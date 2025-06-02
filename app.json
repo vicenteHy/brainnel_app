@@ -1,0 +1,129 @@
+{
+  "expo": {
+    "name": "brainnel",
+    "slug": "brainnel",
+    "version": "3.0.6",
+    "orientation": "portrait",
+    "icon": "./assets/logo/logo2.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "com.brainnel.app",
+    "owner": "newapp123",
+    "deepLinking": true,
+    "splash": {
+      "image": "./assets/logo/logo2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/logo/logo2.png",
+      "bundleIdentifier": "uni.UNIC87CC93",
+      "associatedDomains": ["applinks:api.brainnel.com"],
+      "buildNumber": "3.0.6",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.brainnel.app",
+              "myapp",
+              "fb995035562798467"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.brainnel.app",
+              "myapp",
+              "fb995035562798467"
+            ]
+          }
+        ],
+        "NSPhotoLibraryUsageDescription": "此应用程序需要访问您的照片库以上传图片。",
+        "NSCameraUsageDescription": "此应用程序需要访问您的相机以拍照。",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "permissions": [
+        "android.permission.INTERNET"
+      ],
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo/logo2.png",
+        "backgroundColor": "#ffffff"
+      },
+      "googleServicesFile": "./google-services.json",
+      "package": "com.brainnel.app",
+      "name": "brainnel",
+      "config": {
+        "facebook": {
+          "scheme": "fb995035562798467",
+          "appId": "995035562798467",
+          "displayName": "com.brainnel.app"
+        }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "api.brainnel.com",
+              "pathPattern": ".*"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/logo/logo2.png"
+    },
+    "plugins": [
+      "expo-video",
+      "expo-apple-authentication",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      "expo-localization",
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "995035562798467",
+          "displayName": "newBrainnelApp",
+          "scheme": "fb995035562798467",
+          "clientToken": "2005c337398b1c286e2a189e4e4417ac"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4b8bd660-e8b5-48ad-ac8a-a05607f96eb6"
+      }
+    }
+  }
+}

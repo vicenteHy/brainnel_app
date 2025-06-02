@@ -1,0 +1,367 @@
+import { StyleSheet, Platform } from "react-native";
+import widthUtils from "../../utils/widthUtils";
+import fontSize from "../../utils/fontsizeUtils";
+import isSmallScreen from "../../utils/isSmallScreen";
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  safeAreaContent: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  searchHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  backButton: {
+    padding: 4,
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    height: widthUtils(40, 40).height,
+    marginHorizontal: 8,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 4,
+    fontSize: isSmallScreen ? 14 : 16,
+    color: "#333",
+    height: widthUtils(40, 40).height,
+    paddingRight: 30,
+  },
+  clearButton: {
+    position: "absolute",
+    right: 10,
+    top: '50%',
+    marginTop: -10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  searchButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  searchButtonText: {
+    fontSize: isSmallScreen ? 14 : 16,
+    color: "#333",
+    fontWeight: "500",
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    position: "relative",
+  },
+  tabButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabIcon: {
+    marginLeft: 4,
+  },
+  tabText: {
+    fontSize: fontSize(16),
+    color: "#000",
+  },
+  activeTabText: {
+    color: "#0933a1",
+    fontWeight: "bold",
+  },
+  activeTabButton: {
+    // borderBottomColor: "#0933a1",
+  },
+  resultsContainer: {
+    flex: 1,
+  },
+  resultsHeader: {
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    paddingVertical: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  productGrid: {
+    padding: 8,
+  },
+  productCard: {
+    flex: 1,
+    margin: 8,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  productImageContainer: {
+    height: widthUtils(190, 190).height,
+    backgroundColor: "#f9f9f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+  },
+  placeholderText: {
+    color: "#999",
+    fontSize: fontSize(14),
+  },
+  productInfo: {
+    padding: 8,
+  },
+  categoryText: {
+    fontSize: isSmallScreen ? 12 : 14,
+    color: "#000000",
+    fontWeight: "600",
+    marginBottom: 4,
+    fontFamily: "PingFang SC",
+    letterSpacing: 0,
+  },
+  priceRow: {
+    alignItems: "baseline",
+    marginBottom: 2,
+  },
+  currentPrice: {
+    fontSize: fontSize(24),
+    fontWeight: "600",
+    color: "#ff6600",
+    marginRight: 4,
+  },
+  currency: {
+    fontSize: fontSize(14),
+    fontWeight: "600",
+    fontFamily: "PingFang SC",
+    color: "#ff6600",
+  },
+  originalPrice: {
+    fontSize: fontSize(14),
+    color: "#999",
+    textDecorationLine: "line-through",
+  },
+  currencySmall: {
+    fontSize: fontSize(14),
+    color: "#9a9a9a",
+    fontWeight: "600",
+    fontFamily: "PingFang SC",
+  },
+  productSales: {
+    fontSize: fontSize(14),
+    fontWeight: "600",
+    fontFamily: "PingFang SC",
+    color: "#7c7c7c",
+  },
+  sortScrollView: {
+    flexGrow: 0,
+  },
+  sortGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  sortLabel: {
+    fontSize: fontSize(16),
+    color: "#666",
+    marginRight: 8,
+  },
+  sortButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginLeft: 4,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  sortButtonActive: {
+    borderColor: "#ff6600",
+    backgroundColor: "#fff8f5",
+  },
+  sortButtonText: {
+    fontSize: fontSize(14),
+    color: "#666",
+  },
+  sortButtonTextActive: {
+    color: "#ff6600",
+    fontWeight: "bold",
+  },
+  sortDivider: {
+    width: 1,
+    height: widthUtils(20, 20).height,
+    backgroundColor: "#e0e0e0",
+    marginHorizontal: 16,
+  },
+  footerContainer: {
+    padding: 16,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  footerText: {
+    fontSize: fontSize(14),
+    color: "#666",
+    marginLeft: 8,
+  },
+  footerSpace: {
+    height: widthUtils(20, 20).height,
+  },
+  backToTopButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: widthUtils(20, 20).width,
+    height: widthUtils(20, 20).height,
+    borderRadius: 22,
+    backgroundColor: "#0066FF",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  emptyContainer: {
+    flex: 1,
+    minHeight: 300,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: fontSize(14),
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: fontSize(14),
+    color: "#999",
+    textAlign: "center",
+  },
+  resultsTitle: {
+    fontSize: fontSize(14),
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1,
+  },
+  resultsCount: {
+    fontSize: fontSize(14),
+    color: "#999",
+  },
+  filterButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  imagePlaceholder: {
+    backgroundColor: '#EAEAEA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  vipIcon: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#3b3b3b",
+    borderRadius: 10,
+    flexDirection: "row",
+    width: widthUtils(30, 66).width,
+    height: widthUtils(30, 66).height,
+  },
+  vipButtonText: {
+    fontStyle: "italic",
+    fontWeight: "900",
+    fontSize: fontSize(18),
+    color: "#f1c355",
+  },
+  vipLabelBold: {
+    fontStyle: "italic",
+    fontWeight: "900",
+    fontSize: fontSize(18),
+    color: "#f1c355",
+  },
+  beautyProductInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flexRowCentered: {},
+  priceContainer: {
+    flexDirection: "row",
+  },
+  highlightedText: {
+    fontWeight: "700",
+    fontSize: fontSize(24),
+    color: "#ff5100",
+  },
+  highlightedText1: {
+    fontWeight: "700",
+    fontSize: fontSize(14),
+    color: "#ff5100",
+  },
+  priceContainer1: {},
+  priceLabel1: {
+    fontSize: fontSize(12),
+    fontWeight: "600",
+    color: "#9a9a9a",
+    textDecorationLine: "line-through",
+  },
+  skeletonText: {
+    backgroundColor: '#EAEAEA',
+    borderRadius: 4,
+    overflow: "hidden",
+    position: "relative",
+  },
+  shimmer: {
+    width: "30%",
+    height: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  productColumnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+});

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function getMobileOS() {
+        const userAgent =
+          navigator.userAgent || navigator.vendor || window.opera;
+
+        // 判断是否为 iOS
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+          return "iOS";
+        }
+
+        // 判断是否为 Android
+        if (/android/i.test(userAgent)) {
+          return "Android";
+        }
+
+        // 如果都不是，可以返回其他或未知
+        return "Unknown";
+      }
+
+      const os = getMobileOS();
+
+      if (os === "iOS") {
+        setTimeout(() => {
+          window.location.href = "https://download.brainnel.com";
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          window.location.href =
+            "intent://open#Intent;scheme=com.brainnel.app;package=com.brainnel.app;end";
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>

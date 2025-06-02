@@ -1,0 +1,18 @@
+{
+  "启动app": null,
+  "登录": "login",
+  "注册": "register",
+  "主页": "home",
+  "搜索": "search",
+  "商品详情页": "product",
+  "浏览商品分类": "category",
+  "浏览商品list": "productList",
+  "购物车": "cart",
+  "填写地址": "address",
+  "物流方式": "shipping",
+  "支付方式": "payment",
+  "浏览订单": "order",
+  "结账": "checkout",
+  "支付成功": "purchase",
+  "支付失败": "paymentFailed"
+}
