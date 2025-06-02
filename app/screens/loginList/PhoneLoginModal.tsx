@@ -23,7 +23,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { userApi } from "../../services/api/userApi";
 import { settingApi } from "../../services/api/setting";
 import useUserStore from "../../store/user";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 import { CountryList } from "../../constants/countries";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ForgotPhonePassword } from "./ForgotPhonePassword";
@@ -105,7 +105,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setSettings, setUser } = useUserStore();
-  const burialPointStore = useBurialPointStore();
+  const analyticsStore = useAnalyticsStore();
 
   // Phone login state
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -258,7 +258,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
         setLoading(false);
         
         // 收集登录成功埋点
-        burialPointStore.logLogin(true, "phone");
+        analyticsStore.logLogin(true, "phone");
         
         navigation.replace("MainTabs", { screen: "Home" });
         onClose();
@@ -269,7 +269,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
       setPasswordError(true);
       
       // 收集登录失败埋点
-      burialPointStore.logLogin(false, "phone");
+      analyticsStore.logLogin(false, "phone");
     }
   };
 

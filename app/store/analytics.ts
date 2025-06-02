@@ -1,13 +1,13 @@
 import { Platform } from "react-native";
 import { create } from "zustand";
 import useUserStore from "./user";
-import { sendBurialData } from "../services/api/burialService";
+import { sendAnalyticsData } from "../services/api/analyticsService";
 
 // 定义事件属性类型为灵活的记录类型
 type EventProperty = Record<string, any>;
 
 // 定义事件类型
-type BurialEvent = {
+type AnalyticsEvent = {
   event_name: string;
   page_name: string | null;
   referre_page: string | null; // 注意这里字段名已更正为referre_page
@@ -110,13 +110,13 @@ const generateUniqueId = () => {
 // 创建唯一的session_id
 const SESSION_ID = generateUniqueId();
 
-// 定义埋点store的状态
-type BurialPointState = {
+// 定义分析数据store的状态
+type AnalyticsState = {
   device_id: string;
   version: string;
   session_id: string;
-  event_list: BurialEvent[];
-  addEvent: (event: BurialEvent) => void;
+  event_list: AnalyticsEvent[];
+  addEvent: (event: AnalyticsEvent) => void;
   // startTimer: () => void;
   // stopTimer: () => void;
   logAppLaunch: (isSuccess?: number) => void;
@@ -161,10 +161,10 @@ const getCurrentFormattedTime = (): string => {
   return new Date().toISOString().replace("T", " ").substr(0, 19);
 };
 
-// 创建埋点store
-const useBurialPointStore = create<BurialPointState>((set, get) => {
+// 创建分析数据store
+const useAnalyticsStore = create<AnalyticsState>((set, get) => {
   // 定义定时器变量
-//   let burialDataTimer: NodeJS.Timeout | null = null;
+//   let analyticsDataTimer: NodeJS.Timeout | null = null;
 
   return {
     device_id: Platform.OS,
@@ -175,20 +175,20 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
     // 启动定时器
     // startTimer: () => {
     //   // 清除可能存在的旧定时器
-    //   if (burialDataTimer) {
-    //     clearInterval(burialDataTimer);
+    //   if (analyticsDataTimer) {
+    //     clearInterval(analyticsDataTimer);
     //   }
 
     //   // 每10秒执行一次发送埋点数据
-    //   burialDataTimer = setInterval(() => {
+    //   analyticsDataTimer = setInterval(() => {
     //     const currentEventList = get().event_list;
         
     //     if (currentEventList.length > 0) {
-    //       console.log("Timer triggered, sending burial data:", currentEventList.length, "events");
-    //       console.log(getBurialPointData());
+    //       console.log("Timer triggered, sending analytics data:", currentEventList.length, "events");
+    //       console.log(getAnalyticsData());
           
     //       // 发送数据
-    //       sendBurialData(currentEventList);
+    //       sendAnalyticsData(currentEventList);
           
     //       // 清空本地数据
     //       set({ event_list: [] });
@@ -198,14 +198,14 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
 
     // // 停止定时器
     // stopTimer: () => {
-    //   if (burialDataTimer) {
-    //     clearInterval(burialDataTimer);
-    //     burialDataTimer = null;
+    //   if (analyticsDataTimer) {
+    //     clearInterval(analyticsDataTimer);
+    //     analyticsDataTimer = null;
     //   }
     // },
 
     // 添加事件
-    addEvent: (event: BurialEvent) => {
+    addEvent: (event: AnalyticsEvent) => {
       set((state) => {
         // 直接添加新事件到列表中
         const newEventList = [...state.event_list, event];
@@ -214,8 +214,8 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
         if (newEventList.length >= 10) {
           // 立即发送数据到服务器
           console.log("Event count reached limit, sending data immediately:", newEventList.length);
-          console.log(getBurialPointData());
-          sendBurialData(newEventList);
+          console.log(getAnalyticsData());
+          sendAnalyticsData(newEventList);
           
           // 清空本地数据
           return { event_list: [] };
@@ -225,9 +225,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       });
     },
 
-    // 记录应用启动埋点
+    // 记录应用启动事件
     logAppLaunch: (isSuccess = 1) => {
-      const appLaunchEvent: BurialEvent = {
+      const appLaunchEvent: AnalyticsEvent = {
         event_name: "app_launch",
         page_name: null,
         referre_page: null,
@@ -242,9 +242,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(appLaunchEvent);
     },
 
-    // 记录登录事件埋点
+    // 记录登录事件
     logLogin: (isSuccess = true, loginMethod = "phone") => {
-      const loginEvent: BurialEvent = {
+      const loginEvent: AnalyticsEvent = {
         event_name: "login",
         page_name: "login",
         referre_page: null,
@@ -260,9 +260,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(loginEvent);
     },
 
-    // 记录注册事件埋点
+    // 记录注册事件
     logRegister: (isSuccess = true, registerMethod = "phone") => {
-      const registerEvent: BurialEvent = {
+      const registerEvent: AnalyticsEvent = {
         event_name: "register",
         page_name: "register",
         referre_page: null,
@@ -278,9 +278,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(registerEvent);
     },
 
-    // 记录浏览商品事件埋点
+    // 记录浏览商品事件
     logViewProduct: (productInfo: ProductProperty, fromPage = "home") => {
-      const viewProductEvent: BurialEvent = {
+      const viewProductEvent: AnalyticsEvent = {
         event_name: "product",
         page_name: "product",
         referre_page: fromPage,
@@ -290,9 +290,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(viewProductEvent);
     },
 
-    // 记录搜索事件埋点
+    // 记录搜索事件
     logSearch: (keyword: string, fromPage = "home") => {
-      const searchEvent: BurialEvent = {
+      const searchEvent: AnalyticsEvent = {
         event_name: "search",
         page_name: "search",
         referre_page: 'home',
@@ -307,12 +307,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(searchEvent);
     },
 
-    // 记录填写地址信息事件埋点
+    // 记录填写地址信息事件
     logAddressInfo: (
       addressInfo: Omit<AddressProperty, "timestamp">,
       fromPage = "cart"
     ) => {
-      const addressEvent: BurialEvent = {
+      const addressEvent: AnalyticsEvent = {
         event_name: "address",
         page_name: "address",
         referre_page: fromPage,
@@ -327,12 +327,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(addressEvent);
     },
 
-    // 记录物流信息确认事件埋点
+    // 记录物流信息确认事件
     logShippingConfirm: (
       shippingInfo: Omit<ShippingProperty, "timestamp">,
       fromPage = "address"
     ) => {
-      const shippingEvent: BurialEvent = {
+      const shippingEvent: AnalyticsEvent = {
         event_name: "shipping",
         page_name: "shipping",
         referre_page: fromPage,
@@ -347,12 +347,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(shippingEvent);
     },
 
-    // 记录支付方式确认事件埋点
+    // 记录支付方式确认事件
     logPaymentConfirm: (
       paymentInfo: Omit<PaymentProperty, "timestamp">,
       fromPage = "shipping"
     ) => {
-      const paymentEvent: BurialEvent = {
+      const paymentEvent: AnalyticsEvent = {
         event_name: "payment",
         page_name: "payment",
         referre_page: fromPage,
@@ -367,9 +367,9 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(paymentEvent);
     },
 
-    // 记录预览订单事件埋点
+    // 记录预览订单事件
     logPreviewOrder: (fromPage = "pay_method") => {
-      const previewEvent: BurialEvent = {
+      const previewEvent: AnalyticsEvent = {
         event_name: "order",
         page_name: "order",
         referre_page: fromPage,
@@ -383,12 +383,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(previewEvent);
     },
 
-    // 记录支付结账事件埋点
+    // 记录支付结账事件
     logCheckout: (
       checkoutInfo: Omit<CheckoutProperty, "timestamp">,
       fromPage = "perview"
     ) => {
-      const checkoutEvent: BurialEvent = {
+      const checkoutEvent: AnalyticsEvent = {
         event_name: "checkout",
         page_name: "checkout",
         referre_page: fromPage,
@@ -403,12 +403,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(checkoutEvent);
     },
 
-    // 分类事件埋点
+    // 分类事件
     logCategory: (
       categoryInfo: Omit<CategoryProperty, "timestamp">,
       fromPage = "home"
     ) => {
-      const categoryEvent: BurialEvent = {
+      const categoryEvent: AnalyticsEvent = {
         event_name: "category",
         page_name: "category",
         referre_page: fromPage,
@@ -418,12 +418,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(categoryEvent);
     },
 
-    // 二级分类事件埋点
+    // 二级分类事件
     logSubCategory: (
       subCategoryInfo: Omit<CategoryProperty, "timestamp">,
       fromPage = "category"
     ) => {
-      const subCategoryEvent: BurialEvent = {
+      const subCategoryEvent: AnalyticsEvent = {
         event_name: "category",
         page_name: "category",
         referre_page: fromPage,
@@ -433,12 +433,12 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
       get().addEvent(subCategoryEvent);
     },
 
-    // 记录添加购物车事件埋点
+    // 记录添加购物车事件
     logAddToCart: (
       cartInfo: Omit<CartProperty, "timestamp">,
       fromPage = "search"
     ) => {
-      const addToCartEvent: BurialEvent = {
+      const addToCartEvent: AnalyticsEvent = {
         event_name: "addToCart",
         page_name: "addToCart",
         referre_page: "search",
@@ -462,40 +462,40 @@ const useBurialPointStore = create<BurialPointState>((set, get) => {
   };
 });
 
-// 获取埋点数据，包括从userStore获取的user_id
-export const getBurialPointData = () => {
-  const burialState = useBurialPointStore.getState();
+// 获取分析数据，包括从userStore获取的user_id
+export const getAnalyticsData = () => {
+  const analyticsState = useAnalyticsStore.getState();
   const user = useUserStore.getState().user;
 
   return {
     user_id: user?.user_id || null,
-    device_id: burialState.device_id,
-    version: burialState.version,
-    session_id: burialState.session_id,
-    event_list: burialState.event_list,
+    device_id: analyticsState.device_id,
+    version: analyticsState.version,
+    session_id: analyticsState.session_id,
+    event_list: analyticsState.event_list,
   };
 };
 
-export default useBurialPointStore;
+export default useAnalyticsStore;
 
-// 定时器函数：每10秒发送一次埋点数据
-// const startBurialTimer = () => {
+// 定时器函数：每10秒发送一次分析数据
+// const startAnalyticsTimer = () => {
 //   setInterval(() => {
-//     const store = useBurialPointStore.getState();
+//     const store = useAnalyticsStore.getState();
 //     const eventList = store.event_list;
     
 //     if (eventList.length > 0) {
-//       console.log("Timer triggered, sending burial data:", eventList.length, "events");
-//       console.log(getBurialPointData());
+//       console.log("Timer triggered, sending analytics data:", eventList.length, "events");
+//       console.log(getAnalyticsData());
       
 //       // 发送数据
-//       sendBurialData(eventList);
+//       sendAnalyticsData(eventList);
       
 //       // 清空本地数据
-//       useBurialPointStore.setState({ event_list: [] });
+//       useAnalyticsStore.setState({ event_list: [] });
 //     }
 //   }, 10000); // 10秒 = 10000毫秒
 // };
 
-// 自动启动埋点数据定时器
-// startBurialTimer();
+// 自动启动分析数据定时器
+// startAnalyticsTimer();

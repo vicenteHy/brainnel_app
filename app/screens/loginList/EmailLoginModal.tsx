@@ -21,7 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { userApi } from "../../services/api/userApi";
 import { settingApi } from "../../services/api/setting";
 import useUserStore from "../../store/user";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ForgotEmailPassword } from "./ForgotEmailPassword";
 import BackIcon from "../../components/BackIcon";
@@ -59,7 +59,7 @@ const EmailLoginModal = ({ visible, onClose }: EmailLoginModalProps) => {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setSettings, setUser } = useUserStore();
-  const burialPointStore = useBurialPointStore();
+  const analyticsStore = useAnalyticsStore();
 
   // 状态管理
   const [email, setEmail] = useState("");
@@ -196,7 +196,7 @@ const EmailLoginModal = ({ visible, onClose }: EmailLoginModalProps) => {
         setLoading(false);
         
         // 收集邮箱登录成功埋点
-        burialPointStore.logLogin(true, "email");
+        analyticsStore.logLogin(true, "email");
         
         navigation.navigate("MainTabs", { screen: "Home" });
         onClose();
@@ -207,7 +207,7 @@ const EmailLoginModal = ({ visible, onClose }: EmailLoginModalProps) => {
       setEmailPasswordError(true);
       
       // 收集邮箱登录失败埋点
-      burialPointStore.logLogin(false, "email");
+      analyticsStore.logLogin(false, "email");
     }
   };
 

@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import BackIcon from "../../components/BackIcon";
 import useCreateOrderStore from "../../store/createOrder";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 import { deleteCartItem } from "../../services/api/cart";
 import { t } from "../../i18n";
 import { getSubjectTransLanguage } from "../../utils/languageUtils";
@@ -246,8 +246,8 @@ export const CartScreen = () => {
       }
 
       // 收集购物车提交埋点数据
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logAddToCart(cartList as any, "cart");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logAddToCart(cartList as any, "cart");
 
       // 检查每个商品组的最小起订量
       for (const item of cartList) {

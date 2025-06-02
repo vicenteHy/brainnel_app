@@ -4,7 +4,7 @@ import { RouteProp } from '@react-navigation/native';
 import { productApi, ProductDetailParams, SkuAttribute, ProductGroupList } from '../../../services/api/productApi';
 import useUserStore from '../../../store/user';
 import useProductCartStore from '../../../store/productCart';
-import useBurialPointStore from '../../../store/burialPoint';
+import useAnalyticsStore from '../../../store/analytics';
 import { getSubjectTransLanguage } from '../../../utils/languageUtils';
 import { t } from '../../../i18n';
 
@@ -16,7 +16,7 @@ type ProductDetailRouteParams = {
 
 export const useProductDetail = () => {
   const userStore = useUserStore();
-  const burialPointData = useBurialPointStore.getState();
+  const analyticsData = useAnalyticsStore.getState();
   const { product, setProduct, groupList, setGroupList } = useProductCartStore();
   const route = useRoute<RouteProp<Record<string, ProductDetailRouteParams>, string>>();
   
@@ -242,7 +242,7 @@ export const useProductDetail = () => {
         product_img: res.product_image_urls[0],
         timestamp: new Date().toISOString(),
       };
-      burialPointData.logViewProduct(data);
+      analyticsData.logViewProduct(data);
     } catch (error) {
       console.error("Error fetching product details:", error);
     } finally {

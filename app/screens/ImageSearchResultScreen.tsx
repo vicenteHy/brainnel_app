@@ -38,7 +38,7 @@ import useUserStore from "../store/user";
 import { getSubjectTransLanguage } from "../utils/languageUtils";
 import Toast from "react-native-toast-message";
 import * as FileSystem from 'expo-file-system';
-import useBurialPointStore from "../store/burialPoint";
+import useAnalyticsStore from "../store/analytics";
 
 
 
@@ -237,7 +237,7 @@ export const ImageSearchResultScreen = ({
   const [loading, setLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(true);
   const userStore = useUserStore();
-  const burialPointData = useBurialPointStore();
+  const analyticsData = useAnalyticsStore();
   const flatListRef = useRef<FlatList>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const imageProcessed = useRef(false);

@@ -24,7 +24,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import CameraIcon from "../components/CameraIcon";
 import { productApi } from "../services/api/productApi";
-import useBurialPointStore from "../store/burialPoint";
+import useAnalyticsStore from "../store/analytics";
 
 // 图标组件 - 使用React.memo优化渲染
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -189,9 +189,9 @@ export const SearchScreen = () => {
   // 处理搜索提交 - 使用useCallback优化函数引用
   const handleSearch = useCallback(() => {
     if (searchText.trim()) {
-      // 记录搜索埋点事件
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logSearch(searchText.trim(), "search");
+      // 记录搜索事件
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logSearch(searchText.trim(), "search");
       
       saveSearchHistory(searchText.trim());
       Keyboard.dismiss();
@@ -202,9 +202,9 @@ export const SearchScreen = () => {
 
   // 点击搜索标签
   const handleTagPress = (tag: string) => {
-    // 记录搜索埋点事件
-    const burialPointStore = useBurialPointStore.getState();
-    burialPointStore.logSearch(tag, "search");
+    // 记录搜索事件
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logSearch(tag, "search");
     
     setSearchText(tag);
     saveSearchHistory(tag);

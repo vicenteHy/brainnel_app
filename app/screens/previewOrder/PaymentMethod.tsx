@@ -35,7 +35,7 @@ import PaymentMethodIcon from "../../components/PaymentMethodIcon";
 import PaymentIcon from "../../components/PaymentIcon";
 import { getCurrentLanguage } from "../../i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 
 // Define route params type
 type PaymentMethodRouteParams = {
@@ -708,8 +708,8 @@ export const PaymentMethod = () => {
 
 
     // 记录支付方式确认埋点事件
-    const burialPointStore = useBurialPointStore.getState();
-    burialPointStore.logPaymentConfirm(paymentConfirmData, "shipping");
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPaymentConfirm(paymentConfirmData, "shipping");
     
     console.log("支付确认信息埋点数据:", paymentConfirmData);
 

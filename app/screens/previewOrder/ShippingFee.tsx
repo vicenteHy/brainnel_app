@@ -37,7 +37,7 @@ import useUserStore from "../../store/user";
 import { useTranslation } from "react-i18next";
 import { getCurrentLanguage } from "../../i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 
 type RootStackParamList = {
   ShippingFee: { cart_item_id: any; totalAmount?: number; isFei?: boolean };
@@ -231,8 +231,8 @@ export const ShippingFee = () => {
 
 
       // 记录物流确认埋点事件
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logShippingConfirm(shippingConfirmData, "shipping");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logShippingConfirm(shippingConfirmData, "shipping");
       
       console.log("物流确认信息埋点数据:", shippingConfirmData);
       

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { ordersApi } from '../services/api/orders';
 import { AddressDataItem, CartShippingFeeData, ShippingFeeData,DomesticShippingFeeData } from '../services/api/orders';
-import useBurialPointStore from './burialPoint';
+import useAnalyticsStore from './analytics';
 import useUserStore from './user';
-import { getBurialPointData } from './burialPoint';
+import { getAnalyticsData } from './analytics';
 
 interface PreviewShippingState {
   freightForwarderAddress: AddressDataItem | null;
@@ -65,9 +65,9 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       //   };
 
       //   // 记录货代地址埋点事件
-      //   const burialPointStore = useBurialPointStore.getState();
-      //   burialPointStore.logShippingConfirm(forwarderLogData, "address");
-      //   console.log("当前所有埋点数据:", getBurialPointData());
+      //   const analyticsStore = useAnalyticsStore.getState();
+      //   analyticsStore.logShippingConfirm(forwarderLogData, "address");
+      //   console.log("当前所有埋点数据:", getAnalyticsData());
       // }
       
       set((state) => ({
@@ -110,10 +110,10 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       };
 
       // 记录物流信息埋点事件
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logShippingConfirm(shippingLogData, "address");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logShippingConfirm(shippingLogData, "address");
       
-      console.log("当前所有埋点数据:", getBurialPointData());
+      console.log("当前所有埋点数据:", getAnalyticsData());
       
       set((state) => ({
         state: { 
@@ -156,8 +156,8 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       };
 
       // 记录国内物流信息埋点事件
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logShippingConfirm(domesticShippingLogData, "address");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logShippingConfirm(domesticShippingLogData, "address");
       
       console.log("国内物流信息埋点数据:", domesticShippingLogData);
       

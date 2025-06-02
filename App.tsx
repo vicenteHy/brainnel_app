@@ -13,7 +13,7 @@ import * as Linking from "expo-linking";
 import { EventEmitter } from 'events';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import LanguageSelectionScreen, { checkLanguageSelected } from "./app/screens/LanguageSelectionScreen";
-import  useBurialPointStore  from "./app/store/burialPoint";
+import  useAnalyticsStore  from "./app/store/analytics";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -37,7 +37,7 @@ export const PAYMENT_SUCCESS_EVENT = "PAYMENT_SUCCESS_EVENT";
 export const PAYMENT_FAILURE_EVENT = "PAYMENT_FAILURE_EVENT";
 
 function AppContent() {
-  const burialPointData = useBurialPointStore();
+  const analyticsData = useAnalyticsStore();
   const { setUser } = useUserStore();
   const { login, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +78,7 @@ function AppContent() {
     if (!checkingLanguage && languageSelected) {
       const initApp = async () => {
         try {
-          burialPointData.logAppLaunch(1);
+          analyticsData.logAppLaunch(1);
         } catch (error) {
           console.error('App initialization error:', error);
         } finally {

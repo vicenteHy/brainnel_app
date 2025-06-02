@@ -1,6 +1,13 @@
-import { StyleSheet, Dimensions, Platform, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import fontSize from '../../utils/fontsizeUtils';
-import widthUtils from '../../utils/widthUtils';
+import {
+  StyleSheet,
+  Dimensions,
+  Platform,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
+} from "react-native";
+import fontSize from "../../utils/fontsizeUtils";
+import widthUtils from "../../utils/widthUtils";
 
 export type StylesType = {
   safeArea: ViewStyle;
@@ -157,7 +164,7 @@ export const styles = StyleSheet.create<StylesType>({
     paddingBottom: 8,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 0,
+    marginBottom: 8,
     backgroundColor: "#fff",
   },
   categoryScrollContainer: {

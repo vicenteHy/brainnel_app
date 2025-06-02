@@ -25,7 +25,7 @@ import useUserStore from "../store/user";
 import { getSubjectTransLanguage } from "../utils/languageUtils";
 import Toast from "react-native-toast-message";
 import { getCurrentLanguage } from "../i18n";
-import useBurialPointStore from "../store/burialPoint";
+import useAnalyticsStore from "../store/analytics";
 
 import { IconComponent, ProductSkeleton, ProductItem } from "./SearchResultScreen/components";
 import { useSearchProducts, useSearchFilters } from "./SearchResultScreen/hooks";
@@ -138,8 +138,8 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
 
   const handleSearch = useCallback(() => {
     if (searchText.trim()) {
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logSearch(searchText.trim(), "search");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logSearch(searchText.trim(), "search");
       
       setSortField("price");
       setSortOrder(null);
@@ -165,7 +165,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         return;
       }
       
-      const burialPointStore = useBurialPointStore.getState();
+      const analyticsStore = useAnalyticsStore.getState();
       const productInfo = {
         offer_id: product.offer_id,
         category_id: product.category_id || 0,
@@ -177,7 +177,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         product_img: product.product_image_urls?.[0] || "",
       };
       
-      burialPointStore.logViewProduct(productInfo, "search");
+      analyticsStore.logViewProduct(productInfo, "search");
       
       navigation.navigate("ProductDetail", {
         offer_id: product.offer_id,

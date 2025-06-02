@@ -29,7 +29,7 @@ import flagMap from "../../utils/flagMap";
 import useCreateOrderStore  from "../../store/createOrder";
 import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 
 type RootStackParamList = {
   AddRess: { address?: AddressItem; cart_item_id?: number | string; totalAmount?: number; isFei?: boolean };
@@ -222,8 +222,8 @@ export const PreviewAddress = () => {
       }
       
       // 记录地址信息埋点事件
-      const burialPointStore = useBurialPointStore.getState();
-      burialPointStore.logAddressInfo(logData, "cart");
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logAddressInfo(logData, "cart");
       
       console.log("地址信息埋点已记录:", logData);
       

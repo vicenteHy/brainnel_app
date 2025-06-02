@@ -38,7 +38,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCountryTransLanguage } from "../../utils/languageUtils";
 import { ordersApi } from "../../services/api/orders";
 import Toast from "react-native-toast-message";
-import useBurialPointStore from "../../store/burialPoint";
+import useAnalyticsStore from "../../store/analytics";
 
 // 移除不必要的映射，直接使用API返回的country字段作为电话区号
 const getPhoneCodeFromCountry = (countryCode: number): string => {
@@ -410,8 +410,8 @@ export const PreviewOrder = () => {
         if (res.success) {
           // 支付成功的埋点数据收集
           const checkoutSuccessData = prepareCheckoutData(1);
-          const burialPointStore = useBurialPointStore.getState();
-          burialPointStore.logCheckout(checkoutSuccessData, "preview");
+          const analyticsStore = useAnalyticsStore.getState();
+          analyticsStore.logCheckout(checkoutSuccessData, "preview");
           
           console.log("支付结账成功埋点数据:", checkoutSuccessData);
 
@@ -458,8 +458,8 @@ export const PreviewOrder = () => {
             } else {
               // 移动支付失败的埋点数据收集
               const checkoutFailData = prepareCheckoutData(0);
-              const burialPointStore = useBurialPointStore.getState();
-              burialPointStore.logCheckout(checkoutFailData, "preview");
+              const analyticsStore = useAnalyticsStore.getState();
+              analyticsStore.logCheckout(checkoutFailData, "preview");
               
               console.log("支付结账失败埋点数据:", checkoutFailData);
 
@@ -515,8 +515,8 @@ export const PreviewOrder = () => {
         } else {
           // API返回失败的埋点数据收集
           const checkoutFailData = prepareCheckoutData(0);
-          const burialPointStore = useBurialPointStore.getState();
-          burialPointStore.logCheckout(checkoutFailData, "preview");
+          const analyticsStore = useAnalyticsStore.getState();
+          analyticsStore.logCheckout(checkoutFailData, "preview");
           
           console.log("支付结账失败埋点数据:", checkoutFailData);
 
@@ -531,8 +531,8 @@ export const PreviewOrder = () => {
         
         // 支付请求失败的埋点数据收集
         const checkoutErrorData = prepareCheckoutData(0);
-        const burialPointStore = useBurialPointStore.getState();
-        burialPointStore.logCheckout(checkoutErrorData, "preview");
+        const analyticsStore = useAnalyticsStore.getState();
+        analyticsStore.logCheckout(checkoutErrorData, "preview");
         
         console.log("支付结账错误埋点数据:", checkoutErrorData);
 

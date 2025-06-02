@@ -21,7 +21,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
 import { getSubCategoryTransLanguage } from "../utils/languageUtils";
-import useBurialPointStore from "../store/burialPoint";
+import useAnalyticsStore from "../store/analytics";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MENU_WIDTH = widthUtils(120, 120).width;
@@ -50,7 +50,7 @@ export const CategoryScreen = () => {
   );
   const [loading, setLoading] = useState(true);
   const [subLoading, setSubLoading] = useState(false);
-  const burialPointData = useBurialPointStore.getState();
+  const analyticsData = useAnalyticsStore.getState();
   useEffect(() => {
     fetchMainCategories();
   }, []);
@@ -122,7 +122,7 @@ export const CategoryScreen = () => {
       ]}
       onPress={() => {
         setActiveMainCategory(item.category_id);
-        burialPointData.logCategory({
+        analyticsData.logCategory({
           category_id: item.category_id,
           level: item.level,
           category_name: item.name,
@@ -146,7 +146,7 @@ export const CategoryScreen = () => {
     <TouchableOpacity
       style={styles.subCategoryItem}
       onPress={() => {
-        burialPointData.logSubCategory({
+        analyticsData.logSubCategory({
           category_id: item.category_id,
           category_name: item.name,
         }, "category");
