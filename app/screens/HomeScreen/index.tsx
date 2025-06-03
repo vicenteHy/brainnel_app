@@ -9,11 +9,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  FlatList,
   InteractionManager,
   Image,
   ScrollView,
-  RefreshControl,
   Dimensions,
   Platform,
   StatusBar,
@@ -21,6 +19,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   productApi,
   type Product,
@@ -38,17 +37,14 @@ import { useGlobalStore } from "../../store/useGlobalStore";
 // 导入拆分的组件
 import {
   SearchBar,
-  CarouselBanner,
-  ProductItem,
-  FeatureNavigationBar,
-  ProductSkeleton,
+  MultiPageContainer,
 } from "./components";
 
 // 导入样式
 import { styles, loginModalStyles } from "./styles";
 
 // 导入自定义 hook
-import { useProductData } from "./hooks/useProductData";
+import { useMultiPageData } from "./hooks/useMultiPageData";
 
 type IconProps = {
   name: string;
@@ -66,33 +62,103 @@ export const HomeScreen = () => {
   const { t } = useTranslation();
   const userStore = useUserStore();
   const { country, currency } = useGlobalStore();
-  const flatListRef = useRef<FlatList>(null);
   const horizontalScrollRef = useRef<ScrollView>(null);
   
-  // 使用自定义 hook 管理产品数据
-  const {
-    products,
-    loading,
-    loadingMore,
-    hasMore,
-    refreshing,
-    loadingPlaceholders,
-    currencyVersion,
-    params,
-    handleLoadMore,
-    handleRefresh,
-  } = useProductData();
+  // 缓存用户相关数据，避免不必要的重新渲染
+  const memoizedUserStore = useMemo(() => ({
+    user: userStore.user,
+  }), [userStore.user]);
 
+  // 组件挂载日志
+  useEffect(() => {
+    console.log('[HomeScreen] Component mounted', {
+      timestamp: new Date().toISOString(),
+      hasUser: !!userStore.user?.user_id
+    });
+    
+    return () => {
+      console.log('[HomeScreen] Component will unmount', {
+        timestamp: new Date().toISOString()
+      });
+    };
+  }, []);
+  
   // 本地状态
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(-1); // -1 表示推荐页
   const [galleryUsed, setGalleryUsed] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(!userStore.user?.user_id);
+  const [showLoginModal, setShowLoginModal] = useState(false); // 不依赖userStore初始化，在useEffect中处理
+
+  // 调试selectedCategoryId变化
+  useEffect(() => {
+    console.log('[HomeScreen] selectedCategoryId changed to:', selectedCategoryId, {
+      timestamp: new Date().toISOString()
+    });
+  }, [selectedCategoryId]);
 
   // 分类相关状态
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Category[]>([]);
   const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
+  const [showAllSubcategories, setShowAllSubcategories] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+
+  // 使用多页面数据管理hook
+  const {
+    getPageData,
+    loadPageData,
+    refreshPageData,
+    loadMoreData,
+    preloadAdjacentPages,
+    cleanupPageData,
+    allCategories,
+  } = useMultiPageData(categories);
+
+  // 快速滑动分类栏到选中项（无动画）
+  const scrollCategoryToCenter = useCallback((categoryId: number) => {
+    if (!horizontalScrollRef.current) return;
+    
+    const categoryIndex = allCategories.findIndex(cat => cat.category_id === categoryId);
+    if (categoryIndex === -1) return;
+    
+    // 简化计算，使用固定宽度估算
+    const estimatedItemWidth = 80; // 固定估算宽度，避免复杂计算
+    const screenWidth = Dimensions.get('window').width;
+    const scrollToX = Math.max(0, (categoryIndex * estimatedItemWidth) - (screenWidth / 2));
+    
+    horizontalScrollRef.current.scrollTo({
+      x: scrollToX,
+      animated: false, // 关闭动画
+    });
+  }, [allCategories]);
+
+  // 切换类目的函数
+  const handleCategoryChange = useCallback((categoryId: number) => {
+    console.log(`[HomeScreen] handleCategoryChange called - categoryId: ${categoryId}`);
+    setSelectedCategoryId(categoryId);
+    scrollCategoryToCenter(categoryId);
+    
+    // 为推荐页面和分类页面自动加载数据
+    if (categoryId === -1 || categoryId > 0) {
+      const pageData = getPageData(categoryId);
+      console.log(`[HomeScreen] 检查页面数据 - categoryId: ${categoryId}`, {
+        initialized: pageData.initialized,
+        loading: pageData.loading,
+        productsLength: pageData.products.length
+      });
+      
+      // 如果页面没有初始化或者没有产品数据，则加载数据
+      if (!pageData.initialized || pageData.products.length === 0) {
+        console.log(`[HomeScreen] 触发loadPageData - categoryId: ${categoryId}`);
+        loadPageData(categoryId);
+      }
+    }
+    
+    // 延迟清理数据，确保页面切换完成
+    setTimeout(() => {
+      cleanupPageData(categoryId);
+    }, 100);
+  }, [scrollCategoryToCenter, getPageData, loadPageData, cleanupPageData]);
 
   // 处理产品点击
   const handleProductPress = useCallback(
@@ -100,12 +166,24 @@ export const HomeScreen = () => {
       InteractionManager.runAfterInteractions(() => {
         navigation.navigate("ProductDetail", {
           offer_id: item.offer_id,
-          searchKeyword: params.keyword,
           price: item.min_price,
         });
       });
     },
-    [navigation, params.keyword],
+    [navigation],
+  );
+
+  // 处理二级分类点击
+  const handleSubcategoryPress = useCallback(
+    (subcategoryId: number) => {
+      console.log(`[HomeScreen] 二级分类点击 - subcategoryId: ${subcategoryId}`);
+      InteractionManager.runAfterInteractions(() => {
+        navigation.navigate("SearchResult", {
+          category_id: subcategoryId,
+        });
+      });
+    },
+    [navigation],
   );
 
   // 处理相机按钮点击
@@ -199,24 +277,45 @@ export const HomeScreen = () => {
     Alert.alert("已重置", "现在您可以使用相机功能了");
   }, []);
 
-  // 获取一级类目
+  // 获取一级类目并初始化数据
   useEffect(() => {
+    console.log('[HomeScreen] fetchCategories useEffect triggered', {
+      timestamp: new Date().toISOString(),
+      categoriesLength: categories.length
+    });
+    
     const fetchCategories = async () => {
       try {
+        console.log('[HomeScreen] Calling getFirstCategory API');
         const res = await productApi.getFirstCategory();
+        console.log('[HomeScreen] getFirstCategory API response:', res.length, 'categories');
         setCategories(res);
+        
+        // 不再自动加载推荐数据，等用户手动触发
+        // loadPageData(-1);
+        
+        // 定位分类栏 - 移除对scrollCategoryToCenter的依赖
+        setTimeout(() => {
+          if (horizontalScrollRef.current) {
+            horizontalScrollRef.current.scrollTo({
+              x: 0, // 滚动到推荐页面位置
+              animated: false,
+            });
+          }
+        }, 100);
       } catch (e) {
         console.error("获取一级类目失败", e);
       }
     };
     fetchCategories();
-  }, []);
+  }, []); // 移除所有依赖，只在组件挂载时执行一次
 
   // 获取二级类目
   useEffect(() => {
-    if (selectedCategoryId) {
+    if (selectedCategoryId > 0) {
       const fetchSubcategories = async () => {
         setSubcategoriesLoading(true);
+        setShowAllSubcategories(false); // 切换分类时重置展开状态
         try {
           const res = await productApi.getSecondCategory(selectedCategoryId);
           setSubcategories(res);
@@ -230,6 +329,7 @@ export const HomeScreen = () => {
     } else {
       setSubcategories([]);
       setSubcategoriesLoading(false);
+      setShowAllSubcategories(false);
     }
   }, [selectedCategoryId]);
 
@@ -237,41 +337,18 @@ export const HomeScreen = () => {
   useEffect(() => {
     if (userStore.user?.user_id) {
       setShowLoginModal(false);
+      // 不再自动刷新数据，等用户手动触发
+      // if (selectedCategoryId === -1) {
+      //   refreshPageData(-1);
+      // }
+    } else {
+      // 用户未登录时显示登录弹窗
+      setShowLoginModal(true);
     }
   }, [userStore.user?.user_id]);
 
-  // 渲染产品项
-  const renderProductItem = useCallback(
-    ({ item }: { item: Product & { _uniqueId?: number } }) => (
-      <ProductItem
-        item={item}
-        onPress={handleProductPress}
-        userStore={userStore}
-        t={t}
-      />
-    ),
-    [handleProductPress, userStore, t],
-  );
 
-  // 渲染骨架屏网格
-  const renderSkeletonGrid = useCallback(() => {
-    const skeletonArray = Array(8).fill(null);
-    return (
-      <View style={styles.skeletonContainer}>
-        <FlatList
-          data={skeletonArray}
-          renderItem={() => <ProductSkeleton />}
-          keyExtractor={(_, index) => `skeleton-${index}`}
-          numColumns={2}
-          columnWrapperStyle={styles.productCardGroup}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 8 }}
-        />
-      </View>
-    );
-  }, []);
-
-  // 渲染分类区域
+  // 渲染分类区域（性能优化版）
   const renderCategorySection = useMemo(
     () => (
       <View style={styles.category}>
@@ -283,7 +360,29 @@ export const HomeScreen = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoryScroll}
+            removeClippedSubviews={true}
+            scrollEventThrottle={16}
           >
+            {/* 推荐按钮 */}
+            <TouchableOpacity
+              key="recommendations"
+              style={[
+                styles.categoryItem,
+                selectedCategoryId === -1 && styles.categoryItemActive,
+              ]}
+              onPress={() => handleCategoryChange(-1)}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategoryId === -1 && styles.categoryTextActive,
+                ]}
+              >
+                {t("common.recommendations")}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* 其他分类 */}
             {categories.map((cat) => (
               <TouchableOpacity
                 key={cat.category_id}
@@ -292,7 +391,7 @@ export const HomeScreen = () => {
                   selectedCategoryId === cat.category_id &&
                     styles.categoryItemActive,
                 ]}
-                onPress={() => setSelectedCategoryId(cat.category_id)}
+                onPress={() => handleCategoryChange(cat.category_id)}
               >
                 <Text
                   style={[
@@ -306,15 +405,36 @@ export const HomeScreen = () => {
               </TouchableOpacity>
             ))}
           </ScrollView>
+          
+          {/* 渐变遮罩 */}
+          <LinearGradient
+            colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 1)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.categoryFadeOverlay}
+            pointerEvents="none"
+          />
+          
+          {/* 查看全部按钮 */}
+          <TouchableOpacity
+            style={styles.viewAllButton}
+            onPress={() => setShowCategoryModal(true)}
+          >
+            <IconComponent
+              name="chevron-down-outline"
+              size={25}
+              color="#666"
+            />
+          </TouchableOpacity>
         </View>
       </View>
     ),
-    [categories, selectedCategoryId],
+    [categories, selectedCategoryId, t],
   );
 
   // 渲染子分类区域
   const renderSubcategorySection = useMemo(() => {
-    if (selectedCategoryId === 0) return null;
+    if (selectedCategoryId === 0 || selectedCategoryId === -1) return null;
 
     if (subcategoriesLoading) {
       return (
@@ -335,23 +455,6 @@ export const HomeScreen = () => {
 
     if (subcategories.length === 0) return null;
 
-    const itemsPerRow = 5;
-    const totalPages = Math.ceil(subcategories.length / (itemsPerRow * 2));
-    const pages = [];
-
-    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-      const startIndex = pageIndex * itemsPerRow * 2;
-      const pageFirstRow = subcategories.slice(
-        startIndex,
-        startIndex + itemsPerRow,
-      );
-      const pageSecondRow = subcategories.slice(
-        startIndex + itemsPerRow,
-        startIndex + itemsPerRow * 2,
-      );
-      pages.push({ firstRow: pageFirstRow, secondRow: pageSecondRow });
-    }
-
     const renderSubcategoryItem = (item: any) => (
       <TouchableOpacity
         key={item.category_id}
@@ -366,10 +469,10 @@ export const HomeScreen = () => {
           {item.image ? (
             <Image
               source={{ uri: item.image }}
-              style={{ width: 50, height: 50, borderRadius: 25 }}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
             />
           ) : (
-            <IconComponent name="grid-outline" size={24} color="#666" />
+            <IconComponent name="grid-outline" size={20} color="#666" />
           )}
         </View>
         <Text
@@ -382,138 +485,100 @@ export const HomeScreen = () => {
       </TouchableOpacity>
     );
 
-    return (
-      <View style={styles.subcategoryContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.subcategoryContent}
-          pagingEnabled={totalPages > 1}
-        >
-          {pages.map((page, pageIndex) => (
-            <View key={pageIndex} style={styles.subcategoryPage}>
-              <View style={styles.subcategoryRow}>
-                {page.firstRow.map(renderSubcategoryItem)}
-              </View>
-              <View style={styles.subcategoryRow}>
-                {page.secondRow.map(renderSubcategoryItem)}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+    const renderShowAllButton = () => (
+      <TouchableOpacity
+        key="show-all"
+        style={styles.subcategoryItem}
+        onPress={() => setShowAllSubcategories(!showAllSubcategories)}
+      >
+        <View style={styles.subcategoryImagePlaceholder}>
+          <IconComponent 
+            name={showAllSubcategories ? "chevron-up-outline" : "chevron-forward-outline"} 
+            size={24} 
+            color="#000000" 
+          />
+        </View>
+        <Text style={[styles.subcategoryText, { color: "#000000" }]}>
+          {showAllSubcategories ? t("common.collapse") : t("common.viewAll")}
+        </Text>
+      </TouchableOpacity>
     );
-  }, [selectedCategoryId, subcategories, subcategoriesLoading, navigation]);
 
-  // 渲染项目（包括占位符）
-  const renderItem = useCallback(
-    ({
-      item,
-      index,
-    }: {
-      item: (Product & { _uniqueId?: number }) | null;
-      index: number;
-    }) => {
-      if (
-        index >= products.length &&
-        index < products.length + loadingPlaceholders
-      ) {
-        return <ProductSkeleton />;
+    if (showAllSubcategories) {
+      // 显示所有分类，每行5个，收起按钮放在最后一个分类后面
+      const itemsPerRow = 5;
+      const rows = [];
+      
+      for (let i = 0; i < subcategories.length; i += itemsPerRow) {
+        const rowItems = subcategories.slice(i, i + itemsPerRow);
+        rows.push(rowItems);
+      }
+      
+      // 在最后一行添加收起按钮
+      const lastRowIndex = rows.length - 1;
+      const lastRow = rows[lastRowIndex];
+      if (lastRow && lastRow.length < itemsPerRow) {
+        // 最后一行还有空间，在现有的React Fragment中直接添加收起按钮
+        // 不需要修改数组结构
       }
 
-      if (!item) {
-        return <ProductSkeleton />;
-      }
-
-      return renderProductItem({ item });
-    },
-    [products.length, loadingPlaceholders, renderProductItem],
-  );
-
-  // 键提取器
-  const keyExtractor = useCallback(
-    (item: (Product & { _uniqueId?: number }) | null, index: number) => {
-      if (!item) {
-        return `placeholder-${index}-${Date.now()}`;
-      }
-
-      return item._uniqueId
-        ? `product-${item._uniqueId}`
-        : `${item.offer_id}-${index}-${Date.now()}`;
-    },
-    [],
-  );
-
-  // 列表数据
-  const flatListData = useMemo(() => {
-    const baseData = [...products];
-    if (loadingPlaceholders > 0) {
-      const placeholders = Array(loadingPlaceholders).fill(null);
-      return [...baseData, ...placeholders];
-    }
-    return baseData;
-  }, [products, loadingPlaceholders]);
-
-  // 列表头部组件
-  const listHeaderComponent = useMemo(
-    () => (
-      <>
-        <FeatureNavigationBar />
-        <CarouselBanner onCameraPress={handleCameraPress} />
-        {renderSubcategorySection}
-      </>
-    ),
-    [handleCameraPress, renderSubcategorySection],
-  );
-
-  // 列表尾部组件
-  const listFooterComponent = useMemo(() => {
-    if (!hasMore && !loadingPlaceholders) {
       return (
-        <View style={{ padding: 8, alignItems: "center" }}>
-          <Text>{t("common.noMoreData")}</Text>
+        <View style={styles.subcategoryContainer}>
+          <View style={styles.subcategoryContent}>
+            {rows.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.subcategoryRow}>
+                {row.map(renderSubcategoryItem)}
+                {rowIndex === lastRowIndex && renderShowAllButton()}
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+    } else {
+      const itemsPerRow = 5;
+      const maxItemsWithoutShowAll = itemsPerRow * 2; // 10个
+
+      // 如果总数不超过10个，直接显示所有分类，不显示"全部"按钮
+      if (subcategories.length <= maxItemsWithoutShowAll) {
+        const rows = [];
+        for (let i = 0; i < subcategories.length; i += itemsPerRow) {
+          const rowItems = subcategories.slice(i, i + itemsPerRow);
+          rows.push(rowItems);
+        }
+
+        return (
+          <View style={styles.subcategoryContainer}>
+            <View style={styles.subcategoryContent}>
+              {rows.map((row, rowIndex) => (
+                <View key={rowIndex} style={styles.subcategoryRow}>
+                  {row.map(renderSubcategoryItem)}
+                </View>
+              ))}
+            </View>
+          </View>
+        );
+      }
+      
+      // 如果总数超过10个，显示前两排，第二排最后一个位置放"全部"按钮
+      const firstRow = subcategories.slice(0, itemsPerRow);
+      const secondRowItems = subcategories.slice(itemsPerRow, itemsPerRow * 2 - 1);
+
+      return (
+        <View style={styles.subcategoryContainer}>
+          <View style={styles.subcategoryContent}>
+            <View style={styles.subcategoryRow}>
+              {firstRow.map(renderSubcategoryItem)}
+            </View>
+            <View style={styles.subcategoryRow}>
+              {secondRowItems.map(renderSubcategoryItem)}
+              {renderShowAllButton()}
+            </View>
+          </View>
         </View>
       );
     }
-    if (loadingMore) {
-      return (
-        <View style={{ padding: 8, alignItems: "center" }}>
-          <Text>{t("loading")}</Text>
-        </View>
-      );
-    }
-    return null;
-  }, [hasMore, loadingPlaceholders, loadingMore, t]);
+  }, [selectedCategoryId, subcategories, subcategoriesLoading, showAllSubcategories, navigation, t]);
 
-  // 刷新控制
-  const refreshControl = useMemo(
-    () => (
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        colors={["#ff5100"]}
-        tintColor="#ff5100"
-        progressBackgroundColor="transparent"
-      />
-    ),
-    [refreshing, handleRefresh],
-  );
-
-  // 额外数据
-  const extraData = useMemo(
-    () =>
-      `${products.length}-${loadingPlaceholders}-${currencyVersion}`,
-    [products.length, loadingPlaceholders, currencyVersion],
-  );
-
-  // 列表内容容器样式
-  const flatListContentContainerStyle = useMemo(
-    () => ({
-      paddingBottom: 8,
-      backgroundColor: "#f5f5f5",
-    }),
-    [],
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -530,8 +595,8 @@ export const HomeScreen = () => {
             {renderCategorySection}
           </View>
 
-          {/* 登录弹窗 */}
-          {showLoginModal && !userStore.user?.user_id && (
+            {/* 登录弹窗 */}
+            {showLoginModal && !userStore.user?.user_id && (
             <>
               <TouchableOpacity
                 style={{
@@ -590,37 +655,23 @@ export const HomeScreen = () => {
             </>
           )}
 
-          {/* 可滚动内容区域 */}
+          {/* 多页面容器 */}
           <View style={styles.scrollableContent}>
-            {loading ? (
-              <ScrollView refreshControl={refreshControl}>
-                {listHeaderComponent}
-                {renderSkeletonGrid()}
-              </ScrollView>
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                data={flatListData}
-                numColumns={2}
-                showsVerticalScrollIndicator={false}
-                columnWrapperStyle={styles.productCardGroup}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                contentContainerStyle={flatListContentContainerStyle}
-                ListHeaderComponent={listHeaderComponent}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={3}
-                ListFooterComponent={listFooterComponent}
-                refreshControl={refreshControl}
-                initialNumToRender={6}
-                maxToRenderPerBatch={8}
-                windowSize={10}
-                removeClippedSubviews={Platform.OS !== "web"}
-                updateCellsBatchingPeriod={50}
-                getItemLayout={undefined}
-                extraData={extraData}
-              />
-            )}
+            <MultiPageContainer
+              allCategories={allCategories}
+              selectedCategoryId={selectedCategoryId}
+              onCategoryChange={handleCategoryChange}
+              getPageData={getPageData}
+              onLoadMore={loadMoreData}
+              onRefresh={refreshPageData}
+              onProductPress={handleProductPress}
+              onCameraPress={handleCameraPress}
+              userStore={memoizedUserStore}
+              t={t}
+              subcategories={subcategories}
+              subcategoriesLoading={subcategoriesLoading}
+              onSubcategoryPress={handleSubcategoryPress}
+            />
           </View>
 
           {/* 图片选择弹窗 */}
@@ -700,6 +751,154 @@ export const HomeScreen = () => {
                     {t("homePage.cancel")}
                   </Text>
                 </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {/* 分类选择弹窗 */}
+          {showCategoryModal && (
+            <>
+              <TouchableOpacity
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  zIndex: 999,
+                }}
+                activeOpacity={1}
+                onPress={() => setShowCategoryModal(false)}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "#fff",
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  height: "70%",
+                  zIndex: 1000,
+                }}
+              >
+                <View
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#f0f0f0",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "600",
+                      color: "#333",
+                    }}
+                  >
+                    {t("common.allCategories")}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowCategoryModal(false)}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      width: 24,
+                      height: 24,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <IconComponent name="close-outline" size={20} color="#666" />
+                  </TouchableOpacity>
+                </View>
+                
+                <ScrollView
+                  style={{
+                    flex: 1,
+                  }}
+                  contentContainerStyle={{
+                    paddingBottom: 20,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {/* 推荐选项 */}
+                  <TouchableOpacity
+                    style={{
+                      paddingHorizontal: 20,
+                      paddingVertical: 18,
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#f0f0f0",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                    onPress={() => {
+                      setSelectedCategoryId(-1);
+                      setShowCategoryModal(false);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: "#333",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      {t("common.recommendations")}
+                    </Text>
+                    {selectedCategoryId === -1 && (
+                      <IconComponent
+                        name="checkmark-outline"
+                        size={20}
+                        color="#ff5100"
+                      />
+                    )}
+                  </TouchableOpacity>
+                  
+                  {/* 其他分类选项 */}
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.category_id}
+                      style={{
+                        paddingHorizontal: 20,
+                        paddingVertical: 18,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#f0f0f0",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                      onPress={() => {
+                        setSelectedCategoryId(category.category_id);
+                        setShowCategoryModal(false);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: "#333",
+                          fontWeight: "normal",
+                        }}
+                      >
+                        {category.name}
+                      </Text>
+                      {selectedCategoryId === category.category_id && (
+                        <IconComponent
+                          name="checkmark-outline"
+                          size={20}
+                          color="#ff5100"
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             </>
           )}
