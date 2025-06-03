@@ -1,5 +1,7 @@
-import { Platform } from "react-native";
+import { Platform, AppState, AppStateStatus } from "react-native";
 import { create } from "zustand";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import useUserStore from "./user";
 import { sendAnalyticsData } from "../services/api/analyticsService";
 
@@ -110,15 +112,30 @@ const generateUniqueId = () => {
 // 创建唯一的session_id
 const SESSION_ID = generateUniqueId();
 
+// 本地存储key
+const ANALYTICS_STORAGE_KEY = 'analytics_pending_events';
+
+// 重试配置
+const RETRY_DELAYS = [1000, 5000, 15000]; // 1秒、5秒、15秒
+const MAX_EVENTS_STORAGE = 1000; // 最大存储事件数
+
+// 定义发送状态
+type SendingStatus = 'idle' | 'sending' | 'failed';
+
 // 定义分析数据store的状态
 type AnalyticsState = {
   device_id: string;
   version: string;
   session_id: string;
   event_list: AnalyticsEvent[];
+  sendingStatus: SendingStatus;
+  isOnline: boolean;
   addEvent: (event: AnalyticsEvent) => void;
-  // startTimer: () => void;
-  // stopTimer: () => void;
+  startTimer: () => void;
+  stopTimer: () => void;
+  sendDataWithRetry: () => Promise<void>;
+  loadPersistedData: () => Promise<void>;
+  persistData: () => Promise<void>;
   logAppLaunch: (isSuccess?: number) => void;
   logLogin: (isSuccess: boolean, loginMethod: string) => void;
   logRegister: (isSuccess: boolean, registerMethod: string) => void;
@@ -164,61 +181,149 @@ const getCurrentFormattedTime = (): string => {
 // 创建分析数据store
 const useAnalyticsStore = create<AnalyticsState>((set, get) => {
   // 定义定时器变量
-//   let analyticsDataTimer: NodeJS.Timeout | null = null;
+  let analyticsDataTimer: NodeJS.Timeout | null = null;
+  let retryTimer: NodeJS.Timeout | null = null;
+  
+  // 初始化网络监听
+  NetInfo.addEventListener(state => {
+    set({ isOnline: state.isConnected || false });
+    if (state.isConnected && get().event_list.length > 0) {
+      // 网络恢复时发送数据
+      get().sendDataWithRetry();
+    }
+  });
+  
+  // 监听应用状态变化
+  AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+    if (nextAppState === 'background' && get().event_list.length > 0) {
+      // 应用进入后台时发送数据
+      get().sendDataWithRetry();
+    }
+  });
 
   return {
     device_id: Platform.OS,
     version: generateUniqueId(),
     session_id: SESSION_ID,
     event_list: [],
+    sendingStatus: 'idle' as SendingStatus,
+    isOnline: true,
 
-    // 启动定时器
-    // startTimer: () => {
-    //   // 清除可能存在的旧定时器
-    //   if (analyticsDataTimer) {
-    //     clearInterval(analyticsDataTimer);
-    //   }
+    // 加载持久化数据
+    loadPersistedData: async () => {
+      try {
+        const stored = await AsyncStorage.getItem(ANALYTICS_STORAGE_KEY);
+        if (stored) {
+          const events = JSON.parse(stored);
+          set(state => ({ 
+            event_list: [...state.event_list, ...events].slice(-MAX_EVENTS_STORAGE)
+          }));
+        }
+      } catch (error) {
+        console.log('加载持久化数据失败:', error);
+      }
+    },
 
-    //   // 每10秒执行一次发送埋点数据
-    //   analyticsDataTimer = setInterval(() => {
-    //     const currentEventList = get().event_list;
+    // 持久化数据
+    persistData: async () => {
+      try {
+        const events = get().event_list;
+        if (events.length > 0) {
+          await AsyncStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(events));
+        }
+      } catch (error) {
+        console.log('持久化数据失败:', error);
+      }
+    },
+
+    // 带重试的数据发送
+    sendDataWithRetry: async (retryCount = 0) => {
+      const state = get();
+      
+      // 检查是否正在发送或无数据
+      if (state.sendingStatus === 'sending' || state.event_list.length === 0) {
+        return;
+      }
+
+      // 检查网络状态
+      if (!state.isOnline) {
+        await get().persistData();
+        return;
+      }
+
+      set({ sendingStatus: 'sending' });
+      
+      try {
+        const analyticsData = getAnalyticsData();
+        await sendAnalyticsData(analyticsData);
         
-    //     if (currentEventList.length > 0) {
-    //       console.log("Timer triggered, sending analytics data:", currentEventList.length, "events");
-    //       console.log(getAnalyticsData());
+        // 发送成功，清空数据
+        set({ event_list: [], sendingStatus: 'idle' });
+        await AsyncStorage.removeItem(ANALYTICS_STORAGE_KEY);
+        
+        console.log('数据发送成功:', analyticsData.event_list.length, 'events');
+        
+      } catch (error) {
+        console.log(`数据发送失败 (第${retryCount + 1}次):`, error);
+        
+        if (retryCount < RETRY_DELAYS.length - 1) {
+          // 重试
+          const delay = RETRY_DELAYS[retryCount];
+          retryTimer = setTimeout(() => {
+            get().sendDataWithRetry(retryCount + 1);
+          }, delay);
           
-    //       // 发送数据
-    //       sendAnalyticsData(currentEventList);
-          
-    //       // 清空本地数据
-    //       set({ event_list: [] });
-    //     }
-    //   }, 10000); // 10秒 = 10000毫秒
-    // },
+          set({ sendingStatus: 'failed' });
+        } else {
+          // 重试失败，持久化数据
+          set({ sendingStatus: 'failed' });
+          await get().persistData();
+        }
+      }
+    },
 
-    // // 停止定时器
-    // stopTimer: () => {
-    //   if (analyticsDataTimer) {
-    //     clearInterval(analyticsDataTimer);
-    //     analyticsDataTimer = null;
-    //   }
-    // },
+    // 智能定时器：只在有数据时启动
+    startTimer: () => {
+      if (analyticsDataTimer) {
+        clearTimeout(analyticsDataTimer);
+      }
+      
+      // 30秒后发送数据（如果有的话）
+      analyticsDataTimer = setTimeout(() => {
+        if (get().event_list.length > 0) {
+          get().sendDataWithRetry();
+        }
+      }, 30000); // 30秒
+    },
+
+    // 停止定时器
+    stopTimer: () => {
+      if (analyticsDataTimer) {
+        clearTimeout(analyticsDataTimer);
+        analyticsDataTimer = null;
+      }
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+    },
 
     // 添加事件
     addEvent: (event: AnalyticsEvent) => {
       set((state) => {
-        // 直接添加新事件到列表中
         const newEventList = [...state.event_list, event];
 
-        // 检查是否需要清理数据（当事件数量达到阈值时）
+        // 立即发送：事件数 >= 10
         if (newEventList.length >= 10) {
-          // 立即发送数据到服务器
-          console.log("Event count reached limit, sending data immediately:", newEventList.length);
-          console.log(getAnalyticsData());
-          sendAnalyticsData(newEventList);
-          
-          // 清空本地数据
-          return { event_list: [] };
+          console.log('事件数达到阈值，立即发送:', newEventList.length);
+          // 使用异步发送避免阻塞
+          setTimeout(() => get().sendDataWithRetry(), 0);
+          return { event_list: newEventList };
+        }
+        
+        // 启动智能定时器（只在第一个事件时）
+        if (newEventList.length === 1) {
+          get().startTimer();
         }
 
         return { event_list: newEventList };
@@ -478,24 +583,18 @@ export const getAnalyticsData = () => {
 
 export default useAnalyticsStore;
 
-// 定时器函数：每10秒发送一次分析数据
-// const startAnalyticsTimer = () => {
-//   setInterval(() => {
-//     const store = useAnalyticsStore.getState();
-//     const eventList = store.event_list;
-    
-//     if (eventList.length > 0) {
-//       console.log("Timer triggered, sending analytics data:", eventList.length, "events");
-//       console.log(getAnalyticsData());
-      
-//       // 发送数据
-//       sendAnalyticsData(eventList);
-      
-//       // 清空本地数据
-//       useAnalyticsStore.setState({ event_list: [] });
-//     }
-//   }, 10000); // 10秒 = 10000毫秒
-// };
+// 初始化analytics系统
+const initializeAnalytics = async () => {
+  const store = useAnalyticsStore.getState();
+  
+  // 加载持久化数据
+  await store.loadPersistedData();
+  
+  // 如果有数据且在线，尝试发送
+  if (store.event_list.length > 0 && store.isOnline) {
+    store.sendDataWithRetry();
+  }
+};
 
-// 自动启动分析数据定时器
-// startAnalyticsTimer();
+// 初始化时自动加载
+initializeAnalytics();
