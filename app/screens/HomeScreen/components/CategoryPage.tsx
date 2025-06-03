@@ -44,6 +44,7 @@ interface CategoryPageProps {
   subcategories?: any[]; // 二级分类数据
   subcategoriesLoading?: boolean; // 二级分类加载状态
   onSubcategoryPress?: (subcategoryId: number) => void; // 二级分类点击事件
+  onViewAllSubcategories?: (categoryId: number) => void; // 查看全部二级分类
 }
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({
@@ -59,10 +60,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   subcategories = [],
   subcategoriesLoading = false,
   onSubcategoryPress,
+  onViewAllSubcategories,
 }) => {
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const loadMoreRef = useRef(false); // 防止重复调用加载更多
+  
+  // 本地图片不需要预加载，直接使用即可
   
   // 当loading状态变化时重置防重复标志
   React.useEffect(() => {
@@ -145,6 +149,30 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     </TouchableOpacity>
   ), [onSubcategoryPress]);
 
+
+  // 渲染"查看全部"按钮
+  const renderViewAllButton = useCallback(() => (
+    <TouchableOpacity
+      key="view-all"
+      style={styles.subcategoryItem}
+      onPress={() => {
+        console.log(`[CategoryPage] 查看全部二级分类 - categoryId: ${categoryId}`);
+        onViewAllSubcategories?.(categoryId);
+      }}
+    >
+      <View style={styles.subcategoryImagePlaceholder}>
+        <IconComponent name="grid" size={20} color="#ff5100" />
+      </View>
+      <Text
+        style={[styles.subcategoryText, { color: '#ff5100', fontWeight: '600' }]}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {t('common.viewAll') || '查看全部'}
+      </Text>
+    </TouchableOpacity>
+  ), [categoryId, onViewAllSubcategories, t]);
+
   // 二级分类组件
   const subcategoryComponent = useMemo(() => {
     if (categoryId <= 0) return null;
@@ -162,11 +190,46 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     if (subcategories.length === 0) return null;
 
     const itemsPerRow = 5;
+    const maxRows = 3;
+    const maxItemsToShow = (maxRows * itemsPerRow) - 1; // 减1是为了给"查看全部"留位置
+    
+    // 如果分类数量少于等于最大显示数量，直接显示所有分类
+    if (subcategories.length <= maxItemsToShow) {
+      const rows = [];
+      for (let i = 0; i < subcategories.length; i += itemsPerRow) {
+        const rowItems = subcategories.slice(i, i + itemsPerRow);
+        rows.push(rowItems);
+      }
+
+      return (
+        <View style={styles.subcategoryContainer}>
+          <View style={styles.subcategoryContent}>
+            {rows.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.subcategoryRow}>
+                {row.map(renderSubcategoryItem)}
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    // 如果分类数量超过最大显示数量，显示部分分类+查看全部按钮
+    const itemsToShow = subcategories.slice(0, maxItemsToShow);
     const rows = [];
     
-    for (let i = 0; i < subcategories.length; i += itemsPerRow) {
-      const rowItems = subcategories.slice(i, i + itemsPerRow);
+    for (let i = 0; i < itemsToShow.length; i += itemsPerRow) {
+      const rowItems = itemsToShow.slice(i, i + itemsPerRow);
       rows.push(rowItems);
+    }
+
+    // 在最后一行的最后位置添加"查看全部"按钮
+    const lastRowIndex = rows.length - 1;
+    const lastRow = rows[lastRowIndex];
+    
+    // 如果最后一行已满，创建新行
+    if (lastRow.length === itemsPerRow) {
+      rows.push([]);
     }
 
     return (
@@ -175,12 +238,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           {rows.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.subcategoryRow}>
               {row.map(renderSubcategoryItem)}
+              {/* 在最后一行添加"查看全部"按钮 */}
+              {rowIndex === rows.length - 1 && renderViewAllButton()}
             </View>
           ))}
         </View>
       </View>
     );
-  }, [categoryId, subcategories, subcategoriesLoading, renderSubcategoryItem]);
+  }, [categoryId, subcategories, subcategoriesLoading, renderSubcategoryItem, renderViewAllButton, t]);
 
   // 列表头部组件
   const listHeaderComponent = useMemo(

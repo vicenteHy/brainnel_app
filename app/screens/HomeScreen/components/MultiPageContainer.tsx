@@ -36,6 +36,7 @@ interface MultiPageContainerProps {
   subcategories?: any[];
   subcategoriesLoading?: boolean;
   onSubcategoryPress?: (subcategoryId: number) => void;
+  onViewAllSubcategories?: (categoryId: number) => void;
 }
 
 export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
@@ -52,6 +53,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
   subcategories = [],
   subcategoriesLoading = false,
   onSubcategoryPress,
+  onViewAllSubcategories,
 }) => {
   const screenWidth = Dimensions.get('window').width;
   const translateX = useSharedValue(0);
@@ -169,6 +171,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
           subcategories={isActive ? subcategories : []}
           subcategoriesLoading={isActive ? subcategoriesLoading : false}
           onSubcategoryPress={onSubcategoryPress}
+          onViewAllSubcategories={onViewAllSubcategories}
         />
       );
     });
@@ -187,6 +190,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
     subcategories,
     subcategoriesLoading,
     onSubcategoryPress,
+    onViewAllSubcategories,
   ]);
 
   return (

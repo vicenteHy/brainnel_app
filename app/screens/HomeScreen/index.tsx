@@ -186,6 +186,21 @@ export const HomeScreen = () => {
     [navigation],
   );
 
+  // 处理查看全部二级分类
+  const handleViewAllSubcategories = useCallback(
+    (categoryId: number) => {
+      console.log(`[HomeScreen] 查看全部二级分类 - categoryId: ${categoryId}`);
+      InteractionManager.runAfterInteractions(() => {
+        // 可以导航到专门的二级分类页面，或者显示弹窗
+        // 这里示例导航到搜索结果页面，显示该一级分类下的所有产品
+        navigation.navigate("SearchResult", {
+          category_id: categoryId,
+        });
+      });
+    },
+    [navigation],
+  );
+
   // 处理相机按钮点击
   const handleCameraPress = useCallback(() => {
     setShowImagePickerModal(true);
@@ -671,6 +686,7 @@ export const HomeScreen = () => {
               subcategories={subcategories}
               subcategoriesLoading={subcategoriesLoading}
               onSubcategoryPress={handleSubcategoryPress}
+              onViewAllSubcategories={handleViewAllSubcategories}
             />
           </View>
 
