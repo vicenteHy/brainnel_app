@@ -288,5 +288,21 @@ export interface Category {
         return apiService.get<Category[]>(`/api/categories/level1/${parent_category_id}/children/`);
     },
 
+    // 获取个人推荐商品 (每次返回指定数量的随机产品)
+    getPersonalRecommendations: (params: { count: number; user_id?: number }) => {
+        const url = params.user_id 
+            ? `/api/products/personal-recommendations/?count=${params.count}&user_id=${params.user_id}` 
+            : `/api/products/personal-recommendations/?count=${params.count}`;
+        return apiService.get<Product[]>(url);
+    },
+
+    // 获取品类随机产品 (每次返回指定数量的随机产品)
+    getCategoryRandomProducts: (params: { category_id: number; count: number; user_id?: number }) => {
+        const url = params.user_id 
+            ? `/api/products/category/${params.category_id}/random/?count=${params.count}&user_id=${params.user_id}`
+            : `/api/products/category/${params.category_id}/random/?count=${params.count}`;
+        return apiService.get<Product[]>(url);
+    },
+
   }
 

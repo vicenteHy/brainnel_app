@@ -667,7 +667,12 @@
         "login_required": "Login Required",
         "error": "Error",
         "ok": "OK",
-        "something_went_wrong": "Something went wrong"
+        "something_went_wrong": "Something went wrong",
+        "collapse": "Collapse",
+        "viewAll": "View All",
+        "recommendations": "Recommendations",
+        "allCategories": "All Categories",
+        "categoryTab": "Category"
     },
     "loading_product_details": "Loading product details...",
     "profile": {

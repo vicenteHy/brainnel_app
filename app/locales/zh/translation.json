@@ -464,7 +464,12 @@
     },
     "common": {
         "cancel": "取消",
-        "confirm": "确认"
+        "confirm": "确认",
+        "collapse": "收起",
+        "viewAll": "全部",
+        "recommendations": "推荐",
+        "allCategories": "全部类别",
+        "categoryTab": "类目"
     },
     "loading_product_details": "加载商品详情中...",
     "profile": {

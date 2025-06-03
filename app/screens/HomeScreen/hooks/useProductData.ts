@@ -4,7 +4,7 @@ import { getCurrentLanguage } from '../../../i18n';
 import { eventBus } from '../../../utils/eventBus';
 import useUserStore from '../../../store/user';
 
-export const useProductData = () => {
+export const useProductData = (selectedCategoryId: number = -1) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -98,71 +98,49 @@ export const useProductData = () => {
 
   // 获取初始产品数据
   const fetchInitialProducts = useCallback(
-    async (keyword: string) => {
+    async (keyword?: string) => {
       setLoading(true);
       resetProductState();
       try {
-        const initialParams = {
-          ...params,
-          keyword,
-          page: 1,
-          page_size: 10,
-        };
-        
-        const firstPageRes = await productApi.getSearchProducts(initialParams);
-        const processedFirstPage = processProductData(firstPageRes.products);
+        if (selectedCategoryId === -1) {
+          // 推荐页面，获取个人推荐商品
+          const recommendedProducts = await productApi.getPersonalRecommendations({
+            count: 10,
+            ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+          });
+          const processedProducts = processProductData(recommendedProducts);
+          setProducts(processedProducts);
+          setTotalItems(recommendedProducts.length);
+          setCurrentPage(1);
+          setHasMore(true); // 推荐产品总是有更多（每次都是随机的）
+        } else if (selectedCategoryId > 0) {
+          // 特定类目页面 - 使用随机产品接口（一级类目）
+          const categoryProducts = await productApi.getCategoryRandomProducts({
+            category_id: selectedCategoryId,
+            count: 10,
+            ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+          });
+          const processedProducts = processProductData(categoryProducts);
 
-        setProducts(processedFirstPage);
-        setTotalItems(firstPageRes.total || 0);
-        
-        if (hotTerms.length > 0) {
-          const usedKeywords = new Set([keyword]);
-          
-          const getUniqueKeyword = () => {
-            if (hotTerms.length <= usedKeywords.size || hotTerms.length <= 1) {
-              return hotTerms[Math.floor(Math.random() * hotTerms.length)];
-            }
-            
-            let attempts = 0;
-            while (attempts < 10) {
-              const randomIndex = Math.floor(Math.random() * hotTerms.length);
-              const candidateKeyword = hotTerms[randomIndex];
-              if (!usedKeywords.has(candidateKeyword)) {
-                usedKeywords.add(candidateKeyword);
-                return candidateKeyword;
-              }
-              attempts++;
-            }
-            return hotTerms[Math.floor(Math.random() * hotTerms.length)];
-          };
-
-          const remainingRequests = Array.from(
-            { length: 3 },
-            async (_, index) => {
-              const pageKeyword = getUniqueKeyword();
-              const pageParams = {
-                ...params,
-                keyword: pageKeyword,
-                page: index + 2,
-                page_size: 10,
-              };
-              return productApi.getSearchProducts(pageParams);
-            },
-          );
-
-          const additionalResults = await Promise.all(remainingRequests);
-          const additionalProducts = additionalResults.flatMap(
-            (result) => result.products,
-          );
-          const processedAdditionalProducts = processProductData(additionalProducts);
-
-          setProducts((prev) => [...prev, ...processedAdditionalProducts]);
-          setCurrentPage(4);
-          setHasMore(
-            processedFirstPage.length + processedAdditionalProducts.length <
-              (firstPageRes.total || 0),
-          );
+          setProducts(processedProducts);
+          setTotalItems(categoryProducts.length);
+          setCurrentPage(1);
+          setHasMore(processedProducts.length > 0); // 只要API返回了产品就继续允许加载更多
         } else {
+          // 默认搜索逻辑（保留原有逻辑作为备用）
+          const searchKeyword = keyword || (hotTerms.length > 0 ? getRandomKeyword() : "pen");
+          const initialParams = {
+            ...params,
+            keyword: searchKeyword,
+            page: 1,
+            page_size: 10,
+          };
+          
+          const firstPageRes = await productApi.getSearchProducts(initialParams);
+          const processedFirstPage = processProductData(firstPageRes.products);
+
+          setProducts(processedFirstPage);
+          setTotalItems(firstPageRes.total || 0);
           setCurrentPage(1);
           setHasMore(processedFirstPage.length < (firstPageRes.total || 0));
         }
@@ -172,7 +150,7 @@ export const useProductData = () => {
         setLoading(false);
       }
     },
-    [params, hotTerms, processProductData, resetProductState],
+    [params, hotTerms, processProductData, resetProductState, selectedCategoryId, userStore.user?.user_id, getRandomKeyword],
   );
 
   // 加载更多产品
@@ -186,7 +164,6 @@ export const useProductData = () => {
     if (
       !hasMore ||
       loadingMore ||
-      hotTerms.length === 0 ||
       isRequestInProgress.current
     )
       return;
@@ -203,36 +180,95 @@ export const useProductData = () => {
         setLoadingMore(true);
         setLoadingPlaceholders(10);
         
-        const newKeyword = getRandomKeyword();
-        const loadMoreParams = {
-          ...params,
-          keyword: newKeyword,
-          page: currentPage + 1,
-          page_size: 10,
-        };
+        if (selectedCategoryId === -1) {
+          // 推荐页面加载更多
+          productApi
+            .getPersonalRecommendations({
+              count: 10,
+              ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+            })
+            .then((newProducts) => {
+              const processedNewProducts = processProductData(newProducts);
 
-        productApi
-          .getSearchProducts(loadMoreParams)
-          .then((res) => {
-            const processedNewProducts = processProductData(res.products);
+              setProducts((prev) => {
+                setHasMore(processedNewProducts.length > 0); // 只要API返回了产品就继续允许加载更多
+                return [...prev, ...processedNewProducts];
+              });
 
-            setProducts((prev) => {
-              const newTotal = prev.length + processedNewProducts.length;
-              setHasMore(newTotal < (res.total || 0));
-              return [...prev, ...processedNewProducts];
+              setCurrentPage((prev) => prev + 1);
+            })
+            .catch((error) => {
+              console.error("加载更多推荐失败:", error);
+            })
+            .finally(() => {
+              setLoadingMore(false);
+              setLoadingPlaceholders(0);
+              isRequestInProgress.current = false;
+              executeNextRequest();
             });
+        } else {
+          // 类目页面和搜索页面加载更多
+          if (selectedCategoryId > 0) {
+            // 类目页面加载更多 - 使用随机产品接口（一级类目）
+            productApi
+              .getCategoryRandomProducts({
+                category_id: selectedCategoryId,
+                count: 10,
+                ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+              })
+              .then((newProducts) => {
+                const processedNewProducts = processProductData(newProducts);
 
-            setCurrentPage((prev) => prev + 1);
-          })
-          .catch((error) => {
-            console.error("加载更多失败:", error);
-          })
-          .finally(() => {
-            setLoadingMore(false);
-            setLoadingPlaceholders(0);
-            isRequestInProgress.current = false;
-            executeNextRequest();
-          });
+                setProducts((prev) => {
+                  setHasMore(processedNewProducts.length > 0); // 只要API返回了产品就继续允许加载更多
+                  return [...prev, ...processedNewProducts];
+                });
+
+                setCurrentPage((prev) => prev + 1);
+              })
+              .catch((error) => {
+                console.error("加载更多品类产品失败:", error);
+              })
+              .finally(() => {
+                setLoadingMore(false);
+                setLoadingPlaceholders(0);
+                isRequestInProgress.current = false;
+                executeNextRequest();
+              });
+          } else {
+            // 默认搜索加载更多
+            const newKeyword = getRandomKeyword();
+            const loadMoreParams = {
+              ...params,
+              keyword: newKeyword,
+              page: currentPage + 1,
+              page_size: 10,
+            };
+
+            productApi
+              .getSearchProducts(loadMoreParams)
+              .then((res) => {
+                const processedNewProducts = processProductData(res.products);
+
+                setProducts((prev) => {
+                  const newTotal = prev.length + processedNewProducts.length;
+                  setHasMore(newTotal < (res.total || 0));
+                  return [...prev, ...processedNewProducts];
+                });
+
+                setCurrentPage((prev) => prev + 1);
+              })
+              .catch((error) => {
+                console.error("加载更多搜索产品失败:", error);
+              })
+              .finally(() => {
+                setLoadingMore(false);
+                setLoadingPlaceholders(0);
+                isRequestInProgress.current = false;
+                executeNextRequest();
+              });
+          }
+        }
       };
 
       addToRequestQueue(loadMoreRequest);
@@ -240,7 +276,7 @@ export const useProductData = () => {
   }, [
     hasMore,
     loadingMore,
-    hotTerms,
+    selectedCategoryId,
     getRandomKeyword,
     params,
     currentPage,
@@ -251,18 +287,27 @@ export const useProductData = () => {
 
   // 刷新产品列表
   const handleRefresh = useCallback(async () => {
-    if (hotTerms.length === 0) return;
     setRefreshing(true);
     try {
-      const refreshKeyword = getRandomKeyword();
-      console.log("刷新，使用关键词:", refreshKeyword);
-      await fetchInitialProducts(refreshKeyword);
+      if (selectedCategoryId === -1) {
+        // 推荐页面刷新
+        await fetchInitialProducts();
+      } else if (selectedCategoryId > 0) {
+        // 类目页面刷新
+        await fetchInitialProducts();
+      } else {
+        // 默认搜索刷新
+        if (hotTerms.length === 0) return;
+        const refreshKeyword = getRandomKeyword();
+        console.log("刷新，使用关键词:", refreshKeyword);
+        await fetchInitialProducts(refreshKeyword);
+      }
     } catch (error) {
       console.error("刷新失败:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [hotTerms, getRandomKeyword, fetchInitialProducts]);
+  }, [selectedCategoryId, hotTerms, getRandomKeyword, fetchInitialProducts]);
 
   // 初始化应用数据
   useEffect(() => {
@@ -272,26 +317,22 @@ export const useProductData = () => {
         const terms = response.terms || [];
         setHotTerms(terms);
         
-        if (terms.length > 0) {
-          const randomIndex = Math.floor(Math.random() * terms.length);
-          const randomKeyword = terms[randomIndex];
-          
-          setParams((prev) => ({
-            ...prev,
-            keyword: randomKeyword,
-          }));
-          
-          await fetchInitialProducts(randomKeyword);
-        } else {
-          await fetchInitialProducts("pen");
-        }
+        // 根据当前选中的类目ID加载对应数据
+        await fetchInitialProducts();
       } catch (error) {
         console.error("初始化失败:", error);
-        await fetchInitialProducts("pen");
+        await fetchInitialProducts();
       }
     };
     initApp();
   }, []);
+
+  // 当selectedCategoryId变化时重新加载数据
+  useEffect(() => {
+    if (hotTerms.length > 0) {
+      fetchInitialProducts();
+    }
+  }, [selectedCategoryId, fetchInitialProducts]);
 
   // 监听设置变更事件
   useEffect(() => {

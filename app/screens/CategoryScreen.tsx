@@ -22,9 +22,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
 import { getSubCategoryTransLanguage } from "../utils/languageUtils";
 import useAnalyticsStore from "../store/analytics";
+import BackIcon from "../components/BackIcon";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const MENU_WIDTH = widthUtils(120, 120).width;
+const MENU_WIDTH = widthUtils(140, 140).width; // 增加菜单宽度
 const AVAILABLE_WIDTH = SCREEN_WIDTH - MENU_WIDTH - 20; // 20 for padding
 const NUM_COLUMNS = 4;
 const ITEM_MARGIN = "2.66%";
@@ -134,7 +135,7 @@ export const CategoryScreen = () => {
           styles.menuText,
           item.category_id === activeMainCategory && styles.menuTextActive,
         ]}
-        numberOfLines={1}
+        numberOfLines={3}
         ellipsizeMode="tail"
       >
         {getSubCategoryTransLanguage(item)}
@@ -182,6 +183,17 @@ export const CategoryScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.safeAreaContent}>
+        {/* 添加页面头部 */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <BackIcon size={fontSize(24)} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Catégories</Text>
+          <View style={styles.placeholder} />
+        </View>
         <View style={styles.container}>
           <View style={styles.leftMenu}>
             <FlatList
@@ -225,28 +237,57 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === "android" ? 0 : 0,
   },
+  header: {
+    height: 60,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  backButton: {
+    padding: 5,
+  },
+  placeholder: {
+    width: fontSize(24) + 10,
+  },
+  headerTitle: {
+    fontSize: fontSize(18),
+    fontWeight: "bold",
+    color: "#333",
+  },
   container: {
     flex: 1,
     flexDirection: "row",
   },
   leftMenu: {
     width: MENU_WIDTH,
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
     borderRightWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#fff",
   },
   menuItem: {
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: "center",
+    justifyContent: "center",
     borderBottomWidth: 1,
     borderColor: "#f0f0f0",
+    minHeight: 60,
   },
   menuItemActive: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
+    borderRightWidth: 1,
+    borderRightColor: "#fff",
   },
   menuText: {
-    fontSize: fontSize(14),
+    fontSize: fontSize(12),
     color: "#333",
+    textAlign: "center",
+    lineHeight: fontSize(14),
+    flexWrap: "wrap",
   },
   menuTextActive: {
     color: "#e60012",
@@ -282,13 +323,15 @@ const styles = StyleSheet.create({
   },
   subCategoryInfo: {
     padding: 8,
-    // height: widthUtils(32, 32).height,
+    minHeight: 45,
     justifyContent: "center",
     alignItems: "center",
   },
   subCategoryName: {
-    fontSize: fontSize(12),
+    fontSize: fontSize(11),
     color: "#333",
     textAlign: "center",
+    lineHeight: fontSize(13),
+    flexWrap: "wrap",
   },
 });

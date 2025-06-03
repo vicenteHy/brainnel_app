@@ -24,6 +24,8 @@ export type StylesType = {
   category: ViewStyle;
   categoryScrollContainer: ViewStyle;
   categoryScroll: ViewStyle;
+  viewAllButton: ViewStyle;
+  categoryFadeOverlay: ViewStyle;
   categoryItem: ViewStyle;
   categoryItemActive: ViewStyle;
   categoryText: TextStyle;
@@ -161,19 +163,37 @@ export const styles = StyleSheet.create<StylesType>({
   category: {
     width: "100%",
     paddingVertical: 5,
-    paddingBottom: 8,
+    paddingBottom: 2,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 2,
     backgroundColor: "#fff",
   },
   categoryScrollContainer: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     position: "relative",
     overflow: "hidden",
   },
   categoryScroll: {
+    flex: 1,
     paddingHorizontal: 10,
+  },
+  viewAllButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    marginRight: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoryFadeOverlay: {
+    position: "absolute",
+    right: 40,
+    top: 0,
+    bottom: 0,
+    width: 30,
+    zIndex: 1,
   },
   categoryItem: {
     paddingHorizontal: 12,
@@ -284,9 +304,10 @@ export const styles = StyleSheet.create<StylesType>({
     fontWeight: "500",
   },
   subcategoryContainer: {
-    height: 240,
+    minHeight: 120,
     backgroundColor: "#fff",
     marginBottom: 8,
+    paddingVertical: 10,
   },
   subcategoryScroll: {
     flex: 1,
@@ -312,31 +333,34 @@ export const styles = StyleSheet.create<StylesType>({
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
-    height: 105,
-    flex: 1,
+    height: 85,
+    marginBottom: 5,
   },
   subcategoryItem: {
     alignItems: "center",
     width: (Dimensions.get("window").width - 20) / 5,
-    height: 100,
+    height: 85,
     marginHorizontal: 0,
+    paddingBottom: 5,
   },
   subcategoryImagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subcategoryText: {
-    fontSize: fontSize(12),
+    fontSize: fontSize(9),
     color: "#333",
     textAlign: "center",
     fontFamily: "Alexandria",
     width: "100%",
-    lineHeight: fontSize(14),
+    lineHeight: fontSize(11),
+    paddingHorizontal: 1,
+    height: 22,
   },
   productContainer: {
     flex: 1,

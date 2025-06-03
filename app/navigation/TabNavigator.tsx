@@ -149,8 +149,8 @@ export const TabNavigator = () => {
     <>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: '#0066FF',
-          tabBarInactiveTintColor: '#999999',
+          tabBarActiveTintColor: '#FF6600',
+          tabBarInactiveTintColor: '#000000',
           tabBarStyle: {
             backgroundColor: '#FFFFFF',
             borderTopWidth: 1,
@@ -182,7 +182,7 @@ export const TabNavigator = () => {
           name="productCollection"
           component={CategoryScreen}
           options={{
-            tabBarLabel: t('categories'),
+            tabBarLabel: t('common.categoryTab'),
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
               <IconComponent name="grid-outline" size={size} color={color} />
             ),
