@@ -33,6 +33,7 @@ import useUserStore from "../../store/user";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useGlobalStore } from "../../store/useGlobalStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // 导入拆分的组件
 import {
@@ -87,12 +88,28 @@ export const HomeScreen = () => {
       });
     };
   }, []);
+
+  // 加载用户是否已关闭过登录弹窗的状态
+  useEffect(() => {
+    const loadDismissedLoginModalState = async () => {
+      try {
+        const dismissed = await AsyncStorage.getItem('@login_modal_dismissed');
+        if (dismissed === 'true') {
+          setHasUserDismissedLoginModal(true);
+        }
+      } catch (error) {
+        console.error('加载登录弹窗关闭状态失败:', error);
+      }
+    };
+    loadDismissedLoginModalState();
+  }, []);
   
   // 本地状态
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(-1); // -1 表示推荐页
   const [galleryUsed, setGalleryUsed] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false); // 不依赖userStore初始化，在useEffect中处理
+  const [hasUserDismissedLoginModal, setHasUserDismissedLoginModal] = useState(false); // 用户是否已关闭过登录弹窗
 
   // 调试selectedCategoryId变化
   useEffect(() => {
@@ -267,6 +284,18 @@ export const HomeScreen = () => {
     setShowImagePickerModal(true);
   }, []);
 
+  // 处理关闭登录弹窗
+  const handleDismissLoginModal = useCallback(async () => {
+    setShowLoginModal(false);
+    setHasUserDismissedLoginModal(true);
+    try {
+      await AsyncStorage.setItem('@login_modal_dismissed', 'true');
+      console.log('[HomeScreen] 用户关闭登录弹窗，已保存状态');
+    } catch (error) {
+      console.error('保存登录弹窗关闭状态失败:', error);
+    }
+  }, []);
+
   // 图片选择器相关函数
   const cleanupImagePickerCache = async () => {
     try {
@@ -376,14 +405,23 @@ export const HomeScreen = () => {
     fetchCategories();
   }, []); // 只在组件挂载时执行一次
 
-  // 当分类数据加载完成后，进行初始定位
+  // 当分类数据加载完成后，进行初始定位并加载推荐数据
   useEffect(() => {
     if (categories.length > 0) {
       setTimeout(() => {
         scrollCategoryToCenter(selectedCategoryId, true); // 使用immediate模式
+        
+        // 自动加载推荐页面数据
+        if (selectedCategoryId === -1) {
+          const pageData = getPageData(-1);
+          if (!pageData.initialized || pageData.products.length === 0) {
+            console.log('[HomeScreen] 自动加载推荐页面数据');
+            loadPageData(-1);
+          }
+        }
       }, 150); // 稍微增加延迟确保DOM完全更新
     }
-     }, [categories.length, selectedCategoryId, scrollCategoryToCenter]); // 添加必要依赖
+  }, [categories.length, selectedCategoryId, scrollCategoryToCenter, getPageData, loadPageData]); // 添加必要依赖
 
   // 获取二级类目
   useEffect(() => {
@@ -412,15 +450,24 @@ export const HomeScreen = () => {
   useEffect(() => {
     if (userStore.user?.user_id) {
       setShowLoginModal(false);
-      // 不再自动刷新数据，等用户手动触发
-      // if (selectedCategoryId === -1) {
-      //   refreshPageData(-1);
-      // }
+      // 用户登录成功后，重置弹窗关闭状态，这样下次未登录时可以再次显示
+      setHasUserDismissedLoginModal(false);
+      AsyncStorage.removeItem('@login_modal_dismissed').catch(console.error);
+      
+      // 用户登录后，如果当前在推荐页面，刷新数据以获取个性化推荐
+      if (selectedCategoryId === -1) {
+        setTimeout(() => {
+          console.log('[HomeScreen] 用户登录后刷新推荐数据');
+          refreshPageData(-1);
+        }, 500); // 稍微延迟，确保登录状态完全更新
+      }
     } else {
-      // 用户未登录时显示登录弹窗
-      setShowLoginModal(true);
+      // 用户未登录且未关闭过弹窗时才显示登录弹窗
+      if (!hasUserDismissedLoginModal) {
+        setShowLoginModal(true);
+      }
     }
-  }, [userStore.user?.user_id]);
+  }, [userStore.user?.user_id, selectedCategoryId, refreshPageData, hasUserDismissedLoginModal]);
 
 
   // 渲染分类区域（性能优化版）
@@ -686,7 +733,7 @@ export const HomeScreen = () => {
                   zIndex: 999,
                 }}
                 activeOpacity={1}
-                onPress={() => setShowLoginModal(false)}
+                onPress={handleDismissLoginModal}
               />
               <View
                 style={{
@@ -707,7 +754,7 @@ export const HomeScreen = () => {
               >
                 <TouchableOpacity
                   style={loginModalStyles.closeButton}
-                  onPress={() => setShowLoginModal(false)}
+                  onPress={handleDismissLoginModal}
                 >
                   <Text style={loginModalStyles.closeButtonText}>×</Text>
                 </TouchableOpacity>
@@ -720,7 +767,7 @@ export const HomeScreen = () => {
                 <TouchableOpacity
                   style={loginModalStyles.loginButton}
                   onPress={() => {
-                    setShowLoginModal(false);
+                    handleDismissLoginModal();
                     navigation.navigate("Login");
                   }}
                 >

@@ -656,7 +656,8 @@
         "viewAll": "View All",
         "recommendations": "Recommendations",
         "allCategories": "All Categories",
-        "categoryTab": "Category"
+        "categoryTab": "Category",
+        "loading": "Loading..."
     },
     "loading_product_details": "Loading product details...",
     "profile": {

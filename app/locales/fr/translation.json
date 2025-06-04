@@ -781,7 +781,8 @@
         "recommendations": "Recommandations",
         "allCategories": "Toutes les catégories",
         "categoryTab": "Catégorie",
-        "success": "Succès"
+        "success": "Succès",
+        "loading": "Chargement..."
     },
     "categories": {
         "daily_use": "Quotidien",
