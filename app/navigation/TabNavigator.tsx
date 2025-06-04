@@ -156,9 +156,17 @@ export const TabNavigator = () => {
             borderTopWidth: 1,
             borderTopColor: '#F0F0F0',
             display: keyboardVisible ? 'none' : 'flex',
-            paddingBottom: insets.bottom + 14,
-            height: 60 + insets.bottom,
-            paddingTop: 10,
+            paddingBottom: insets.bottom + 8,
+            height: 75 + insets.bottom,
+            paddingTop: 8,
+          },
+          tabBarLabelStyle: {
+            fontSize: 10,
+            marginTop: 2,
+            marginBottom: 4,
+          },
+          tabBarIconStyle: {
+            marginTop: 4,
           },
           headerShown: false,
         }}

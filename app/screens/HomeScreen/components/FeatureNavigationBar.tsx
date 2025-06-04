@@ -35,10 +35,7 @@ export const FeatureNavigationBar = React.memo(() => {
           />
         </View>
         <Text style={styles.featureNavText}>
-          {t(
-            "featureNav.internationalShipping",
-            "Frais d'expédition\nInternational",
-          )}
+          {t("featureNav.internationalShipping")}
         </Text>
       </TouchableOpacity>
 
@@ -54,7 +51,7 @@ export const FeatureNavigationBar = React.memo(() => {
           />
         </View>
         <Text style={styles.featureNavText}>
-          {t("featureNav.tiktokSection", "Section TikTok")}
+          {t("featureNav.tiktokSection")}
         </Text>
       </TouchableOpacity>
 
@@ -70,7 +67,7 @@ export const FeatureNavigationBar = React.memo(() => {
           />
         </View>
         <Text style={styles.featureNavText}>
-          {t("featureNav.getQuote", "Obtenir un devis")}
+          {t("featureNav.getQuote")}
         </Text>
       </TouchableOpacity>
     </View>

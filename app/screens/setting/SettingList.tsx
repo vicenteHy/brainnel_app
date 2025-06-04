@@ -61,7 +61,6 @@ export const SettingList = () => {
   // 简单的测试函数
   const testLogout = () => {
     console.log("Test logout function called!");
-    Alert.alert("测试", "退出登录按钮点击成功！");
   };
 
   const handleLogout = async () => {

@@ -108,7 +108,7 @@ export const InquiryScreen = () => {
         }
       } catch (error: any) {
         console.error("相册错误:", error);
-        Alert.alert("错误", "选择图片时出现错误");
+        Alert.alert(t("common.error"), t("banner.inquiry.gallery_error"));
       } finally {
         await cleanupImagePickerCache();
       }
@@ -147,7 +147,7 @@ export const InquiryScreen = () => {
         }
       } catch (error: any) {
         console.error("相机错误:", error);
-        Alert.alert("错误", "拍照时出现错误");
+        Alert.alert(t("common.error"), t("banner.inquiry.camera_error"));
       } finally {
         await cleanupImagePickerCache();
       }
@@ -205,7 +205,7 @@ export const InquiryScreen = () => {
           });
         } catch (error) {
           console.error("读取图片文件失败:", error);
-          Alert.alert("错误", "图片处理失败，请重新选择图片");
+          Alert.alert(t("common.error"), t("banner.inquiry.image_process_error"));
           setIsSubmitting(false);
           return;
         }
@@ -249,14 +249,14 @@ export const InquiryScreen = () => {
           link: "",
           remark: "",
         });
-        Alert.alert("成功", "询价提交成功");
+        Alert.alert(t("common.success"), t("banner.inquiry.submit_success"));
       } catch (error: any) {
         console.error("创建询盘出错:", error);
-        Alert.alert("错误", "提交询价失败，请重试");
+        Alert.alert(t("common.error"), t("banner.inquiry.submit_failed"));
       }
     } catch (error: any) {
       console.error("Error creating inquiry:", error);
-      Alert.alert("错误", "提交过程中出现错误");
+      Alert.alert(t("common.error"), t("banner.inquiry.submit_error"));
     } finally {
       setIsSubmitting(false);
     }

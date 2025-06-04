@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
   Image,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AddressIcon from "../../components/AddressIcon";
@@ -35,6 +36,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { payApi, PaymentMethodsResponse } from "../../services/api/payApi";
 import useOrderStore from '../../store/order';
+import { useTranslation } from 'react-i18next';
 
 
 interface PaymentOption {
@@ -128,6 +130,7 @@ export function Recipient({
   const [currentTab, setCurrentTab] = useState("online");
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodsResponse>();
+  const { t } = useTranslation();
 
   const getAddress = async () => {
     const response = await addressApi.addressesDefault();
@@ -350,11 +353,11 @@ export function Recipient({
   const createOrder = async () => {
     
     if (!defaultAddress) {
-      alert('请添加收件人信息');
+      Alert.alert(t('order.preview.login_required'), t('order.preview.add_recipient_required'));
       return;
     }
     if (!selectedPayment) {
-      alert('请选择支付方式');
+      Alert.alert(t('order.preview.login_required'), t('order.preview.select_payment_required'));
       return;
     }  
 
@@ -718,7 +721,7 @@ export function Recipient({
                 {domesticShippingFee?.currency ? (
                   <Text>{domesticShippingFee?.total_shipping_fee}</Text>
                 ) : (
-                  <Text>报价中...</Text>
+                  <Text>{t('order.preview.calculating')}</Text>
                 )}
               </View>
 

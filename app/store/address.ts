@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { addressApi } from "../services/api/addressApi";
+import i18n from "../i18n";
 
 interface Address {
   receiver_first_name: string;
@@ -65,7 +66,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : "Failed to fetch addresses",
+          error instanceof Error ? error.message : i18n.t("address.errors.fetch_failed"),
         loading: false,
       });
     }
@@ -81,7 +82,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
       set({ loading: false });
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : "Failed to add address",
+        error: error instanceof Error ? error.message : i18n.t("address.errors.add_failed"),
         loading: false,
       });
     }
@@ -124,7 +125,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : "Failed to update address",
+          error instanceof Error ? error.message : i18n.t("address.errors.update_failed"),
         loading: false,
       });
     }
@@ -146,7 +147,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : "Failed to delete address",
+          error instanceof Error ? error.message : i18n.t("address.errors.delete_failed"),
         loading: false,
       });
     }
@@ -164,7 +165,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
         set({
           defaultAddress: null,
           loading: false,
-          error: "No default address found",
+          error: i18n.t("address.errors.no_default_found"),
         });
         return;
       }
@@ -182,7 +183,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
         error:
           error instanceof Error
             ? error.message
-            : "Failed to fetch default address",
+            : i18n.t("address.errors.fetch_default_failed"),
         loading: false,
       });
     }

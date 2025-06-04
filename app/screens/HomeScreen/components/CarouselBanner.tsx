@@ -18,15 +18,15 @@ export const CarouselBanner = React.memo(
     const data = useMemo(
       () => [
         {
-          imgUrl: require("../../../../assets/img/banner en (5)_compressed.png"),
+          imgUrl: require("../../../../assets/img/Group 1993.png"),
           add: "TikTokScreen",
         },
         {
-          imgUrl: require("../../../../assets/img/banner en (3)_compressed.png"),
+          imgUrl: require("../../../../assets/img/Group 1994.png"),
           add: "MemberIntroduction",
         },
         {
-          imgUrl: require("../../../../assets/img/banner en (4)_compressed.png"),
+          imgUrl: require("../../../../assets/img/Group 1995.png"),
           add: "CompanyScreen",
         },
       ],
@@ -50,7 +50,7 @@ export const CarouselBanner = React.memo(
           loop
           width={screenWidth}
           data={data}
-          height={300}
+          height={200}
           modeConfig={{
             parallaxScrollingScale: 0.9,
             parallaxScrollingOffset: 50,

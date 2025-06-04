@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +15,7 @@ import useOrderStore from '../../store/order';
 import widthUtils from '../../utils/widthUtils';
 import { ordersApi } from '../../services/api/orders';
 import { Order } from '../../services/api/orders';
-import { t } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 interface OrderStore {
   order: any;
@@ -29,6 +30,7 @@ export function ConfirmOrder() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const orderInfo = useOrderStore() as unknown as OrderStore;
   const [order, setOrder] = useState<Order>();
+  const { t } = useTranslation();
 
   const getOrder = async () => {
     const data = orderInfo.order;
@@ -39,7 +41,7 @@ export function ConfirmOrder() {
     } catch (error) {
       navigation.goBack();
       console.error('创建订单失败:', error);
-      alert('创建订单失败，请重试');
+      Alert.alert(t('common.error'), t('order.create_failed'));
     }
   };
 
@@ -106,7 +108,7 @@ export function ConfirmOrder() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>👤</Text>
-            <Text style={styles.sectionTitle}>收件人信息</Text>
+            <Text style={styles.sectionTitle}>{t('confirmOrder.recipientInfo')}</Text>
           </View>
           <View style={styles.recipientInfo}>
             <Text style={styles.recipientName}>{order?.receiver_name}</Text>

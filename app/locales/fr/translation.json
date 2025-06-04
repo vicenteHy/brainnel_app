@@ -257,13 +257,18 @@
     "order.check_logistics": "Vérifier la logistique",
     "order.confirm_receipt": "Confirmer la réception",
     "order.pay_now": "Payer maintenant",
-    "order.reorder": "Commander à nouveau",
-    "order.unable_to_load": "Impossible de charger le statut de la commande",
-    "order.select_payment": "Moyens de paiement",
-    "order.select_currency": "Sélectionner la devise",
-    "order.confirm_payment": "Confirmer le paiement",
-    "order.add_cart_success": "Ajout au panier réussi",
-    "order.error.add_cart": "Échec de l'ajout au panier",
+    "order": {
+        "reorder": "Commander à nouveau",
+        "unable_to_load": "Impossible de charger les détails de la commande",
+        "select_payment": "Moyens de paiement",
+        "select_currency": "Sélectionner la devise",
+        "confirm_payment": "Confirmer le paiement",
+        "add_cart_success": "Ajout au panier réussi",
+        "create_failed": "Échec de création de commande, veuillez réessayer",
+        "error": {
+            "add_cart": "Échec de l'ajout au panier"
+        }
+    },
     "member.introduction": "Avantages pour les membres",
     "member.client_service": "Service Client",
     "member.vip.spend_more_text": "Dépensez plus pour améliorer votre niveau VIP",
@@ -310,7 +315,7 @@
     "address": {
         "select_recipient": "Sélectionner le destinataire",
         "first_name": "Prénom",
-        "last_name": "Nom",
+        "last_name": "Nom de famille",
         "country": "Pays",
         "phone_number": "Numéro de téléphone",
         "confirm_phone_number": "Confirmer le numéro de téléphone",
@@ -322,19 +327,25 @@
         "close": "Fermer",
         "placeholder": {
             "first_name": "Veuillez entrer le prénom",
-            "last_name": "Veuillez entrer le nom",
+            "last_name": "Veuillez entrer le nom de famille",
             "select_country": "Veuillez sélectionner un pays",
             "phone_number": "Veuillez entrer le numéro de téléphone",
-            "confirm_phone_number": "Veuillez confirmer le numéro de téléphone",
+            "confirm_phone_number": "Veuillez re-entrer le numéro de téléphone",
             "whatsapp": "Veuillez entrer le numéro WhatsApp"
         },
         "errors": {
             "first_name_required": "Veuillez entrer le prénom",
-            "last_name_required": "Veuillez entrer le nom",
+            "last_name_required": "Veuillez entrer le nom de famille",
             "phone_required": "Veuillez entrer le numéro de téléphone",
-            "confirm_phone_required": "Veuillez confirmer le numéro de téléphone",
+            "confirm_phone_required": "Veuillez re-entrer le numéro de téléphone",
             "phone_mismatch": "Les numéros de téléphone ne correspondent pas",
-            "whatsapp_required": "Veuillez entrer le numéro WhatsApp"
+            "whatsapp_required": "Veuillez entrer le numéro WhatsApp",
+            "fetch_failed": "Échec de récupération des adresses",
+            "add_failed": "Échec d'ajout de l'adresse",
+            "update_failed": "Échec de mise à jour de l'adresse",
+            "delete_failed": "Échec de suppression de l'adresse",
+            "no_default_found": "Aucune adresse par défaut trouvée",
+            "fetch_default_failed": "Échec de récupération de l'adresse par défaut"
         },
         "add_new": "Ajouter une nouvelle adresse",
         "default": "Par défaut",
@@ -374,7 +385,10 @@
         "wave": "Paiement Wave",
         "balance": "Paiement par solde",
         "bank_transfer": "Virement bancaire",
-        "cash": "Paiement en espèces"
+        "cash": "Paiement en espèces",
+        "add_recipient_required": "Veuillez ajouter les informations du destinataire",
+        "select_payment_required": "Veuillez sélectionner un mode de paiement",
+        "calculating": "Calcul en cours..."
     },
     "payment": {
         "select_currency": "Sélectionner la devise", 
@@ -468,6 +482,13 @@
     },
     "searchCountry": "Rechercher un pays",
     "noCountriesFound": "Aucun pays trouvé",
+    "shipping": {
+        "errors": {
+            "fetch_forwarder_failed": "Échec de récupération de l'adresse du transitaire",
+            "calculate_shipping_failed": "Échec du calcul des frais d'expédition",
+            "calculate_domestic_failed": "Échec du calcul des frais d'expédition nationale"
+        }
+    },
     "typingMessage": "En cours de frappe",
     "defaultResponse": "Merci pour votre message. Notre équipe vous répondra sous peu.",
     "errorResponse": "Désolé, une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer plus tard.",
@@ -601,7 +622,12 @@
             "in_progress": "En cours",
             "completed": "Terminé",
             "network_error": "Erreur de connexion réseau, veuillez vérifier vos paramètres réseau",
-            "image_process_error": "Impossible de traiter le fichier image, veuillez essayer une autre image ou vérifier la source de l'image"
+            "image_process_error": "Impossible de traiter le fichier image, veuillez essayer une autre image ou vérifier la source de l'image",
+            "gallery_error": "Erreur lors de la sélection d'image",
+            "camera_error": "Erreur lors de la prise de photo",
+            "submit_success": "Demande soumise avec succès",
+            "submit_failed": "Échec de soumission de la demande, veuillez réessayer",
+            "submit_error": "Erreur survenue lors de la soumission"
         },
         "tiktok": {
             "store": "Boutique TikTok",
@@ -710,7 +736,10 @@
             "wave": "Paiement Wave",
             "balance": "Paiement par solde",
             "bank_transfer": "Virement bancaire",
-            "cash": "Paiement en espèces"
+            "cash": "Paiement en espèces",
+            "add_recipient_required": "Veuillez ajouter les informations du destinataire",
+            "select_payment_required": "Veuillez sélectionner un mode de paiement",
+            "calculating": "Calcul en cours..."
         },
         "status_title": "Statut de la commande"
     },
@@ -746,12 +775,13 @@
         "login_required": "Connexion requise",
         "error": "Erreur",
         "ok": "OK",
-        "something_went_wrong": "Une erreur s'est produite",
+        "something_went_wrong": "Quelque chose s'est mal passé",
         "collapse": "Réduire",
         "viewAll": "Voir tout",
         "recommendations": "Recommandations",
         "allCategories": "Toutes les catégories",
-        "categoryTab": "Catégorie"
+        "categoryTab": "Catégorie",
+        "success": "Succès"
     },
     "categories": {
         "daily_use": "Quotidien",
@@ -808,5 +838,27 @@
         "photo_library_required": "L'accès à la bibliothèque de photos est requis pour sélectionner un avatar"
     },
     "searchingImage": "Recherche de produits...",
-    "pleaseWait": "Veuillez patienter, cela peut prendre un moment"
+    "pleaseWait": "Veuillez patienter, cela peut prendre un moment",
+    "featureNav": {
+        "internationalShipping": "Expédition internationale",
+        "tiktokSection": "Produit TikTok",
+        "getQuote": "Obtenir un devis"
+    },
+    "confirmOrder": {
+        "title": "Confirmation de commande",
+        "orderNumber": "Numéro de commande",
+        "paymentMethod": "Mode de paiement",
+        "shippingInfo": "Informations d'expédition",
+        "shippingMethod": "Mode d'expédition",
+        "seaShipping": "Transport maritime",
+        "airShipping": "Transport aérien",
+        "estimatedArrival": "Arrivée estimée",
+        "recipientInfo": "Informations du destinataire",
+        "orderItems": "Articles de commande",
+        "totalPrice": "Prix total",
+        "domesticShipping": "Expédition nationale",
+        "internationalShipping": "Expédition internationale",
+        "actualAmount": "Montant réel",
+        "payNow": "Payer maintenant"
+    }
 } 

@@ -4,6 +4,7 @@ import { AddressDataItem, CartShippingFeeData, ShippingFeeData,DomesticShippingF
 import useAnalyticsStore from './analytics';
 import useUserStore from './user';
 import { getAnalyticsData } from './analytics';
+import i18n from '../i18n';
 
 interface PreviewShippingState {
   freightForwarderAddress: AddressDataItem | null;
@@ -81,7 +82,7 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       set((state) => ({
         state: { 
           ...state.state, 
-          error: error instanceof Error ? error.message : 'Failed to fetch freight forwarder address', 
+          error: error instanceof Error ? error.message : i18n.t('shipping.errors.fetch_forwarder_failed'), 
           isLoading: false 
         }
       }));
@@ -126,7 +127,7 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       set((state) => ({
         state: { 
           ...state.state, 
-          error: error instanceof Error ? error.message : 'Failed to calculate shipping fee', 
+          error: error instanceof Error ? error.message : i18n.t('shipping.errors.calculate_shipping_failed'), 
           isLoading: false 
         }
       }));
@@ -172,7 +173,7 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       set((state) => ({
         state: { 
           ...state.state, 
-          error: error instanceof Error ? error.message : 'Failed to calculate domestic shipping fee', 
+          error: error instanceof Error ? error.message : i18n.t('shipping.errors.calculate_domestic_failed'), 
           isLoading: false 
         }
       }));

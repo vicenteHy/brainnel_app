@@ -280,8 +280,8 @@ export const SearchScreen = () => {
   const resetAppState = useCallback(() => {
     setGalleryUsed(false);
     cleanupImagePickerCache();
-    Alert.alert("已重置", "现在您可以使用相机功能了");
-  }, []);
+    Alert.alert(t('banner.inquiry.camera_reset'), t('banner.inquiry.camera_reset_message'));
+  }, [t]);
   const handleCameraPress = useCallback(() => {
     setShowImagePickerModal(true);
   }, []);

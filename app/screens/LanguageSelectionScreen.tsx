@@ -87,7 +87,7 @@ export default function LanguageSelectionScreen({ onLanguageSelected }: Language
       console.error('Error selecting language:', error);
       // 显示错误消息
       const errorMessage = i18n.t('languageSelection.error');
-      Alert.alert('Error', errorMessage);
+      Alert.alert(i18n.t('common.error'), errorMessage);
     } finally {
       setIsLoading(false);
     }
