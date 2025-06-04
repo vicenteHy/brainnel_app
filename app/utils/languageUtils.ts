@@ -5,7 +5,6 @@ export const getSubjectTransLanguage = <T extends Record<string, any>>(
 ): string => {
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
-  console.log("currentLang", currentLang);
 
   // 特殊处理中文
   if (currentLang === "zh" && "subject" in data) {
@@ -105,8 +104,6 @@ export const getSkuTransLanguage = <T extends Record<string, any>>(
 export const getOrderTransLanguage = <T extends Record<string, any>>(
   data: T
 ): string => {
-  console.log(data);
-
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 

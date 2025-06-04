@@ -15,6 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Product } from '../../../services/api/productApi';
 import { ProductItem, ProductSkeleton, FeatureNavigationBar, CarouselBanner } from './';
 import { styles } from '../styles';
+import { getCategoryImageSource } from '../../../utils/categoryImageUtils';
 
 // Icon组件
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -179,31 +180,36 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   );
 
   // 渲染二级分类项
-  const renderSubcategoryItem = useCallback((item: any) => (
-    <TouchableOpacity
-      key={item.category_id}
-      style={styles.subcategoryItem}
-      onPress={() => onSubcategoryPress?.(item.category_id)}
-    >
-      <View style={styles.subcategoryImagePlaceholder}>
-        {item.image ? (
-          <Image
-            source={{ uri: item.image }}
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-          />
-        ) : (
-          <IconComponent name="grid-outline" size={20} color="#666" />
-        )}
-      </View>
-      <Text
-        style={styles.subcategoryText}
-        numberOfLines={2}
-        ellipsizeMode="tail"
+  const renderSubcategoryItem = useCallback((item: any) => {
+    // 获取类目图片源（本地优先，网络备用）
+    const imageSource = getCategoryImageSource(item.category_id, item.image, item.name);
+    
+    return (
+      <TouchableOpacity
+        key={item.category_id}
+        style={styles.subcategoryItem}
+        onPress={() => onSubcategoryPress?.(item.category_id)}
       >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  ), [onSubcategoryPress]);
+        <View style={styles.subcategoryImagePlaceholder}>
+          {imageSource ? (
+            <Image
+              source={imageSource}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+            />
+          ) : (
+            <IconComponent name="grid-outline" size={20} color="#666" />
+          )}
+        </View>
+        <Text
+          style={styles.subcategoryText}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    );
+  }, [onSubcategoryPress]);
 
 
   // 渲染"查看全部/收起"按钮

@@ -34,6 +34,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getCategoryImageSource } from "../../utils/categoryImageUtils";
 
 // 导入拆分的组件
 import {
@@ -579,35 +580,40 @@ export const HomeScreen = () => {
 
     if (subcategories.length === 0) return null;
 
-    const renderSubcategoryItem = (item: any) => (
-      <TouchableOpacity
-        key={item.category_id}
-        style={styles.subcategoryItem}
-        onPress={() => {
-          navigation.navigate("SearchResult", {
-            category_id: item.category_id,
-          });
-        }}
-      >
-        <View style={styles.subcategoryImagePlaceholder}>
-          {item.image ? (
-            <Image
-              source={{ uri: item.image }}
-              style={{ width: 40, height: 40, borderRadius: 20 }}
-            />
-          ) : (
-            <IconComponent name="grid-outline" size={20} color="#666" />
-          )}
-        </View>
-        <Text
-          style={styles.subcategoryText}
-          numberOfLines={2}
-          ellipsizeMode="tail"
+    const renderSubcategoryItem = (item: any) => {
+      // 获取类目图片源（本地优先，网络备用）
+      const imageSource = getCategoryImageSource(item.category_id, item.image, item.name);
+      
+      return (
+        <TouchableOpacity
+          key={item.category_id}
+          style={styles.subcategoryItem}
+          onPress={() => {
+            navigation.navigate("SearchResult", {
+              category_id: item.category_id,
+            });
+          }}
         >
-          {item.name}
-        </Text>
-      </TouchableOpacity>
-    );
+          <View style={styles.subcategoryImagePlaceholder}>
+            {imageSource ? (
+              <Image
+                source={imageSource}
+                style={{ width: 40, height: 40, borderRadius: 20 }}
+              />
+            ) : (
+              <IconComponent name="grid-outline" size={20} color="#666" />
+            )}
+          </View>
+          <Text
+            style={styles.subcategoryText}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {item.name}
+          </Text>
+        </TouchableOpacity>
+      );
+    };
 
     const renderShowAllButton = () => (
       <TouchableOpacity

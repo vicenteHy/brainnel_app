@@ -23,6 +23,7 @@ import { RootStackParamList } from "../navigation/types";
 import { getSubCategoryTransLanguage } from "../utils/languageUtils";
 import useAnalyticsStore from "../store/analytics";
 import BackIcon from "../components/BackIcon";
+import { getCategoryImageSource } from "../utils/categoryImageUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MENU_WIDTH = widthUtils(140, 140).width; // 增加菜单宽度
@@ -143,33 +144,44 @@ export const CategoryScreen = () => {
     </TouchableOpacity>
   );
 
-  const renderSubCategoryItem: ListRenderItem<Category> = ({ item }) => (
-    <TouchableOpacity
-      style={styles.subCategoryItem}
-      onPress={() => {
-        analyticsData.logSubCategory({
-          category_id: item.category_id,
-          category_name: item.name,
-        }, "category");
-        navigation.navigate("SearchResult", { category_id: item.category_id });
-      }}
-    >
-      <Image
-        source={{ uri: item.image }}
-        style={styles.subCategoryImage}
-        resizeMode="cover"
-      />
-      <View style={styles.subCategoryInfo}>
-        <Text
-          style={styles.subCategoryName}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {getSubCategoryTransLanguage(item)}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderSubCategoryItem: ListRenderItem<Category> = ({ item }) => {
+    // 获取类目图片源（本地优先，网络备用）
+    const imageSource = getCategoryImageSource(item.category_id, item.image, item.name);
+    
+    return (
+      <TouchableOpacity
+        style={styles.subCategoryItem}
+        onPress={() => {
+          analyticsData.logSubCategory({
+            category_id: item.category_id,
+            category_name: item.name,
+          }, "category");
+          navigation.navigate("SearchResult", { category_id: item.category_id });
+        }}
+      >
+        {imageSource ? (
+          <Image
+            source={imageSource}
+            style={styles.subCategoryImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.subCategoryImage, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ fontSize: 12, color: '#999' }}>无图片</Text>
+          </View>
+        )}
+        <View style={styles.subCategoryInfo}>
+          <Text
+            style={styles.subCategoryName}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {getSubCategoryTransLanguage(item)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
