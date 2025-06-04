@@ -15,60 +15,72 @@ export const ProductTab: React.FC<ProductTabProps> = ({
   userLoggedIn,
 }) => {
   return (
-    <View style={styles.tabContent}>
-      <View style={styles.productSupportContainer}>
-        {productInquiries.length > 0 ? (
-          <FlatList
-            data={productInquiries}
-            renderItem={({ item }) => <ProductInquiryCard item={item} />}
-            keyExtractor={(item, index) => item.offer_id?.toString() || index.toString()}
-            contentContainerStyle={styles.productInquiryList}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={userLoggedIn}
-          />
-        ) : (
-          <View style={styles.emptyProductContainer}>
-            <Text style={styles.emptyProductText}>
-              {t("chat.no_product_inquiries", "暂无产品咨询记录")}
-            </Text>
-            <Text style={styles.emptyProductSubText}>
-              {t("chat.product_inquiry_hint", "从商品详情页点击咨询按钮开始您的第一次产品咨询")}
-            </Text>
+    <View style={styles.container}>
+      {productInquiries.length > 0 ? (
+        <FlatList
+          data={productInquiries}
+          renderItem={({ item }) => <ProductInquiryCard item={item} />}
+          keyExtractor={(item, index) => item.offer_id?.toString() || index.toString()}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={userLoggedIn}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconContainer}>
+            <Text style={styles.emptyIcon}>📦</Text>
           </View>
-        )}
-      </View>
+          <Text style={styles.emptyTitle}>
+            {t("chat.no_product_inquiries", "暂无产品咨询记录")}
+          </Text>
+          <Text style={styles.emptySubtitle}>
+            {t("chat.product_inquiry_hint", "从商品详情页点击咨询按钮开始您的第一次产品咨询")}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  tabContent: {
+  container: {
     flex: 1,
+    backgroundColor: "#ffffff",
   },
-  productSupportContainer: {
-    padding: 20,
-    backgroundColor: "#f5f5f5",
+  listContainer: {
+    paddingTop: 16,
+    paddingBottom: 20,
   },
-  productInquiryList: {
-    // padding: 20,
-  },
-  emptyProductContainer: {
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 40,
+    paddingHorizontal: 40,
   },
-  emptyProductText: {
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f8f9fa",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  emptyIcon: {
+    fontSize: 32,
+  },
+  emptyTitle: {
     fontSize: customRF(18),
     fontWeight: "600",
-    color: "#666",
-    marginBottom: 10,
+    color: "#2c3e50",
+    marginBottom: 12,
     textAlign: "center",
   },
-  emptyProductSubText: {
+  emptySubtitle: {
     fontSize: customRF(14),
-    color: "#999",
+    color: "#95a5a6",
     textAlign: "center",
     lineHeight: 20,
+    maxWidth: 280,
   },
 });

@@ -105,10 +105,14 @@ export const ChatScreen = () => {
                   style={styles.backButton} 
                   onPress={() => navigation.goBack()}
                 >
-                  <BackIcon size={20} color="#000" />
+                  <BackIcon size={20} color="#333" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t("chat.title", "聊天")}</Text>
-                <View style={styles.headerRight} />
+                <Text style={styles.headerTitle}>{t("chat.title")}</Text>
+                <View style={styles.headerRight}>
+                  <TouchableOpacity style={styles.moreButton}>
+                    <Text style={styles.moreButtonText}>⋯</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               
               <TabBar
@@ -141,7 +145,7 @@ export const ChatScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
   },
   safeAreaContent: {
     flex: 1,
@@ -154,25 +158,34 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: "#ffffff",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
+    borderBottomColor: "#f0f0f0",
   },
   backButton: {
     padding: 8,
     borderRadius: 20,
+    backgroundColor: "transparent",
   },
   headerTitle: {
-    fontSize: customRF(18),
-    fontWeight: "600",
+    fontSize: customRF(20),
+    fontWeight: "700",
     color: "#333",
-    textAlign: "center",
+    marginLeft: 12,
+    flex: 1,
+  },
+  moreButton: {
+    padding: 8,
+  },
+  moreButtonText: {
+    fontSize: 20,
+    color: "#333",
+    fontWeight: "600",
   },
   headerRight: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
   },
 });

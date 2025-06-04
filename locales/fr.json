@@ -9,5 +9,8 @@
   "chooseFromGallery": "Choisir depuis la galerie",
   "resetCamera": "Réinitialiser l'appareil photo",
   "close": "Fermer",
-  "delete": "Supprimer"
+  "delete": "Supprimer",
+  "chat": {
+    "title": "Discussion"
+  }
 } 

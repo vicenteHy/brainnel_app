@@ -9,5 +9,8 @@
   "chooseFromGallery": "Choose from Gallery",
   "resetCamera": "Reset Camera",
   "close": "Close",
-  "delete": "Delete"
+  "delete": "Delete",
+  "chat": {
+    "title": "Chat"
+  }
 } 

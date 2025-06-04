@@ -38,7 +38,7 @@ import { PreviewOrder } from "../screens/previewOrder/perviewOrder";
 import { ForgotPhonePassword } from "../screens/loginList/ForgotPhonePassword";
 import { PayError } from '../screens/pay/PayError';
 import { ChatScreen } from '../screens/ChatScreen';
-import { ProductChatScreen } from '../screens/ProductChatScreen';
+import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
 import {ChangePassword} from '../screens/setting/ChangePassword';
 import { HomeScreen } from '../screens/HomeScreen';

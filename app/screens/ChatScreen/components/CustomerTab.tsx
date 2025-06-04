@@ -6,7 +6,7 @@ import { Message } from "../types";
 interface CustomerTabProps {
   messages: Message[];
   keyExtractor: (item: Message, index: number) => string;
-  flatListRef: React.RefObject<FlatList>;
+  flatListRef: React.RefObject<FlatList<any>>;
   userLoggedIn: boolean;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import customRF from "../utils/customRF";
+import customRF from "../../utils/customRF";
 import {
   View,
   Text,
@@ -16,11 +16,11 @@ import {
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { chatService } from "../services/api/chat";
-import useUserStore from "../store/user";
+import { chatService } from "../../services/api/chat";
+import useUserStore from "../../store/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { t } from "../i18n";
-import BackIcon from "../components/BackIcon";
+import { t } from "../../i18n";
+import BackIcon from "../../components/BackIcon";
 
 interface Message {
   id?: string;
@@ -181,7 +181,7 @@ export const ProductChatScreen = () => {
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const formatTime = (timestamp?: Date) => {
       if (!timestamp) return "";
       try {
@@ -196,18 +196,47 @@ export const ProductChatScreen = () => {
       }
     };
 
+    const isLastUserMessage = item.isMe && index === messages.length - 1;
+
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          item.isMe ? styles.myMessage : styles.theirMessage,
-        ]}
-      >
-        <Text style={styles.messageText}>{item.text}</Text>
-        <Text style={styles.timestamp}>{formatTime(item.timestamp)}</Text>
+      <View>
+        <View
+          style={[
+            styles.messageContainer,
+            item.isMe ? styles.myMessage : styles.theirMessage,
+          ]}
+        >
+          <Text style={[styles.messageText, item.isMe && styles.myMessageText]}>{item.text}</Text>
+          <Text style={[styles.timestamp, item.isMe && styles.myMessageTimestamp]}>{formatTime(item.timestamp)}</Text>
+        </View>
+        {isLastUserMessage && (
+          <View style={styles.readStatusContainer}>
+            <Text style={styles.readStatusText}>Lu</Text>
+          </View>
+        )}
       </View>
     );
   };
+
+  // 欢迎消息
+  const renderWelcomeMessage = () => (
+    <View style={styles.welcomeContainer}>
+      <View style={styles.avatarContainer}>
+        {productInfo.product_image_urls && productInfo.product_image_urls[0] && (
+          <Image
+            source={{ uri: productInfo.product_image_urls[0] }}
+            style={styles.welcomeAvatar}
+            resizeMode="cover"
+          />
+        )}
+      </View>
+      <Text style={styles.welcomeTitle}>Bienvenue !</Text>
+      <Text style={styles.welcomeMessage}>
+        Vous voulez en savoir plus sur nos produits ?Rejoignez la discussion 😊
+      </Text>
+      <Text style={styles.welcomeTime}>5:43 PM</Text>
+    </View>
+  );
 
   // 产品信息卡片
   const renderProductInfo = () => (
@@ -269,27 +298,19 @@ export const ProductChatScreen = () => {
       >
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.container}>
-          <ImageBackground
-            source={require("../../assets/img/DefaultWallpaper.png")}
-            style={styles.backgroundImage}
-            resizeMode="cover"
-          >
             {/* Header */}
             <View style={styles.header}>
               <TouchableOpacity 
                 style={styles.backButton} 
                 onPress={() => navigation.goBack()}
               >
-                <BackIcon size={20} color="#fff" />
+                <BackIcon size={20} color="#333" />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>
                 {t("chat.product_inquiry", "商品咨询")}
               </Text>
               <View style={styles.headerRight} />
             </View>
-
-            {/* 产品信息卡片 */}
-            {renderProductInfo()}
 
             {/* 聊天记录 */}
             <View style={styles.chatContainer}>
@@ -301,8 +322,10 @@ export const ProductChatScreen = () => {
                 contentContainerStyle={styles.messageList}
                 showsVerticalScrollIndicator={false}
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                ListHeaderComponent={renderWelcomeMessage}
               />
             </View>
+
 
             {/* 输入框 */}
             <View style={styles.inputContainer}>
@@ -310,7 +333,7 @@ export const ProductChatScreen = () => {
                 style={styles.input}
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder={t("chat.input_product_message", "请描述您关于此商品的问题...")}
+                placeholder="Je suis intéressé par ce produit"
                 multiline
               />
               <TouchableOpacity
@@ -318,12 +341,9 @@ export const ProductChatScreen = () => {
                 onPress={sendMessage}
                 disabled={sending}
               >
-                <Text style={styles.sendButtonText}>
-                  {sending ? t("chat.sending", "发送中...") : t("chat.send", "发送")}
-                </Text>
+                <Text style={styles.sendButtonText}>➤</Text>
               </TouchableOpacity>
             </View>
-          </ImageBackground>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -333,55 +353,98 @@ export const ProductChatScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
+    backgroundColor: "#f5f5f5",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#007a6c",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.2)",
+    borderBottomColor: "#e5e5e5",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   backButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "transparent",
   },
   headerTitle: {
     fontSize: customRF(18),
     fontWeight: "600",
-    color: "#fff",
+    color: "#333",
     textAlign: "center",
   },
   headerRight: {
     width: 36,
     height: 36,
   },
+  welcomeContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: "#f5f5f5",
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  welcomeAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  welcomeMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  welcomeTime: {
+    fontSize: 12,
+    color: "#999",
+  },
   productInfoCard: {
     backgroundColor: "white",
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 16,
+    marginVertical: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   productInfoHeader: {
     marginBottom: 15,
@@ -428,59 +491,102 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
+    backgroundColor: "#f5f5f5",
   },
   messageList: {
     padding: 10,
   },
   messageContainer: {
     maxWidth: "80%",
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
+    padding: 12,
+    borderRadius: 18,
+    marginVertical: 3,
+    marginHorizontal: 16,
   },
   myMessage: {
     alignSelf: "flex-end",
-    backgroundColor: "#dcf8c6",
+    backgroundColor: "#ff6b35",
+    borderBottomRightRadius: 4,
   },
   theirMessage: {
     alignSelf: "flex-start",
     backgroundColor: "white",
+    borderBottomLeftRadius: 4,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   messageText: {
     fontSize: 16,
+    color: "#333",
+    lineHeight: 22,
   },
   timestamp: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 11,
+    color: "#999",
     alignSelf: "flex-end",
-    marginTop: 5,
+    marginTop: 6,
+  },
+  myMessageText: {
+    color: "white",
+  },
+  myMessageTimestamp: {
+    color: "rgba(255,255,255,0.8)",
+  },
+  readStatusContainer: {
+    alignItems: "flex-end",
+    marginRight: 16,
+    marginTop: 4,
+  },
+  readStatusText: {
+    fontSize: 12,
+    color: "#999",
+    fontStyle: "italic",
   },
   inputContainer: {
     flexDirection: "row",
-    padding: 10,
+    padding: 16,
     backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
+    alignItems: "center",
+    paddingBottom: Platform.OS === "ios" ? 34 : 16,
   },
   input: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: Platform.OS === "ios" ? 12 : 8,
-    marginRight: 10,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === "ios" ? 12 : 10,
+    marginRight: 12,
     maxHeight: 100,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
   },
   sendButton: {
-    backgroundColor: "#128C7E",
-    borderRadius: 20,
-    paddingHorizontal: 20,
+    backgroundColor: "#ff6b35",
+    borderRadius: 25,
+    width: 50,
+    height: 50,
     justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sendButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: "600",
   },
   disabledButton: {
     opacity: 0.6,
@@ -508,4 +614,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-});
+}); 

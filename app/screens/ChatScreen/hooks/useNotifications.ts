@@ -120,6 +120,8 @@ export const useNotifications = (activeTab: string) => {
   useEffect(() => {
     if (user.user_id && activeTab === "notification") {
       loadNotifications(1, false);
+      // 自动标记所有消息为已读
+      markAllMessagesAsRead();
     }
   }, [user.user_id, activeTab]);
 

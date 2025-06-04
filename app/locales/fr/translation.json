@@ -112,6 +112,7 @@
     "my":"Mon",
     "categories":"Catégories",
     "chat": {
+        "title": "Discussion",
         "product_inquiry": "Demande de produit",
         "input_product_message": "Veuillez décrire votre problème de produit...",
         "product_name_unavailable": "Nom du produit indisponible",
@@ -131,7 +132,8 @@
         "product_error_response": "L'API de support produit n'est pas encore implémentée, veuillez contacter l'équipe de développement",
         "login_required_title": "Veuillez vous connecter d'abord",
         "login_required_subtitle": "Connectez-vous pour utiliser les fonctionnalités de chat",
-        "login_now": "Se connecter maintenant"
+        "login_now": "Se connecter maintenant",
+        "continue_inquiry": "Continuer la consultation"
     },
     "searchProducts":"Rechercher des produits",
     "recommendations":"Recommandations",

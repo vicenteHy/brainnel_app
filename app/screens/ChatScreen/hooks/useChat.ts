@@ -11,7 +11,7 @@ export const useChat = () => {
   const [inputText, setInputText] = useState("");
   const [country, setCountry] = useState<string>("");
   const { user } = useUserStore();
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<any>>(null);
 
   useEffect(() => {
     if (messages.length > 0 && user.user_id) {

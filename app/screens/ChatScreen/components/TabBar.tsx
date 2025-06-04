@@ -26,6 +26,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         ]}
         onPress={() => userLoggedIn && onTabPress("customer")}
         disabled={!userLoggedIn}
+        activeOpacity={1}
       >
         <Text
           style={[
@@ -44,6 +45,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         ]}
         onPress={() => userLoggedIn && onTabPress("product")}
         disabled={!userLoggedIn}
+        activeOpacity={1}
       >
         <Text
           style={[
@@ -62,6 +64,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         ]}
         onPress={() => userLoggedIn && onTabPress("notification")}
         disabled={!userLoggedIn}
+        activeOpacity={1}
       >
         <View style={styles.tabWithBadge}>
           <Text
@@ -89,58 +92,56 @@ export const TabBar: React.FC<TabBarProps> = ({
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: "white",
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#eef0f1",
-    paddingHorizontal: 10,
-    borderRadius: 25,
-    paddingVertical: 8,
+    borderBottomColor: "#f0f0f0",
+    justifyContent: "space-around",
   },
   tab: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 4,
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 25,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
     backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "transparent",
+    flex: 1,
+    marginHorizontal: -4,
   },
   activeTab: {
-    backgroundColor: "#fff1ea",
+    backgroundColor: "#ff6b35",
+    borderWidth: 1,
+    borderColor: "#ff6b35",
+    borderRadius: 16,
   },
   tabText: {
-    fontSize: customRF(14),
-    color: "#666",
-    fontWeight: "500",
+    fontSize: customRF(13),
+    color: "black",
+    fontWeight: "400",
     textAlign: "center",
   },
   activeTabText: {
-    color: "#ff5217",
+    color: "white",
     fontWeight: "600",
   },
   tabWithBadge: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 25,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
   },
   unreadBadge: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#ff4757",
     borderRadius: 10,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    marginLeft: 5,
+    marginLeft: 4,
+    minWidth: 18,
+    alignItems: "center",
   },
   unreadBadgeText: {
     color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: customRF(10),
+    fontWeight: "600",
   },
 });

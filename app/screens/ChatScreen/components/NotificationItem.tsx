@@ -1,25 +1,20 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet } from "react-native";
 import customRF from "../../../utils/customRF";
 import { NotificationItem as NotificationItemType } from "../../../services/api/chat";
-import useUserStore from "../../../store/user";
 
 interface NotificationItemProps {
   item: NotificationItemType;
-  onMarkAsRead: (messageId: number) => void;
+  onMarkAsRead?: (messageId: number) => void;
 }
 
 export const NotificationItem: React.FC<NotificationItemProps> = ({ 
-  item, 
-  onMarkAsRead 
+  item
 }) => {
-  const { user } = useUserStore();
 
   return (
-    <TouchableOpacity
+    <View
       style={styles.notificationItem}
-      onPress={() => onMarkAsRead(item.notification_id)}
-      disabled={!user.user_id}
     >
       <View
         style={[
@@ -46,7 +41,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           {new Date(item.sent_time).toLocaleString()}
         </Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 

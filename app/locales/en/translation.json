@@ -107,6 +107,7 @@
     "my":"My",
     "categories": "Categories",
     "chat": {
+        "title": "Chat",
         "product_inquiry": "Product Inquiry",
         "input_product_message": "Please describe your product problem...",
         "product_name_unavailable": "Product name unavailable",
@@ -126,7 +127,8 @@
         "product_error_response": "Product support API not implemented yet, please contact development team",
         "login_required_title": "Please Login First",
         "login_required_subtitle": "Login to use chat features",
-        "login_now": "Login Now"
+        "login_now": "Login Now",
+        "continue_inquiry": "Continue Inquiry"
     },
     "login":{
         "error":"Login failed, please try again",
