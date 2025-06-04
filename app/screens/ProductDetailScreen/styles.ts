@@ -32,7 +32,7 @@ export const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   search: {
-    width: "80%",
+    width: "85%",
     height: 40,
     paddingHorizontal: 15,
     paddingVertical: 8,
@@ -43,12 +43,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginLeft: 10,
+    marginLeft: 5,
+    marginRight: 10,
   },
   searchText: {
-    fontSize: fontSize(16),
-    color: "#747474",
-    fontWeight: "600",
+    fontSize: fontSize(14),
+    color: "black",
+    fontWeight: "400",
     textAlignVertical: "center",
   },
   cartIcon: {
