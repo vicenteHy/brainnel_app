@@ -38,7 +38,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
   };
 
   return (
-    <View style={styles.centerColumnWithPagination}>
+    <View style={styles.imageCarouselContainer}>
       <View style={{ position: "relative" }}>
         <Carousel
           loop

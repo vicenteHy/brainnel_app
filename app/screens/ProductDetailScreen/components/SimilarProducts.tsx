@@ -11,6 +11,7 @@ interface SimilarProductsProps {
   onProductPress: (item: similar) => void;
   onViewAllPress: () => void;
   renderSkeletonItems: () => any[];
+  totalCount?: number; // 添加总数显示
 }
 
 export const SimilarProducts: React.FC<SimilarProductsProps> = ({
@@ -52,10 +53,10 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
                   />
                 </View>
                 <View style={styles.priceContainerFlex}>
-                  <Text style={styles.highlightedText1}>
+                  <Text style={styles.productPrice}>
                     {item.max_price}
                   </Text>
-                  <Text style={styles.highlightedTextWithBorder}>
+                  <Text style={styles.smallCurrencyText}>
                     {userStore.user?.currency || "FCFA"}
                   </Text>
                 </View>

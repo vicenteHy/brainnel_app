@@ -10,7 +10,6 @@ import {
   StatusBar,
   ActivityIndicator,
   Platform,
-  RefreshControl,
   Animated,
   InteractionManager,
 } from "react-native";
@@ -286,32 +285,53 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
     user_id: userStore.user.user_id,
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [refreshing, setRefreshing] = useState(false);
   const lastLoadTime = useRef(0);
 
   // 初始化相关商品搜索
   useEffect(() => {
-    if (route.params?.product_name) {
+    if (route.params?.product_id) {
       setShowSkeleton(true);
-      const newParams = {
-        ...searchParams,
-        keyword: route.params.product_name,
-      };
-      setSearchParams(newParams);
-      // 直接调用API
+      // 直接调用关联商品API
       const fetchData = async () => {
         try {
           setLoading(true);
-          const res = await productApi.getSearchProducts(newParams);
-          setProducts(res.products);
-          setOriginalProducts(res.products);
+          // 使用现有的getSimilarProducts API（limit=20）
+          const res = await productApi.getSimilarProducts(route.params.product_id, userStore.user?.user_id, 20);
+          // 将similar product格式转换为Product格式
+          const products = (res || []).map((item: any) => ({
+            ...item,
+            currency: userStore.user?.currency || "FCFA",
+            original_min_price: item.min_price || 0,
+          }));
+          setProducts(products);
+          setOriginalProducts(products);
           setCurrentPage(1);
-          setHasMore(res.products.length === newParams.page_size);
+          // 关联商品只显示5个，不需要分页
+          setHasMore(false);
         } catch (error) {
           console.error("Error fetching related products:", error);
-          setProducts([]);
-          setOriginalProducts([]);
-          setHasMore(false);
+          // 如果关联商品API失败，fallback到搜索API
+          if (route.params?.product_name) {
+            try {
+              const newParams = {
+                ...searchParams,
+                keyword: route.params.product_name,
+              };
+              const searchRes = await productApi.getSearchProducts(newParams);
+              setProducts(searchRes.products);
+              setOriginalProducts(searchRes.products);
+              setHasMore(searchRes.products.length === newParams.page_size);
+            } catch (searchError) {
+              console.error("Fallback search also failed:", searchError);
+              setProducts([]);
+              setOriginalProducts([]);
+              setHasMore(false);
+            }
+          } else {
+            setProducts([]);
+            setOriginalProducts([]);
+            setHasMore(false);
+          }
         } finally {
           setLoading(false);
           setTimeout(() => {
@@ -321,7 +341,7 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
       };
       fetchData();
     }
-  }, [route.params?.product_name]);
+  }, [route.params?.product_id, route.params?.product_name]);
 
   // 搜索产品的API调用
   const searchProducts = useCallback(
@@ -508,69 +528,47 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
     // 标记为加载中
     setLoadingMore(true);
     
-    // 请求参数
-    const loadMoreParams = {
-      ...searchParams,
-      page: currentPage + 1,
-    };
-    
-    // 获取下一页数据
-    productApi.getSearchProducts(loadMoreParams)
-      .then(res => {
-        // 使用回调更新，确保获取最新状态
-        setProducts(prev => {
-          // 过滤掉重复商品
-          const newProducts = res.products.filter(
-            newProduct => !prev.some(
-              existingProduct => existingProduct.offer_id === newProduct.offer_id
-            )
-          );
-          return [...prev, ...newProducts];
+    // 关联商品页面不支持分页，直接返回
+    if (route.params?.product_id) {
+      setLoadingMore(false);
+      return;
+    } else {
+      // 使用搜索API加载更多
+      const loadMoreParams = {
+        ...searchParams,
+        page: currentPage + 1,
+      };
+      
+      // 获取下一页数据
+      productApi.getSearchProducts(loadMoreParams)
+        .then(res => {
+          // 使用回调更新，确保获取最新状态
+          setProducts(prev => {
+            // 过滤掉重复商品
+            const newProducts = res.products.filter(
+              newProduct => !prev.some(
+                existingProduct => existingProduct.offer_id === newProduct.offer_id
+              )
+            );
+            return [...prev, ...newProducts];
+          });
+          
+          setCurrentPage(prev => prev + 1);
+          setHasMore(res.products.length === loadMoreParams.page_size);
+        })
+        .catch(error => {
+          console.error("加载更多失败:", error);
+        })
+        .finally(() => {
+          // 延迟结束加载状态，给用户更好的体验
+          setTimeout(() => {
+            setLoadingMore(false);
+          }, 300);
         });
-        
-        setCurrentPage(prev => prev + 1);
-        setHasMore(res.products.length === loadMoreParams.page_size);
-      })
-      .catch(error => {
-        console.error("加载更多失败:", error);
-      })
-      .finally(() => {
-        // 延迟结束加载状态，给用户更好的体验
-        setTimeout(() => {
-          setLoadingMore(false);
-        }, 300);
-      });
-  }, [hasMore, loadingMore, searchParams, currentPage]);
+    }
+  }, [hasMore, loadingMore, searchParams, currentPage, route.params?.product_id, userStore.user?.user_id]);
 
-  // 处理下拉刷新
-  const handleRefresh = useCallback(() => {
-    if (refreshing) return;
-    
-    setRefreshing(true);
-    
-    const refreshParams = {
-      ...searchParams,
-      page: 1,
-    };
-    
-    // 直接调用API避免状态冲突
-    productApi.getSearchProducts(refreshParams)
-      .then(res => {
-        setProducts(res.products);
-        setOriginalProducts(res.products);
-        setCurrentPage(1);
-        setHasMore(res.products.length === refreshParams.page_size);
-      })
-      .catch(error => {
-        console.error("刷新失败:", error);
-      })
-      .finally(() => {
-        // 延迟结束刷新状态，让过渡更平滑
-        setTimeout(() => {
-          setRefreshing(false);
-        }, 300);
-      });
-  }, [refreshing, searchParams]);
+
 
   // 渲染底部加载指示器
   const renderFooter = useCallback(() => {
@@ -803,15 +801,6 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
                   onEndReachedThreshold={3}
                   onScroll={handleScroll}
                   scrollEventThrottle={160}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={handleRefresh}
-                      colors={["#0066FF"]}
-                      tintColor="#0066FF"
-                      progressBackgroundColor="transparent"
-                    />
-                  }
                 />
                 {showBackToTop && (
                   <TouchableOpacity

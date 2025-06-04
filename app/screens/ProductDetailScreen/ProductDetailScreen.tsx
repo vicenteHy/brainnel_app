@@ -86,11 +86,15 @@ export default function ProductDetailScreen() {
   };
 
   const handleViewAllPress = () => {
-    if (product?.subject_trans) {
+    if (product?.offer_id) {
+      console.log('查看所有关联商品 - 产品ID:', product.offer_id);
+      console.log('产品名称:', product.subject || product.subject_trans);
       navigation.navigate("RelatedProductsScreen", {
         product_id: product.offer_id,
         product_name: product.subject || product.subject_trans,
       });
+    } else {
+      console.log('无法获取产品ID，product:', product);
     }
   };
 
@@ -104,6 +108,10 @@ export default function ProductDetailScreen() {
         default_message: t('defaultProductMessage'),
       });
     }
+  };
+
+  const handleStorePress = () => {
+    handleViewAllPress();
   };
 
   const handleAddToCartPress = () => {
@@ -140,10 +148,10 @@ export default function ProductDetailScreen() {
               { paddingBottom: widthUtils(80, 80).height }
             ]}
           >
-            <View style={styles.productDetailsContainer3}>
+            <View style={styles.productLayoutContainer}>
               <ProductImageCarousel product={product} />
               
-              <View style={styles.productDetailsContainer2}>
+              <View style={styles.productContentContainer}>
                 <ProductInfo product={product} />
                 
                 <ProductAttributes
@@ -153,7 +161,6 @@ export default function ProductDetailScreen() {
                   getDisplayAttributes={getDisplayAttributes}
                   handleSizeSelect={handleSizeSelect}
                   handleColorSelect={handleColorSelect}
-                  setShowBottomSheet={setShowBottomSheet}
                 />
                 
                 <SimilarProducts
@@ -170,6 +177,7 @@ export default function ProductDetailScreen() {
           </ScrollView>
           
           <BottomActionBar
+            onStorePress={handleStorePress}
             onChatNowPress={handleChatNowPress}
             onAddToCartPress={handleAddToCartPress}
           />

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import DiagonalArrowIcon from '../../../components/DiagonalArrowIcon';
 import { getAttributeTransLanguage } from '../../../utils/languageUtils';
 import fontSize from '../../../utils/fontsizeUtils';
 import { styles } from '../styles';
@@ -12,7 +11,6 @@ interface ProductAttributesProps {
   toggleExpand: (attributeName: string) => void;
   handleSizeSelect: (size: string, index: number) => void;
   handleColorSelect: (colorId: string, index: number) => void;
-  setShowBottomSheet: (show: boolean) => void;
   getDisplayAttributes: (attributes: any[], attributeName: string) => any[];
 }
 
@@ -22,18 +20,17 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
   toggleExpand,
   handleSizeSelect,
   handleColorSelect,
-  setShowBottomSheet,
   getDisplayAttributes,
 }) => {
   const { t } = useTranslation();
   return (
     <View style={styles.productDetailsContainer}>
-      <View style={styles.productDetailsContainer1}>
-        <View style={styles.blackThemeContainer}>
+      <View style={styles.productAttributesWrapper}>
+        <View style={styles.attributesContainer}>
           {groupList.map((item, index) =>
             item.has_image ? (
               <View key={item.attribute_name_trans}>
-                <Text style={styles.uniqueTextBlock}>
+                <Text style={styles.attributeLabel}>
                   {item.attribute_name_trans} :{" "}
                   {(() => {
                     const selectedAttribute = item.attributes.find((item: any) => item.has_color);
@@ -76,20 +73,10 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     </TouchableOpacity>
                   )}
                 </View>
-                {((groupList.length > 1 && index === 0) || groupList.length === 1) && (
-                  <TouchableOpacity
-                    style={styles.svgContainer6}
-                    onPress={() => setShowBottomSheet(true)}
-                  >
-                    <View style={styles.svgContainer6}>
-                      <DiagonalArrowIcon size={fontSize(18)} />
-                    </View>
-                  </TouchableOpacity>
-                )}
               </View>
             ) : (
               <View key={item.attribute_name_trans}>
-                <Text style={styles.uniqueTextBlock}>
+                <Text style={styles.attributeLabel}>
                   {item.attribute_name_trans}
                 </Text>
                 <View style={styles.horizontalFlexContainer}>
@@ -130,16 +117,6 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     </TouchableOpacity>
                   )}
                 </View>
-                {((groupList.length === 1) || (groupList.length === 2 && index === 0)) && (
-                  <TouchableOpacity
-                    style={styles.svgContainer6}
-                    onPress={() => setShowBottomSheet(true)}
-                  >
-                    <View style={styles.svgContainer6}>
-                      <DiagonalArrowIcon size={fontSize(18)} />
-                    </View>
-                  </TouchableOpacity>
-                )}
               </View>
             )
           )}

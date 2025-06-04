@@ -23,7 +23,7 @@ export const useSimilarProducts = () => {
 
   const getSimilars = () => {
     productApi
-      .getSimilarProducts(route.params.offer_id, userStore.user?.user_id)
+      .getSimilarProducts(route.params.offer_id, userStore.user?.user_id, 5)
       .then((res) => {
         setSimilars(res);
         setIsSimilarsFlag(true);

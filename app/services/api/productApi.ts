@@ -254,8 +254,8 @@ export interface Category {
         return apiService.get<ProductDetailParams>(url);
     },
     // 获取相似商品
-    getSimilarProducts: (offer_id: string, user_id?: number) => {
-        const url = user_id ? `/api/products/${offer_id}/similar/?limit=5&user_id=${user_id}` : `/api/products/${offer_id}/similar/?limit=5`;
+    getSimilarProducts: (offer_id: string, user_id?: number, limit?: number) => {
+        const url = user_id ? `/api/products/${offer_id}/similar/?limit=${limit}&user_id=${user_id}` : `/api/products/${offer_id}/similar/?limit=${limit}`;
         return apiService.get<Similars>(url);
     },
     // 图片搜索

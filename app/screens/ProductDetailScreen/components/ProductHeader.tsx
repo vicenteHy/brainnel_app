@@ -45,7 +45,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.searchIcon} onPress={onCartPress}>
+      <TouchableOpacity style={styles.cartIcon} onPress={onCartPress}>
         <ShoppingCartIcon size={fontSize(20)} />
       </TouchableOpacity>
     </View>

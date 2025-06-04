@@ -1,17 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import WhiteCircleIcon from '../../../components/WhiteCircleIconIcon';
-import ShoppingCartIcon from '../../../components/ShoppingCartIcon';
+import { Ionicons } from '@expo/vector-icons';
 import fontSize from '../../../utils/fontsizeUtils';
 import { styles } from '../styles';
 
 interface BottomActionBarProps {
+  onStorePress: () => void;
   onChatNowPress: () => void;
   onAddToCartPress: () => void;
 }
 
 export const BottomActionBar: React.FC<BottomActionBarProps> = ({
+  onStorePress,
   onChatNowPress,
   onAddToCartPress,
 }) => {
@@ -26,12 +27,13 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
       shadowRadius: 8,
       elevation: 8,
     }]}>
+      <TouchableOpacity style={styles.storeIconButton} onPress={onStorePress}>
+        <Ionicons name="storefront" size={24} color="#fff" />
+      </TouchableOpacity>
       <TouchableOpacity style={styles.chatNowButton} onPress={onChatNowPress}>
-        <WhiteCircleIcon color="#fff" size={fontSize(20)} />
         <Text style={styles.chatNowText}>{t('chatNow')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.addToCartButton} onPress={onAddToCartPress}>
-        <ShoppingCartIcon color="#fff" size={fontSize(20)} />
         <Text style={styles.addToCartText}>{t('addToCart')}</Text>
       </TouchableOpacity>
     </View>
