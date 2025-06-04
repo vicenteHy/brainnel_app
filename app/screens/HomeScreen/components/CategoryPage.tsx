@@ -71,6 +71,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   const screenWidth = Dimensions.get('window').width;
   const loadMoreRef = useRef(false); // 防止重复调用加载更多
   const [showAllSubcategories, setShowAllSubcategories] = React.useState(false); // 控制是否显示所有二级分类
+  const [isUserRefreshing, setIsUserRefreshing] = React.useState(false); // 跟踪是否是用户主动下拉刷新
   
   // 智能预加载相关
   const lastVisibleIndex = useRef(0);
@@ -78,9 +79,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   
   // 本地图片不需要预加载，直接使用即可
   
-  // 当分类切换时重置展开状态
+  // 当分类切换时重置展开状态和用户刷新状态
   React.useEffect(() => {
     setShowAllSubcategories(false);
+    setIsUserRefreshing(false);
   }, [categoryId]);
   
   // 当loading状态变化时重置防重复标志
@@ -337,18 +339,31 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     [categoryId, onCameraPress, subcategoryComponent],
   );
 
-  // 刷新控制
+  // 处理用户下拉刷新
+  const handleUserRefresh = useCallback(() => {
+    setIsUserRefreshing(true);
+    onRefresh(categoryId);
+  }, [onRefresh, categoryId]);
+
+  // 监听loading状态变化，重置用户刷新标志
+  React.useEffect(() => {
+    if (!pageData.loading && isUserRefreshing) {
+      setIsUserRefreshing(false);
+    }
+  }, [pageData.loading, isUserRefreshing]);
+
+  // 刷新控制 - 只有用户主动下拉刷新时才显示加载动画
   const refreshControl = useMemo(
     () => (
       <RefreshControl
-        refreshing={pageData.loading && pageData.products.length === 0}
-        onRefresh={() => onRefresh(categoryId)}
+        refreshing={isUserRefreshing && pageData.loading}
+        onRefresh={handleUserRefresh}
         colors={["#ff5100"]}
         tintColor="#ff5100"
         progressBackgroundColor="transparent"
       />
     ),
-    [pageData.loading, pageData.products.length, onRefresh, categoryId],
+    [isUserRefreshing, pageData.loading, handleUserRefresh],
   );
 
   // 处理加载更多
@@ -435,32 +450,41 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
 
   return (
     <View style={{ width: screenWidth, flex: 1 }}>
-      {(pageData.loading && pageData.products.length === 0) || (!pageData.initialized && pageData.products.length === 0) ? (
-        // 正在加载时或未初始化时显示骨架屏
+      {(pageData.loading && pageData.products.length === 0 && !isUserRefreshing) || (!pageData.initialized && pageData.products.length === 0) ? (
+        // 页面初次加载时显示骨架屏，不显示下拉刷新动画
         <ScrollView refreshControl={refreshControl}>
           {listHeaderComponent}
           {renderSkeletonGrid()}
         </ScrollView>
       ) : pageData.products.length === 0 ? (
-        // 已初始化但没有数据时，显示空状态，提示用户下拉刷新
-        <ScrollView 
-          refreshControl={refreshControl}
-          contentContainerStyle={{ flex: 1 }}
-        >
-          {listHeaderComponent}
-          <View style={{ 
-            flex: 1, 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            paddingBottom: 100 
-          }}>
-            <Text style={{ fontSize: 16, color: '#999' }}>
-              {categoryId === -1 
-                ? '下拉刷新获取推荐商品' 
-                : `下拉刷新获取分类商品`}
-            </Text>
-          </View>
-        </ScrollView>
+        // 用户下拉刷新时没有数据，或已初始化但没有数据时，显示空状态
+        isUserRefreshing && pageData.loading ? (
+          // 用户下拉刷新时显示骨架屏和下拉刷新动画
+          <ScrollView refreshControl={refreshControl}>
+            {listHeaderComponent}
+            {renderSkeletonGrid()}
+          </ScrollView>
+        ) : (
+          // 已初始化但没有数据时，显示空状态，提示用户下拉刷新
+          <ScrollView 
+            refreshControl={refreshControl}
+            contentContainerStyle={{ flex: 1 }}
+          >
+            {listHeaderComponent}
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              paddingBottom: 100 
+            }}>
+              <Text style={{ fontSize: 16, color: '#999' }}>
+                {categoryId === -1 
+                  ? '下拉刷新获取推荐商品' 
+                  : `下拉刷新获取分类商品`}
+              </Text>
+            </View>
+          </ScrollView>
+        )
       ) : (
         // 有数据时显示正常列表
         <FlatList
