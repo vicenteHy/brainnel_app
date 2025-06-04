@@ -19,7 +19,9 @@
       "supportsTablet": true,
       "icon": "./assets/logo/logo2.png",
       "bundleIdentifier": "uni.UNIC87CC93",
-      "associatedDomains": ["applinks:api.brainnel.com"],
+      "associatedDomains": [
+        "applinks:api.brainnel.com"
+      ],
       "buildNumber": "3.0.6",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -118,7 +120,8 @@
           "scheme": "fb995035562798467",
           "clientToken": "2005c337398b1c286e2a189e4e4417ac"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

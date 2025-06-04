@@ -69,6 +69,11 @@ export const HomeScreen = () => {
     user: userStore.user,
   }), [userStore.user]);
 
+  // 存储每个分类按钮的宽度信息
+  const categoryWidthsRef = useRef<Map<number, number>>(new Map());
+  const categoryPositionsRef = useRef<Map<number, number>>(new Map());
+  const isScrollingRef = useRef(false); // 防止重复滚动的标志位
+
   // 组件挂载日志
   useEffect(() => {
     console.log('[HomeScreen] Component mounted', {
@@ -114,29 +119,85 @@ export const HomeScreen = () => {
     allCategories,
   } = useMultiPageData(categories);
 
-  // 快速滑动分类栏到选中项（无动画）
-  const scrollCategoryToCenter = useCallback((categoryId: number) => {
-    if (!horizontalScrollRef.current) return;
+  // 记录分类按钮的位置信息
+  const handleCategoryLayout = useCallback((categoryId: number, event: any) => {
+    const { x, width } = event.nativeEvent.layout;
+    categoryWidthsRef.current.set(categoryId, width);
+    categoryPositionsRef.current.set(categoryId, x);
+  }, []);
+
+  // 精确居中当前选中的分类
+  const scrollCategoryToCenter = useCallback((categoryId: number, immediate = false) => {
+    if (!horizontalScrollRef.current || isScrollingRef.current) return;
     
-    const categoryIndex = allCategories.findIndex(cat => cat.category_id === categoryId);
-    if (categoryIndex === -1) return;
+    const executeScroll = () => {
+      const position = categoryPositionsRef.current.get(categoryId);
+      const width = categoryWidthsRef.current.get(categoryId);
+      
+      if (position !== undefined && width !== undefined) {
+        const screenWidth = Dimensions.get('window').width;
+        const containerPadding = 10; // categoryScroll的paddingHorizontal
+        
+        // 计算目标分类的中心点位置
+        const itemCenterX = position + (width / 2);
+        
+        // 计算需要滚动的距离，使分类居中显示
+        const scrollToX = Math.max(0, itemCenterX - (screenWidth / 2) + containerPadding);
+        
+        isScrollingRef.current = true;
+        horizontalScrollRef.current?.scrollTo({
+          x: scrollToX,
+          animated: !immediate,
+        });
+        
+        // 重置滚动标志位
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, immediate ? 0 : 300);
+      } else {
+        // 如果还没有布局信息，使用简单估算
+        const categoryIndex = allCategories.findIndex(cat => cat.category_id === categoryId);
+        if (categoryIndex !== -1) {
+          const estimatedItemWidth = 80;
+          const screenWidth = Dimensions.get('window').width;
+          const scrollToX = Math.max(0, (categoryIndex * estimatedItemWidth) - (screenWidth / 2));
+          
+          isScrollingRef.current = true;
+          horizontalScrollRef.current?.scrollTo({
+            x: scrollToX,
+            animated: !immediate,
+          });
+          
+          // 重置滚动标志位
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, immediate ? 0 : 300);
+        }
+      }
+    };
     
-    // 简化计算，使用固定宽度估算
-    const estimatedItemWidth = 80; // 固定估算宽度，避免复杂计算
-    const screenWidth = Dimensions.get('window').width;
-    const scrollToX = Math.max(0, (categoryIndex * estimatedItemWidth) - (screenWidth / 2));
-    
-    horizontalScrollRef.current.scrollTo({
-      x: scrollToX,
-      animated: false, // 关闭动画
-    });
+    if (immediate) {
+      executeScroll();
+    } else {
+      // 只在有布局信息时才延迟，否则立即执行
+      const hasLayoutInfo = categoryPositionsRef.current.has(categoryId);
+      if (hasLayoutInfo) {
+        executeScroll();
+      } else {
+        setTimeout(executeScroll, 50);
+      }
+    }
   }, [allCategories]);
 
   // 切换类目的函数
   const handleCategoryChange = useCallback((categoryId: number) => {
     console.log(`[HomeScreen] handleCategoryChange called - categoryId: ${categoryId}`);
     setSelectedCategoryId(categoryId);
-    scrollCategoryToCenter(categoryId);
+    
+    // 使用requestAnimationFrame确保在下一帧执行滚动，避免冲突
+    requestAnimationFrame(() => {
+      scrollCategoryToCenter(categoryId);
+    });
     
     // 为推荐页面和分类页面自动加载数据
     if (categoryId === -1 || categoryId > 0) {
@@ -292,7 +353,7 @@ export const HomeScreen = () => {
     Alert.alert("已重置", "现在您可以使用相机功能了");
   }, []);
 
-  // 获取一级类目并初始化数据
+  // 获取一级类目并初始化数据（只在组件挂载时执行一次）
   useEffect(() => {
     console.log('[HomeScreen] fetchCategories useEffect triggered', {
       timestamp: new Date().toISOString(),
@@ -308,22 +369,21 @@ export const HomeScreen = () => {
         
         // 不再自动加载推荐数据，等用户手动触发
         // loadPageData(-1);
-        
-        // 定位分类栏 - 移除对scrollCategoryToCenter的依赖
-        setTimeout(() => {
-          if (horizontalScrollRef.current) {
-            horizontalScrollRef.current.scrollTo({
-              x: 0, // 滚动到推荐页面位置
-              animated: false,
-            });
-          }
-        }, 100);
       } catch (e) {
         console.error("获取一级类目失败", e);
       }
     };
     fetchCategories();
-  }, []); // 移除所有依赖，只在组件挂载时执行一次
+  }, []); // 只在组件挂载时执行一次
+
+  // 当分类数据加载完成后，进行初始定位
+  useEffect(() => {
+    if (categories.length > 0) {
+      setTimeout(() => {
+        scrollCategoryToCenter(selectedCategoryId, true); // 使用immediate模式
+      }, 150); // 稍微增加延迟确保DOM完全更新
+    }
+     }, [categories.length, selectedCategoryId, scrollCategoryToCenter]); // 添加必要依赖
 
   // 获取二级类目
   useEffect(() => {
@@ -386,6 +446,7 @@ export const HomeScreen = () => {
                 selectedCategoryId === -1 && styles.categoryItemActive,
               ]}
               onPress={() => handleCategoryChange(-1)}
+              onLayout={(event) => handleCategoryLayout(-1, event)}
             >
               <Text
                 style={[
@@ -407,6 +468,7 @@ export const HomeScreen = () => {
                     styles.categoryItemActive,
                 ]}
                 onPress={() => handleCategoryChange(cat.category_id)}
+                onLayout={(event) => handleCategoryLayout(cat.category_id, event)}
               >
                 <Text
                   style={[
@@ -856,7 +918,7 @@ export const HomeScreen = () => {
                       alignItems: "center",
                     }}
                     onPress={() => {
-                      setSelectedCategoryId(-1);
+                      handleCategoryChange(-1);
                       setShowCategoryModal(false);
                     }}
                   >
@@ -892,7 +954,7 @@ export const HomeScreen = () => {
                         alignItems: "center",
                       }}
                       onPress={() => {
-                        setSelectedCategoryId(category.category_id);
+                        handleCategoryChange(category.category_id);
                         setShowCategoryModal(false);
                       }}
                     >

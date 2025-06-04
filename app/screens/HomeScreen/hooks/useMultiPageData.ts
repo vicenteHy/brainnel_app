@@ -91,8 +91,8 @@ export const useMultiPageData = (categories: any[]) => {
   }, []);
 
   // 加载页面数据
-  const loadPageData = useCallback(async (categoryId: number, isRefresh = false) => {
-    console.log(`[useMultiPageData] loadPageData被调用 - categoryId: ${categoryId}, isRefresh: ${isRefresh}`);
+  const loadPageData = useCallback(async (categoryId: number, isRefresh = false, isLoadMore = false) => {
+    console.log(`[useMultiPageData] loadPageData被调用 - categoryId: ${categoryId}, isRefresh: ${isRefresh}, isLoadMore: ${isLoadMore}`);
     
     // 跳过无效的categoryId
     if (categoryId === 0) {
@@ -108,6 +108,15 @@ export const useMultiPageData = (categories: any[]) => {
     
     // 从ref获取最新状态
     const currentData = pageDataMapRef.current.get(categoryId) || initializePageData(categoryId);
+    
+    // 如果不是刷新操作也不是加载更多，且页面已有数据，则跳过首次加载
+    if (!isRefresh && !isLoadMore && currentData.initialized && currentData.products.length > 0) {
+      console.log(`[useMultiPageData] 页面已有数据，跳过首次加载 - categoryId: ${categoryId}`, {
+        productsLength: currentData.products.length,
+        initialized: currentData.initialized
+      });
+      return;
+    }
     
     console.log(`[useMultiPageData] loadPageData开始 - categoryId: ${categoryId}, isRefresh: ${isRefresh}`, {
       currentLoading: currentData.loading,
@@ -140,36 +149,33 @@ export const useMultiPageData = (categories: any[]) => {
       if (categoryId === -1) {
         // 推荐页面 - 每次调用获取10个随机产品
         console.log(`[useMultiPageData] 调用推荐API - categoryId: ${categoryId}`, {
-          count: 10,
+          count: 20,
           user_id: userStore.user?.user_id
         });
         
         apiResponse = await productApi.getPersonalRecommendations({
-          count: 10,
+          count: 20,
           ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
         });
         
         console.log(`[useMultiPageData] 推荐API响应 - categoryId: ${categoryId}`, {
-          responseLength: apiResponse.length,
-          apiResponse: apiResponse.slice(0, 2) // 只显示前2个产品的信息
+          responseLength: apiResponse.length
         });
       } else if (categoryId > 0) {
         // 分类页面 - 调用分类随机产品API
         console.log(`[useMultiPageData] 调用分类API - categoryId: ${categoryId}`, {
-          count: 10,
+          count: 20,
           user_id: userStore.user?.user_id
         });
         
         apiResponse = await productApi.getCategoryRandomProducts({
           category_id: categoryId,
-          count: 10,
+          count: 20,
           ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
         });
         
         console.log(`[useMultiPageData] 分类API响应 - categoryId: ${categoryId}`, {
-          responseLength: apiResponse.length,
-          apiResponse: apiResponse.slice(0, 2), // 只显示前2个产品的信息
-          fullApiResponse: apiResponse // 显示完整响应用于调试
+          responseLength: apiResponse.length
         });
       } else {
         console.log(`[useMultiPageData] 未支持的categoryId: ${categoryId}`);
@@ -289,18 +295,30 @@ export const useMultiPageData = (categories: any[]) => {
   // 缓存空数据对象，避免每次创建新对象
   const emptyDataCache = useRef(new Map<number, PageData>());
   
-  // 获取页面数据 - 直接使用 state，不用 callback 来避免闭包问题
+  // 获取页面数据 - 确保获取最新数据
   const getPageData = useCallback((categoryId: number): PageData => {
+    // 从state获取数据，这样可以确保组件重新渲染
     const pageData = pageDataMap.get(categoryId);
     if (pageData) {
-      // console.log(`[useMultiPageData] getPageData - categoryId: ${categoryId}`, {
-      //   hasData: true,
-      //   productsLength: pageData.products.length,
-      //   initialized: pageData.initialized,
-      //   loading: pageData.loading,
-      //   mapSize: pageDataMap.size
-      // });
       return pageData;
+    }
+    
+    // 如果state中没有数据，检查ref中是否有最新数据
+    const refPageData = pageDataMapRef.current.get(categoryId);
+    if (refPageData) {
+      console.log(`[useMultiPageData] getPageData - state滞后，从ref获取数据 - categoryId: ${categoryId}`, {
+        hasData: true,
+        productsLength: refPageData.products.length,
+        initialized: refPageData.initialized,
+        loading: refPageData.loading,
+        refMapSize: pageDataMapRef.current.size,
+        stateMapSize: pageDataMap.size
+      });
+      
+      // 强制更新state来触发重新渲染
+      setPageDataMap(prev => new Map(prev.set(categoryId, refPageData)));
+      
+      return refPageData;
     }
     
     // 如果没有数据，返回缓存的空数据对象，避免每次创建新对象
@@ -317,14 +335,16 @@ export const useMultiPageData = (categories: any[]) => {
     
     const emptyData = emptyDataCache.current.get(categoryId)!;
     
-    console.log(`[useMultiPageData] getPageData called for empty data - categoryId: ${categoryId}`, {
-      hasData: false,
-      productsLength: 0,
-      initialized: false,
-      loading: false,
-      mapSize: pageDataMap.size,
-      timestamp: new Date().toISOString()
-    });
+    // 移除频繁的空数据日志，减少日志噪音
+    // console.log(`[useMultiPageData] getPageData called for empty data - categoryId: ${categoryId}`, {
+    //   hasData: false,
+    //   productsLength: 0,
+    //   initialized: false,
+    //   loading: false,
+    //   refMapSize: pageDataMapRef.current.size,
+    //   stateMapSize: pageDataMap.size,
+    //   timestamp: new Date().toISOString()
+    // });
     
     return emptyData;
   }, [pageDataMap]);
@@ -351,8 +371,8 @@ export const useMultiPageData = (categories: any[]) => {
     });
     
     if (pageData.hasMore && !pageData.loading) {
-      console.log(`[useMultiPageData] 执行loadPageData - categoryId: ${categoryId}`);
-      loadPageData(categoryId);
+      console.log(`[useMultiPageData] 执行loadPageData (加载更多) - categoryId: ${categoryId}`);
+      loadPageData(categoryId, false, true); // isRefresh=false, isLoadMore=true
     } else {
       console.log(`[useMultiPageData] loadMoreData被阻止 - categoryId: ${categoryId}`, {
         hasMore: pageData.hasMore,

@@ -196,7 +196,7 @@ export const styles = StyleSheet.create<StylesType>({
     zIndex: 1,
   },
   categoryItem: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
     paddingVertical: 8,
     marginRight: 5,
   },
@@ -205,7 +205,7 @@ export const styles = StyleSheet.create<StylesType>({
     borderBottomColor: "#000",
   },
   categoryText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(12),
     color: "#747474",
     fontFamily: "Alexandria",
     fontWeight: "400",

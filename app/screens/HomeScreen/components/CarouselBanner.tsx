@@ -50,7 +50,7 @@ export const CarouselBanner = React.memo(
           loop
           width={screenWidth}
           data={data}
-          height={200}
+          height={300}
           modeConfig={{
             parallaxScrollingScale: 0.9,
             parallaxScrollingOffset: 50,

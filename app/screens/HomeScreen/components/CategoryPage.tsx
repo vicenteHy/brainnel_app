@@ -44,7 +44,10 @@ interface CategoryPageProps {
   subcategories?: any[]; // 二级分类数据
   subcategoriesLoading?: boolean; // 二级分类加载状态
   onSubcategoryPress?: (subcategoryId: number) => void; // 二级分类点击事件
-  onViewAllSubcategories?: (categoryId: number) => void; // 查看全部二级分类
+  onViewAllSubcategories?: (categoryId: number) => void; // 查看全部子分类
+  // 新增：智能预加载相关
+  checkAndTriggerPreload?: (categoryId: number, visibleIndex: number) => void;
+  loadingStrategy?: any;
 }
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({
@@ -61,12 +64,24 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   subcategoriesLoading = false,
   onSubcategoryPress,
   onViewAllSubcategories,
+  checkAndTriggerPreload,
+  loadingStrategy,
 }) => {
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const loadMoreRef = useRef(false); // 防止重复调用加载更多
+  const [showAllSubcategories, setShowAllSubcategories] = React.useState(false); // 控制是否显示所有二级分类
+  
+  // 智能预加载相关
+  const lastVisibleIndex = useRef(0);
+  const preloadCheckTimeout = useRef<NodeJS.Timeout | null>(null);
   
   // 本地图片不需要预加载，直接使用即可
+  
+  // 当分类切换时重置展开状态
+  React.useEffect(() => {
+    setShowAllSubcategories(false);
+  }, [categoryId]);
   
   // 当loading状态变化时重置防重复标志
   React.useEffect(() => {
@@ -74,6 +89,45 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       loadMoreRef.current = false;
     }
   }, [pageData.loading]);
+
+  // 清理预加载检查定时器
+  React.useEffect(() => {
+    return () => {
+      if (preloadCheckTimeout.current) {
+        clearTimeout(preloadCheckTimeout.current);
+      }
+    };
+  }, []);
+
+  // 处理可见项变化（智能预加载）
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    if (!isActive || categoryId !== -1 || !checkAndTriggerPreload) return; // 只为推荐页面和活跃状态检查
+    
+    if (viewableItems.length === 0) return;
+    
+    // 获取最后一个可见项的索引
+    const maxVisibleIndex = Math.max(...viewableItems.map((item: any) => item.index || 0));
+    
+    // 只有当滚动前进时才检查预加载
+    if (maxVisibleIndex > lastVisibleIndex.current) {
+      lastVisibleIndex.current = maxVisibleIndex;
+      
+      // 防抖处理，避免滚动过程中频繁触发
+      if (preloadCheckTimeout.current) {
+        clearTimeout(preloadCheckTimeout.current);
+      }
+      
+      preloadCheckTimeout.current = setTimeout(() => {
+        checkAndTriggerPreload(categoryId, maxVisibleIndex);
+      }, 150);
+    }
+  }, [isActive, categoryId, checkAndTriggerPreload]);
+
+  // 可见项配置
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50, // 50%可见时算作可见
+    minimumViewTime: 100, // 最小可见时间100ms
+  }).current;
 
   // 渲染产品项
   const renderProductItem = useCallback(
@@ -150,28 +204,32 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   ), [onSubcategoryPress]);
 
 
-  // 渲染"查看全部"按钮
+  // 渲染"查看全部/收起"按钮
   const renderViewAllButton = useCallback(() => (
     <TouchableOpacity
       key="view-all"
       style={styles.subcategoryItem}
       onPress={() => {
-        console.log(`[CategoryPage] 查看全部二级分类 - categoryId: ${categoryId}`);
-        onViewAllSubcategories?.(categoryId);
+        console.log(`[CategoryPage] 切换显示状态 - categoryId: ${categoryId}, showAll: ${!showAllSubcategories}`);
+        setShowAllSubcategories(!showAllSubcategories);
       }}
     >
       <View style={styles.subcategoryImagePlaceholder}>
-        <IconComponent name="grid" size={20} color="#ff5100" />
+        <IconComponent 
+          name={showAllSubcategories ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color="#ff5100" 
+        />
       </View>
       <Text
         style={[styles.subcategoryText, { color: '#ff5100', fontWeight: '600' }]}
         numberOfLines={2}
         ellipsizeMode="tail"
       >
-        {t('common.viewAll') || '查看全部'}
+        {showAllSubcategories ? (t('common.collapse') || '收起') : (t('common.viewAll') || '查看全部')}
       </Text>
     </TouchableOpacity>
-  ), [categoryId, onViewAllSubcategories, t]);
+  ), [categoryId, showAllSubcategories, t]);
 
   // 二级分类组件
   const subcategoryComponent = useMemo(() => {
@@ -193,7 +251,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     const maxRows = 3;
     const maxItemsToShow = (maxRows * itemsPerRow) - 1; // 减1是为了给"查看全部"留位置
     
-    // 如果分类数量少于等于最大显示数量，直接显示所有分类
+    // 如果分类数量少于等于最大显示数量，直接显示所有分类（不需要查看全部按钮）
     if (subcategories.length <= maxItemsToShow) {
       const rows = [];
       for (let i = 0; i < subcategories.length; i += itemsPerRow) {
@@ -214,22 +272,35 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       );
     }
 
-    // 如果分类数量超过最大显示数量，显示部分分类+查看全部按钮
-    const itemsToShow = subcategories.slice(0, maxItemsToShow);
+    // 如果分类数量超过最大显示数量
+    let itemsToShow: any[];
+    let needsViewAllButton = true;
+
+    if (showAllSubcategories) {
+      // 显示所有分类
+      itemsToShow = subcategories;
+      needsViewAllButton = true; // 显示"收起"按钮
+    } else {
+      // 只显示前几个分类
+      itemsToShow = subcategories.slice(0, maxItemsToShow);
+      needsViewAllButton = true; // 显示"查看全部"按钮
+    }
+
     const rows = [];
-    
     for (let i = 0; i < itemsToShow.length; i += itemsPerRow) {
       const rowItems = itemsToShow.slice(i, i + itemsPerRow);
       rows.push(rowItems);
     }
 
-    // 在最后一行的最后位置添加"查看全部"按钮
-    const lastRowIndex = rows.length - 1;
-    const lastRow = rows[lastRowIndex];
-    
-    // 如果最后一行已满，创建新行
-    if (lastRow.length === itemsPerRow) {
-      rows.push([]);
+    // 添加查看全部/收起按钮到最后
+    if (needsViewAllButton) {
+      const lastRowIndex = rows.length - 1;
+      const lastRow = rows[lastRowIndex];
+      
+      // 如果最后一行已满或没有行，创建新行
+      if (!lastRow || lastRow.length === itemsPerRow) {
+        rows.push([]);
+      }
     }
 
     return (
@@ -238,14 +309,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           {rows.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.subcategoryRow}>
               {row.map(renderSubcategoryItem)}
-              {/* 在最后一行添加"查看全部"按钮 */}
-              {rowIndex === rows.length - 1 && renderViewAllButton()}
+              {/* 在最后一行添加查看全部/收起按钮 */}
+              {needsViewAllButton && rowIndex === rows.length - 1 && renderViewAllButton()}
             </View>
           ))}
         </View>
       </View>
     );
-  }, [categoryId, subcategories, subcategoriesLoading, renderSubcategoryItem, renderViewAllButton, t]);
+  }, [categoryId, subcategories, subcategoriesLoading, showAllSubcategories, renderSubcategoryItem, renderViewAllButton]);
 
   // 列表头部组件
   const listHeaderComponent = useMemo(
@@ -308,6 +379,38 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     }
   }, [pageData.hasMore, pageData.loading, isActive, onLoadMore, categoryId]);
 
+  // 渲染底部加载指示器
+  const renderFooter = useCallback(() => {
+    // 如果没有更多数据或者当前没有产品，不显示底部加载指示器
+    if (!pageData.hasMore || pageData.products.length === 0) {
+      return null;
+    }
+
+    // 如果正在加载更多，显示加载动画
+    if (pageData.loading && pageData.products.length > 0) {
+      return (
+        <View style={{
+          paddingVertical: 20,
+          alignItems: 'center',
+          backgroundColor: '#f5f5f5',
+        }}>
+          <ActivityIndicator size="small" color="#ff5100" />
+          <Text style={{
+            marginTop: 8,
+            fontSize: 14,
+            color: '#666',
+            textAlign: 'center',
+          }}>
+            {t('common.loading') || '正在加载...'}
+          </Text>
+        </View>
+      );
+    }
+
+    // 默认情况下不显示任何内容
+    return null;
+  }, [pageData.hasMore, pageData.loading, pageData.products.length, t]);
+
   // 列表内容容器样式
   const flatListContentContainerStyle = useMemo(
     () => ({
@@ -317,10 +420,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     [],
   );
 
-  // 如果页面未初始化且不是当前活跃页面，返回空视图
-  if (!pageData.initialized && !isActive) {
-    return <View style={{ width: screenWidth, backgroundColor: "#f5f5f5" }} />;
-  }
+  // 移除这个条件判断，因为它会在页面切换时导致空白
+  // 让所有页面都正常渲染，由下面的逻辑来处理不同状态
   
   // 只有当用户明确交互过（如下拉刷新），且推荐页面为空时才自动加载
   // 这里暂时完全禁用自动加载，等用户滑动到底部或下拉刷新时才触发
@@ -334,14 +435,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
 
   return (
     <View style={{ width: screenWidth, flex: 1 }}>
-      {pageData.loading && pageData.products.length === 0 ? (
-        // 正在加载且没有数据时显示骨架屏
+      {(pageData.loading && pageData.products.length === 0) || (!pageData.initialized && pageData.products.length === 0) ? (
+        // 正在加载时或未初始化时显示骨架屏
         <ScrollView refreshControl={refreshControl}>
           {listHeaderComponent}
           {renderSkeletonGrid()}
         </ScrollView>
       ) : pageData.products.length === 0 ? (
-        // 没有数据且没在加载时，显示空状态，但仍可下拉刷新
+        // 已初始化但没有数据时，显示空状态，提示用户下拉刷新
         <ScrollView 
           refreshControl={refreshControl}
           contentContainerStyle={{ flex: 1 }}
@@ -372,16 +473,20 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           keyExtractor={keyExtractor}
           contentContainerStyle={flatListContentContainerStyle}
           ListHeaderComponent={listHeaderComponent}
+          ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
+          onEndReachedThreshold={0.3} // 提高触发阈值，避免过早加载
           refreshControl={refreshControl}
-          initialNumToRender={isActive ? 10 : 0} // 非活跃页面不预渲染
-          maxToRenderPerBatch={isActive ? 10 : 2}
-          windowSize={isActive ? 10 : 3}
+          initialNumToRender={isActive ? (loadingStrategy?.initialCount || 6) : 0} // 减少初始渲染数量
+          maxToRenderPerBatch={isActive ? 6 : 2} // 减少每批渲染数量
+          windowSize={isActive ? 8 : 3} // 优化窗口大小
           removeClippedSubviews={true}
-          updateCellsBatchingPeriod={50}
-          scrollEventThrottle={16}
+          updateCellsBatchingPeriod={100} // 增加批处理间隔，减少频繁更新
+          scrollEventThrottle={32} // 降低滚动事件频率
           getItemLayout={undefined} // 让FlatList自动计算布局，提高性能
+          // 智能预加载相关
+          onViewableItemsChanged={categoryId === -1 ? handleViewableItemsChanged : undefined}
+          viewabilityConfig={categoryId === -1 ? viewabilityConfig : undefined}
         />
       )}
     </View>
