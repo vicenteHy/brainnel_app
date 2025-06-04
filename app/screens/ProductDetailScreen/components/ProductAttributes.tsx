@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import DiagonalArrowIcon from '../../../components/DiagonalArrowIcon';
 import { getAttributeTransLanguage } from '../../../utils/languageUtils';
 import fontSize from '../../../utils/fontsizeUtils';
@@ -24,6 +25,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
   setShowBottomSheet,
   getDisplayAttributes,
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.productDetailsContainer}>
       <View style={styles.productDetailsContainer1}>
@@ -70,7 +72,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       style={styles.expandButton}
                       onPress={() => toggleExpand(item.attribute_name_trans)}
                     >
-                      <Text style={styles.expandButtonText}>收起</Text>
+                      <Text style={styles.expandButtonText}>{t('collapse')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -116,7 +118,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                         style={styles.expandButton}
                         onPress={() => toggleExpand(item.attribute_name_trans)}
                       >
-                        <Text style={styles.expandButtonText}>更多</Text>
+                        <Text style={styles.expandButtonText}>{t('showMore')}</Text>
                       </TouchableOpacity>
                     )}
                   {expandedGroups[item.attribute_name_trans] && (
@@ -124,7 +126,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       style={styles.expandButton}
                       onPress={() => toggleExpand(item.attribute_name_trans)}
                     >
-                      <Text style={styles.expandButtonText}>收起</Text>
+                      <Text style={styles.expandButtonText}>{t('collapse')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>

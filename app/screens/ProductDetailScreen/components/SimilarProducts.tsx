@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { similar } from '../../../services/api/productApi';
 import useUserStore from '../../../store/user';
 import { styles } from '../styles';
@@ -20,15 +21,16 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
   renderSkeletonItems,
 }) => {
   const userStore = useUserStore();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.storeRecommendationsContainer}>
       <View style={styles.storeInfoContainer}>
         <Text style={styles.storeSectionTitle}>
-          More from this store
+          {t('moreFromStore')}
         </Text>
         <TouchableOpacity onPress={onViewAllPress}>
-          <Text style={styles.storeMoreLink}>View All</Text>
+          <Text style={styles.storeMoreLink}>{t('viewAll')}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView

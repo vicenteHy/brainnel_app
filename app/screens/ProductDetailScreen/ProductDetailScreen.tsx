@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from 'react-i18next';
 import {
   ProductHeader,
   ProductImageCarousel,
@@ -31,6 +32,7 @@ import widthUtils from "../../utils/widthUtils";
 
 export default function ProductDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const { t } = useTranslation();
 
   const {
     product,
@@ -99,7 +101,7 @@ export default function ProductDetailScreen() {
         subject_trans: product.subject || product.subject_trans,
         min_price: product.price,
         offer_id: product.offer_id,
-        default_message: "我对这个产品感兴趣",
+        default_message: t('defaultProductMessage'),
       });
     }
   };
@@ -113,7 +115,7 @@ export default function ProductDetailScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FF5100" />
-          <Text style={styles.loadingText}>Loading product details...</Text>
+          <Text style={styles.loadingText}>{t('loading_product_details')}</Text>
         </View>
       </SafeAreaView>
     );

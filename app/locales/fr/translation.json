@@ -6,6 +6,11 @@
         "error": "Échec de la sélection de la langue. Veuillez réessayer."
     },
     "loading": "Chargement...",
+    "loading_product_details": "Chargement des détails du produit...",
+    "moreFromStore": "Plus de ce magasin",
+    "showMore": "Afficher plus",
+    "collapse": "Réduire", 
+    "defaultProductMessage": "Je suis intéressé par ce produit",
     "selectCountry": "Sélectionnez votre pays",
     "related_goods": "Produits liés",
     "address.errors.invalid_phone_length": "Veuillez entrer un numéro de téléphone valide avec {{validLengths}} chiffres",

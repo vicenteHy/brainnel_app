@@ -222,10 +222,10 @@ export const PreviewOrder = () => {
       };
 
       // 添加返回键监听（Android）
-      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
       return () => {
-        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+        backHandler.remove();
       };
     }, [navigation])
   );
@@ -413,7 +413,7 @@ export const PreviewOrder = () => {
           const analyticsStore = useAnalyticsStore.getState();
           analyticsStore.logCheckout(checkoutSuccessData, "preview");
           
-          console.log("支付结账成功埋点数据:", checkoutSuccessData);
+          console.log("支付结账成功埋点数据:");
 
           if (route.params.payMethod === "wave") {
             try {

@@ -422,7 +422,7 @@ export const HomeScreen = () => {
         }
       }, 150); // 稍微增加延迟确保DOM完全更新
     }
-  }, [categories.length, selectedCategoryId, scrollCategoryToCenter, getPageData, loadPageData]); // 添加必要依赖
+  }, [categories.length, selectedCategoryId]); // 移除函数依赖，只保留数据依赖
 
   // 获取二级类目
   useEffect(() => {

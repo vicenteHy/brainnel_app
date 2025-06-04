@@ -27,7 +27,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   return (
     <View style={styles.productDetailsSection}>
       <Text style={styles.productDetailsSectionTitle}>
-        {t("Product Details")}
+        {t('productDetails')}
       </Text>
       {imageUrls.map((src, index) => (
         <View
