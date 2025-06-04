@@ -723,7 +723,7 @@ export const PaymentMethod = () => {
         navigation.navigate("PreviewOrder", {
           data: res,
           payMethod: selectedPayment,
-          currency: selectedCurrency,
+          currency: selectedPayment === "paypal" ? selectedCurrency : selectedPayment === "wave" ? "FCFA" : user.currency,
           amount: totalAmount,
         });
       })

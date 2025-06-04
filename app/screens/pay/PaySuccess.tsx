@@ -52,27 +52,10 @@ export const PaymentSuccessScreen = () => {
       };
 
       // 监听硬件返回按钮（Android）
-      const backHandler = BackHandler;
-      const subscription = backHandler.addEventListener('hardwareBackPress', onBackPress);
-
-      // 监听导航事件（iOS手势返回和导航栏返回按钮）
-      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-        // 阻止默认行为
-        e.preventDefault();
-        
-        // 执行自定义返回逻辑
-        navigation.reset({
-          index: 0,
-          routes: [{ 
-            name: 'MainTabs',
-            params: { screen: 'Home' }
-          }],
-        });
-      });
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
       return () => {
-        subscription?.remove();
-        unsubscribe();
+        backHandler.remove();
       };
     }, [navigation])
   );
