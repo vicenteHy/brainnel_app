@@ -61,6 +61,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
           <TouchableOpacity
             style={styles.imagePickerOption}
             onPress={handleTakePhoto}
+            activeOpacity={1}
           >
             <IconComponent name="camera-outline" size={24} color="#333" />
             <Text style={styles.imagePickerText}>{t('takePhoto')}</Text>
@@ -69,6 +70,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
           <TouchableOpacity
             style={styles.imagePickerOption}
             onPress={resetAppState}
+            activeOpacity={1}
           >
             <IconComponent name="refresh-outline" size={24} color="#333" />
             <Text style={styles.imagePickerText}>{t('resetCamera')}</Text>
@@ -78,6 +80,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         <TouchableOpacity
           style={styles.imagePickerOption}
           onPress={handleChooseFromGallery}
+          activeOpacity={1}
         >
           <IconComponent name="images-outline" size={24} color="#333" />
           <Text style={styles.imagePickerText}>{t('chooseFromGallery')}</Text>
@@ -86,6 +89,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         <TouchableOpacity
           style={styles.imagePickerCancelButton}
           onPress={() => setShowImagePickerModal(false)}
+          activeOpacity={1}
         >
           <Text style={styles.imagePickerCancelText}>{t('cancel')}</Text>
         </TouchableOpacity>

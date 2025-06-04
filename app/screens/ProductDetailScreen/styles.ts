@@ -80,7 +80,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     height: 130,
     padding: 16,
-    paddingLeft: 10,
+    paddingHorizontal: 10,
     paddingBottom: 10,
     backgroundColor: "white",
   },
@@ -105,6 +105,7 @@ export const styles = StyleSheet.create({
   salesInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 10,
     justifyContent: "flex-start",
   },
   highlightedText: {
@@ -167,7 +168,7 @@ export const styles = StyleSheet.create({
     justifyContent: "flex-start",
     width: "100%",
     padding: 10,
-    paddingLeft: 10,
+    paddingHorizontal: 10,
     paddingBottom: 10,
     marginTop: 10,
     backgroundColor: "white",
@@ -259,7 +260,7 @@ export const styles = StyleSheet.create({
   storeRecommendationsContainer: {
     width: "100%",
     padding: 10,
-    paddingLeft: 19,
+    paddingHorizontal: 10,
     paddingBottom: 19,
     marginTop: 8,
     backgroundColor: "white",
@@ -370,7 +371,7 @@ export const styles = StyleSheet.create({
   },
   chatNowButton: {
     flex: 1,
-    height: widthUtils(30, 30).height,
+    height: widthUtils(35, 35).height,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -388,7 +389,7 @@ export const styles = StyleSheet.create({
   },
   addToCartButton: {
     flex: 1,
-    height: widthUtils(30, 30).height,
+    height: widthUtils(35, 35).height,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -480,7 +481,7 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: "white",
     padding: 10,
-    paddingLeft: 19,
+    paddingLeft: 0,
     paddingBottom: 19,
   },
   productDetailsSectionTitle: {
@@ -488,6 +489,7 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(16),
     lineHeight: 20,
     color: "black",
+    paddingLeft: 10,
     marginBottom: 12,
   },
 });

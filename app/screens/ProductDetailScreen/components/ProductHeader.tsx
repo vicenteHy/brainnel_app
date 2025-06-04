@@ -24,7 +24,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
 
   return (
     <View style={styles.headerBox}>
-      <TouchableOpacity style={styles.backIcon} onPress={onBackPress}>
+      <TouchableOpacity style={styles.backIcon} onPress={onBackPress} activeOpacity={1}>
         <BackIcon size={fontSize(20)} />
       </TouchableOpacity>
 
@@ -32,7 +32,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
         <TouchableOpacity
           style={{ flex: 1 }}
           onPress={onSearchPress}
-          activeOpacity={0.7}
+          activeOpacity={1}
         >
           <Text style={styles.searchText}>{t("search")}</Text>
         </TouchableOpacity>
@@ -40,12 +40,13 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
           onPress={onCameraPress}
           style={{ marginLeft: 8 }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          activeOpacity={1}
         >
           <CameraIcon size={20} color="#747474" />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.cartIcon} onPress={onCartPress}>
+      <TouchableOpacity style={styles.cartIcon} onPress={onCartPress} activeOpacity={1}>
         <ShoppingCartIcon size={fontSize(20)} />
       </TouchableOpacity>
     </View>

@@ -30,7 +30,7 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
         <Text style={styles.storeSectionTitle}>
           {t('moreFromStore')}
         </Text>
-        <TouchableOpacity onPress={onViewAllPress}>
+        <TouchableOpacity onPress={onViewAllPress} activeOpacity={1}>
           <Text style={styles.storeMoreLink}>{t('viewAll')}</Text>
         </TouchableOpacity>
       </View>
@@ -42,9 +42,10 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
         {isSimilarsFlag
           ? similars?.map((item) => (
               <TouchableOpacity
-                style={styles.productCard}
                 key={item.offer_id}
                 onPress={() => onProductPress(item)}
+                activeOpacity={1}
+                style={styles.productCard}
               >
                 <View style={styles.cardContainerWithPrice}>
                   <Image

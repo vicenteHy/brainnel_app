@@ -42,6 +42,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     <TouchableOpacity
                       key={attribute.value}
                       onPress={() => handleColorSelect(attribute.value, index)}
+                      activeOpacity={1}
                       style={[
                         styles.colorImageContainer,
                         attribute.has_color && styles.selectedColorImageContainer,
@@ -58,6 +59,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       <TouchableOpacity
                         style={styles.expandButton}
                         onPress={() => toggleExpand(item.attribute_name_trans)}
+                        activeOpacity={1}
                       >
                         <Text style={styles.expandButtonText}>
                           +{item.attributes.length - 6}
@@ -68,6 +70,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     <TouchableOpacity
                       style={styles.expandButton}
                       onPress={() => toggleExpand(item.attribute_name_trans)}
+                      activeOpacity={1}
                     >
                       <Text style={styles.expandButtonText}>{t('collapse')}</Text>
                     </TouchableOpacity>
@@ -84,6 +87,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     <TouchableOpacity
                       key={attribute.value}
                       onPress={() => handleSizeSelect(attribute.value, index)}
+                      activeOpacity={1}
                       style={[
                         styles.sizeButton,
                         attribute.has_color && styles.selectedSizeButton,
@@ -104,6 +108,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       <TouchableOpacity
                         style={styles.expandButton}
                         onPress={() => toggleExpand(item.attribute_name_trans)}
+                        activeOpacity={1}
                       >
                         <Text style={styles.expandButtonText}>{t('showMore')}</Text>
                       </TouchableOpacity>
@@ -112,6 +117,7 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                     <TouchableOpacity
                       style={styles.expandButton}
                       onPress={() => toggleExpand(item.attribute_name_trans)}
+                      activeOpacity={1}
                     >
                       <Text style={styles.expandButtonText}>{t('collapse')}</Text>
                     </TouchableOpacity>

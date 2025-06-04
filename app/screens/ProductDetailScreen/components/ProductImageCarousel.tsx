@@ -82,7 +82,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
             alignItems: "center",
           }}
         >
-          <TouchableOpacity onPress={handleFavoritePress}>
+          <TouchableOpacity onPress={handleFavoritePress} activeOpacity={1}>
             {product?.is_favorited ? (
               <HeartRedIcon size={20} color="red" />
             ) : (

@@ -27,13 +27,13 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
       shadowRadius: 8,
       elevation: 8,
     }]}>
-      <TouchableOpacity style={styles.storeIconButton} onPress={onStorePress}>
+      <TouchableOpacity style={styles.storeIconButton} onPress={onStorePress} activeOpacity={1}>
         <Ionicons name="storefront" size={24} color="#fff" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.chatNowButton} onPress={onChatNowPress}>
+      <TouchableOpacity style={styles.chatNowButton} onPress={onChatNowPress} activeOpacity={1}>
         <Text style={styles.chatNowText}>{t('chatNow')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.addToCartButton} onPress={onAddToCartPress}>
+      <TouchableOpacity style={styles.addToCartButton} onPress={onAddToCartPress} activeOpacity={1}>
         <Text style={styles.addToCartText}>{t('addToCart')}</Text>
       </TouchableOpacity>
     </View>
