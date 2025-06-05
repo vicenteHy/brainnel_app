@@ -47,6 +47,7 @@ const BottomActionBar: React.FC<BottomActionBarProps> = ({
       <TouchableOpacity
         style={styles.fixedBottomViewButton}
         onPress={onAddToCart}
+        activeOpacity={1}
       >
         <Text style={styles.fixedBottomViewButtonText}>
           {t("productCard.addToCart")}
@@ -82,12 +83,10 @@ const styles = StyleSheet.create({
   },
   fixedBottomViewBoxLeftText: {
     fontSize: fontSize(16),
-    fontFamily: "Segoe UI",
     color: "#000",
   },
   fixedBottomViewBoxPriceText: {
     fontSize: fontSize(20),
-    fontFamily: "Segoe UI",
     color: "#ff5217",
     fontWeight: "700",
   },
@@ -99,7 +98,6 @@ const styles = StyleSheet.create({
   },
   fixedBottomViewBoxRightText: {
     fontSize: fontSize(16),
-    fontFamily: "Segoe UI",
   },
   fixedBottomViewButton: {
     marginTop: 10,
@@ -112,7 +110,6 @@ const styles = StyleSheet.create({
   },
   fixedBottomViewButtonText: {
     fontSize: fontSize(16),
-    fontFamily: "Segoe UI",
     color: "#fff",
     fontWeight: "700",
     lineHeight: widthUtils(50, 50).height,

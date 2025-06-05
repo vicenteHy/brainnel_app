@@ -218,7 +218,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
   }, []);
 
   // 加入购物车
-  const addCartHandel = useCallback(() => {
+  const handleAddToCart = useCallback(() => {
     if (!user_id) {
       showCustomAlert(
         t("productCard.addFailed"),
@@ -393,7 +393,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     setDeleteModalVisible(true);
   }, [user_id, localProduct, mainProductQuantity, skuQuantities, totalPrice, selectedSize, product, groupList, hasImg, noImgList, showCustomAlert, navigation]);
 
-  const cancelDelete = useCallback(() => {
+  const handleCancelDelete = useCallback(() => {
     setDeleteModalVisible(false);
   }, []);
 
@@ -427,8 +427,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     handleQuantityInputConfirm,
     handleQuantityPress,
     handleSkuQuantityChange,
-    addCartHandel,
-    cancelDelete,
+    handleAddToCart,
+    handleCancelDelete,
     handleNavigateToCart,
     setMainProductQuantity,
     setQuantityInput,

@@ -73,7 +73,7 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
             </View>
           </View>
           <View style={styles.priceInfoClose}>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={onClose} activeOpacity={1}>
               <CloseIcon size={fontSize(20)} />
             </TouchableOpacity>
           </View>
@@ -121,19 +121,20 @@ const styles = StyleSheet.create({
   },
   price: {
     flexDirection: "row",
+    alignItems: "flex-end",
   },
   priceInfoText: {
     fontWeight: "700",
-    fontSize: fontSize(30),
-    fontFamily: "Segoe UI",
+    fontSize: fontSize(26),
     color: "#ff5100",
   },
   priceInfoTextCon: {
     fontWeight: "700",
     fontSize: fontSize(14),
-    fontFamily: "Segoe UI",
     color: "#ff5100",
     lineHeight: fontSize(30),
+    alignSelf: "flex-end",
+    marginLeft: 2,
   },
   priceInfoOffer: {
     width: widthUtils(35, 35).width,
