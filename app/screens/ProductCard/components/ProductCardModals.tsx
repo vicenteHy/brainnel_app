@@ -64,12 +64,14 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
               <TouchableOpacity
                 style={styles.cancelButton1}
                 onPress={onCancelDelete}
+                activeOpacity={1}
               >
-                <Text style={styles.cancelText}>{t("productCard.no")}</Text>
+                <Text style={styles.cancelText}>{t("productCard.continueShopping")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmButton}
                 onPress={onNavigateToCart}
+                activeOpacity={1}
               >
                 <Text style={styles.confirmText}>
                   {t("productCard.viewCart")}
@@ -172,51 +174,58 @@ const styles = StyleSheet.create({
   },
   popup: {
     backgroundColor: "white",
-    borderRadius: 10,
-    paddingVertical: 27,
-    paddingHorizontal: 20,
+    borderRadius: 15,
+    paddingVertical: 30,
+    paddingHorizontal: 25,
     alignItems: "center",
-    gap: 21,
+    width: "90%",
+    maxWidth: 380,
+    minWidth: 300,
   },
   promptText: {
-    fontSize: fontSize(20),
+    fontSize: fontSize(18),
     fontWeight: "600",
     color: "black",
-    fontFamily: "Segoe UI",
+    textAlign: "center",
+    marginBottom: 15,
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 10,
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 20,
+    paddingHorizontal: 10,
   },
   cancelButton1: {
-    width: widthUtils(50, 160).width,
-    height: widthUtils(50, 160).height,
+    flex: 1,
+    height: 50,
     borderRadius: 25,
     backgroundColor: "#f2f3f5",
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
+    paddingHorizontal: 15,
   },
   confirmButton: {
-    width: widthUtils(50, 160).width,
-    height: widthUtils(50, 160).height,
+    flex: 1,
+    height: 50,
     borderRadius: 25,
-    backgroundColor: "#002fa7",
+    backgroundColor: "#ff5217",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 20,
+    paddingHorizontal: 15,
   },
   cancelText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(15),
     fontWeight: "500",
     color: "#333333",
-    fontFamily: "Source Han Sans CN",
+    textAlign: "center",
   },
   confirmText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(15),
     fontWeight: "500",
     color: "#ffffff",
-    fontFamily: "Source Han Sans CN",
+    textAlign: "center",
   },
   quantityInput: {
     width: "100%",

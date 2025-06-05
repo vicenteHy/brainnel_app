@@ -11,6 +11,7 @@ import widthUtils from "../../../utils/widthUtils";
 import fontSize from "../../../utils/fontsizeUtils";
 import CloseIcon from "../../../components/CloseIcon";
 import { ProductDetailParams } from "../../../services/api/productApi";
+import { t } from "../../../i18n";
 
 interface ProductHeaderProps {
   imgTitle: string;
@@ -65,11 +66,18 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
                 </>
               )}
             </View>
-            <View style={styles.price}>
-              <Text style={styles.priceInfoText}>{price}</Text>
-              <Text style={styles.priceInfoTextCon}>
-                {product.currency}
-              </Text>
+            <View style={styles.priceContainer}>
+              <View style={styles.price}>
+                <Text style={styles.priceInfoText}>{price}</Text>
+                <Text style={styles.priceInfoTextCon}>
+                  {product.currency}
+                </Text>
+              </View>
+              {product.min_order_quantity && product.min_order_quantity > 1 && (
+                <Text style={styles.minOrderText}>
+                  {t("productCard.minOrder")}: {product.min_order_quantity}
+                </Text>
+              )}
             </View>
           </View>
           <View style={styles.priceInfoClose}>
@@ -119,6 +127,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  priceContainer: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
   price: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -135,6 +147,12 @@ const styles = StyleSheet.create({
     lineHeight: fontSize(30),
     alignSelf: "flex-end",
     marginLeft: 2,
+  },
+  minOrderText: {
+    fontSize: fontSize(12),
+    color: "#666",
+    marginTop: 2,
+    fontWeight: "500",
   },
   priceInfoOffer: {
     width: widthUtils(35, 35).width,

@@ -39,7 +39,7 @@ const BottomActionBar: React.FC<BottomActionBarProps> = ({
             {t("productCard.totalPrice")}
           </Text>
           <Text style={styles.fixedBottomViewBoxPriceText}>
-            {totalPrice.toFixed(2)} {product.currency}
+            {Math.round(totalPrice)} {product.currency}
           </Text>
         </View>
       </View>
