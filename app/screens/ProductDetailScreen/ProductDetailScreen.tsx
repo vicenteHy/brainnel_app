@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -13,6 +13,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from 'react-i18next';
+import useCartStore from "../../store/cartStore";
+import useUserStore from "../../store/user";
 import {
   ProductHeader,
   ProductImageCarousel,
@@ -33,6 +35,15 @@ import widthUtils from "../../utils/widthUtils";
 export default function ProductDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { t } = useTranslation();
+  const { updateCartItemCount } = useCartStore();
+  const { user } = useUserStore();
+
+  // 页面加载时更新购物车数量
+  useEffect(() => {
+    if (user?.user_id) {
+      updateCartItemCount();
+    }
+  }, [user?.user_id]);
 
   const {
     product,

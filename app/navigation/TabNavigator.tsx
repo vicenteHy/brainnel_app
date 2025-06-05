@@ -9,6 +9,7 @@ import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import useUserStore from '../store/user';
+import useCartStore from '../store/cartStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeScreen } from '../screens/HomeScreen';
@@ -27,6 +28,40 @@ const IconComponent = ({ name, size, color }: IconProps) => {
   return <Icon name={name} size={size} color={color} />;
 };
 
+// 购物车图标组件，带有数量标识
+const CartIconWithBadge = ({ color, size }: TabBarIconProps) => {
+  const { cartItemCount } = useCartStore();
+  
+  return (
+    <View style={{ position: 'relative' }}>
+      <IconComponent name="cart-outline" size={size} color={color} />
+      {cartItemCount > 0 && (
+        <View style={{
+          position: 'absolute',
+          top: -8,
+          right: -8,
+          backgroundColor: '#FF5100',
+          borderRadius: 8,
+          minWidth: 16,
+          height: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 3,
+        }}>
+          <Text style={{
+            color: 'white',
+            fontSize: 9,
+            fontWeight: 'bold',
+            textAlign: 'center',
+          }}>
+            {cartItemCount > 99 ? '99+' : cartItemCount.toString()}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 type TabBarIconProps = {
   color: string;
   size: number;
@@ -40,6 +75,7 @@ export const TabNavigator = () => {
   const route = useRoute();
   const { isLoggedIn } = useAuth();
   const { user } = useUserStore();
+  const { updateCartItemCount } = useCartStore();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [promptShownBefore, setPromptShownBefore] = useState(false);
@@ -94,6 +130,13 @@ export const TabNavigator = () => {
       }
     }
   }, [currentTab, user?.user_id, isFocused, promptShownBefore]);
+
+  // 监听用户登录状态，更新购物车数量
+  useEffect(() => {
+    if (user?.user_id) {
+      updateCartItemCount();
+    }
+  }, [user?.user_id]);
 
   const showLoginModal = () => {
     setShowLoginPrompt(true);
@@ -212,7 +255,7 @@ export const TabNavigator = () => {
           options={{
             tabBarLabel: t('cart.cart'),
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
-              <IconComponent name="cart-outline" size={size} color={color} />
+              <CartIconWithBadge color={color} size={size} />
             ),
           }}
         />

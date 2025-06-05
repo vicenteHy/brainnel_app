@@ -776,7 +776,10 @@
         "noName": "Pas de nom",
         "skuOptions": "Options du produit",
         "continueShopping": "Continuer les achats",
-        "minOrder": "Commande min"
+        "minOrder": "Commande min",
+        "notice": "Avis",
+        "pleaseAddProductQuantityZero": "Veuillez ajouter des produits, quantité actuelle est 0",
+        "addProducts": "Ajouter produits"
     },
     "common": {
         "cancel": "Annuler",

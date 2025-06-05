@@ -100,22 +100,37 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
             >
               {alertMessage.message}
             </Text>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton1}
-                onPress={onAlertCancel}
-              >
-                <Text style={styles.cancelText}>{t("productCard.cancel")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={onAlertConfirm}
-              >
-                <Text style={styles.confirmText}>
-                  {t("productCard.confirm")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {/* 检查是否是数量为0的提示，如果是则只显示一个按钮 */}
+            {alertMessage.message.includes("quantity is 0") || 
+             alertMessage.message.includes("quantité actuelle est 0") ? (
+              <View style={[styles.buttonContainer, { justifyContent: "center" }]}>
+                <TouchableOpacity
+                  style={[styles.confirmButton, { flex: 0, minWidth: 200 }]}
+                  onPress={onAlertConfirm}
+                >
+                  <Text style={styles.confirmText}>
+                    {t("productCard.addProducts")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton1}
+                  onPress={onAlertCancel}
+                >
+                  <Text style={styles.cancelText}>{t("productCard.cancel")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={onAlertConfirm}
+                >
+                  <Text style={styles.confirmText}>
+                    {t("productCard.confirm")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>

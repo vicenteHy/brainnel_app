@@ -405,7 +405,6 @@ export const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
-    backdropFilter: "blur(10px)", // iOS 毛玻璃效果
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,

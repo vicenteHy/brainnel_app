@@ -9,6 +9,7 @@ import {
 } from "../../../services/api/cart";
 import { payApi } from "../../../services/api/payApi";
 import useUserStore from "../../../store/user";
+import useCartStore from "../../../store/cartStore";
 import { t } from "../../../i18n";
 import Toast from "react-native-toast-message";
 
@@ -17,6 +18,7 @@ export const useCartData = () => {
   const {
     user: { user_id, currency, vip_discount, country_code },
   } = useUserStore();
+  const { updateCartItemCount, setCartItemCount } = useCartStore();
   const [selectedItems, setSelectedItems] = useState<{
     [key: string]: boolean;
   }>({});
@@ -133,6 +135,8 @@ export const useCartData = () => {
         });
         calculateTotalAmount(newList);
         changeAllSelected(newList);
+        // 立即更新购物车图标数字
+        updateCartIconCount(newList);
         return newList;
       });
 
@@ -192,6 +196,8 @@ export const useCartData = () => {
         });
         calculateTotalAmount(newList);
         changeAllSelected(newList);
+        // 立即更新购物车图标数字
+        updateCartIconCount(newList);
         return newList;
       });
 
@@ -229,28 +235,68 @@ export const useCartData = () => {
   };
 
   const getCart = async () => {
+    console.log('🔄 [Cart] 开始获取购物车数据', {
+      user_id,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!user_id) {
+      console.log('❌ [Cart] 用户未登录，跳过获取购物车');
       return;
     }
 
-    const res = await getCartList();
+    try {
+      const res = await getCartList();
+      console.log('📦 [Cart] 获取购物车数据成功', {
+        totalItems: res.items?.length || 0,
+        items: res.items?.map(item => ({
+          cart_id: item.cart_id,
+          subject: item.subject,
+          skuCount: item.skus?.length || 0,
+          totalQuantity: item.skus?.reduce((sum, sku) => sum + sku.quantity, 0) || 0
+        })) || []
+      });
 
-    // 修正父商品的选择状态，确保与子商品状态一致
-    const correctedItems = res.items.map((item) => {
-      const allSkusSelected = item.skus.every((sku) => sku.selected === 1);
-      return {
-        ...item,
-        selected: allSkusSelected ? 1 : 0,
-      };
-    });
+      // 修正父商品的选择状态，确保与子商品状态一致
+      const correctedItems = res.items.map((item) => {
+        const allSkusSelected = item.skus.every((sku) => sku.selected === 1);
+        const corrected = allSkusSelected !== (item.selected === 1);
+        
+        if (corrected) {
+          console.log('🔧 [Cart] 修正商品选择状态', {
+            cart_id: item.cart_id,
+            subject: item.subject,
+            原状态: item.selected,
+            新状态: allSkusSelected ? 1 : 0
+          });
+        }
+        
+        return {
+          ...item,
+          selected: allSkusSelected ? 1 : 0,
+        };
+      });
 
-    setCartList(correctedItems);
-    calculateTotalAmount(correctedItems);
+      setCartList(correctedItems);
+      calculateTotalAmount(correctedItems);
 
-    if (correctedItems.length === 0) {
-      setAllSelected(false);
-    } else {
-      changeAllSelected(correctedItems);
+      if (correctedItems.length === 0) {
+        console.log('📭 [Cart] 购物车为空，取消全选状态');
+        setAllSelected(false);
+      } else {
+        changeAllSelected(correctedItems);
+      }
+
+      // 立即更新购物车图标数字（本地计算）
+      updateCartIconCount(correctedItems);
+      
+      console.log('✅ [Cart] 购物车数据处理完成', {
+        totalProducts: correctedItems.length,
+        totalQuantity: correctedItems.reduce((total, item) => 
+          total + item.skus.reduce((sum, sku) => sum + sku.quantity, 0), 0)
+      });
+    } catch (error) {
+      console.error('❌ [Cart] 获取购物车数据失败', error);
     }
   };
 
@@ -302,6 +348,8 @@ export const useCartData = () => {
         };
       });
       calculateTotalAmount(newList);
+      // 立即更新购物车图标数字
+      updateCartIconCount(newList);
       return newList;
     });
   };
@@ -316,8 +364,15 @@ export const useCartData = () => {
       return;
     }
 
+    // 确保数量至少为1
+    if (newQuantity < 1) {
+      console.warn("数量不能小于1，已调整为1");
+      newQuantity = 1;
+    }
+
     try {
       // 更新本地状态
+      let updatedList: GetCartList[] = [];
       setCartList((prev) => {
         const newList = prev.map((item) => {
           if (item.cart_id === cartId) {
@@ -334,8 +389,12 @@ export const useCartData = () => {
           return item;
         });
         calculateTotalAmount(newList);
+        updatedList = newList;
         return newList;
       });
+
+      // 立即更新购物车图标数字（基于当前本地状态）
+      updateCartIconCount(updatedList);
 
       // 调用API更新数量
       await updateCartItem(cartId, {
@@ -348,6 +407,25 @@ export const useCartData = () => {
       // 如果更新失败，回滚本地状态
       getCart();
     }
+  };
+
+  // 计算购物车中所有商品的总数量
+  const calculateCartTotalQuantity = (cartData: GetCartList[]) => {
+    return cartData.reduce((total, item) => {
+      return total + item.skus.reduce((skuTotal, sku) => {
+        return skuTotal + sku.quantity;
+      }, 0);
+    }, 0);
+  };
+
+  // 立即更新购物车图标数字（本地计算，无需API调用）
+  const updateCartIconCount = (cartData: GetCartList[]) => {
+    const totalCount = calculateCartTotalQuantity(cartData);
+    console.log('🔢 [Cart] 立即更新购物车图标数字', {
+      totalCount,
+      timestamp: new Date().toISOString()
+    });
+    setCartItemCount(totalCount);
   };
 
   // 计算同一商品组的总数量
@@ -367,6 +445,14 @@ export const useCartData = () => {
     showMinQuantityModal: (message: string) => void
   ) => {
     if (!user_id) {
+      return;
+    }
+
+    // 如果当前数量已经是1，不能再减少
+    if (currentQuantity <= 1) {
+      showMinQuantityModal(
+        `${t("cart.notice")}：${t("cart.min_order")}1${t("cart.pieces")}`
+      );
       return;
     }
 
@@ -400,6 +486,7 @@ export const useCartData = () => {
 
   return {
     cartList,
+    setCartList,
     selectedItems,
     allSelected,
     totalAmount,
@@ -416,6 +503,8 @@ export const useCartData = () => {
     getCart,
     selectAllHandel,
     updateQuantity,
+    calculateTotalAmount,
+    updateCartIconCount,
     calculateProductGroupTotalQuantity,
     handleDecreaseQuantity,
     handleIncreaseQuantity,

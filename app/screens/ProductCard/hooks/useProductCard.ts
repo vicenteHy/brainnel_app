@@ -6,6 +6,7 @@ import { ProductDetailParams, ProductGroupList } from "../../../services/api/pro
 import { cartApi } from "../../../services/api/cart";
 import useProductCartStore from "../../../store/productCart";
 import useUserStore from "../../../store/user";
+import useCartStore from "../../../store/cartStore";
 import { t } from "../../../i18n";
 
 interface UseProductCardProps {
@@ -48,6 +49,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
   const {
     user: { user_id, vip_level, currency, vip_discount },
   } = useUserStore();
+  
+  const { updateCartItemCount } = useCartStore();
   
   const {
     product,
@@ -139,7 +142,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     if (!editingItem) return;
 
     const newQuantity = parseInt(quantityInput);
-    if (isNaN(newQuantity) || newQuantity < 0) {
+    if (isNaN(newQuantity) || newQuantity < 1) {
       showCustomAlert(
         t("productCard.inputError"),
         t("productCard.enterValidQuantity")
@@ -219,6 +222,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
 
   // 加入购物车
   const handleAddToCart = useCallback(() => {
+    
     if (!user_id) {
       showCustomAlert(
         t("productCard.addFailed"),
@@ -230,9 +234,21 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       return;
     }
 
+    // 检查总数量是否为0
+    if (selectedSize === 0) {
+      showCustomAlert(
+        t("productCard.notice"),
+        t("productCard.pleaseAddProductQuantityZero")
+      );
+      return;
+    }
+
     // 判断无sku
     const isNoSku = !localProduct.skus || localProduct.skus.length === 0;
-    if (isNoSku) {
+    // 判断单sku
+    const isSingleSku = localProduct.skus && localProduct.skus.length === 1;
+    
+    if (isNoSku || isSingleSku) {
       if (mainProductQuantity < 1) {
         showCustomAlert(
           t("productCard.addFailed"),
@@ -252,12 +268,19 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       const data = {
         offer_id: localProduct.offer_id,
         skus: [
-          { sku_id: localProduct.offer_id, quantity: mainProductQuantity },
+          { 
+            sku_id: isSingleSku ? localProduct.skus[0].sku_id : localProduct.offer_id, 
+            quantity: mainProductQuantity,
+            is_inquiry_item: false
+          },
         ],
       };
+      
       cartApi(data)
         .then(() => {
           setDeleteModalVisible(true);
+          // 更新全局购物车数量
+          updateCartItemCount();
         })
         .catch(() => {
           Alert.alert(
@@ -299,6 +322,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       const skus = selectedSkus.map(sku => ({
         sku_id: sku.sku_id,
         quantity: sku.selected_quantity,
+        is_inquiry_item: false
       }));
 
       const data = {
@@ -309,6 +333,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       cartApi(data)
         .then(() => {
           setDeleteModalVisible(true);
+          // 更新全局购物车数量
+          updateCartItemCount();
         })
         .catch(() => {
           Alert.alert(
@@ -339,13 +365,15 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     if (groupList.length > 1) {
       const selectedSku =
         hasImg?.attributes?.filter((item) => (item.size ?? 0) > 0) || [];
-      const skus: { sku_id: number; quantity: number }[] = [];
+      
+      const skus: { sku_id: number; quantity: number; is_inquiry_item: boolean }[] = [];
       selectedSku.forEach((item) => {
         item.list?.forEach((item) => {
           if ((item.size ?? 0) > 0) {
             skus.push({
               sku_id: item.sku_id,
               quantity: item.size as number,
+              is_inquiry_item: false
             });
           }
         });
@@ -358,6 +386,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       cartApi(data)
         .then((res) => {
           // ... existing code ...
+          // 更新全局购物车数量
+          updateCartItemCount();
         })
         .catch((err) => {
           Alert.alert(
@@ -368,11 +398,12 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     } else if (groupList.length === 1) {
       const selectedSku =
         noImgList.filter((item) => (item.size ?? 0) > 0) || [];
-      const skus: { sku_id: number; quantity: number }[] = [];
+      const skus: { sku_id: number; quantity: number; is_inquiry_item: boolean }[] = [];
       selectedSku.forEach((item) => {
         skus.push({
           sku_id: item.sku_id,
           quantity: item.size as number,
+          is_inquiry_item: false
         });
       });
       const data = {
@@ -381,7 +412,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       };
       cartApi(data)
         .then((res) => {
-          console.log(selectedSku);
+          // 更新全局购物车数量
+          updateCartItemCount();
         })
         .catch((err) => {
           Alert.alert(

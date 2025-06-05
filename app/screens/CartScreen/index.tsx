@@ -14,6 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import BackIcon from "../../components/BackIcon";
 import useCreateOrderStore from "../../store/createOrder";
 import useAnalyticsStore from "../../store/analytics";
+import useCartStore from "../../store/cartStore";
 import { deleteCartItem } from "../../services/api/cart";
 import { t } from "../../i18n";
 import { getSubjectTransLanguage } from "../../utils/languageUtils";
@@ -27,10 +28,12 @@ import { styles } from "./styles";
 export const CartScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { setItems } = useCreateOrderStore();
+  const { updateCartItemCount } = useCartStore();
 
   // 使用自定义hook管理购物车数据
   const {
     cartList,
+    setCartList,
     selectedItems,
     allSelected,
     totalAmount,
@@ -44,9 +47,12 @@ export const CartScreen = () => {
     toggleSelection,
     getCart,
     selectAllHandel,
+    calculateTotalAmount,
+    updateCartIconCount,
     calculateProductGroupTotalQuantity,
     handleDecreaseQuantity,
     handleIncreaseQuantity,
+    updateQuantity,
   } = useCartData();
 
   // 本地状态
@@ -86,64 +92,191 @@ export const CartScreen = () => {
     cartItemId: number,
     cartId1: number
   ) => {
+    console.log('🗑️ [Delete] 开始删除SKU', {
+      cartId,
+      cartItemId,
+      cartId1,
+      user_id,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!user_id) {
+      console.log('❌ [Delete] 用户未登录，取消删除');
       return;
     }
+    
+    // 查找要删除的商品信息用于日志
+    const itemToRemove = cartList.find((item) => item.cart_id === cartId);
+    const skuToRemove = itemToRemove?.skus.find((sku) => sku.cart_item_id === cartItemId);
+    
+    console.log('📋 [Delete] 删除目标信息', {
+      productName: itemToRemove?.subject,
+      skuInfo: skuToRemove ? {
+        quantity: skuToRemove.quantity,
+        price: skuToRemove.price,
+        selected: skuToRemove.selected,
+        attributes: skuToRemove.attributes.map(attr => attr.value).join(', ')
+      } : null,
+      totalSkusInProduct: itemToRemove?.skus.length || 0
+    });
+    
     setItemToDelete({ cartId, cartItemId, cartId1 });
     setDeleteModalVisible(true);
+    console.log('✅ [Delete] 删除确认弹窗已显示');
   };
 
   // 确认删除
   const confirmDelete = () => {
+    console.log('🔄 [Delete] 用户确认删除', {
+      user_id,
+      itemToDelete,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!user_id || !itemToDelete) {
+      console.log('❌ [Delete] 确认删除失败 - 用户未登录或无删除项', {
+        user_id: !!user_id,
+        hasItemToDelete: !!itemToDelete
+      });
       return;
     }
 
     const { cartId, cartItemId, cartId1 } = itemToDelete;
+    console.log('📝 [Delete] 提取删除参数', { cartId, cartItemId, cartId1 });
 
     // 执行删除逻辑
     const itemToRemove = cartList.find((item) => item.cart_id === cartId);
+    console.log('🔍 [Delete] 查找要删除的商品', {
+      found: !!itemToRemove,
+      productName: itemToRemove?.subject,
+      totalSkus: itemToRemove?.skus.length
+    });
+    
     if (itemToRemove) {
       const skuToRemove = itemToRemove.skus.find(
         (sku) => sku.cart_item_id === cartItemId
       );
+      console.log('🔍 [Delete] 查找要删除的SKU', {
+        found: !!skuToRemove,
+        skuDetails: skuToRemove ? {
+          quantity: skuToRemove.quantity,
+          price: skuToRemove.price,
+          selected: skuToRemove.selected
+        } : null
+      });
+      
       if (skuToRemove && skuToRemove.selected === 1) {
-        // 如果商品是已选中状态，从总价中减去
-        // setTotalAmount((prev) =>
-        //   Number((prev - skuToRemove.price * skuToRemove.quantity).toFixed(2))
-        // );
+        console.log('💰 [Delete] SKU已选中，将影响总价', {
+          currentPrice: skuToRemove.price,
+          quantity: skuToRemove.quantity,
+          totalImpact: skuToRemove.price * skuToRemove.quantity
+        });
       }
     }
 
     // 更新购物车列表
     const itemToUpdate = cartList.find((item) => item.cart_id === cartId);
+    console.log('🔄 [Delete] 准备更新购物车', {
+      found: !!itemToUpdate,
+      currentSkusCount: itemToUpdate?.skus.length
+    });
+    
     if (itemToUpdate) {
       const remainingSkus = itemToUpdate.skus.filter(
         (sku) => sku.cart_item_id !== cartItemId
       );
+      
+      console.log('📊 [Delete] SKU删除后状态', {
+        originalSkuCount: itemToUpdate.skus.length,
+        remainingSkuCount: remainingSkus.length,
+        willDeleteEntireProduct: remainingSkus.length === 0
+      });
+
+      // 立即更新本地UI状态，提供即时反馈
+      let updatedCartList: any[];
+      if (remainingSkus.length === 0) {
+        // 删除整个商品
+        updatedCartList = cartList.filter((item) => item.cart_id !== cartId);
+        console.log('🔄 [Delete] 立即更新本地状态 - 删除整个商品', {
+          原商品数: cartList.length,
+          新商品数: updatedCartList.length
+        });
+      } else {
+        // 删除单个SKU
+        updatedCartList = cartList.map((item) => {
+          if (item.cart_id === cartId) {
+            return {
+              ...item,
+              skus: remainingSkus
+            };
+          }
+          return item;
+        });
+        console.log('🔄 [Delete] 立即更新本地状态 - 删除单个SKU', {
+          商品ID: cartId,
+          原SKU数: itemToUpdate.skus.length,
+          新SKU数: remainingSkus.length
+        });
+      }
+      
+      setCartList(updatedCartList);
+      calculateTotalAmount(updatedCartList);
+      // 立即更新购物车图标数字
+      updateCartIconCount(updatedCartList);
 
       if (remainingSkus.length === 0) {
-        deleteCartItem(cartId1, cartItemId).then((res) => {
-          console.log(res);
+        console.log('🗑️ [Delete] 删除整个商品（所有SKU已删除）', {
+          cartId1,
+          cartItemId,
+          productName: itemToUpdate.subject
         });
-        // 删除整个商品
-        getCart(); // 重新获取购物车数据
+        
+        deleteCartItem(cartId1, cartItemId)
+          .then((res) => {
+            console.log('✅ [Delete] 整个商品删除成功', res);
+            // API删除成功后重新获取购物车数据（同步服务器状态）
+            getCart();
+          })
+          .catch((error) => {
+            console.error('❌ [Delete] 整个商品删除失败', error);
+            // 即使删除失败也重新获取数据以确保状态一致
+            getCart();
+          });
       } else {
-        deleteCartItem(cartId, cartItemId).then((res) => {
-          console.log(res);
+        console.log('🗑️ [Delete] 删除单个SKU（商品还有其他SKU）', {
+          cartId,
+          cartItemId,
+          remainingSkuCount: remainingSkus.length
         });
-        // 重新获取购物车数据
-        getCart();
+        
+        deleteCartItem(cartId, cartItemId)
+          .then((res) => {
+            console.log('✅ [Delete] 单个SKU删除成功', res);
+            // API删除成功后重新获取购物车数据（同步服务器状态）
+            getCart();
+          })
+          .catch((error) => {
+            console.error('❌ [Delete] 单个SKU删除失败', error);
+            // 即使删除失败也重新获取数据以确保状态一致
+            getCart();
+          });
       }
+    } else {
+      console.log('❌ [Delete] 未找到要更新的商品');
     }
 
     // 关闭确认对话框
     setDeleteModalVisible(false);
     setItemToDelete(null);
+    console.log('🔒 [Delete] 删除流程完成，关闭弹窗');
   };
 
   // 取消删除
   const cancelDelete = () => {
+    console.log('❎ [Delete] 用户取消删除', {
+      itemToDelete,
+      timestamp: new Date().toISOString()
+    });
     setDeleteModalVisible(false);
     setItemToDelete(null);
   };
@@ -179,7 +312,8 @@ export const CartScreen = () => {
         )}`
       );
     } else {
-      // updateQuantity(cartId, cartItemId, newQuantity);
+      // 调用updateQuantity方法来更新数量
+      updateQuantity(cartId, cartItemId, newQuantity);
       setEditingItem(null);
       setQuantityInput("");
     }

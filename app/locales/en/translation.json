@@ -686,7 +686,10 @@
         "noName": "No name",
         "skuOptions": "Product Options",
         "continueShopping": "Continue Shopping",
-        "minOrder": "Min Order"
+        "minOrder": "Min Order",
+        "notice": "Notice",
+        "pleaseAddProductQuantityZero": "Please add products, current quantity is 0",
+        "addProducts": "Add Products"
     },
     "common": {
         "cancel": "Cancel",

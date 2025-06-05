@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import BackIcon from '../../../components/BackIcon';
 import CameraIcon from '../../../components/CameraIcon';
-import ShoppingCartIcon from '../../../components/ShoppingCartIcon';
+import ShoppingCartIconWithBadge from '../../../components/ShoppingCartIconWithBadge';
 import fontSize from '../../../utils/fontsizeUtils';
 import { styles } from '../styles';
 
@@ -47,7 +47,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
       </View>
 
       <TouchableOpacity style={styles.cartIcon} onPress={onCartPress} activeOpacity={1}>
-        <ShoppingCartIcon size={fontSize(20)} />
+        <ShoppingCartIconWithBadge size={fontSize(20)} />
       </TouchableOpacity>
     </View>
   );
