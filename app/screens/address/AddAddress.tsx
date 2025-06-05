@@ -228,7 +228,7 @@ export const AddAddress = () => {
                     <View style={styles.recipientFormContainer2}>
                       <View style={styles.titleContainer}>
                         <View style={styles.backIconContainer}>
-                          <TouchableOpacity onPress={() => navigation.goBack()}>
+                          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
                             <BackIcon size={20} />
                           </TouchableOpacity>
                         </View>
@@ -245,6 +245,7 @@ export const AddAddress = () => {
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.first_name")}
+                              placeholderTextColor="#9ca3af"
                               value={formData.receiver_first_name}
                               onChangeText={(text) =>
                                 setFormData({
@@ -268,6 +269,7 @@ export const AddAddress = () => {
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.last_name")}
+                              placeholderTextColor="#9ca3af"
                               value={formData.receiver_last_name}
                               onChangeText={(text) =>
                                 setFormData({ ...formData, receiver_last_name: text })
@@ -287,6 +289,7 @@ export const AddAddress = () => {
                             <TouchableOpacity
                               style={styles.countrySelectorButton}
                               onPress={() => setOpen(true)}
+                              activeOpacity={1}
                             >
                               {selectedCountryLabel ? (
                                 <Text style={styles.selectedCountryText}>{selectedCountryLabel}</Text>
@@ -309,6 +312,7 @@ export const AddAddress = () => {
                                 <TextInput
                                   style={styles.pingFangText1}
                                   placeholder={t("address.placeholder.phone_number")}
+                                  placeholderTextColor="#9ca3af"
                                   value={formData.receiver_phone}
                                   onChangeText={(text) =>
                                     setFormData({
@@ -333,6 +337,7 @@ export const AddAddress = () => {
                                 <TextInput
                                   style={styles.pingFangText1}
                                   placeholder={t("address.placeholder.confirm_phone_number")}
+                                  placeholderTextColor="#9ca3af"
                                   value={formData.receiver_phone_again}
                                   onChangeText={(text) =>
                                     setFormData({
@@ -363,6 +368,7 @@ export const AddAddress = () => {
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.whatsapp")}
+                              placeholderTextColor="#9ca3af"
                               value={formData.whatsapp_phone}
                               onChangeText={(text) =>
                                 setFormData({ ...formData, whatsapp_phone: text })
@@ -380,6 +386,7 @@ export const AddAddress = () => {
                               onPress={() =>
                                 setCopyPhoneToWhatsApp(!copyPhoneToWhatsApp)
                               }
+                              activeOpacity={1}
                             >
                               <View
                                 style={[
@@ -423,6 +430,7 @@ export const AddAddress = () => {
                     <TouchableOpacity
                       style={styles.primaryButtonStyle}
                       onPress={handleSubmit}
+                      activeOpacity={1}
                     >
                       <Text style={styles.buttonText}>{t("address.submit")}</Text>
                     </TouchableOpacity>
@@ -441,7 +449,7 @@ export const AddAddress = () => {
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{t("address.select_country")}</Text>
-                  <TouchableOpacity onPress={() => setOpen(false)}>
+                  <TouchableOpacity onPress={() => setOpen(false)} activeOpacity={1}>
                     <Text style={styles.closeButton}>{t("address.close")}</Text>
                   </TouchableOpacity>
                 </View>
@@ -452,6 +460,7 @@ export const AddAddress = () => {
                     <TouchableOpacity
                       style={styles.countryItem}
                       onPress={() => handleCountrySelect(item)}
+                      activeOpacity={1}
                     >
                       {item.flag && (
                         <Image 
@@ -487,7 +496,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#f8f9fa",
   },
   scrollContainer: {
     flex: 1,
@@ -509,7 +518,7 @@ const styles = StyleSheet.create({
   },
   recipientFormContainer1: {
     width: "100%",
-    padding: 15,
+    padding: 16,
     paddingBottom: 32,
   },
   recipientFormContainer2: {
@@ -524,173 +533,194 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   backIconContainer: {
     position: "absolute",
-    left: 0,
+    left: 16,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
   titleHeading: {
     fontWeight: "600",
     fontSize: fontSize(20),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    lineHeight: 26,
+    color: "#000",
   },
   recipientInfoForm: {
-    marginTop: 35,
+    marginTop: 24,
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   recipientInfoHeadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 20,
   },
   recipientInfoHeading: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
+    fontWeight: "600",
     fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    lineHeight: 24,
+    color: "#000",
   },
   recipientInfoHeadingEmit: {
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#ff731e",
+    fontSize: fontSize(14),
+    lineHeight: 20,
+    color: "#FF5100",
     textDecorationLine: "underline",
   },
   contactFormContainer: {
     width: "100%",
-    marginTop: 9,
   },
   formFieldContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
-    backgroundColor: "white",
+    marginBottom: 16,
+    backgroundColor: "#f8f9fa",
     borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   flexRowCentered: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
+    marginBottom: 8,
   },
   elegantTextSnippet: {
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(12),
-    fontFamily: "PingFang SC",
-    color: "#646472",
+    fontSize: fontSize(15),
+    color: "#495057",
   },
   redTextHeading: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    fontSize: fontSize(15),
+    lineHeight: 20,
+    color: "#dc3545",
   },
   pingFangText: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
     fontWeight: "400",
     fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    lineHeight: 24,
+    color: "#495057",
+    backgroundColor: "transparent",
   },
   pingFangText1: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
     fontWeight: "400",
     fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    lineHeight: 24,
+    color: "#495057",
+    backgroundColor: "transparent",
   },
   copyContainer: {
-    marginTop: 10,
+    marginTop: 16,
+    marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   checkbox: {
-    width: 15,
-    height: 15,
-    borderWidth: 1,
-    borderColor: "#dbdce0",
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: "#dee2e6",
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: 12,
     justifyContent: "center",
     alignItems: "center",
   },
   checked: {
-    backgroundColor: "#002fa7",
-    borderColor: "#002fa7",
+    backgroundColor: "#FF5100",
+    borderColor: "#FF5100",
   },
   checkmark: {
     color: "white",
-    fontSize: fontSize(12),
+    fontSize: fontSize(14),
+    fontWeight: "bold",
   },
   checkboxLabel: {
-    fontSize: fontSize(14),
-    color: "#646472",
-    fontFamily: "PingFang SC",
+    fontSize: fontSize(13),
+    color: "#6c757d",
+    flex: 1,
   },
   lastNameInputContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
-    marginTop: 12,
-    backgroundColor: "white",
+    marginBottom: 16,
+    backgroundColor: "#f8f9fa",
     borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   lastNameInputContainer1: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
-    backgroundColor: "white",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f8f9fa",
     borderTopWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e9ecef",
   },
   redAsteriskTextStyle: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    fontSize: fontSize(15),
+    lineHeight: 20,
+    color: "#dc3545",
   },
   formContainer: {
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "center",
     width: "100%",
-    marginTop: 12,
-    backgroundColor: "white",
+    marginBottom: 16,
+    backgroundColor: "#f8f9fa",
     borderWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e9ecef",
+    borderRadius: 8,
   },
   optionListDropdown: {},
   verticalCenteredColumn: {
@@ -715,16 +745,14 @@ const styles = StyleSheet.create({
     margin: 0,
     fontWeight: "500",
     fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    color: "#495057",
   },
   mobilePhoneNumberLabel1: {
     padding: 0,
     margin: 0,
     fontWeight: "500",
     fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    color: "#495057",
   },
   phoneNumberPromptContainer: {
     flexDirection: "row",
@@ -752,36 +780,40 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(16),
+    fontSize: fontSize(15),
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    color: "#000",
   },
   submitButtonContainer: {
-    paddingRight: 11,
-    paddingLeft: 11,
-    marginTop: 60,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
   },
   primaryButtonStyle: {
     width: "100%",
-    height: 50,
+    height: 54,
     justifyContent: "center",
     alignItems: "center",
-    fontWeight: "600",
-    fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "white",
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF5100",
     borderWidth: 0,
-    borderRadius: 25,
+    borderRadius: 27,
+    shadowColor: "#FF5100",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   buttonText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: fontSize(17),
+    lineHeight: 24,
+    letterSpacing: 0.5,
   },
   dropdown: {
     borderColor: "#dbdce0",
@@ -812,7 +844,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   placeholderStyle: {
-    color: "#999",
+    color: "#9ca3af",
   },
   searchContainer: {
     borderBottomWidth: 1,
@@ -830,29 +862,31 @@ const styles = StyleSheet.create({
     borderColor: "#fe1e00",
   },
   errorText: {
-    color: "#fe1e00",
-    fontSize: fontSize(12),
-    marginTop: 4,
-    fontFamily: "PingFang SC",
+    color: "#dc3545",
+    fontSize: fontSize(11),
+    marginTop: 6,
+    fontWeight: "500",
+    lineHeight: 16,
   },
   countrySelectorButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    backgroundColor: "#f8f9fa",
   },
   selectedCountryText: {
     fontSize: fontSize(16),
-    color: "#333",
-    fontFamily: "PingFang SC",
+    color: "#495057",
   },
   dropdownArrow: {
     fontSize: fontSize(12),
-    color: "#646472",
-    fontFamily: "PingFang SC",
+    color: "#6c757d",
+    fontWeight: "500",
   },
   modalContainer: {
     flex: 1,
@@ -883,7 +917,7 @@ const styles = StyleSheet.create({
   closeButton: {
     fontSize: fontSize(16),
     fontWeight: "bold",
-    color: "#002fa7",
+    color: "#FF5100",
   },
   countryItem: {
     flexDirection: "row",
@@ -901,7 +935,7 @@ const styles = StyleSheet.create({
   checkIcon: {
     fontSize: fontSize(16),
     fontWeight: "bold",
-    color: "#002fa7",
+    color: "#FF5100",
   },
   flatList: {
     width: "100%",

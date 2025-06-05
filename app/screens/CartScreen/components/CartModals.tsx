@@ -44,12 +44,14 @@ export const CartModals: React.FC<CartModalsProps> = ({
               <TouchableOpacity
                 style={modalStyles.cancelButton1}
                 onPress={onCancelDelete}
+                activeOpacity={1}
               >
                 <Text style={modalStyles.cancelText}>{t("cart.no")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={modalStyles.confirmButton}
                 onPress={onConfirmDelete}
+                activeOpacity={1}
               >
                 <Text style={modalStyles.confirmText}>{t("cart.yes")}</Text>
               </TouchableOpacity>
@@ -76,6 +78,7 @@ export const CartModals: React.FC<CartModalsProps> = ({
             <TouchableOpacity
               style={[modalStyles.confirmButton, modalStyles.minQuantityButton]}
               onPress={onCloseMinQuantityModal}
+              activeOpacity={1}
             >
               <Text style={[modalStyles.confirmText, modalStyles.minQuantityButtonText]}>
                 {t("cart.confirm")}

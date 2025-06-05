@@ -259,7 +259,8 @@ export const AppNavigator = () => {
             gestureDirection: "horizontal",
           }}
         />
-        <Stack.Screen
+        {/* CartScreen已移除 - 现在只能通过Tab Navigator的Cart tab访问购物车 */}
+        {/* <Stack.Screen
           name="CartScreen"
           component={Screens.CartScreen}
           options={{
@@ -267,7 +268,7 @@ export const AppNavigator = () => {
             gestureEnabled: true,
             gestureDirection: "horizontal",
           }}
-        />
+        /> */}
         <Stack.Screen
           name="PaymentSuccessScreen"
           component={Screens.PaymentSuccessScreen}

@@ -37,8 +37,9 @@ export const CartBottom: React.FC<CartBottomProps> = ({
           <TouchableOpacity
             onPress={user_id ? onSelectAll : undefined}
             disabled={!user_id}
+            activeOpacity={1}
           >
-            <View style={styles.svgContainer1}>
+            <View style={styles.iconContainer24}>
               {allSelected ? (
                 <OrangeCircleIcon size={fontSize(24)} />
               ) : (
@@ -63,6 +64,7 @@ export const CartBottom: React.FC<CartBottomProps> = ({
             ]}
             onPress={user_id && !loading ? onSubmitOrder : undefined}
             disabled={!user_id || loading}
+            activeOpacity={1}
           >
             {loading ? (
               <ActivityIndicator size="small" color="white" />

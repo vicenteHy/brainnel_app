@@ -352,7 +352,7 @@ export const CartScreen = () => {
   };
 
   // 提交订单
-  const gotoOrder = async () => {
+  const goToOrder = async () => {
     if (!user_id) {
       Alert.alert(t("cart.add_failed"), t("cart.login_required"));
       return;
@@ -446,6 +446,7 @@ export const CartScreen = () => {
           <TouchableOpacity 
             style={styles.backButton} 
             onPress={() => navigation.goBack()}
+            activeOpacity={1}
           >
             <BackIcon size={20} />
           </TouchableOpacity>
@@ -463,7 +464,7 @@ export const CartScreen = () => {
             <View style={styles.productListingContainer}>
               <View style={styles.shoppingCartSection}>
                 <View style={styles.productCardContainer7}>
-                  <View style={styles.svgContainer}>
+                  <View style={styles.iconContainer18}>
                     {/* Replace SVG with actual icon component or image */}
                   </View>
                 </View>
@@ -474,7 +475,7 @@ export const CartScreen = () => {
                 <CartItem
                   item={item}
                   index1={index1}
-                  user_id={user_id}
+                  user_id={user_id?.toString() || null}
                   vip_discount={vip_discount}
                   editingItem={editingItem}
                   quantityInput={quantityInput}
@@ -501,17 +502,17 @@ export const CartScreen = () => {
 
           {/* Fixed Bottom Section */}
           <CartBottom
-            user_id={user_id}
+            user_id={user_id?.toString() || null}
             allSelected={allSelected}
             totalAmount={totalAmount}
             currency={currency}
             loading={loading}
             onSelectAll={selectAllHandel}
-            onSubmitOrder={gotoOrder}
+            onSubmitOrder={goToOrder}
           />
 
           {/* 未登录遮罩 */}
-          <LoginOverlay user_id={user_id} onGoToLogin={goToLogin} />
+          <LoginOverlay user_id={user_id?.toString() || null} onGoToLogin={goToLogin} />
         </View>
       </View>
 
@@ -523,7 +524,7 @@ export const CartScreen = () => {
         onConfirmDelete={confirmDelete}
         onCancelDelete={cancelDelete}
         onCloseMinQuantityModal={() => setMinQuantityModalVisible(false)}
-        user_id={user_id}
+        user_id={user_id?.toString() || null}
       />
     </SafeAreaView>
   );

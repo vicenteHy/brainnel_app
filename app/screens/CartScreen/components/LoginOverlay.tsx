@@ -37,6 +37,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({
           <TouchableOpacity
             style={styles.loginButton}
             onPress={onGoToLogin}
+            activeOpacity={1}
           >
             <Text style={styles.loginButtonText}>
               {t("cart.login_now", "立即登录")}

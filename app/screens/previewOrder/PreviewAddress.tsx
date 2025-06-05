@@ -56,7 +56,7 @@ export const PreviewAddress = () => {
   const [formData, setFormData] = useState({
     receiver_first_name: "",
     receiver_last_name: "",
-    country: "",
+    country_code: "225", // 默认科特迪瓦区号
     receiver_phone: "",
     receiver_phone_again: "",
     whatsapp_phone: "",
@@ -89,12 +89,14 @@ export const PreviewAddress = () => {
     // If there is an address in route params, use it first
     if (route.params?.address) {
       setFormData({
-        ...route.params.address,
-        receiver_phone_again: route.params.address.receiver_phone,
+        receiver_first_name: route.params.address.receiver_first_name || "",
+        receiver_last_name: route.params.address.receiver_last_name || "",
+        country_code: "225", // 默认科特迪瓦区号
+        receiver_phone: route.params.address.receiver_phone || "",
+        receiver_phone_again: route.params.address.receiver_phone || "",
+        whatsapp_phone: route.params.address.whatsapp_phone || "",
         is_default: Boolean(route.params.address.is_default),
       });
-      // Set country dropdown default value to address country
-      setValue(route.params.address.country || null);
     }
   }, []);
 
@@ -154,13 +156,12 @@ export const PreviewAddress = () => {
       setFormData({
         receiver_first_name: defaultAddress.receiver_first_name || "",
         receiver_last_name: defaultAddress.receiver_last_name || "",
-        country: defaultAddress.country || "",
+        country_code: "225", // 默认科特迪瓦区号
         receiver_phone: defaultAddress.receiver_phone || "",
         receiver_phone_again: defaultAddress.receiver_phone || "",
         whatsapp_phone: defaultAddress.whatsapp_phone || "",
         is_default: Boolean(defaultAddress.is_default),
       });
-      setValue(defaultAddress.country || null);
     }
   }, [defaultAddress, route.params?.address]);
 
@@ -216,7 +217,7 @@ export const PreviewAddress = () => {
       const logData = {
         last_name: formData.receiver_last_name,
         first_name: formData.receiver_first_name,
-        country: formData.country,
+        country: formData.country_code,
         phone_number: Number(formData.receiver_phone),
         whatsApp_number: Number(formData.whatsapp_phone),
       }
@@ -236,8 +237,10 @@ export const PreviewAddress = () => {
   };
 
   const handleCountrySelect = (item: any) => {
-    setValue(item.value);
-    setSelectedCountryLabel(item.label);
+    setFormData(prev => ({
+      ...prev,
+      country_code: item.country
+    }));
     setOpen(false);
   };
 
@@ -291,7 +294,6 @@ export const PreviewAddress = () => {
                                 receiver_first_name: text,
                               })
                             }
-                            editable={false}
                           />
                           {errors.receiver_first_name && (
                             <Text style={styles.errorText}>
@@ -313,7 +315,6 @@ export const PreviewAddress = () => {
                             onChangeText={(text) =>
                               setFormData({ ...formData, receiver_last_name: text })
                             }
-                            editable={false}
                           />
                           {errors.receiver_last_name && (
                             <Text style={styles.errorText}>
@@ -321,24 +322,7 @@ export const PreviewAddress = () => {
                             </Text>
                           )}
                         </View>
-                        {/* Country */}
-                        <View style={styles.lastNameInputContainer}>
-                          <View style={styles.flexRowCentered}>
-                            <Text style={styles.elegantTextSnippet}>{t("address.country")}</Text>
-                          </View>
-                          <TouchableOpacity
-                            style={styles.countrySelectorButton}
-                            onPress={() => setOpen(true)}
-                            disabled={true}
-                          >
-                            {selectedCountryLabel ? (
-                              <Text style={styles.selectedCountryText}>{selectedCountryLabel}</Text>
-                            ) : (
-                              <Text style={styles.placeholderStyle}>{t("address.placeholder.select_country")}</Text>
-                            )}
-                            <Text style={styles.dropdownArrow}>▼</Text>
-                          </TouchableOpacity>
-                        </View>
+
 
                         {/* Phone Number Section */}
                         <View style={styles.formContainer}>
@@ -350,18 +334,27 @@ export const PreviewAddress = () => {
                                 </Text>
                                 <Text style={styles.redAsteriskTextStyle}>*</Text>
                               </View>
-                              <TextInput
-                                style={styles.pingFangText1}
-                                placeholder={t("address.placeholder.phone_number")}
-                                value={formData.receiver_phone}
-                                onChangeText={(text) =>
-                                  setFormData({
-                                    ...formData,
-                                    receiver_phone: text,
-                                  })
-                                }
-                                editable={false}
-                              />
+                              <View style={styles.phoneInputContainer}>
+                                <TouchableOpacity
+                                  style={styles.countryCodeSelector}
+                                  onPress={() => setOpen(true)}
+                                >
+                                  <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
+                                  <Text style={styles.dropdownArrow}>▼</Text>
+                                </TouchableOpacity>
+                                <TextInput
+                                  style={styles.phoneInput}
+                                  placeholder={t("address.placeholder.phone_number")}
+                                  value={formData.receiver_phone}
+                                  onChangeText={(text) =>
+                                    setFormData({
+                                      ...formData,
+                                      receiver_phone: text,
+                                    })
+                                  }
+                                  keyboardType="numeric"
+                                />
+                              </View>
                               {errors.receiver_phone && (
                                 <Text style={styles.errorText}>
                                   {errors.receiver_phone}
@@ -375,18 +368,23 @@ export const PreviewAddress = () => {
                                 </Text>
                                 <Text style={styles.redAsteriskTextStyle}>*</Text>
                               </View>
-                              <TextInput
-                                style={styles.pingFangText1}
-                                placeholder={t("address.placeholder.confirm_phone_number")}
-                                value={formData.receiver_phone_again}
-                                onChangeText={(text) =>
-                                  setFormData({
-                                    ...formData,
-                                    receiver_phone_again: text,
-                                  })
-                                }
-                                editable={false}
-                              />
+                              <View style={styles.phoneInputContainer}>
+                                <View style={styles.countryCodeDisplay}>
+                                  <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
+                                </View>
+                                <TextInput
+                                  style={styles.phoneInput}
+                                  placeholder={t("address.placeholder.confirm_phone_number")}
+                                  value={formData.receiver_phone_again}
+                                  onChangeText={(text) =>
+                                    setFormData({
+                                      ...formData,
+                                      receiver_phone_again: text,
+                                    })
+                                  }
+                                  keyboardType="numeric"
+                                />
+                              </View>
                               {errors.receiver_phone_again && (
                                 <Text style={styles.errorText}>
                                   {errors.receiver_phone_again}
@@ -414,7 +412,7 @@ export const PreviewAddress = () => {
                             onChangeText={(text) =>
                               setFormData({ ...formData, whatsapp_phone: text })
                             }
-                            editable={false}
+                            keyboardType="numeric"
                           />
                           {errors.whatsapp_phone && (
                             <Text style={styles.errorText}>
@@ -489,7 +487,7 @@ export const PreviewAddress = () => {
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{t("address.select_country")}</Text>
+                  <Text style={styles.modalTitle}>选择国家区号</Text>
                   <TouchableOpacity onPress={() => setOpen(false)}>
                     <Text style={styles.closeButton}>{t("address.close")}</Text>
                   </TouchableOpacity>
@@ -508,8 +506,8 @@ export const PreviewAddress = () => {
                           style={styles.flagImage} 
                         />
                       )}
-                      <Text style={styles.countryItemText}>{item.label}</Text>
-                      {value === item.value && (
+                      <Text style={styles.countryItemText}>{item.name_en} (+{item.country})</Text>
+                      {formData.country_code === item.country && (
                         <Text style={styles.checkIcon}>✓</Text>
                       )}
                     </TouchableOpacity>
@@ -556,7 +554,7 @@ const styles = StyleSheet.create({
   },
   recipientFormContainer1: {
     width: "100%",
-    padding: 15,
+    padding: 20,
     paddingBottom: 32,
   },
 
@@ -572,6 +570,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    paddingVertical: 10,
   },
   backIconContainer: {
     position: "absolute",
@@ -579,51 +578,62 @@ const styles = StyleSheet.create({
   },
   titleHeading: {
     fontWeight: "600",
-    fontSize: fontSize(20),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontSize: 20,
+    lineHeight: 28,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
+    letterSpacing: 0.3,
   },
   recipientInfoForm: {
-    marginTop: 35,
+    marginTop: 30,
   },
   recipientInfoHeadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 16,
   },
   recipientInfoHeading: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontWeight: "600",
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
+    letterSpacing: 0.2,
   },
   recipientInfoHeadingEmit:{
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#ff731e",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#ff6b35",
     textDecorationLine: "underline",
   },
   contactFormContainer: {
     width: "100%",
-    marginTop: 9,
+    marginTop: 8,
   },
   formFieldContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
+    padding: 16,
+    paddingBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   flexRowCentered: {
     flexDirection: "row",
@@ -634,42 +644,43 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(12),
-    fontFamily: "PingFang SC",
-    color: "#646472",
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#666666",
+    letterSpacing: 0.1,
   },
   redTextHeading: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#ff4444",
   },
   pingFangText: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
+    marginTop: 8,
     fontWeight: "400",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#333333",
   },
   pingFangText1: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
+    marginTop: 8,
     fontWeight: "400",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#333333",
   },
   copyContainer: {
-    marginTop: 10,
+    marginTop: 16,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -678,75 +689,91 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checkbox: {
-    width: 15,
-    height: 15,
-    borderWidth: 1,
-    borderColor: "#dbdce0",
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: "#e8e8e8",
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   checked: {
-    backgroundColor: "#002fa7",
-    borderColor: "#002fa7",
+    backgroundColor: "#ff6b35",
+    borderColor: "#ff6b35",
   },
   checkmark: {
     color: "white",
     fontSize: 12,
+    fontWeight: "bold",
   },
   checkboxLabel: {
-    fontSize: fontSize(14),
-    color: "#646472",
-    fontFamily: "PingFang SC",
+    fontSize: 14,
+    color: "#666666",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.1,
   },
   lastNameInputContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
-    marginTop: 12,
+    padding: 16,
+    paddingBottom: 12,
+    marginBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   lastNameInputContainer1: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
+    padding: 16,
+    paddingBottom: 12,
     backgroundColor: "white",
     borderTopWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e8e8e8",
   },
 
   redAsteriskTextStyle: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#ff4444",
   },
   formContainer: {
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "center",
     width: "100%",
-    marginTop: 12,
+    marginBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   optionListDropdown: {},
   verticalCenteredColumn: {
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "center",
-    marginTop: -1,
   },
   phoneNumberContainer: {
     flexDirection: "row",
@@ -757,23 +784,23 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     backgroundColor: "white",
     borderWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e8e8e8",
   },
   mobilePhoneNumberLabel: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontWeight: "400",
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#666666",
   },
   mobilePhoneNumberLabel1: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontWeight: "400",
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#666666",
   },
   phoneNumberPromptContainer: {
     flexDirection: "row",
@@ -785,61 +812,65 @@ const styles = StyleSheet.create({
     marginTop: -1,
     backgroundColor: "white",
     borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    borderColor: "#e8e8e8",
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   defaultSettingSection: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    marginTop: 15.5,
+    marginTop: 20,
     gap: 8,
   },
   defaultTextDisplayStyle: {
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
+    letterSpacing: 0.1,
   },
   submitButtonContainer: {
-    paddingRight: 11,
-    paddingLeft: 11,
-    marginTop: 60,
+    paddingHorizontal: 20,
+    marginTop: 40,
   },
   primaryButtonStyle: {
     width: "100%",
-    height: 50,
+    height: 56,
     justifyContent: "center",
     alignItems: "center",
-    fontWeight: "600",
-    fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "white",
-    backgroundColor: "#002fa7",
+    backgroundColor: "#ff6b35",
     borderWidth: 0,
-    borderRadius: 25,
+    borderRadius: 16,
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
     color: "white",
     fontWeight: "600",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
   },
   selectedCountryText: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(16) ,
+    fontWeight: "400",
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#646472",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#333333",
   },
   modalContainer: {
     flex: 1,
@@ -848,8 +879,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     width: "100%",
     height: Dimensions.get('window').height * 0.8,
     display: "flex",
@@ -859,65 +890,69 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 15,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#dbdce0",
+    borderBottomColor: "#e8e8e8",
   },
   modalTitle: {
     fontWeight: "600",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
+    letterSpacing: 0.2,
   },
   closeButton: {
     fontWeight: "500",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#ff731e",
-    textDecorationLine: "underline",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#ff6b35",
   },
   countryItem: {
-    padding: 15,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#dbdce0",
+    borderBottomColor: "#f0f0f0",
     flexDirection: "row",
     alignItems: "center",
   },
   countryItemText: {
-    fontSize: fontSize(16),
-    color: "#333",
+    fontSize: 16,
+    color: "#333333",
     flex: 1,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   errorText: {
-    color: "#fe1e00",
-    fontSize: fontSize(12),
-    marginTop: 4,
-    fontFamily: "PingFang SC",
+    color: "#ff4444",
+    fontSize: 12,
+    marginTop: 6,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontWeight: "400",
   },
   countrySelectorButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
-    marginTop: 5,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    marginTop: 8,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: "#fafafa",
   },
   placeholderStyle: {
-    color: "#807e7e",
-    fontSize: fontSize(16),
+    color: "#999999",
+    fontSize: 16,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   flagImage: {
     width: 24,
     height: 16,
-    marginRight: 10,
+    marginRight: 12,
   },
   dropdownArrow: {
-    fontSize: fontSize(12),
-    color: "#807e7e",
+    fontSize: 14,
+    color: "#666666",
   },
   flatList: {
     flex: 1,
@@ -927,8 +962,55 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   checkIcon: {
-    color: "#002fa7",
-    fontSize: fontSize(18),
+    color: "#ff6b35",
+    fontSize: 18,
     fontWeight: "bold",
+  },
+  phoneInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  countryCodeSelector: {
+    backgroundColor: "#f5f5f5",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginRight: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 80,
+    justifyContent: "space-between",
+  },
+  countryCodeDisplay: {
+    backgroundColor: "#f5f5f5",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginRight: 8,
+    minWidth: 80,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  countryCodeText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333333",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  phoneInput: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333333",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });

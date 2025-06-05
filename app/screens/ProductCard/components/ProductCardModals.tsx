@@ -107,6 +107,7 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
                 <TouchableOpacity
                   style={[styles.confirmButton, { flex: 0, minWidth: 200 }]}
                   onPress={onAlertConfirm}
+                  activeOpacity={1}
                 >
                   <Text style={styles.confirmText}>
                     {t("productCard.addProducts")}
@@ -118,12 +119,14 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
                 <TouchableOpacity
                   style={styles.cancelButton1}
                   onPress={onAlertCancel}
+                  activeOpacity={1}
                 >
                   <Text style={styles.cancelText}>{t("productCard.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.confirmButton}
                   onPress={onAlertConfirm}
+                  activeOpacity={1}
                 >
                   <Text style={styles.confirmText}>
                     {t("productCard.confirm")}
@@ -158,6 +161,7 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
               <TouchableOpacity
                 style={[styles.cancelButton1, { width: "45%" }]}
                 onPress={onQuantityInputCancel}
+                activeOpacity={1}
               >
                 <Text style={styles.cancelText}>{t("productCard.cancel")}</Text>
               </TouchableOpacity>
@@ -167,6 +171,7 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
                   { width: "45%", backgroundColor: "#ff5100" },
                 ]}
                 onPress={onQuantityInputConfirm}
+                activeOpacity={1}
               >
                 <Text style={styles.confirmText}>
                   {t("productCard.confirm")}

@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  svgContainer: {
+  iconContainer18: {
     width: widthUtils(18, 18).width,
     height: widthUtils(18, 18).height,
   },
@@ -80,7 +80,7 @@ export const styles = StyleSheet.create({
     gap: 10,
     alignItems: "center",
   },
-  svgContainer1: {
+  iconContainer24: {
     width: widthUtils(24, 24).width,
     height: widthUtils(24, 24).height,
   },
@@ -116,8 +116,8 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   productImageDisplayStyle: {
-    width: widthUtils(80, 80).width,
-    height: widthUtils(80, 80).height,
+    width: widthUtils(40, 40).width,
+    height: widthUtils(40, 40).height,
     borderRadius: 5,
   },
   productCardWidget1: {
@@ -125,20 +125,19 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   longLifeRougeStyle: {
-    paddingRight: 13,
-    paddingBottom: 4,
-    paddingLeft: 13,
-    paddingTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     fontFamily: "Segoe UI",
     backgroundColor: "#f4f4f4",
-    borderRadius: 18,
+    borderRadius: 16,
     alignSelf: "flex-start",
     maxWidth: widthUtils(249, 249).width,
+    marginBottom: 4,
   },
   longLifeTextSnippet: {
     color: "#747474",
-    fontSize: fontSize(16),
-    lineHeight: 15,
+    fontSize: fontSize(11),
+    lineHeight: fontSize(13),
     fontFamily: "Segoe UI",
   },
   productVariantButton: {
@@ -206,7 +205,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 10,
   },
-  VipImg: {
+  vipImage: {
     width: widthUtils(28, 28).width,
     height: widthUtils(28, 28).height,
   },
@@ -233,7 +232,7 @@ export const styles = StyleSheet.create({
     width: widthUtils(22, 22).width,
     height: widthUtils(22, 22).height,
   },
-  svgContainer2: {
+  iconContainer32: {
     width: widthUtils(32, 32).width,
     height: widthUtils(32, 32).height,
     marginTop: -26,
@@ -248,38 +247,44 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-end",
     marginRight: 10,
+    justifyContent: "flex-end",
+    minWidth: 100,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+    backgroundColor: "#fff",
+    overflow: "visible",
   },
   borderBoxDivider1: {
     width: widthUtils(9, 9).width,
     borderTopWidth: 1,
     borderTopColor: "black",
   },
-  svgContainer3: {
+  iconContainer12: {
     width: widthUtils(12, 12).width,
     height: widthUtils(12, 12).height,
   },
-  svgContainer4: {
-    width: 28,
-    height: 28,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 0,
+  quantityButton: {
+    width: widthUtils(30, 30).width,
+    height: widthUtils(30, 30).height,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    borderRadius: widthUtils(30, 30).width / 2,
   },
   quantityLabelContainer: {
-    height: 28,
-    width: 40,
-    fontSize: fontSize(14),
-    fontFamily: "Segoe UI",
-    color: "black",
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
+    width: widthUtils(30, 30).width,
+    height: widthUtils(30, 30).height,
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
+    fontSize: fontSize(12),
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: "white",
+    borderRightColor: "white",
+    padding: 0,
+    lineHeight: fontSize(12),
+    borderRadius: 0,
   },
   flexDivider: {
     height: widthUtils(8, 8).height,
@@ -320,7 +325,6 @@ export const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: fontSize(18),
-    fontFamily: "Segoe UI",
     fontWeight: "600",
     color: "black",
     textAlign: "center",
@@ -329,33 +333,29 @@ export const styles = StyleSheet.create({
   bottomSelectAllText: {
     marginLeft: 7,
     fontSize: fontSize(14),
-    fontFamily: "Segoe UI",
     fontWeight: "600",
     color: "black",
   },
   highlightedText1: {
     fontSize: fontSize(20),
-    fontFamily: "Segoe UI",
-    fontWeight: "700",
+    fontWeight: "500",
     color: "black",
   },
   priceLabel: {
     fontSize: fontSize(10),
-    fontFamily: "Segoe UI",
     fontWeight: "700",
     color: "black",
     lineHeight: fontSize(13),
     marginTop: fontSize(-8),
   },
   submitButtonStyle: {
-    width: widthUtils(50, 160).width,
-    height: widthUtils(50, 160).height,
-    minWidth: widthUtils(50, 160).width,
+    width: widthUtils(50, 110).width,
+    height: widthUtils(50, 110).height,
+    minWidth: widthUtils(50, 110).width,
     marginLeft: 11.5,
     fontSize: fontSize(18),
     lineHeight: fontSize(22),
-    fontFamily: "Segoe UI",
-    fontWeight: "700",
+    fontWeight: "500",
     color: "white",
     backgroundColor: "#FF5100",
     borderRadius: 30,
@@ -366,11 +366,6 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(16),
     color: "#333",
     fontWeight: "600",
-  },
-  quantityButtonText: {
-    fontSize: fontSize(18),
-    color: "#333",
-    fontWeight: "500",
   },
   quantityInput: {
     width: "100%",
@@ -397,6 +392,38 @@ export const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  disabledQuantityButton: {
+    backgroundColor: "#f3f4f8",
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+  },
+  quantityButtonEnabled: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+  },
+  quantityButtonDisabled: {
+    backgroundColor: "#f3f4f8",
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+  },
+  quantityDisplayText: {
+    fontSize: fontSize(14),
+    fontWeight: "500",
+    color: "#000",
+  },
+  quantityButtonText: {
+    fontSize: fontSize(25),
+    lineHeight: fontSize(25),
+    fontWeight: "300",
+    color: "#000",
+  },
+  quantityButtonDisabledText: {
+    fontSize: fontSize(25),
+    lineHeight: fontSize(25),
+    fontWeight: "300",
+    color: "#bdbdbd",
   },
   loginOverlay: {
     position: "absolute",
@@ -477,6 +504,13 @@ export const styles = StyleSheet.create({
     height: 5,
     backgroundColor: "#f0f0f0",
     width: "100%",
+  },
+  productCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 12,
   },
 });
 

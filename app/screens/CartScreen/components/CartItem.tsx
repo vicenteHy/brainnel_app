@@ -73,15 +73,16 @@ export const CartItem: React.FC<CartItemProps> = ({
   calculateProductGroupTotalQuantity,
 }) => {
   return (
-    <View key={item.cart_id}>
-      <View style={styles.productCardListing}>
+    <View key={item.cart_id} style={styles.productCard}>
+      <View>
         <View style={styles.productCardContainer5}>
-          <View style={styles.svgContainer1}>
+          <View style={styles.iconContainer24}>
             <TouchableOpacity
               onPress={() =>
                 onToggleSelection(String(item.cart_id), index1, null)
               }
               disabled={!user_id}
+              activeOpacity={1}
             >
               <View style={[styles.iconContainer]}>
                 {item.selected === 1 ? (
@@ -133,6 +134,7 @@ export const CartItem: React.FC<CartItemProps> = ({
                     )
                   }
                   disabled={!user_id}
+                  activeOpacity={1}
                 >
                   <Text
                     style={{ color: "white", fontWeight: "bold" }}
@@ -152,8 +154,9 @@ export const CartItem: React.FC<CartItemProps> = ({
                   styles.productCardContainer5,
                   styles.productCardContainer4,
                 ]}
+                activeOpacity={1}
               >
-                <View style={styles.svgContainer1}>
+                <View style={styles.iconContainer24}>
                   <TouchableOpacity
                     onPress={() =>
                       user_id &&
@@ -164,6 +167,7 @@ export const CartItem: React.FC<CartItemProps> = ({
                       )
                     }
                     disabled={!user_id}
+                    activeOpacity={1}
                   >
                     <View style={[styles.iconContainer]}>
                       {sku.selected === 1 ? (
@@ -215,7 +219,7 @@ export const CartItem: React.FC<CartItemProps> = ({
                         <View style={styles.vipContainer}>
                           <Image
                             source={require("../../../../assets/img/zkVIP1.png")}
-                            style={styles.VipImg}
+                            style={styles.vipImage}
                           />
                           <Text style={styles.discountPercentageTextStyle}>
                             -{((1 - vip_discount) * 100).toFixed(0)}%
@@ -238,8 +242,8 @@ export const CartItem: React.FC<CartItemProps> = ({
                     <View style={styles.orderQuantityContainer}>
                       <TouchableOpacity
                         style={[
-                          styles.svgContainer4,
-                          { borderRightWidth: 0 },
+                          styles.quantityButton,
+                          sku.quantity <= 1 ? styles.quantityButtonDisabled : styles.quantityButtonEnabled
                         ]}
                         onPress={() =>
                           user_id &&
@@ -251,14 +255,9 @@ export const CartItem: React.FC<CartItemProps> = ({
                           )
                         }
                         disabled={!user_id}
+                        activeOpacity={1}
                       >
-                        <Text
-                          style={{
-                            fontSize: fontSize(18),
-                            color: "#333",
-                            fontWeight: "500",
-                          }}
-                        >
+                        <Text style={sku.quantity <= 1 ? styles.quantityButtonDisabledText : styles.quantityButtonText}>
                           -
                         </Text>
                       </TouchableOpacity>
@@ -290,17 +289,15 @@ export const CartItem: React.FC<CartItemProps> = ({
                             )
                           }
                           disabled={!user_id}
+                          activeOpacity={1}
                         >
-                          <Text style={styles.quantityText}>
+                          <Text style={styles.quantityDisplayText}>
                             {sku.quantity}
                           </Text>
                         </TouchableOpacity>
                       )}
                       <TouchableOpacity
-                        style={[
-                          styles.svgContainer4,
-                          { borderLeftWidth: 0, marginLeft: 0 },
-                        ]}
+                        style={[styles.quantityButton, styles.quantityButtonEnabled]}
                         onPress={() =>
                           user_id &&
                           onIncreaseQuantity(
@@ -310,14 +307,9 @@ export const CartItem: React.FC<CartItemProps> = ({
                           )
                         }
                         disabled={!user_id}
+                        activeOpacity={1}
                       >
-                        <Text
-                          style={{
-                            fontSize: fontSize(18),
-                            color: "#333",
-                            fontWeight: "500",
-                          }}
-                        >
+                        <Text style={styles.quantityButtonText}>
                           +
                         </Text>
                       </TouchableOpacity>
