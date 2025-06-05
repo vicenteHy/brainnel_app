@@ -40,7 +40,7 @@ import useAnalyticsStore from "../../store/analytics";
 // Define route params type
 type PaymentMethodRouteParams = {
   freight_forwarder_address_id?: number;
-  isFei?: boolean;
+  isCOD?: boolean;
 };
 // Define the root navigation params
 type RootStackParamList = {
@@ -51,8 +51,8 @@ type RootStackParamList = {
     amount: number;
   };
   Pay: { order_id: string };
-  ShippingFee: { freight_forwarder_address_id?: number; isFei?: boolean };
-  PaymentMethod: { freight_forwarder_address_id?: number; isFei?: boolean };
+  ShippingFee: { freight_forwarder_address_id?: number; isCOD?: boolean };
+  PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: boolean };
   PreviewAddress: undefined;
   AddressList: undefined;
   // Add other routes as needed
@@ -336,8 +336,8 @@ export const PaymentMethod = () => {
   const [totalAmount, setTotalAmount] = useState(121.97);
   const [isWaveExpanded, setIsWaveExpanded] = useState(false);
 
-  // Get isFei parameter from route
-  const isFei = route.params?.isFei || false;
+  // Get isCOD parameter from route
+  const isCOD = route.params?.isCOD || false;
 
   // State to store the original total price (fixed, won't change)
   const [originalTotalPrice, setOriginalTotalPrice] = useState(0);
@@ -362,10 +362,10 @@ export const PaymentMethod = () => {
     return convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
   };
 
-  // Helper function to get converted total amount for calculation (excluding shipping fee if isFei is true)
+  // Helper function to get converted total amount for calculation (excluding shipping fee if isCOD is true)
   const getConvertedTotalForCalculation = () => {
-    if (isFei) {
-      // If isFei is true, subtract the shipping fee from the total converted amount
+    if (isCOD) {
+      // If isCOD is true, subtract the shipping fee from the total converted amount
       const totalConverted = convertedAmount.reduce((acc, item) => acc + item.converted_amount, 0);
       const shippingFeeConverted = convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
       return totalConverted - shippingFeeConverted;
@@ -373,9 +373,9 @@ export const PaymentMethod = () => {
     return convertedAmount.reduce((acc, item) => acc + item.converted_amount, 0);
   };
 
-  // Helper function to get total amount for calculation (excluding shipping fee if isFei is true)
+  // Helper function to get total amount for calculation (excluding shipping fee if isCOD is true)
   const getTotalForCalculation = () => {
-    if (isFei) {
+    if (isCOD) {
       // 不计入国际运费
       return Number(
         (
@@ -602,10 +602,10 @@ export const PaymentMethod = () => {
       const originalTotal = 
         (previewOrder.total_amount || 0) + 
         (orderData.domestic_shipping_fee || 0) + 
-        (isFei ? 0 : (orderData.shipping_fee || 0));
+        (isCOD ? 0 : (orderData.shipping_fee || 0));
       setOriginalTotalPrice(originalTotal);
     }
-  }, [previewOrder, orderData, originalTotalPrice, isFei]);
+  }, [previewOrder, orderData, originalTotalPrice, isCOD]);
 
   const handleSubmit = async () => {
     if (!selectedPayment) {
@@ -927,9 +927,11 @@ export const PaymentMethod = () => {
                   </View>
                 </View>
                 <View style={styles.priceBox1}>
-                  <Text>{t("payment.international_shipping")}</Text>
-                  <View style={styles.shippingFeeAmountRow}>
-                    <Text>
+                  <View style={styles.shippingLabelContainer}>
+                    <Text style={styles.shippingLabel}>{t("payment.international_shipping")}</Text>
+                  </View>
+                  <View style={styles.shippingPriceContainer}>
+                    <Text style={styles.shippingPriceText}>
                       {selectedPayment === "paypal"
                         ? getConvertedShippingFee().toFixed(2)
                         : selectedPayment === "wave"
@@ -943,16 +945,12 @@ export const PaymentMethod = () => {
                         ? "FCFA"
                         : previewOrder?.currency}
                     </Text>
-                    {isFei && (
-                      <TouchableOpacity 
-                        style={styles.warningIconContainer}
-                        onPress={() => Alert.alert(
-                          t("payment.notice") || "Notice", 
-                          t("payment.cash_on_delivery") || "Cash on Delivery"
-                        )}
-                      >
-                        <Text style={styles.warningIcon}>⚠️</Text>
-                      </TouchableOpacity>
+                    {isCOD && (
+                      <View style={styles.cashOnDeliveryContainer}>
+                        <Text style={styles.cashOnDeliveryText}>
+                          {t("order.preview.Cash_on_delivery") || "货到付款"}
+                        </Text>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -1344,7 +1342,7 @@ const styles = StyleSheet.create({
   priceBox1: {
     justifyContent: "space-between",
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#f5f5f5",
@@ -1725,5 +1723,39 @@ const styles = StyleSheet.create({
   warningIcon: {
     fontSize: fontSize(16),
     color: "#ff6000",
+  },
+  cashOnDeliveryContainer: {
+    marginTop: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    backgroundColor: "#fff4f0",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#ff6b35",
+    alignSelf: "flex-start",
+  },
+  cashOnDeliveryText: {
+    fontSize: fontSize(12),
+    color: "#ff6b35",
+    fontWeight: "500",
+  },
+  shippingLabelContainer: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  shippingLabel: {
+    fontSize: fontSize(14),
+    color: "#333",
+    lineHeight: 20,
+  },
+  shippingPriceContainer: {
+    alignItems: "flex-end",
+    justifyContent: "flex-start",
+  },
+  shippingPriceText: {
+    fontSize: fontSize(14),
+    color: "#333",
+    textAlign: "right",
+    marginBottom: 2,
   },
 });

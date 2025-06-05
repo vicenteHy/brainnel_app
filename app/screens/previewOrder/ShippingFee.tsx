@@ -12,6 +12,7 @@ import {
   Platform,
   StatusBar,
   Image,
+  ScrollView,
 } from "react-native";
 import { useState, useEffect } from "react";
 import fontSize from "../../utils/fontsizeUtils";
@@ -40,8 +41,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAnalyticsStore from "../../store/analytics";
 
 type RootStackParamList = {
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isFei?: boolean };
-  PaymentMethod: { freight_forwarder_address_id: number; isFei?: boolean };
+  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean };
+  PaymentMethod: { freight_forwarder_address_id: number; isCOD?: boolean };
 };
 type ShippingFeeParams = {
   cart_item_id: any;
@@ -145,10 +146,16 @@ export const ShippingFee = () => {
     }
   }, [warehouse, freightForwarderAddress]);
 
-  // 当运输方式改变时重新获取货代中心
+  // 当运输方式改变时，如果已有体积重量数据，直接重新计算运费，无需重新获取货代中心
   useEffect(() => {
-    const transportMode = shippingMethod === "sea" ? 0 : 1;
-    fetchFreightForwarderAddress(transportMode);
+    if (shippingFeeData && selectedWarehouse) {
+      // 如果已经有运费数据和选中的仓库，直接切换显示即可，无需重新调用API
+      console.log('切换运输方式，使用已有数据');
+    } else {
+      // 只有在没有数据时才重新获取货代中心
+      const transportMode = shippingMethod === "sea" ? 0 : 1;
+      fetchFreightForwarderAddress(transportMode);
+    }
   }, [shippingMethod]);
 
   const changeCountryHandel = async (value: string) => {
@@ -203,6 +210,15 @@ export const ShippingFee = () => {
       !isShippingFeeLoading &&
       domesticShippingFeeData?.total_shipping_fee != null
     ) {
+      // 计算更新后的COD状态：科特迪瓦用户选择空运时需要预付
+      let updatedIsCOD = route.params.isCOD;
+      if (userStore.user?.country_code === 225) {
+        if (shippingMethod === "air") {
+          updatedIsCOD = false; // 空运情况下科特迪瓦用户需要预付运费
+        }
+        // 海运保持原有逻辑（基于50000FCFA判断）
+      }
+
       setOrderData({
         ...orderData,
         transport_type: shippingMethod === "sea" ? 0 : 1,
@@ -238,7 +254,7 @@ export const ShippingFee = () => {
       
       navigation.navigate("PaymentMethod", {
         freight_forwarder_address_id: selectedWarehouse?.address_id || 0,
-        isFei: route.params.isFei
+        isCOD: updatedIsCOD
       });
     } else {
       Alert.alert(t("order.shipping.select_method"));
@@ -249,37 +265,47 @@ export const ShippingFee = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.safeAreaContent}>
-        <View style={styles.container}>
-          <View style={styles.recipientFormContainer3}>
-            <View style={styles.titleContainer}>
-              <View style={styles.backIconContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                  <BackIcon size={20} />
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.titleHeading}>
-                {t("order.shipping.method")}
-              </Text>
+        {/* Fixed Header */}
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <View style={styles.backIconContainer}>
+              <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
+                <BackIcon size={20} />
+              </TouchableOpacity>
             </View>
 
-            {/* 到达时间显示区域 - 移动到页面顶部 */}
-            <View style={styles.estimatedTimeContainer}>
-              <View style={styles.timeRow}>
-                <Image 
-                  source={require("../../../assets/preview/Frame.png")} 
-                  style={styles.timeIcon}
-                />
-                <Text style={styles.timeLabel}>
-                  {t("order.shipping.estimated_time")}:
-                </Text>
-                <Text style={styles.timeValue}>
-                  {shippingMethod === "sea"
-                    ? t("order.shipping.sea_time")
-                    : t("order.shipping.air_time")}
-                </Text>
+            <Text style={styles.titleHeading}>
+              {t("order.shipping.method")}
+            </Text>
+          </View>
+        </View>
+
+        {/* Scrollable Content */}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <View style={styles.recipientFormContainer3}>
+
+              {/* 到达时间显示区域 - 移动到页面顶部 */}
+              <View style={styles.estimatedTimeContainer}>
+                <View style={styles.timeRow}>
+                  <Image 
+                    source={require("../../../assets/preview/Frame.png")} 
+                    style={styles.timeIcon}
+                  />
+                  <Text style={styles.timeLabel}>
+                    {t("order.shipping.estimated_time")}:
+                  </Text>
+                  <Text style={styles.timeValue}>
+                    {shippingMethod === "sea"
+                      ? t("order.shipping.sea_time")
+                      : t("order.shipping.air_time")}
+                  </Text>
+                </View>
               </View>
-            </View>
 
             <View style={styles.recipientFormContainer1}>
               <View style={styles.section}>
@@ -314,29 +340,34 @@ export const ShippingFee = () => {
                       onPress={() => {
                         setShippingMethod(option.id);
                       }}
+                      activeOpacity={1}
                     >
                       {index === 0 && (
                         <View style={styles.locationPin}>
-                          <LocationPinIcon size={20} />
+                          <LocationPinIcon size={16} />
                         </View>
                       )}
-                      <View style={styles.shippingIcon}>
-                        {option.id === "sea" ? (
-                          <ShipIcon 
-                            size={70} 
-                            color={shippingMethod === option.id ? "#ff8d4e" : "#999"} 
-                          />
-                        ) : (
-                          <PlaneIcon 
-                            size={70} 
-                            color={shippingMethod === option.id ? "#ff8d4e" : "#999"} 
-                          />
-                        )}
+                      <View style={styles.shippingIconContainer}>
+                        <View style={styles.shippingIcon}>
+                          {option.id === "sea" ? (
+                            <ShipIcon 
+                              size={60} 
+                              color={shippingMethod === option.id ? "#ff6b35" : "#999"} 
+                            />
+                          ) : (
+                            <PlaneIcon 
+                              size={60} 
+                              color={shippingMethod === option.id ? "#ff6b35" : "#999"} 
+                            />
+                          )}
+                        </View>
+                        <View style={styles.shippingTextContainer}>
+                          <Text style={styles.shippingLabel}>{option.label}</Text>
+                          <Text style={styles.shippingDetail}>
+                            {option.detail}
+                          </Text>
+                        </View>
                       </View>
-                      <Text style={styles.shippingLabel}>{option.label}</Text>
-                      <Text style={styles.shippingDetail}>
-                        {option.detail}
-                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -360,6 +391,7 @@ export const ShippingFee = () => {
                     <TouchableOpacity
                       style={styles.selectWrapper}
                       onPress={() => setModalVisible(true)}
+                      activeOpacity={1}
                     >
                       <Text style={styles.selectedText} numberOfLines={1} ellipsizeMode="tail">
                         {selectedWarehouseLabel ||
@@ -367,71 +399,6 @@ export const ShippingFee = () => {
                       </Text>
                       <DropdownIcon size={12} color="#666" />
                     </TouchableOpacity>
-
-                    {/* Modal Dropdown */}
-                    <Modal
-                      visible={modalVisible}
-                      transparent={true}
-                      animationType="slide"
-                      onRequestClose={() => setModalVisible(false)}
-                    >
-                      <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPress={() => setModalVisible(false)}
-                      >
-                        <View style={styles.modalContainer}>
-                          <SafeAreaView style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                              <Text style={styles.modalTitle}>
-                                {t("order.shipping.select_warehouse")}
-                              </Text>
-                              <TouchableOpacity
-                                onPress={() => setModalVisible(false)}
-                              >
-                                <Text style={styles.closeButton}>×</Text>
-                              </TouchableOpacity>
-                            </View>
-                            <FlatList
-                              data={
-                                freightForwarderAddress?.other_addresses || []
-                              }
-                              keyExtractor={(item, index) => index.toString()}
-                              renderItem={({ item }) => {
-                                const label =
-                                  (getCurrentLanguage() === "fr"
-                                    ? item.country_name
-                                    : item.country_name_en) +
-                                  " | " +
-                                  item.city +
-                                  (item.detail_address ? (" | " + item.detail_address) : "");
-                                return (
-                                  <TouchableOpacity
-                                    style={[
-                                      styles.optionItem,
-                                      warehouse === label && styles.selectedOption,
-                                    ]}
-                                    onPress={() =>
-                                      handleSelectWarehouse(
-                                        item.country_code,
-                                        label
-                                      )
-                                    }
-                                  >
-                                    <Text style={styles.optionText} numberOfLines={1} ellipsizeMode="tail">
-                                      {label}
-                                    </Text>
-                                    {warehouse === label && (
-                                      <Text style={styles.checkmark}>✓</Text>
-                                    )}
-                                  </TouchableOpacity>
-                                );
-                              }}
-                            />
-                          </SafeAreaView>
-                        </View>
-                      </TouchableOpacity>
-                    </Modal>
                   </View>
 
                   {warehouse && (
@@ -451,7 +418,7 @@ export const ShippingFee = () => {
                             <Text style={styles.calculatingText}>{count}</Text>
                             <ActivityIndicator
                               size="small"
-                              color="#ff6000"
+                              color="#ff6b35"
                               style={{ marginLeft: 5 }}
                             />
                           </View>
@@ -460,37 +427,19 @@ export const ShippingFee = () => {
                           <>
                             <View style={styles.shippingInfoRow}>
                               <Text style={styles.shippingInfoLabel}>
-                                {t("order.shipping.domestic_fee_china") || "运费 (在中国)"}:{" "}
+                                {t("order.shipping.domestic_fee_china") || "运费 (在中国)"}:
                               </Text>
-                              <Text
-                                style={{
-                                  color: "#ff6000",
-                                  flex: 1,
-                                  textAlign: "left",
-                                  marginLeft: 10,
-                                  fontWeight: "600",
-                                }}
-                              >
-                                <Text style={{ color: "#ff6000" }}>
-                                  {domesticShippingFeeData?.total_shipping_fee.toFixed(2) ||
-                                    0}{" "}
-                                  {userStore.user?.currency}
-                                </Text>
+                              <Text style={styles.shippingInfoPrice}>
+                                {domesticShippingFeeData?.total_shipping_fee.toFixed(2) ||
+                                  0}{" "}
+                                {userStore.user?.currency}
                               </Text>
                             </View>
                             <View style={styles.shippingInfoRow}>
                               <Text style={styles.shippingInfoLabel}>
-                                {t("order.shipping.international_delivery_fee") || "国际运输费"}:{" "}
+                                {t("order.shipping.international_delivery_fee") || "国际运输费"}:
                               </Text>
-                              <Text
-                                style={{
-                                  color: "#ff6000",
-                                  flex: 1,
-                                  textAlign: "left",
-                                  marginLeft: 10,
-                                  fontWeight: "600",
-                                }}
-                              >
+                              <Text style={styles.shippingInfoPrice}>
                                 {shippingMethod === "sea"
                                   ? shippingFeeData?.total_shipping_fee_sea.toFixed(2)
                                   : shippingFeeData?.total_shipping_fee_air.toFixed(2)}{" "}
@@ -504,7 +453,8 @@ export const ShippingFee = () => {
                                 </Text>
                               </View>
                             ) : (
-                              route.params.isFei ? (
+                              // 科特迪瓦用户的COD逻辑：空运需要预付，海运根据金额判断
+                              (shippingMethod === "sea" && route.params.isCOD) ? (
                                 <View style={styles.delivery}>
                                   <Text style={styles.deliveryText}>
                                     {t("order.preview.Cash_on_delivery")}
@@ -536,6 +486,7 @@ export const ShippingFee = () => {
                     isShippingFeeLoading ||
                     domesticShippingFeeData?.total_shipping_fee == null
                   }
+                  activeOpacity={1}
                 >
                   <Text style={styles.buttonText}>
                     {t("order.shipping.submit")}
@@ -544,7 +495,74 @@ export const ShippingFee = () => {
               </View>
             </View>
           </View>
-        </View>
+          </View>
+        </ScrollView>
+
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setModalVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <SafeAreaView style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {t("order.shipping.select_warehouse")}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    activeOpacity={1}
+                  >
+                    <Text style={styles.closeButton}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={
+                    freightForwarderAddress?.other_addresses || []
+                  }
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => {
+                    const label =
+                      (getCurrentLanguage() === "fr"
+                        ? item.country_name
+                        : item.country_name_en) +
+                      " | " +
+                      item.city +
+                      (item.detail_address ? (" | " + item.detail_address) : "");
+                    return (
+                      <TouchableOpacity
+                        style={[
+                          styles.optionItem,
+                          warehouse === label && styles.selectedOption,
+                        ]}
+                        onPress={() =>
+                          handleSelectWarehouse(
+                            item.country_code,
+                            label
+                          )
+                        }
+                        activeOpacity={1}
+                      >
+                        <Text style={styles.optionText} numberOfLines={1} ellipsizeMode="tail">
+                          {label}
+                        </Text>
+                        {warehouse === label && (
+                          <Text style={styles.checkmark}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              </SafeAreaView>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -557,31 +575,59 @@ const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 0 : 0,
+  },
+  header: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    zIndex: 1,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   container: {
-    flex: 1,
     backgroundColor: "#fff",
   },
   section: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingLeft: 16,
-    paddingRight: 16,
-    marginTop: 10,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingVertical: 16,
   },
   sectionIcon: { marginRight: 8, fontSize: fontSize(18) },
-  sectionTitle: { flex: 1, fontSize: fontSize(15), fontWeight: "500" },
+  sectionTitle: { 
+    flex: 1, 
+    fontSize: fontSize(16), 
+    fontWeight: "600",
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.2,
+  },
   sectionAction: {
-    color: "#ff6000",
-    fontSize: fontSize(13),
-    fontWeight: "500",
+    color: "#ff6b35",
+    fontSize: fontSize(14),
+    fontWeight: "600",
   },
   paymentOptions: {
     marginTop: 12,
@@ -589,11 +635,11 @@ const styles = StyleSheet.create({
   },
   recipientInfo: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#ccc",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
     width: "100%",
     marginBottom: 12,
     flexDirection: "row",
@@ -604,14 +650,15 @@ const styles = StyleSheet.create({
   },
   recipientInfoText: {
     flex: 1,
-    fontSize: fontSize(18),
+    fontSize: fontSize(16),
+    color: "#1a1a1a",
   },
 
   addRecipient: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    padding: 16,
+    borderRadius: 12,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -619,48 +666,97 @@ const styles = StyleSheet.create({
   },
   addRecipientIcon: {
     fontSize: fontSize(20),
-    color: "#ff6000",
+    color: "#ff6b35",
     marginRight: 6,
   },
-  addRecipientText: { fontSize: fontSize(14), color: "#666" },
+  addRecipientText: { 
+    fontSize: fontSize(14), 
+    color: "#666666",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
 
   shippingOptions: {
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
     justifyContent: "space-between",
-    marginTop: 12,
+    marginTop: 16,
+    marginBottom: 16,
   },
   shippingCard: {
     flex: 1,
     alignItems: "center",
-    padding: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+    padding: 16,
+    paddingTop: 20,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
     backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    minHeight: 120,
+    justifyContent: "space-between",
   },
-  shippingCardSelected: { borderColor: "#ff6000", backgroundColor: "#fff" },
+  shippingCardSelected: { 
+    borderColor: "#ff6b35", 
+    backgroundColor: "#fff4f0",
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   locationPin: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 12,
+    right: 12,
     zIndex: 1,
   },
+  shippingIconContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 8,
+  },
   shippingIcon: {
-    width: 70,
-    marginBottom: 6,
+    width: 60,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
   },
-  shippingLabel: { fontSize: fontSize(14), fontWeight: "500" },
-  shippingDetail: { fontSize: fontSize(12), color: "#888", marginTop: 3 },
+  shippingTextContainer: {
+    alignItems: "center",
+  },
+  shippingLabel: { 
+    fontSize: fontSize(14), 
+    fontWeight: "600",
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  shippingDetail: { 
+    fontSize: fontSize(12), 
+    color: "#666666", 
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    textAlign: "center",
+  },
   recipientFormContainer3: {
-    flex: 1,
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "flex-start",
     backgroundColor: "#fff",
-    padding: 15,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   recipientFormContainer1: {
     width: "100%",
@@ -671,28 +767,43 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     marginTop: 12,
   },
-  selectBox: { marginBottom: 12 },
-  selectLabel: { fontSize: fontSize(14), marginBottom: 6, color: "#666" },
+  selectBox: { marginBottom: 16 },
+  selectLabel: { 
+    fontSize: fontSize(14), 
+    marginBottom: 8, 
+    color: "#666666",
+    fontWeight: "500",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
   selectWrapper: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#fff",
-    padding: 12,
+    padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   selectedText: {
     fontSize: fontSize(14),
-    color: "#333",
+    color: "#1a1a1a",
     maxWidth: '95%',
     overflow: 'hidden',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   dropdownIcon: {
     fontSize: fontSize(12),
-    color: "#666",
+    color: "#666666",
   },
   modalOverlay: {
     flex: 1,
@@ -701,8 +812,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: "white",
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     height: "80%",
   },
   modalContent: {
@@ -712,17 +823,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#e8e8e8",
   },
   modalTitle: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(18),
     fontWeight: "600",
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   closeButton: {
-    fontSize: fontSize(24),
-    color: "#666",
+    fontSize: fontSize(16),
+    color: "#ff6b35",
+    fontWeight: "500",
   },
   optionItem: {
     flexDirection: "row",
@@ -730,38 +844,52 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#f0f0f0",
   },
   selectedOption: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#fff4f0",
   },
   optionText: {
     fontSize: fontSize(14),
     maxWidth: '95%',
     overflow: 'hidden',
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   checkmark: {
-    color: "#ff6000",
+    color: "#ff6b35",
     fontWeight: "bold",
+    fontSize: fontSize(16),
   },
   shippingInfo: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 6,
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e8e8e8",
   },
   shippingInfoRow: {
-    fontSize: fontSize(13),
-    marginBottom: 6,
-    color: "#333",
+    fontSize: fontSize(14),
+    marginBottom: 8,
+    color: "#1a1a1a",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   shippingInfoLabel: {
-    color: "#777",
+    color: "#666666",
     fontWeight: "500",
-    fontSize: fontSize(13),
+    fontSize: fontSize(14),
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    flex: 1,
+  },
+  shippingInfoPrice: {
+    color: "#ff6b35",
+    fontWeight: "600",
+    fontSize: fontSize(14),
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    textAlign: "right",
   },
   loadingContainer: {
     flex: 1,
@@ -771,6 +899,10 @@ const styles = StyleSheet.create({
   backIconContainer: {
     position: "absolute",
     left: 0,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
   titleContainer: {
     width: "100%",
@@ -778,39 +910,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    paddingVertical: 16,
   },
   titleHeading: {
     fontWeight: "600",
     fontSize: fontSize(20),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    lineHeight: 28,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
+    letterSpacing: 0.3,
   },
   submitButtonContainer: {
-    paddingRight: 11,
-    paddingLeft: 11,
-    marginTop: 60,
+    marginTop: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   primaryButtonStyle: {
     width: "100%",
-    height: 50,
+    height: 56,
     justifyContent: "center",
     alignItems: "center",
-    fontWeight: "600",
-    fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "white",
-    backgroundColor: "#002fa7",
+    backgroundColor: "#ff6b35",
     borderWidth: 0,
-    borderRadius: 25,
+    borderRadius: 16,
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
     color: "white",
     fontWeight: "600",
     fontSize: fontSize(16),
     lineHeight: 22,
-    fontFamily: "PingFang SC",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
   },
   selectedCountryText: {
     padding: 0,
@@ -818,40 +956,57 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: fontSize(16),
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#646472",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: "#1a1a1a",
   },
   disabledButtonStyle: {
-    backgroundColor: "#ccc",
+    backgroundColor: "#cccccc",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   loadingFeesContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 15,
+    marginVertical: 20,
   },
   calculatingText: {
-    color: "#ff6000",
+    color: "#ff6b35",
     fontSize: fontSize(14),
     fontWeight: "500",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   delivery: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#fff4f0",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ff6b35",
   },
   deliveryText: {
-    color: "#ff6000",
-    fontSize: fontSize(20),
-    fontWeight: "900",
+    color: "#ff6b35",
+    fontSize: fontSize(16),
+    fontWeight: "700",
     textAlign: "center",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   estimatedTimeContainer: {
-    backgroundColor: "#002fa7",
+    backgroundColor: "#ff6b35",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 16,
     marginTop: 16,
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   timeRow: {
     flexDirection: "row",
@@ -867,14 +1022,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "white",
     marginRight: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   timeValue: {
     fontSize: fontSize(16),
     fontWeight: "600",
     color: "white",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   paymentHeader: {
-    marginBottom: 12,
+    marginBottom: 16,
     paddingBottom: 8,
     flexDirection: "row",
     alignItems: "center",
@@ -882,6 +1039,8 @@ const styles = StyleSheet.create({
   paymentTitle: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#333",
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.2,
   },
 });

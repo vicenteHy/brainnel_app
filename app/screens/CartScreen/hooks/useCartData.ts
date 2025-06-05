@@ -29,7 +29,7 @@ export const useCartData = () => {
   );
   const [loading, setLoading] = useState(false);
 
-  // 货币转换函数
+  // 货币转换函数 - 将50000FCFA转换为用户当前货币的等值金额
   const convertCurrency = async () => {
     if (!user_id) {
       return;
@@ -40,7 +40,7 @@ export const useCartData = () => {
         from_currency: "FCFA",
         to_currency: currency,
         amounts: {
-          total_amount: 50000,
+          total_amount: 50000, // 50000FCFA
         },
       };
 

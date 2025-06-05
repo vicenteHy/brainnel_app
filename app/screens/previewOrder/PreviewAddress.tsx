@@ -32,9 +32,9 @@ import fontSize from "../../utils/fontsizeUtils";
 import useAnalyticsStore from "../../store/analytics";
 
 type RootStackParamList = {
-  AddRess: { address?: AddressItem; cart_item_id?: number | string; totalAmount?: number; isFei?: boolean };
+  AddRess: { address?: AddressItem; cart_item_id?: number | string; totalAmount?: number; isCOD?: boolean };
   AddressList: undefined;
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isFei?: boolean };
+  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean };
 };
 type AddRessRouteProp = RouteProp<RootStackParamList, "AddRess">;
 
@@ -44,6 +44,9 @@ export const PreviewAddress = () => {
     defaultAddress,
     fetchDefaultAddress,
     loading,
+    addAddress,
+    addresses,
+    fetchAddresses,
   } = useAddressStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<AddRessRouteProp>();
@@ -63,7 +66,7 @@ export const PreviewAddress = () => {
     is_default: false,
   });
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
-  const [copyPhoneToWhatsApp, setCopyPhoneToWhatsApp] = useState(false);
+  const [whatsappSameAsPhone, setWhatsappSameAsPhone] = useState(true);
   const [phoneNumbersMatch, setPhoneNumbersMatch] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -85,18 +88,29 @@ export const PreviewAddress = () => {
   React.useEffect(() => {
     fetchSelectedCountry();
     fetchDefaultAddress();
+    fetchAddresses(); // 加载地址列表用于重复检查
 
     // If there is an address in route params, use it first
     if (route.params?.address) {
+      const address = route.params.address;
+      const phoneNumber = address.receiver_phone || "";
+      const whatsappPhone = address.whatsapp_phone || "";
+      
+      // Check if WhatsApp is same as phone with country code
+      const fullPhoneNumber = `225${phoneNumber}`;
+      const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
+      
       setFormData({
-        receiver_first_name: route.params.address.receiver_first_name || "",
-        receiver_last_name: route.params.address.receiver_last_name || "",
+        receiver_first_name: address.receiver_first_name || "",
+        receiver_last_name: address.receiver_last_name || "",
         country_code: "225", // 默认科特迪瓦区号
-        receiver_phone: route.params.address.receiver_phone || "",
-        receiver_phone_again: route.params.address.receiver_phone || "",
-        whatsapp_phone: route.params.address.whatsapp_phone || "",
-        is_default: Boolean(route.params.address.is_default),
+        receiver_phone: phoneNumber,
+        receiver_phone_again: phoneNumber,
+        whatsapp_phone: whatsappPhone,
+        is_default: Boolean(address.is_default),
       });
+      
+      setWhatsappSameAsPhone(isWhatsappSameAsPhone);
     }
   }, []);
 
@@ -129,15 +143,22 @@ export const PreviewAddress = () => {
     }
   }, [countryList, route.params?.address, defaultAddress]);
 
-  // Monitor phone number changes, if copy option is checked then automatically update WhatsApp number
+  // Monitor phone number changes, if whatsapp same as phone option is checked then automatically update WhatsApp number
   React.useEffect(() => {
-    if (copyPhoneToWhatsApp) {
+    if (whatsappSameAsPhone && formData.receiver_phone) {
+      const fullPhoneNumber = `${formData.country_code}${formData.receiver_phone}`;
       setFormData((prev) => ({
         ...prev,
-        whatsapp_phone: prev.receiver_phone,
+        whatsapp_phone: fullPhoneNumber,
+      }));
+    } else if (!whatsappSameAsPhone) {
+      // When unchecked, clear WhatsApp field so user can input different number
+      setFormData((prev) => ({
+        ...prev,
+        whatsapp_phone: "",
       }));
     }
-  }, [formData.receiver_phone, copyPhoneToWhatsApp]);
+  }, [formData.receiver_phone, formData.country_code, whatsappSameAsPhone]);
 
   // Monitor phone number changes, verify if two inputs match
   React.useEffect(() => {
@@ -153,15 +174,24 @@ export const PreviewAddress = () => {
   // Monitor defaultAddress changes
   React.useEffect(() => {
     if (defaultAddress && !route.params?.address) {
+      const phoneNumber = defaultAddress.receiver_phone || "";
+      const whatsappPhone = defaultAddress.whatsapp_phone || "";
+      
+      // Check if WhatsApp is same as phone with country code
+      const fullPhoneNumber = `225${phoneNumber}`;
+      const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
+      
       setFormData({
         receiver_first_name: defaultAddress.receiver_first_name || "",
         receiver_last_name: defaultAddress.receiver_last_name || "",
         country_code: "225", // 默认科特迪瓦区号
-        receiver_phone: defaultAddress.receiver_phone || "",
-        receiver_phone_again: defaultAddress.receiver_phone || "",
-        whatsapp_phone: defaultAddress.whatsapp_phone || "",
+        receiver_phone: phoneNumber,
+        receiver_phone_again: phoneNumber,
+        whatsapp_phone: whatsappPhone,
         is_default: Boolean(defaultAddress.is_default),
       });
+      
+      setWhatsappSameAsPhone(isWhatsappSameAsPhone);
     }
   }, [defaultAddress, route.params?.address]);
 
@@ -198,7 +228,7 @@ export const PreviewAddress = () => {
     if (formData.receiver_phone !== formData.receiver_phone_again) {
       newErrors.receiver_phone_again = t("address.errors.phone_mismatch");
     }
-    if (!formData.whatsapp_phone) {
+    if (!whatsappSameAsPhone && !formData.whatsapp_phone) {
       newErrors.whatsapp_phone = t("address.errors.whatsapp_required");
     }
 
@@ -207,32 +237,86 @@ export const PreviewAddress = () => {
   };
 
   const handleSubmit = async () => {
-    if (validateForm()) {    
-      setOrderData({
-        ...orderData,
-        address_id: defaultAddress?.address_id,
-      });
+    if (validateForm()) {
+      try {
+        // 准备地址数据
+        const whatsappNumber = whatsappSameAsPhone 
+          ? `${formData.country_code}${formData.receiver_phone}` 
+          : formData.whatsapp_phone;
 
-      // 准备埋点数据
-      const logData = {
-        last_name: formData.receiver_last_name,
-        first_name: formData.receiver_first_name,
-        country: formData.country_code,
-        phone_number: Number(formData.receiver_phone),
-        whatsApp_number: Number(formData.whatsapp_phone),
+        // 获取选中的国家信息
+        const selectedCountryInfo = countryList.find(item => 
+          item.country === formData.country_code
+        );
+
+        const addressData = {
+          receiver_first_name: formData.receiver_first_name,
+          receiver_last_name: formData.receiver_last_name,
+          country: selectedCountryInfo?.name_en || "",
+          receiver_phone: formData.receiver_phone,
+          whatsapp_phone: whatsappNumber,
+          province: "",
+          city: "",
+          district: "",
+          detail_address: "",
+          is_default: formData.is_default ? 1 : 0,
+        };
+
+        // 检查是否已存在相同地址，避免重复保存
+        const isDuplicateAddress = addresses.some(addr => 
+          addr.receiver_first_name === addressData.receiver_first_name &&
+          addr.receiver_last_name === addressData.receiver_last_name &&
+          addr.receiver_phone === addressData.receiver_phone &&
+          addr.whatsapp_phone === addressData.whatsapp_phone
+        );
+
+        if (!isDuplicateAddress) {
+          // 保存地址到用户地址列表
+          await addAddress(addressData);
+          console.log("地址已保存到用户地址列表");
+        } else {
+          console.log("地址已存在，跳过保存");
+        }
+
+        setOrderData({
+          ...orderData,
+          address_id: defaultAddress?.address_id,
+        });
+
+        // 准备埋点数据
+        const logData = {
+          last_name: formData.receiver_last_name,
+          first_name: formData.receiver_first_name,
+          country: formData.country_code,
+          phone_number: Number(formData.receiver_phone),
+          whatsApp_number: Number(whatsappNumber),
+        }
+        
+        // 记录地址信息埋点事件
+        const analyticsStore = useAnalyticsStore.getState();
+        analyticsStore.logAddressInfo(logData, "cart");
+        
+        console.log("地址信息埋点已记录:", logData);
+        
+        navigation.navigate("ShippingFee", {
+          cart_item_id: route.params?.cart_item_id,
+          totalAmount: route.params?.totalAmount,
+          isCOD: route.params?.isCOD,
+        });
+      } catch (error) {
+        console.error("保存地址失败:", error);
+        // 即使保存地址失败，也继续进行下一步流程
+        setOrderData({
+          ...orderData,
+          address_id: defaultAddress?.address_id,
+        });
+        
+        navigation.navigate("ShippingFee", {
+          cart_item_id: route.params?.cart_item_id,
+          totalAmount: route.params?.totalAmount,
+          isCOD: route.params?.isCOD,
+        });
       }
-      
-      // 记录地址信息埋点事件
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logAddressInfo(logData, "cart");
-      
-      console.log("地址信息埋点已记录:", logData);
-      
-      navigation.navigate("ShippingFee", {
-        cart_item_id: route.params?.cart_item_id,
-        totalAmount: route.params?.totalAmount,
-        isFei: route.params?.isFei,
-      });
     }
   };
 
@@ -399,49 +483,53 @@ export const PreviewAddress = () => {
                           </View>
                         </View>
 
-                        {/* WhatsApp Field */}
-                        <View style={styles.lastNameInputContainer}>
-                          <View style={styles.flexRowCentered}>
-                            <Text style={styles.elegantTextSnippet}>{t("address.whatsapp")}</Text>
-                            <Text style={styles.redTextHeading}>*</Text>
-                          </View>
-                          <TextInput
-                            style={styles.pingFangText}
-                            placeholder={t("address.placeholder.whatsapp")}
-                            value={formData.whatsapp_phone}
-                            onChangeText={(text) =>
-                              setFormData({ ...formData, whatsapp_phone: text })
-                            }
-                            keyboardType="numeric"
-                          />
-                          {errors.whatsapp_phone && (
-                            <Text style={styles.errorText}>
-                              {errors.whatsapp_phone}
-                            </Text>
-                          )}
-                        </View>
-                        <View style={styles.copyContainer}>
+                        {/* WhatsApp Section */}
+                        <View style={styles.whatsappSection}>
                           <TouchableOpacity
                             style={styles.checkboxContainer}
                             onPress={() =>
-                              setCopyPhoneToWhatsApp(!copyPhoneToWhatsApp)
+                              setWhatsappSameAsPhone(!whatsappSameAsPhone)
                             }
                           >
                             <View
                               style={[
                                 styles.checkbox,
-                                copyPhoneToWhatsApp && styles.checked,
+                                whatsappSameAsPhone && styles.checked,
                               ]}
                             >
-                              {copyPhoneToWhatsApp && (
+                              {whatsappSameAsPhone && (
                                 <Text style={styles.checkmark}>✓</Text>
                               )}
                             </View>
                             <Text style={styles.checkboxLabel}>
-                              {t("address.copy_phone_to_whatsapp")}
+                              {t("address.whatsapp_same_as_phone")}
                             </Text>
                           </TouchableOpacity>
                         </View>
+
+                        {/* WhatsApp Input Field - Only show when different from phone */}
+                        {!whatsappSameAsPhone && (
+                          <View style={styles.lastNameInputContainer}>
+                            <View style={styles.flexRowCentered}>
+                              <Text style={styles.elegantTextSnippet}>{t("address.whatsapp")}</Text>
+                              <Text style={styles.redTextHeading}>*</Text>
+                            </View>
+                            <TextInput
+                              style={styles.pingFangText}
+                              placeholder={t("address.placeholder.whatsapp")}
+                              value={formData.whatsapp_phone}
+                              onChangeText={(text) =>
+                                setFormData({ ...formData, whatsapp_phone: text })
+                              }
+                              keyboardType="numeric"
+                            />
+                            {errors.whatsapp_phone && (
+                              <Text style={styles.errorText}>
+                                {errors.whatsapp_phone}
+                              </Text>
+                            )}
+                          </View>
+                        )}
 
                         {/* Default Setting Section */}
                         {/* <View style={styles.defaultSettingSection}>
@@ -487,7 +575,7 @@ export const PreviewAddress = () => {
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>选择国家区号</Text>
+                  <Text style={styles.modalTitle}>{t("address.select_country_code")}</Text>
                   <TouchableOpacity onPress={() => setOpen(false)}>
                     <Text style={styles.closeButton}>{t("address.close")}</Text>
                   </TouchableOpacity>
@@ -681,6 +769,12 @@ const styles = StyleSheet.create({
   },
   copyContainer: {
     marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  whatsappSection: {
+    marginTop: 16,
+    marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -972,7 +1066,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   countryCodeSelector: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff",
     borderWidth: 1.5,
     borderColor: "#e8e8e8",
     borderRadius: 8,
@@ -985,7 +1079,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   countryCodeDisplay: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff",
     borderWidth: 1.5,
     borderColor: "#e8e8e8",
     borderRadius: 8,

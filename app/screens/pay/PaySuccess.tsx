@@ -7,9 +7,13 @@ import {
   StyleSheet,
   ScrollView,
   BackHandler,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
 
 // import { useRoute, RouteProp } from "@react-navigation/native";
@@ -23,6 +27,7 @@ type RootStackParamList = {
 
 export const PaymentSuccessScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   
   // const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccessScreen'>>();
   // const { paymentId, PayerID } = route.params;
@@ -61,299 +66,301 @@ export const PaymentSuccessScreen = () => {
   );
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} >
-      <View style={styles.header}>
-        <View style={styles.headerSuccess}>
-          <View style={styles.headerSuccessImg}></View>
-          <View style={styles.headerSuccessText}>
-            <Text style={styles.headerSuccessTextTitle}>支付成功</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#ff6b35" />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Success Header */}
+        <View style={styles.successHeader}>
+          <View style={styles.successIconContainer}>
+            <View style={styles.successIcon}>
+              <Text style={styles.checkIcon}>✓</Text>
+            </View>
           </View>
-          {/* <View style={styles.headerPriceText}>
-            <Text style={styles.headerPriceTextTitle}>73800FCFA</Text>
-          </View> */}
+          
+          <Text style={styles.successTitle}>
+            {t("payment.success.title")}
+          </Text>
+          
+          <Text style={styles.successSubtitle}>
+            {t("payment.success.subtitle")}
+          </Text>
         </View>
 
-        <View style={styles.headerSuccessInfo}>
-          {/* <View style={styles.headerSuccessInfoItem}>
-            <Text style={styles.headerSuccessInfoItemText}>现代电话</Text>
-            <Text style={styles.headerSuccessInfoItemText1}>17088752341</Text>
-          </View> */}
-          {/* <View style={styles.headerSuccessInfoItem1}>
-            <Text style={styles.headerSuccessInfoItemText}>地址</Text>
-            <Text style={styles.headerSuccessInfoItemText1}>河南省</Text>
-          </View> */}
-        </View>
-        <View style={styles.headerSuccessInfoItem2}>
-          <Text>货到仓库后，打电话联系您</Text>
-        </View>
-        {/* <View style={styles.button}>
-          <View style={styles.buttonItem}>
-            <Text style={styles.buttonText}>查看订单</Text>
+        {/* Content Section */}
+        <View style={styles.contentSection}>
+          {/* Info Card */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>📦</Text>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoTitle}>
+                  {t("payment.success.shipping_info")}
+                </Text>
+                <Text style={styles.infoSubtitle}>
+                  {t("payment.success.contact_message")}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.buttonItem}>
-            <Text style={styles.buttonText}>订单详情</Text>
-          </View>
-        </View> */}
-      </View>
 
-      <TouchableOpacity
-        style={{ marginTop: 20, alignSelf: 'center', padding: 10, backgroundColor: '#0030a7', borderRadius: 8 }}
-        onPress={() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ 
-              name: 'MainTabs',
-              params: { screen: 'Home' }
-            }],
-          });
-        }}
-      >
-        <Text style={{ color: 'white', fontSize: fontSize(16) }}>返回首页</Text>
-      </TouchableOpacity>
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ 
+                    name: 'MainTabs',
+                    params: { screen: 'Home' }
+                  }],
+                });
+              }}
+            >
+              <Text style={styles.primaryButtonText}>
+                {t("payment.success.back_to_home")}
+              </Text>
+            </TouchableOpacity>
 
-      <View style={styles.recommend}>
-        <Text style={styles.footerItemText1}>1234567890</Text>
-        <View style={styles.productContainer}>
-          <View style={styles.productRow}>
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥199</Text>
-            </View>
-            
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥299</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ 
+                    name: 'MainTabs',
+                    params: { screen: 'Profile' }
+                  }],
+                });
+              }}
+            >
+              <Text style={styles.secondaryButtonText}>
+                {t("payment.success.view_orders")}
+              </Text>
+            </TouchableOpacity>
           </View>
-          
-          <View style={styles.productRow}>
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥399</Text>
+
+          {/* Tips Section */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>
+              {t("payment.success.tips_title")}
+            </Text>
+            <View style={styles.tipItem}>
+              <Text style={styles.tipBullet}>•</Text>
+              <Text style={styles.tipText}>
+                {t("payment.success.tip_1")}
+              </Text>
             </View>
-            
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥499</Text>
+            <View style={styles.tipItem}>
+              <Text style={styles.tipBullet}>•</Text>
+              <Text style={styles.tipText}>
+                {t("payment.success.tip_2")}
+              </Text>
             </View>
-          </View>
-          
-          <View style={styles.productRow}>
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥599</Text>
-            </View>
-            
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥699</Text>
-            </View>
-          </View>
-          
-          <View style={styles.productRow}>
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥799</Text>
-            </View>
-            
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥899</Text>
-            </View>
-          </View>
-          
-          <View style={styles.productRow}>
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥999</Text>
-            </View>
-            
-            <View style={styles.productItem}>
-              <View style={styles.productImageContainer}>
-                <View style={styles.productImage} />
-              </View>
-              <Text style={styles.productName}>商品名称</Text>
-              <Text style={styles.productPrice}>¥1099</Text>
+            <View style={styles.tipItem}>
+              <Text style={styles.tipBullet}>•</Text>
+              <Text style={styles.tipText}>
+                {t("payment.success.tip_3")}
+              </Text>
             </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#ff6b35",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#f8f9fa",
   },
-  header: {
-    padding: 30,
+  successHeader: {
+    backgroundColor: "#ff6b35",
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    alignItems: "center",
+    paddingBottom: 60,
+  },
+  successIconContainer: {
+    marginBottom: 20,
+  },
+  successIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "white",
-  },
-  headerSuccess: {
-    width: "100%",
-    marginBottom: 5,
-  },
-  headerSuccessImg: {
-    width: 60,
-    height: 60,
-    alignSelf: "center",
-  },
-  headerSuccessText: {
-    fontSize: fontSize(20),
-    color: "#000000",
-    alignSelf: "center",
-    marginTop: 10,
-  },
-  headerSuccessTextTitle: {
-    fontSize: fontSize(16),
-    color: "#000000",
-    alignSelf: "center",
-  },
-  headerPriceText: {
-    fontSize: fontSize(20),
-    color: "#000000",
-    alignSelf: "center",
-  },
-  headerPriceTextTitle: {
-    fontSize: fontSize(20),
-    color: "#000000",
-    alignSelf: "center",
-    marginTop: 10,
-  },
-  headerSuccessInfo: {
-    width: "100%",
-    backgroundColor: "#f0f6ff",
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#dafcff",
-    marginTop: 10,
-    padding: 10,
-  },
-  headerSuccessInfoItem: {
-    flexDirection: "row",
-    fontSize: fontSize(16),
-    color: "#0046bf",
-    fontWeight: "600",
-    alignItems: "center",
-  },
-  headerSuccessInfoItem1: {
-    flexDirection: "row",
-    fontSize: fontSize(16),
-    color: "#0046bf",
-    fontWeight: "600",
-    alignItems: "center",
-    marginTop: 5,
-  },
-  headerSuccessInfoItemText: {
-    fontSize: fontSize(16),
-    color: "#0046bf",
-    width: "20%",
-    fontWeight: "600",
-    alignItems: "center",
-  },
-  headerSuccessInfoItemText1: {
-    fontSize: fontSize(16),
-    color: "#0046bf",
-    marginLeft: 10,
-    fontWeight: "600",
-    alignItems: "center",
-  },
-  headerSuccessInfoItem2: {
-    marginTop: 5,
-    flexDirection: "row",
-  },
-  button: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingLeft: 20,
-    paddingRight: 20,
-    marginTop: 20,
-  },
-  buttonItem: {
-    width: "40%",
-    height: 40,
-    backgroundColor: "#0030a7",
-    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  buttonText: {
+  checkIcon: {
+    fontSize: fontSize(32),
+    color: "#ff6b35",
+    fontWeight: "bold",
+  },
+  successTitle: {
+    fontSize: fontSize(24),
+    fontWeight: "700",
+    color: "white",
+    textAlign: "center",
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.5,
+  },
+  successSubtitle: {
     fontSize: fontSize(16),
     color: "white",
+    textAlign: "center",
+    opacity: 0.9,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    lineHeight: 22,
   },
-  recommend: {
-    padding: 20,
+  contentSection: {
+    flex: 1,
+    marginTop: -30,
+    backgroundColor: "#f8f9fa",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  footerItemText1: {
-    fontSize: fontSize(16),
-    color: "#000000",
-    fontWeight: "600",
-    marginBottom: 15,
-  },
-  productContainer: {
-    marginTop: 10,
-  },
-  productRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  productItem: {
-    width: "48%",
+  infoCard: {
     backgroundColor: "white",
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  productImageContainer: {
-    alignItems: "center",
-    marginBottom: 8,
-    width: "100%",
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
-  productImage: {
-    width: "100%",
-    height: 120,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 4,
+  infoIcon: {
+    fontSize: fontSize(24),
+    marginRight: 16,
+    marginTop: 2,
   },
-  productName: {
-    fontSize: fontSize(14),
-    color: "#333",
-    marginTop: 5,
-    marginBottom: 5,
+  infoTextContainer: {
+    flex: 1,
   },
-  productPrice: {
+  infoTitle: {
     fontSize: fontSize(16),
-    color: "#E53935",
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 6,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.2,
+  },
+  infoSubtitle: {
+    fontSize: fontSize(14),
+    color: "#666666",
+    lineHeight: 20,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  buttonContainer: {
+    marginBottom: 24,
+  },
+  primaryButton: {
+    backgroundColor: "#ff6b35",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginBottom: 12,
+    shadowColor: "#ff6b35",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  primaryButtonText: {
+    color: "white",
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    textAlign: "center",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+  },
+  secondaryButton: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderWidth: 1.5,
+    borderColor: "#ff6b35",
+  },
+  secondaryButtonText: {
+    color: "#ff6b35",
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    textAlign: "center",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+  },
+  tipsSection: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 20,
+  },
+  tipsTitle: {
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 16,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.2,
+  },
+  tipItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  tipBullet: {
+    fontSize: fontSize(16),
+    color: "#ff6b35",
+    marginRight: 12,
+    marginTop: 2,
     fontWeight: "bold",
+  },
+  tipText: {
+    flex: 1,
+    fontSize: fontSize(14),
+    color: "#666666",
+    lineHeight: 20,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
