@@ -95,6 +95,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       const newParams = {
         ...searchParams,
         keyword: route.params.keyword,
+        page: 1,
       };
       setSearchParams(newParams);
       
@@ -117,6 +118,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       const newParams = {
         ...searchParams,
         category_id: route.params.category_id,
+        page: 1,
       };
       setSearchParams(newParams);
       
@@ -230,11 +232,13 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   }, []);
 
   const handleLoadMoreProducts = useCallback(() => {
-    handleLoadMore(searchParams);
+    const { page, ...baseParams } = searchParams;
+    handleLoadMore(baseParams);
   }, [handleLoadMore, searchParams]);
 
   const handleRefreshProducts = useCallback(() => {
-    handleRefresh(searchParams);
+    const { page, ...baseParams } = searchParams;
+    handleRefresh(baseParams);
   }, [handleRefresh, searchParams]);
 
   const renderFooter = useCallback(() => {

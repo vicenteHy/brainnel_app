@@ -684,7 +684,9 @@
         "modifyQuantity": "Modify Quantity",
         "quantity": "Quantity",
         "noName": "No name",
-        "skuOptions": "Product Options"
+        "skuOptions": "Product Options",
+        "continueShopping": "Continue Shopping",
+        "minOrder": "Min Order"
     },
     "common": {
         "cancel": "Cancel",

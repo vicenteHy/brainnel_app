@@ -105,14 +105,15 @@ export const styles = StyleSheet.create({
   salesInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
     justifyContent: "flex-start",
   },
   highlightedText: {
     marginTop: 10,
     fontWeight: "600",
-    fontSize: fontSize(25),
+    fontSize: fontSize(20),
     color: "#ff5100",
+    marginLeft: 0,
   },
   currencyText: {
     marginTop: 10,
@@ -232,13 +233,13 @@ export const styles = StyleSheet.create({
     lineHeight: widthUtils(30, 40).height,
   },
   selectedSizeButton: {
-    backgroundColor: "#fff5f0",
+    backgroundColor: "white",
     borderWidth: 1,
-    borderColor: "#ff5217",
+    borderColor: "#000000",
   },
   selectedSizeText: {
-    color: "#ff5217",
-    fontWeight: "600",
+    color: "#000000",
+    fontWeight: "400",
   },
   expandButton: {
     alignItems: "center",
@@ -292,7 +293,7 @@ export const styles = StyleSheet.create({
   },
   productCard: {
     width: widthUtils(115, 90).width,
-    height: widthUtils(115, 90).height,
+    height: widthUtils(140, 90).height,
     marginRight: 10,
   },
   cardContainerWithPrice: {
@@ -306,6 +307,7 @@ export const styles = StyleSheet.create({
   imageContainerCompact: {
     height: widthUtils(90, 90).height,
     width: widthUtils(90, 90).width,
+    borderRadius: 8,
   },
   priceContainerFlex: {
     flexDirection: "row",
@@ -314,8 +316,8 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   productPrice: {
-    fontWeight: "500",
-    fontSize: fontSize(14),
+    fontWeight: "600",
+    fontSize: fontSize(10),
     lineHeight: 20,
     color: "#ff5100",
   },
@@ -324,6 +326,14 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(10),
     marginLeft: 1.25,
     color: "#ff5100",
+  },
+  productTitleSimilar: {
+    marginTop: 2,
+    fontWeight: "400",
+    fontSize: fontSize(10),
+    lineHeight: 12,
+    color: "#333",
+    textAlign: "left",
   },
   activeIndexText: {
     color: "white",
@@ -338,9 +348,9 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
   },
   selectedColorImageContainer: {
-    backgroundColor: "#fff5f0",
+    backgroundColor: "#f5f5f5",
     borderWidth: 1,
-    borderColor: "#ff5217",
+    borderColor: "#000000",
   },
   fixedBottomBar: {
     position: "absolute",

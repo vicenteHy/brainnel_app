@@ -65,11 +65,14 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
         </View>
         <View style={styles.quantityControls}>
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={[
+              styles.quantityButton,
+              mainProductQuantity <= 1 ? styles.quantityButtonDisabled : styles.quantityButtonEnabled
+            ]}
             onPress={() => onQuantityChange(0, Math.max(1, mainProductQuantity - 1))}
             activeOpacity={1}
           >
-            <Text>-</Text>
+            <Text style={mainProductQuantity <= 1 ? styles.quantityButtonDisabledText : styles.quantityButtonText}>-</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.quantityInput}
@@ -89,11 +92,11 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={[styles.quantityButton, styles.quantityButtonEnabled]}
             onPress={() => onQuantityChange(0, mainProductQuantity + 1)}
             activeOpacity={1}
           >
-            <Text>+</Text>
+            <Text style={styles.quantityButtonText}>+</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -132,32 +135,28 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
               ? sku.attributes.map(attr => attr.value_trans || attr.value).join(" / ")
               : ""}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minWidth: 120 }}>
+          <View style={styles.quantityControls}>
             <TouchableOpacity
-              style={styles.quantityButton}
+              style={[
+                styles.quantityButton,
+                mainProductQuantity <= 1 ? styles.quantityButtonDisabled : styles.quantityButtonEnabled
+              ]}
               onPress={() => onQuantityChange(0, Math.max(1, mainProductQuantity - 1))}
               activeOpacity={1}
             >
-              <Text>-</Text>
+              <Text style={mainProductQuantity <= 1 ? styles.quantityButtonDisabledText : styles.quantityButtonText}>-</Text>
             </TouchableOpacity>
-            <Text
-              style={[
-                styles.quantityDisplayText,
-                {
-                  marginHorizontal: 8,
-                  minWidth: 24,
-                  textAlign: "center",
-                },
-              ]}
-            >
-              {mainProductQuantity}
-            </Text>
+            <View style={styles.quantityInput}>
+              <Text style={styles.quantityDisplayText}>
+                {mainProductQuantity}
+              </Text>
+            </View>
             <TouchableOpacity
-              style={styles.quantityButton}
+              style={[styles.quantityButton, styles.quantityButtonEnabled]}
               onPress={() => onQuantityChange(0, mainProductQuantity + 1)}
               activeOpacity={1}
             >
-              <Text>+</Text>
+              <Text style={styles.quantityButtonText}>+</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -208,7 +207,12 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                 </View>
                 <View style={styles.quantityControls}>
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      (sku.amount_on_sale ?? 0) === 0 || (skuQuantities[index] || 0) <= 0
+                        ? styles.quantityButtonDisabled
+                        : styles.quantityButtonEnabled
+                    ]}
                     onPress={() => {
                       const currentQuantity = skuQuantities[index] || 0;
                       if (currentQuantity > 0) {
@@ -218,7 +222,11 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                     disabled={(sku.amount_on_sale ?? 0) === 0}
                     activeOpacity={1}
                   >
-                    <Text>-</Text>
+                    <Text style={
+                      (sku.amount_on_sale ?? 0) === 0 || (skuQuantities[index] || 0) <= 0
+                        ? styles.quantityButtonDisabledText
+                        : styles.quantityButtonText
+                    }>-</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.quantityInput}
@@ -239,7 +247,12 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      (sku.amount_on_sale ?? 0) === 0
+                        ? styles.quantityButtonDisabled
+                        : styles.quantityButtonEnabled
+                    ]}
                     onPress={() => {
                       const currentQuantity = skuQuantities[index] || 0;
                       const maxQuantity = sku.amount_on_sale ?? 0;
@@ -250,7 +263,11 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                     disabled={(sku.amount_on_sale ?? 0) === 0}
                     activeOpacity={1}
                   >
-                    <Text>+</Text>
+                    <Text style={
+                      (sku.amount_on_sale ?? 0) === 0
+                        ? styles.quantityButtonDisabledText
+                        : styles.quantityButtonText
+                    }>+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -289,7 +306,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     fontWeight: "600",
     color: "#000",
-    lineHeight: fontSize(20),
+    lineHeight: fontSize(14),
   },
   // 无SKU样式
   productItems: {
@@ -363,31 +380,61 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    minWidth: 120,
+    minWidth: 100,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+    backgroundColor: "#fff",
+    overflow: "visible",
   },
   quantityButton: {
-    width: widthUtils(40, 30).width,
-    height: widthUtils(40, 30).height,
-    backgroundColor: "#f3f4f8",
+    width: widthUtils(30, 30).width,
+    height: widthUtils(30, 30).height,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: widthUtils(30, 30).width / 2,
+  },
+  quantityButtonEnabled: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
+  }, 
+  quantityButtonDisabled: {
+    backgroundColor: "#f3f4f8",
+    borderWidth: 1,
+    borderColor: "#f3f4f8",
   },
   quantityInput: {
-    width: widthUtils(60, 40).width,
-    height: widthUtils(40, 30).height,
+    width: widthUtils(30, 30).width,
+    height: widthUtils(30, 30).height,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    fontSize: fontSize(14),
-    borderWidth: 1,
-    borderColor: "#f3f4f8",
+    fontSize: fontSize(12),
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: "white",
+    borderRightColor: "white",
     padding: 0,
-    lineHeight: fontSize(14),
+    lineHeight: fontSize(12),
+    borderRadius: 0,
   },
   quantityDisplayText: {
-    fontSize: fontSize(16),
-    fontWeight: "700",
+    fontSize: fontSize(14),
+    fontWeight: "500",
     color: "#000",
+  },
+  quantityButtonText: {
+    fontSize: fontSize(25),
+    lineHeight: fontSize(25),
+    fontWeight: "300",
+    color: "#000",
+  },
+  quantityButtonDisabledText: {
+    fontSize: fontSize(25),
+    lineHeight: fontSize(25),
+    fontWeight: "300",
+    color: "#bdbdbd",
   },
 });
 

@@ -74,7 +74,7 @@ export const useSearchProducts = () => {
     [loading, loadingMore]
   );
 
-  const handleLoadMore = useCallback((searchParams: ProductParams) => {
+  const handleLoadMore = useCallback((baseParams: Omit<ProductParams, 'page'>) => {
     if (!hasMore || loadingMore) {
       return;
     }
@@ -88,7 +88,7 @@ export const useSearchProducts = () => {
     setLoadingMore(true);
     
     const loadMoreParams = {
-      ...searchParams,
+      ...baseParams,
       page: currentPage + 1,
     };
     
@@ -116,13 +116,13 @@ export const useSearchProducts = () => {
       });
   }, [hasMore, loadingMore, currentPage]);
 
-  const handleRefresh = useCallback((searchParams: ProductParams) => {
+  const handleRefresh = useCallback((baseParams: Omit<ProductParams, 'page'>) => {
     if (refreshing) return;
     
     setRefreshing(true);
     
     const refreshParams = {
-      ...searchParams,
+      ...baseParams,
       page: 1,
     };
     

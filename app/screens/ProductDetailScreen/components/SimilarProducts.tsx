@@ -61,6 +61,9 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
                     {userStore.user?.currency || "FCFA"}
                   </Text>
                 </View>
+                <Text style={styles.productTitleSimilar} numberOfLines={2}>
+                  {item.subject_trans}
+                </Text>
               </TouchableOpacity>
             ))
           : renderSkeletonItems().map((item) => (
