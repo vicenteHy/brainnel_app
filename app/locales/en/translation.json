@@ -780,9 +780,11 @@
         }
       },
       "vip": {
-        "upgrade_message": "Spend {{amount}} more to become VIP{{level}}",
+        "upgrade_message": "",
         "view_benefits": "View Benefits",
-        "benefits_summary": "Enjoy exclusive discounts and benefits"
+        "benefits_summary_prefix": "You need ",
+        "benefits_summary_suffix": " more points to reach ",
+        "benefits_summary": "You need {{amount}} more points to reach VIP{{level}}"
       },
       "balance": {
         "title": "My Balance",

@@ -875,11 +875,13 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     fontWeight: 'bold',
+    fontSize: 16,
     marginRight: 8,
   },
   vipCardLink: {
     fontSize: 12,
     color: '#999',
+    marginTop: -10
   },
   vipProgressBarOuter: {
     height: 6,
@@ -913,5 +915,10 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 8,
+  },
+  vipBenefitsHighlight: {
+    fontSize: 12,
+    color: '#000',
+    fontWeight: 'bold',
   },
 }); 

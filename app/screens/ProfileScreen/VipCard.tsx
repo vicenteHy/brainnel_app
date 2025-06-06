@@ -23,7 +23,7 @@ export const VipCard: React.FC<VipCardProps> = ({ user }) => {
     <View style={styles.vipCard}>
       <View style={styles.vipCardTop}>
         <Text style={styles.vipCardTitle}>
-          <Text style={styles.vipLevelTag}>VIP {user?.vip_level}</Text> {t('profile.vip.upgrade_message', { amount: remaining, level: user.vip_level + 1 })}
+          <Text style={styles.vipLevelTag}>VIP {user?.vip_level}</Text>
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate("MemberIntroduction")}>
           <Text style={styles.vipCardLink}>{t('profile.vip.view_benefits')} {'>'}</Text>
@@ -37,7 +37,12 @@ export const VipCard: React.FC<VipCardProps> = ({ user }) => {
         <Text style={styles.vipProgressPercentage}>{progress.toFixed(0)}%</Text>
         <Text style={styles.vipProgressLabel}>VIP{user.vip_level + 1}</Text>
       </View>
-      <Text style={styles.vipBenefits}>{t('profile.vip.benefits_summary')}</Text>
+      <Text style={styles.vipBenefits}>
+        {t('profile.vip.benefits_summary_prefix')}
+        <Text style={styles.vipBenefitsHighlight}>{remaining}</Text>
+        {t('profile.vip.benefits_summary_suffix')}
+        <Text style={styles.vipBenefitsHighlight}>VIP{user.vip_level + 1}</Text>
+      </Text>
     </View>
   );
 }; 

@@ -879,9 +879,11 @@
         }
       },
       "vip": {
-        "upgrade_message": "{{amount}} de plus pour VIP{{level}}",
+        "upgrade_message": "",
         "view_benefits": "Avantages",
-        "benefits_summary": "Remises exclusives"
+        "benefits_summary_prefix": "Il te reste ",
+        "benefits_summary_suffix": " points pour atteindre ",
+        "benefits_summary": "Il te reste {{amount}} points pour atteindre VIP{{level}}"
       },
       "balance": {
         "title": "Solde",
