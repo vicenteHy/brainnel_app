@@ -771,7 +771,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: 15,
-    backgroundColor: '#FF4D4F',
+    backgroundColor: '#FF6F30',
     borderRadius: 7.5,
     minWidth: 15,
     height: 15,
