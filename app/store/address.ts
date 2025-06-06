@@ -52,7 +52,6 @@ export const useAddressStore = create<AddressStore>((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await addressApi.getAddress();
-      console.log("getAddress response:", response);
 
       // 检查响应格式
       const addresses = response.items
@@ -156,12 +155,9 @@ export const useAddressStore = create<AddressStore>((set) => ({
   fetchDefaultAddress: async () => {
     try {
       set({ loading: true, error: null });
-      console.log("Calling addressesDefault API...");
       const response = await addressApi.addressesDefault();
-      console.log("addressesDefault API response:", response);
 
       if (!response) {
-        console.log("No response from addressesDefault API");
         set({
           defaultAddress: null,
           loading: false,
@@ -171,7 +167,6 @@ export const useAddressStore = create<AddressStore>((set) => ({
       }
 
       const defaultAddress = response as Address;
-      console.log("Setting defaultAddress in store:", defaultAddress);
       set({
         defaultAddress,
         loading: false,

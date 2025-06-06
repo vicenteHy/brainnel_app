@@ -93,8 +93,6 @@ export const ShippingFee = () => {
 
   useEffect(() => {
     if (state.freightForwarderAddress) {
-      console.log(state.freightForwarderAddress.other_addresses);
-
       setFreightForwarderAddress(state.freightForwarderAddress);
       // Set the first item as default
       if (
@@ -150,7 +148,6 @@ export const ShippingFee = () => {
   useEffect(() => {
     if (shippingFeeData && selectedWarehouse) {
       // 如果已经有运费数据和选中的仓库，直接切换显示即可，无需重新调用API
-      console.log('切换运输方式，使用已有数据');
     } else {
       // 只有在没有数据时才重新获取货代中心
       const transportMode = shippingMethod === "sea" ? 0 : 1;
@@ -244,13 +241,9 @@ export const ShippingFee = () => {
         timestamp: new Date().toISOString(),
       };
 
-
-
       // 记录物流确认埋点事件
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logShippingConfirm(shippingConfirmData, "shipping");
-      
-      console.log("物流确认信息埋点数据:", shippingConfirmData);
       
       navigation.navigate("PaymentMethod", {
         freight_forwarder_address_id: selectedWarehouse?.address_id || 0,
@@ -352,12 +345,12 @@ export const ShippingFee = () => {
                           {option.id === "sea" ? (
                             <ShipIcon 
                               size={60} 
-                              color={shippingMethod === option.id ? "#ff6b35" : "#999"} 
+                              color={shippingMethod === option.id ? "#FF6F30" : "#999"} 
                             />
                           ) : (
                             <PlaneIcon 
                               size={60} 
-                              color={shippingMethod === option.id ? "#ff6b35" : "#999"} 
+                              color={shippingMethod === option.id ? "#FF6F30" : "#999"} 
                             />
                           )}
                         </View>
@@ -418,7 +411,7 @@ export const ShippingFee = () => {
                             <Text style={styles.calculatingText}>{count}</Text>
                             <ActivityIndicator
                               size="small"
-                              color="#ff6b35"
+                              color="#FF6F30"
                               style={{ marginLeft: 5 }}
                             />
                           </View>
@@ -625,7 +618,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   sectionAction: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontSize: fontSize(14),
     fontWeight: "600",
   },
@@ -666,7 +659,7 @@ const styles = StyleSheet.create({
   },
   addRecipientIcon: {
     fontSize: fontSize(20),
-    color: "#ff6b35",
+    color: "#FF6F30",
     marginRight: 6,
   },
   addRecipientText: { 
@@ -703,9 +696,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   shippingCardSelected: { 
-    borderColor: "#ff6b35", 
+    borderColor: "#FF6F30", 
     backgroundColor: "#fff4f0",
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -835,7 +828,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     fontSize: fontSize(16),
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "500",
   },
   optionItem: {
@@ -857,7 +850,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   checkmark: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "bold",
     fontSize: fontSize(16),
   },
@@ -885,7 +878,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   shippingInfoPrice: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "600",
     fontSize: fontSize(14),
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -930,10 +923,10 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     borderWidth: 0,
     borderRadius: 16,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -971,7 +964,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   calculatingText: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontSize: fontSize(14),
     fontWeight: "500",
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -984,22 +977,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
   },
   deliveryText: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontSize: fontSize(16),
     fontWeight: "700",
     textAlign: "center",
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   estimatedTimeContainer: {
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 16,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 2,

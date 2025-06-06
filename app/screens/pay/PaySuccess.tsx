@@ -67,7 +67,7 @@ export const PaymentSuccessScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#ff6b35" />
+      <StatusBar barStyle="light-content" backgroundColor="#FF6F30" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Success Header */}
         <View style={styles.successHeader}>
@@ -173,14 +173,14 @@ export const PaymentSuccessScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
   },
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
   successHeader: {
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     paddingHorizontal: 20,
     paddingVertical: 40,
     alignItems: "center",
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     fontSize: fontSize(32),
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "bold",
   },
   successTitle: {
@@ -282,12 +282,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   primaryButton: {
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginBottom: 12,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -310,10 +310,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 1.5,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
   },
   secondaryButtonText: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontSize: fontSize(16),
     fontWeight: "600",
     textAlign: "center",
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   tipBullet: {
     fontSize: fontSize(16),
-    color: "#ff6b35",
+    color: "#FF6F30",
     marginRight: 12,
     marginTop: 2,
     fontWeight: "bold",

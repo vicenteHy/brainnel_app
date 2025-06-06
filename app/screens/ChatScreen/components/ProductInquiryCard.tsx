@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   continueButton: {
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 2,

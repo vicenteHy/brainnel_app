@@ -454,7 +454,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -481,7 +481,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -514,7 +514,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -541,7 +541,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>

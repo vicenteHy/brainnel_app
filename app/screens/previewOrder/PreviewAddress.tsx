@@ -117,6 +117,7 @@ export const PreviewAddress = () => {
   // When countryList loaded, set selected country label
   React.useEffect(() => {
     if (countryList.length > 0) {
+      const addressToUse = defaultAddress || (addresses && addresses.length > 0 ? addresses[0] : null);
       // If there is an address in route params
       const addressFromRoute = route.params?.address;
       if (addressFromRoute && addressFromRoute.country) {
@@ -130,10 +131,10 @@ export const PreviewAddress = () => {
         }
       }
       // If no route params but there is default address
-      else if (defaultAddress && defaultAddress.country && !route.params?.address) {
+      else if (addressToUse && addressToUse.country && !route.params?.address) {
         const selectedCountry = countryList.find(item => 
-          item.name_en === defaultAddress.country || 
-          item.value === defaultAddress.country
+          item.name_en === addressToUse.country || 
+          item.value === addressToUse.country
         );
         if (selectedCountry) {
           setSelectedCountryLabel(selectedCountry.label);
@@ -141,7 +142,7 @@ export const PreviewAddress = () => {
         }
       }
     }
-  }, [countryList, route.params?.address, defaultAddress]);
+  }, [countryList, route.params?.address, defaultAddress, addresses]);
 
   // Monitor phone number changes, if whatsapp same as phone option is checked then automatically update WhatsApp number
   React.useEffect(() => {
@@ -173,27 +174,29 @@ export const PreviewAddress = () => {
 
   // Monitor defaultAddress changes
   React.useEffect(() => {
-    if (defaultAddress && !route.params?.address) {
-      const phoneNumber = defaultAddress.receiver_phone || "";
-      const whatsappPhone = defaultAddress.whatsapp_phone || "";
+    const addressToUse = defaultAddress || (addresses && addresses.length > 0 ? addresses[0] : null);
+
+    if (addressToUse && !route.params?.address) {
+      const phoneNumber = addressToUse.receiver_phone || "";
+      const whatsappPhone = addressToUse.whatsapp_phone || "";
       
       // Check if WhatsApp is same as phone with country code
       const fullPhoneNumber = `225${phoneNumber}`;
       const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
       
       setFormData({
-        receiver_first_name: defaultAddress.receiver_first_name || "",
-        receiver_last_name: defaultAddress.receiver_last_name || "",
+        receiver_first_name: addressToUse.receiver_first_name || "",
+        receiver_last_name: addressToUse.receiver_last_name || "",
         country_code: "225", // 默认科特迪瓦区号
         receiver_phone: phoneNumber,
         receiver_phone_again: phoneNumber,
         whatsapp_phone: whatsappPhone,
-        is_default: Boolean(defaultAddress.is_default),
+        is_default: Boolean(addressToUse.is_default),
       });
       
       setWhatsappSameAsPhone(isWhatsappSameAsPhone);
     }
-  }, [defaultAddress, route.params?.address]);
+  }, [defaultAddress, addresses, route.params?.address]);
 
   React.useEffect(() => {
     settingApi.getCountryList().then((res) => {
@@ -698,7 +701,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: "#ff6b35",
+    color: "#FF6F30",
     textDecorationLine: "underline",
   },
   contactFormContainer: {
@@ -793,8 +796,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checked: {
-    backgroundColor: "#ff6b35",
-    borderColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
+    borderColor: "#FF6F30",
   },
   checkmark: {
     color: "white",
@@ -937,10 +940,10 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     borderWidth: 0,
     borderRadius: 16,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1001,7 +1004,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: "#ff6b35",
+    color: "#FF6F30",
   },
   countryItem: {
     padding: 16,
@@ -1056,7 +1059,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   checkIcon: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontSize: 18,
     fontWeight: "bold",
   },

@@ -167,7 +167,7 @@ export function Recipient({
     const response = await ordersApi.calcDomesticShippingFee(data);
     // 转换响应数据以匹配 DomesticShippingFeeData 类型
     const domesticShippingFeeData: DomesticShippingFeeData = {
-      total_shipping_fee: response.total_shipping_fee_air || 0,
+      total_shipping_fee: response.total_shipping_fee || 0,
       currency: response.currency || '',
       // 添加其他必要的属性
     };
@@ -503,7 +503,7 @@ export function Recipient({
         {/* Warehouse Selection */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>🏭</Text>
+            <Text style={styles.sectionIcon}>��</Text>
             <Text style={styles.sectionTitle}>Delivery Warehouse</Text>
           </View>
           <View style={{ marginTop: 12 }}>
@@ -1783,7 +1783,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   bottomButtonContent: {
-    backgroundColor: "#ff611a",
+    backgroundColor: "#FF6F30",
     width: "100%",
     justifyContent: "center",
     alignItems: "center",

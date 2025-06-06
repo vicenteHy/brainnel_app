@@ -48,7 +48,6 @@ type RootStackParamList = {
     data: Order;
     payMethod: string;
     currency: string;
-    amount: number;
   };
   Pay: { order_id: string };
   ShippingFee: { freight_forwarder_address_id?: number; isCOD?: boolean };
@@ -77,7 +76,6 @@ const PaymentMethodItem = ({
   selectedCurrency,
   onSelectCurrency,
   exchangeRates,
-  totalAmount,
   convertedAmount,
   isConverting,
   isPaypalExpanded,
@@ -92,7 +90,6 @@ const PaymentMethodItem = ({
     usd: number;
     eur: number;
   };
-  totalAmount?: number;
   convertedAmount?: {
     converted_amount: number;
     item_key: string;
@@ -169,8 +166,7 @@ const PaymentMethodItem = ({
         isPaypalExpanded &&
         selectedCurrency &&
         onSelectCurrency &&
-        exchangeRates &&
-        totalAmount && (
+        exchangeRates && (
           <View style={styles.paypalExpandedContainer}>
             <View style={styles.paypalCurrencyContainer}>
               <Text style={styles.currencyTitle}>
@@ -333,7 +329,6 @@ export const PaymentMethod = () => {
     usd: 580.0,
     eur: 655.96,
   });
-  const [totalAmount, setTotalAmount] = useState(121.97);
   const [isWaveExpanded, setIsWaveExpanded] = useState(false);
 
   // Get isCOD parameter from route
@@ -724,7 +719,6 @@ export const PaymentMethod = () => {
           data: res,
           payMethod: selectedPayment,
           currency: selectedPayment === "paypal" ? selectedCurrency : selectedPayment === "wave" ? "FCFA" : user.currency,
-          amount: totalAmount,
         });
       })
       .catch((error) => {
@@ -748,7 +742,7 @@ export const PaymentMethod = () => {
         <View style={styles.container}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#ff6000" />
+              <ActivityIndicator size="large" color="#FF6F30" />
             </View>
           ) : (
             <ScrollView
@@ -798,13 +792,8 @@ export const PaymentMethod = () => {
                           isSelected={selectedPayment === option.id}
                           onSelect={() => onSelectPayment(option.id)}
                           selectedCurrency={selectedCurrency}
-                          onSelectCurrency={
-                            option.id === "paypal"
-                              ? onSelectCurrency
-                              : undefined
-                          }
+                          onSelectCurrency={onSelectCurrency}
                           exchangeRates={exchangeRates}
-                          totalAmount={totalAmount}
                           convertedAmount={convertedAmount}
                           isConverting={isConverting}
                           isPaypalExpanded={isPaypalExpanded}
@@ -985,7 +974,7 @@ export const PaymentMethod = () => {
                           style={{
                             fontSize: fontSize(18),
                             fontWeight: "600",
-                            color: "#ff6000",
+                            color: "#FF6F30",
                             marginLeft: 10,
                           }}
                         >
@@ -1001,7 +990,7 @@ export const PaymentMethod = () => {
                           style={{
                             fontSize: fontSize(18),
                             fontWeight: "600",
-                            color: "#ff6000",
+                            color: "#FF6F30",
                           }}
                         >
                           {getConvertedTotalForCalculation().toFixed(2)}
@@ -1026,7 +1015,7 @@ export const PaymentMethod = () => {
                         style={{
                           fontSize: fontSize(18),
                           fontWeight: "600",
-                          color: "#ff6000",
+                          color: "#FF6F30",
                           marginLeft: 10,
                         }}
                       >
@@ -1040,7 +1029,7 @@ export const PaymentMethod = () => {
                       style={{
                         fontSize: fontSize(18),
                         fontWeight: "600",
-                        color: "#ff6000",
+                        color: "#FF6F30",
                       }}
                     >
                       {originalTotalPrice.toFixed(2)}{" "}
@@ -1125,14 +1114,14 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF5100",
+    borderBottomColor: "#FF6F30",
   },
   tabText: {
     fontSize: fontSize(16),
     color: "#666",
   },
   tabTextActive: {
-    color: "#FF5100",
+    color: "#FF6F30",
     fontWeight: "500",
   },
   paymentOptions: {
@@ -1151,7 +1140,7 @@ const styles = StyleSheet.create({
   paymentSelected: {
     backgroundColor: "#FFF0E8",
     borderWidth: 1,
-    borderColor: "#FF5100",
+    borderColor: "#FF6F30",
   },
   paymentContent: {
     flex: 1,
@@ -1201,7 +1190,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   radioInnerSelected: {
-    backgroundColor: "#FF5100",
+    backgroundColor: "#FF6F30",
   },
   titleContainer: {
     width: "100%",
@@ -1263,7 +1252,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   sectionAction: {
-    color: "#ff6000",
+    color: "#FF6F30",
     fontSize: fontSize(13),
     fontWeight: "500",
   },
@@ -1330,7 +1319,7 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontWeight: "600",
-    color: "#ff6000",
+    color: "#FF6F30",
     fontSize: fontSize(15),
     marginBottom: 5,
   },
@@ -1460,7 +1449,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#ff6000",
+    color: "#FF6F30",
   },
   loadingIndicator: {
     marginLeft: 10,
@@ -1497,7 +1486,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF5100",
+    borderBottomColor: "#FF6F30",
   },
   bottomBar: {
     padding: 15,
@@ -1509,7 +1498,7 @@ const styles = StyleSheet.create({
     height: widthUtils(50, 50).height,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FF5100",
+    backgroundColor: "#FF6F30",
     borderRadius: 25,
   },
   submitButtonText: {
@@ -1554,10 +1543,10 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF5100",
+    borderBottomColor: "#FF6F30",
   },
   activeTabText: {
-    color: "#FF5100",
+    color: "#FF6F30",
     fontWeight: "500",
   },
   tabContent: {
@@ -1679,14 +1668,14 @@ const styles = StyleSheet.create({
   },
   currencyButtonActive: {
     backgroundColor: "#FFF0E8",
-    borderColor: "#FF5100",
+    borderColor: "#FF6F30",
   },
   currencyButtonText: {
     fontSize: fontSize(14),
     color: "#333",
   },
   currencyButtonTextActive: {
-    color: "#FF5100",
+    color: "#FF6F30",
     fontWeight: "600",
   },
   convertingContainer: {
@@ -1711,7 +1700,7 @@ const styles = StyleSheet.create({
   convertedAmountValue: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#FF5100",
+    color: "#FF6F30",
   },
   shippingFeeAmountRow: {
     flexDirection: "row",
@@ -1722,7 +1711,7 @@ const styles = StyleSheet.create({
   },
   warningIcon: {
     fontSize: fontSize(16),
-    color: "#ff6000",
+    color: "#FF6F30",
   },
   cashOnDeliveryContainer: {
     marginTop: 4,
@@ -1731,12 +1720,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
     alignSelf: "flex-start",
   },
   cashOnDeliveryText: {
     fontSize: fontSize(12),
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "500",
   },
   shippingLabelContainer: {

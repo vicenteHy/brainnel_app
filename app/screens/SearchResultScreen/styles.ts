@@ -154,14 +154,14 @@ export const styles = StyleSheet.create({
   currentPrice: {
     fontSize: fontSize(24),
     fontWeight: "600",
-    color: "#ff6600",
+    color: "#FF6F30",
     marginRight: 4,
   },
   currency: {
     fontSize: fontSize(14),
     fontWeight: "600",
     fontFamily: "PingFang SC",
-    color: "#ff6600",
+    color: "#FF6F30",
   },
   originalPrice: {
     fontSize: fontSize(14),
@@ -208,7 +208,7 @@ export const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   sortButtonActive: {
-    borderColor: "#ff6600",
+    borderColor: "#FF6F30",
     backgroundColor: "#fff8f5",
   },
   sortButtonText: {
@@ -216,7 +216,7 @@ export const styles = StyleSheet.create({
     color: "#666",
   },
   sortButtonTextActive: {
-    color: "#ff6600",
+    color: "#FF6F30",
     fontWeight: "bold",
   },
   sortDivider: {

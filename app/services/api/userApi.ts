@@ -97,12 +97,12 @@ export const userApi = {
   
   // 更新用户信息
   updateProfile: (data: Partial<User>) => {
-    return apiService.put<User>('/user/profile/', data);
+    return apiService.put<User>('/api/users/me/', data);
   },
   
   // 更新用户头像
-  updateAvatar: (file: FormData) => {
-    return apiService.upload<{avatar: string}>('/user/avatar/', file);
+  updateAvatar: (data: { image_base64: string; image_filename: string }) => {
+    return apiService.put<User>('/api/users/me/avatar/', data);
   },
   
   // 退出登录

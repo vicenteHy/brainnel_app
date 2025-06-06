@@ -3,8 +3,8 @@ import { Svg, Path } from 'react-native-svg';
 
 const OrangeCircleIcon = ({
   size = 24,
-  fillColor = "#FF5100",
-  strokeColor = "#FF5100",
+  fillColor = "#FF6F30",
+  strokeColor = "#FF6F30",
   strokeWidth = 2
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

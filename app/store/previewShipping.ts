@@ -114,7 +114,6 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logShippingConfirm(shippingLogData, "address");
       
-      console.log("当前所有埋点数据:", getAnalyticsData());
       
       set((state) => ({
         state: { 
@@ -160,7 +159,6 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logShippingConfirm(domesticShippingLogData, "address");
       
-      console.log("国内物流信息埋点数据:", domesticShippingLogData);
       
       set((state) => ({
         state: { 

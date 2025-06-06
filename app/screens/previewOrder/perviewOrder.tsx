@@ -69,7 +69,6 @@ type RootStackParamList = {
     data: Order;
     payMethod: string;
     currency: string;
-    amount: number;
   };
   Pay: { payUrl: string; method: string; order_id: string };
   OrderDetails: { orderId?: number };
@@ -886,10 +885,10 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     borderWidth: 0,
     borderRadius: 16,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -968,11 +967,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
   },
   paymentMethodText: {
     fontSize: fontSize(16),
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "600",
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
@@ -1027,7 +1026,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
     marginTop: 8,
   },
   totalLabel: {
@@ -1039,7 +1038,7 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: fontSize(20),
     fontWeight: "700",
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   phoneInputRow: {
@@ -1112,7 +1111,7 @@ const styles = StyleSheet.create({
   modalCloseText: {
     fontSize: fontSize(16),
     fontWeight: "500",
-    color: "#ff6b35",
+    color: "#FF6F30",
   },
   countryItem: {
     padding: 16,
@@ -1124,7 +1123,7 @@ const styles = StyleSheet.create({
   selectedCountryItem: {
     backgroundColor: "#fff4f0",
     borderLeftWidth: 4,
-    borderLeftColor: "#ff6b35",
+    borderLeftColor: "#FF6F30",
   },
   countryItemText: {
     fontSize: fontSize(16),
@@ -1138,7 +1137,7 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
   },
   selectedCountryItemText: {
-    color: "#ff6b35",
+    color: "#FF6F30",
     fontWeight: "600",
   },
   phoneNumberErrorText: {

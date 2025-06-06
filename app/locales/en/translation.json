@@ -758,7 +758,37 @@
       "discount": "discount",
       "avatar_updated_successfully": "Avatar updated successfully",
       "avatar_upload_failed": "Avatar upload failed",
-      "login_required_for_avatar": "Login required to change avatar"
+      "login_required_for_avatar": "Login required to change avatar",
+      "orders": {
+        "title": "My Orders",
+        "view_all": "View All",
+        "status": {
+          "to_pay": "To Pay",
+          "to_ship": "To Ship",
+          "to_receive": "To Receive",
+          "to_review": "To Review",
+          "after_sales": "After Sales"
+        }
+      },
+      "services": {
+        "title": "My Services",
+        "item": {
+          "collection": "Collection",
+          "history": "Browse History",
+          "address": "My Address",
+          "share": "Share"
+        }
+      },
+      "vip": {
+        "upgrade_message": "Spend {{amount}} more to become VIP{{level}}",
+        "view_benefits": "View Benefits",
+        "benefits_summary": "Enjoy exclusive discounts and benefits"
+      },
+      "balance": {
+        "title": "My Balance",
+        "recharge": "Recharge",
+        "details": "Details"
+      }
   },
   "permissions": {
       "required": "Permissions Required",

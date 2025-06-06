@@ -450,13 +450,13 @@ export const styles = StyleSheet.create<StylesType>({
   highlightedText: {
     fontWeight: "700",
     fontSize: fontSize(24),
-    color: "#ff5100",
+    color: "#FF6F30",
     marginLeft: 2,
   },
   highlightedText1: {
     fontWeight: "700",
     fontSize: fontSize(14),
-    color: "#ff5100",
+    color: "#FF6F30",
   },
   priceContainer1: {},
   priceLabel1: {
@@ -671,7 +671,7 @@ export const loginModalStyles = StyleSheet.create({
     lineHeight: 22,
   },
   loginButton: {
-    backgroundColor: "#ff5100",
+    backgroundColor: "#FF6F30",
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,

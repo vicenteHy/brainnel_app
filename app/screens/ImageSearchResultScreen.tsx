@@ -793,7 +793,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -820,7 +820,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -853,7 +853,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -880,7 +880,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#ff6600"
+                            color="#FF6F30"
                           />
                         )}
                       </TouchableOpacity>
@@ -1141,7 +1141,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   sortButtonActive: {
-    borderColor: "#ff6600",
+    borderColor: "#FF6F30",
     backgroundColor: "#fff8f5",
   },
   sortButtonText: {
@@ -1149,7 +1149,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   sortButtonTextActive: {
-    color: "#ff6600",
+    color: "#FF6F30",
     fontWeight: "bold",
   },
   sortDivider: {

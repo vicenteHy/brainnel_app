@@ -70,7 +70,7 @@ export const CartModals: React.FC<CartModalsProps> = ({
         <View style={modalStyles.overlay}>
           <View style={[modalStyles.popup, modalStyles.minQuantityPopup]}>
             <View style={modalStyles.warningIconContainer}>
-              <IconComponent name="exclamation" size={28} color="#FF5100" />
+              <IconComponent name="exclamation" size={28} color="#FF6F30" />
             </View>
             <Text style={[modalStyles.promptText, modalStyles.minQuantityText]}>
               {minQuantityMessage}

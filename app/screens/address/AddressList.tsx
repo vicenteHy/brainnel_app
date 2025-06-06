@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   addressItemSelected: {
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
     borderWidth: 2,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ff6b35",
+    borderColor: "#FF6F30",
   },
   blueHeadingTextStyle: {
     fontSize: fontSize(12),
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     fontWeight: "600",
-    color: "#ff6b35",
+    color: "#FF6F30",
     letterSpacing: 0.2,
   },
   svgContainer: {
@@ -331,12 +331,12 @@ const styles = StyleSheet.create({
   addButton: {
     width: "100%",
     height: 56,
-    backgroundColor: "#ff6b35",
+    backgroundColor: "#FF6F30",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 16,
     marginTop: 20,
-    shadowColor: "#ff6b35",
+    shadowColor: "#FF6F30",
     shadowOffset: {
       width: 0,
       height: 4,

@@ -3,7 +3,7 @@ import { Svg, Path} from 'react-native-svg';
 
 const ShoppingBagIcon = ({ 
   size = 16,
-  color = "#FF5100",
+  color = "#FF6F30",
 
 }) => (
   <Svg

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   fixedBottomViewBoxPriceText: {
     fontSize: fontSize(20),
-    color: "#ff5217",
+    color: "#FF6F30",
     fontWeight: "700",
   },
   fixedBottomViewBoxRight: {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: "100%",
     height: widthUtils(50, 50).height,
-    backgroundColor: "#ff5217",
+    backgroundColor: "#FF6F30",
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",

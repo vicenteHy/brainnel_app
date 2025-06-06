@@ -81,7 +81,7 @@ export function MyAccount() {
               </View>
               <View style={styles.userinfoDetails}>
                 <Text style={styles.userinfoDetailsText}>View Details</Text>
-                <ArrowRightIcon size={8} color="#ff611a" />
+                <ArrowRightIcon size={8} color="#FF6F30" />
               </View>
             </View>
           </View>
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   userinfoDetailsText: {
-    color: "#ff611a",
+    color: "#FF6F30",
     fontSize: 12,
     fontWeight: "600",
     marginRight: 5,

@@ -42,6 +42,7 @@ import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
 import {ChangePassword} from '../screens/setting/ChangePassword';
 import { HomeScreen } from '../screens/HomeScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 
 export {
   CountrySelect,
@@ -87,5 +88,6 @@ export {
   PayError,
   Info,
   ChangePassword,
-  HomeScreen as Home
+  HomeScreen as Home,
+  ProfileScreen,
 }; 

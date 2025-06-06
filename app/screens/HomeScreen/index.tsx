@@ -572,7 +572,7 @@ export const HomeScreen = () => {
               height: "100%",
             }}
           >
-            <ActivityIndicator size="small" color="#ff5100" />
+            <ActivityIndicator size="small" color="#FF6F30" />
           </View>
         </View>
       );
@@ -988,7 +988,7 @@ export const HomeScreen = () => {
                       <IconComponent
                         name="checkmark-outline"
                         size={20}
-                        color="#ff5100"
+                        color="#FF6F30"
                       />
                     )}
                   </TouchableOpacity>
@@ -1024,7 +1024,7 @@ export const HomeScreen = () => {
                         <IconComponent
                           name="checkmark-outline"
                           size={20}
-                          color="#ff5100"
+                          color="#FF6F30"
                         />
                       )}
                     </TouchableOpacity>
