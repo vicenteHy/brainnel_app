@@ -48,10 +48,14 @@ export const SimilarProducts: React.FC<SimilarProductsProps> = ({
                 style={styles.productCard}
               >
                 <View style={styles.cardContainerWithPrice}>
-                  <Image
-                    source={{ uri: item.product_image_urls[0] }}
-                    style={styles.imageContainerCompact}
-                  />
+                  {item.product_image_urls && item.product_image_urls[0] ? (
+                    <Image
+                      source={{ uri: item.product_image_urls[0] }}
+                      style={styles.imageContainerCompact}
+                    />
+                  ) : (
+                    <View style={[styles.imageContainerCompact, styles.skeletonBox]} />
+                  )}
                 </View>
                 <View style={styles.priceContainerFlex}>
                   <Text style={styles.productPrice}>

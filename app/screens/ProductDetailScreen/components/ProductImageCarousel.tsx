@@ -43,7 +43,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
         <Carousel
           loop
           width={screenWidth}
-          data={product?.product_image_urls || []}
+          data={product?.product_image_urls?.filter(url => url && typeof url === 'string') || []}
           height={widthUtils(430, 430).height}
           onSnapToItem={(index) => setActiveIndex(index)}
           modeConfig={{

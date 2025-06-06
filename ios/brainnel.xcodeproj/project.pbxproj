@@ -7,28 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0681BDDB8024BA6C06BF815D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192892B37ED3801AC5BC087E /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1DB2D6FD93B3B55D3D915D2A /* libPods-brainnel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 07AA07B58F60A21B605BC18E /* libPods-brainnel.a */; };
-		2FD55C1F22DFEFB7A673AE96 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E56FED3B8BDF38DCEBEA7ABB /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		9E33ECDC86D0A1E00754CEAA /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15B39AA91B42EF4AE432918 /* ExpoModulesProvider.swift */; };
+		529FE1FEEB3695DA771B50CD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 957BC004EF5A6232A1285EB6 /* PrivacyInfo.xcprivacy */; };
+		9188CC5F8EBC4381FC2CE48D /* libPods-brainnel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BFABB3DC743141465E0F2665 /* libPods-brainnel.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C8C015568A2048A381431D7C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D492E468B98C40EA91587FE7 /* GoogleService-Info.plist */; };
+		C9FD5F6EF2984EF7A35856EF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75FA1DFA957B4E5DA8CA745C /* GoogleService-Info.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		07AA07B58F60A21B605BC18E /* libPods-brainnel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-brainnel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* brainnel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = brainnel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = brainnel/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = brainnel/Info.plist; sourceTree = "<group>"; };
-		74D5BC4B98A0963B1CE822B9 /* Pods-brainnel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.debug.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.debug.xcconfig"; sourceTree = "<group>"; };
+		169751F2CCA3B7117C076C98 /* Pods-brainnel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.release.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.release.xcconfig"; sourceTree = "<group>"; };
+		192892B37ED3801AC5BC087E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-brainnel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		75FA1DFA957B4E5DA8CA745C /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "brainnel/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		957BC004EF5A6232A1285EB6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = brainnel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = brainnel/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B15B39AA91B42EF4AE432918 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-brainnel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C9D8D999FABB271D1977ED57 /* Pods-brainnel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.release.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.release.xcconfig"; sourceTree = "<group>"; };
-		D492E468B98C40EA91587FE7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "brainnel/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		E56FED3B8BDF38DCEBEA7ABB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = brainnel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BFABB3DC743141465E0F2665 /* libPods-brainnel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-brainnel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA377A6245492243788DE8D2 /* Pods-brainnel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.debug.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = brainnel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* brainnel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "brainnel-Bridging-Header.h"; path = "brainnel/brainnel-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -39,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DB2D6FD93B3B55D3D915D2A /* libPods-brainnel.a in Frameworks */,
+				9188CC5F8EBC4381FC2CE48D /* libPods-brainnel.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,8 +55,8 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				D492E468B98C40EA91587FE7 /* GoogleService-Info.plist */,
-				E56FED3B8BDF38DCEBEA7ABB /* PrivacyInfo.xcprivacy */,
+				75FA1DFA957B4E5DA8CA745C /* GoogleService-Info.plist */,
+				957BC004EF5A6232A1285EB6 /* PrivacyInfo.xcprivacy */,
 			);
 			name = brainnel;
 			sourceTree = "<group>";
@@ -65,26 +65,19 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				07AA07B58F60A21B605BC18E /* libPods-brainnel.a */,
+				BFABB3DC743141465E0F2665 /* libPods-brainnel.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4280CE9972B74B05FFA6DFF3 /* Pods */ = {
+		46CC2FA4818F5719FEB912B1 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				74D5BC4B98A0963B1CE822B9 /* Pods-brainnel.debug.xcconfig */,
-				C9D8D999FABB271D1977ED57 /* Pods-brainnel.release.xcconfig */,
+				CA377A6245492243788DE8D2 /* Pods-brainnel.debug.xcconfig */,
+				169751F2CCA3B7117C076C98 /* Pods-brainnel.release.xcconfig */,
 			);
+			name = Pods;
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		68CBD4AA5C62DBE59AAFB579 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				9462B4BB7F83D31EEF69C9B4 /* brainnel */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -101,8 +94,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				4280CE9972B74B05FFA6DFF3 /* Pods */,
-				68CBD4AA5C62DBE59AAFB579 /* ExpoModulesProviders */,
+				46CC2FA4818F5719FEB912B1 /* Pods */,
+				DF2CB132EB7E93A8C52B51D4 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -117,14 +110,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9462B4BB7F83D31EEF69C9B4 /* brainnel */ = {
-			isa = PBXGroup;
-			children = (
-				B15B39AA91B42EF4AE432918 /* ExpoModulesProvider.swift */,
-			);
-			name = brainnel;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -132,6 +117,22 @@
 			);
 			name = Supporting;
 			path = brainnel/Supporting;
+			sourceTree = "<group>";
+		};
+		DD052D7B08933B63ACBAE4CF /* brainnel */ = {
+			isa = PBXGroup;
+			children = (
+				192892B37ED3801AC5BC087E /* ExpoModulesProvider.swift */,
+			);
+			name = brainnel;
+			sourceTree = "<group>";
+		};
+		DF2CB132EB7E93A8C52B51D4 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				DD052D7B08933B63ACBAE4CF /* brainnel */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,13 +143,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "brainnel" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				2C3406CBEEC89C4929E45A83 /* [Expo] Configure project */,
+				910BE5AAB292A78FCB9265A0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				B60E52DB125D9AAC5EEB63AD /* [CP] Embed Pods Frameworks */,
+				E236591E527C46EDD440D5E4 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -169,6 +170,8 @@
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
+						DevelopmentTeam = "LM9LMW3HL3";
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -198,8 +201,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				C8C015568A2048A381431D7C /* GoogleService-Info.plist in Resources */,
-				2FD55C1F22DFEFB7A673AE96 /* PrivacyInfo.xcprivacy in Resources */,
+				C9FD5F6EF2984EF7A35856EF /* GoogleService-Info.plist in Resources */,
+				529FE1FEEB3695DA771B50CD /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,25 +245,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		2C3406CBEEC89C4929E45A83 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-brainnel/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -350,7 +334,26 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-brainnel/Pods-brainnel-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		B60E52DB125D9AAC5EEB63AD /* [CP] Embed Pods Frameworks */ = {
+		910BE5AAB292A78FCB9265A0 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-brainnel/expo-configure-project.sh\"\n";
+		};
+		E236591E527C46EDD440D5E4 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -388,7 +391,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				9E33ECDC86D0A1E00754CEAA /* ExpoModulesProvider.swift in Sources */,
+				0681BDDB8024BA6C06BF815D /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,13 +400,12 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 74D5BC4B98A0963B1CE822B9 /* Pods-brainnel.debug.xcconfig */;
+			baseConfigurationReference = CA377A6245492243788DE8D2 /* Pods-brainnel.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = brainnel/brainnel.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LM9LMW3HL3;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -429,18 +431,20 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "LM9LMW3HL3";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C9D8D999FABB271D1977ED57 /* Pods-brainnel.release.xcconfig */;
+			baseConfigurationReference = 169751F2CCA3B7117C076C98 /* Pods-brainnel.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = brainnel/brainnel.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LM9LMW3HL3;
 				INFOPLIST_FILE = brainnel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -460,6 +464,9 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "LM9LMW3HL3";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};
