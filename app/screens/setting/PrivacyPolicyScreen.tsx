@@ -194,20 +194,9 @@ export const PrivacyPolicyScreen = () => {
       console.log('API响应:', response);
       
       if (response && typeof response === 'object') {
-        // 检查多种可能的数据结构
-        let data: PrivacyPolicyData | null = null;
-        
-        // 尝试不同的数据结构路径
-        if (response.data && typeof response.data === 'object') {
-          data = response.data as PrivacyPolicyData;
-          console.log('使用response.data作为数据源');
-        } else if (response.info_en || response.info_fr) {
-          data = response as PrivacyPolicyData;
-          console.log('直接使用response作为数据源');
-        } else if (Array.isArray(response.data) && response.data.length > 0) {
-          data = response.data[0] as PrivacyPolicyData;
-          console.log('使用response.data[0]作为数据源');
-        }
+        // response直接包含需要的数据结构
+        const data = response as PrivacyPolicyData;
+        console.log('使用response作为数据源');
         
         if (data && (data.info_en || data.info_fr)) {
           console.log('找到有效数据，开始处理内容');
