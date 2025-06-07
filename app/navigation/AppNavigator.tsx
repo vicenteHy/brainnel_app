@@ -506,6 +506,15 @@ export const AppNavigator = () => {
             gestureDirection: "horizontal",
           }}
         />
+        <Stack.Screen
+          name="PrivacyPolicyScreen"
+          component={Screens.PrivacyPolicyScreen}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

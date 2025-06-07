@@ -56,4 +56,5 @@ export type RootStackParamList = {
   ForgotPhonePassword: undefined;
   Info: undefined;
   ChangePassword: undefined;
+  PrivacyPolicyScreen: undefined;
 };

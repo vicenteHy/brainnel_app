@@ -41,6 +41,7 @@ import { ChatScreen } from '../screens/ChatScreen';
 import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
 import {ChangePassword} from '../screens/setting/ChangePassword';
+import { PrivacyPolicyScreen } from '../screens/setting/PrivacyPolicyScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
@@ -89,6 +90,7 @@ export {
   PayError,
   Info,
   ChangePassword,
+  PrivacyPolicyScreen,
   HomeScreen as Home,
   ProfileScreen,
   CategoryScreen,

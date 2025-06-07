@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import useUserStore from "../../store/user";
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi } from "../../services/api/userApi";
-import { getAgreement } from "../../services/api/agreement";
+
 import { avatarCacheService } from "../../services/avatarCacheService";
 
 export const SettingList = () => {
@@ -201,9 +201,7 @@ export const SettingList = () => {
           <TouchableOpacity
             style={styles.item}
             onPress={() => {
-              getAgreement("ysxy").then((res) => {
-                console.log(res);
-              });
+              navigation.navigate("PrivacyPolicyScreen");
             }}
           >
             <Text>{t("settings.privacy_policy")}</Text>
