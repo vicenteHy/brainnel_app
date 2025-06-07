@@ -188,7 +188,7 @@ export const CategoryScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6F30" />
+        <ActivityIndicator size="small" color="#FF6F30" />
       </View>
     );
   }
@@ -222,7 +222,7 @@ export const CategoryScreen = () => {
           <View style={styles.rightContent}>
             {subLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#FF6F30" />
+                <ActivityIndicator size="small" color="#FF6F30" />
               </View>
             ) : (
               <FlatList
@@ -335,6 +335,7 @@ const styles = StyleSheet.create({
   subCategoryImage: {
     width: "100%",
     height: ITEM_WIDTH,
+    borderRadius: 8,
   },
   subCategoryInfo: {
     padding: 8,

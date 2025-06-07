@@ -146,11 +146,23 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             >
               <Text style={mainProductQuantity <= 1 ? styles.quantityButtonDisabledText : styles.quantityButtonText}>-</Text>
             </TouchableOpacity>
-            <View style={styles.quantityInput}>
+            <TouchableOpacity
+              style={styles.quantityInput}
+              onPress={() =>
+                onQuantityPress(
+                  "noImg",
+                  0,
+                  mainProductQuantity,
+                  999999,
+                  "default"
+                )
+              }
+              activeOpacity={1}
+            >
               <Text style={styles.quantityDisplayText}>
                 {mainProductQuantity}
               </Text>
-            </View>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quantityButton, styles.quantityButtonEnabled]}
               onPress={() => onQuantityChange(0, mainProductQuantity + 1)}
