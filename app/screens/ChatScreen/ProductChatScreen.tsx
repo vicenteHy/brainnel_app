@@ -211,7 +211,7 @@ export const ProductChatScreen = () => {
         </View>
         {isLastUserMessage && (
           <View style={styles.readStatusContainer}>
-            <Text style={styles.readStatusText}>Lu</Text>
+            <Text style={styles.readStatusText}>{t("chat.read_status")}</Text>
           </View>
         )}
       </View>
@@ -230,11 +230,11 @@ export const ProductChatScreen = () => {
           />
         )}
       </View>
-      <Text style={styles.welcomeTitle}>Bienvenue !</Text>
+      <Text style={styles.welcomeTitle}>{t("chat.welcome_title")}</Text>
       <Text style={styles.welcomeMessage}>
-        Vous voulez en savoir plus sur nos produits ?Rejoignez la discussion 😊
+        {t("chat.welcome_message")}
       </Text>
-      <Text style={styles.welcomeTime}>5:43 PM</Text>
+      <Text style={styles.welcomeTime}>{t("chat.welcome_time")}</Text>
     </View>
   );
 
@@ -277,12 +277,12 @@ export const ProductChatScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loginPromptContainer}>
-          <Text style={styles.loginPromptTitle}>请先登录</Text>
+          <Text style={styles.loginPromptTitle}>{t("chat.login_required_title")}</Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => navigation.navigate("Login")}
           >
-            <Text style={styles.loginButtonText}>立即登录</Text>
+            <Text style={styles.loginButtonText}>{t("chat.login_now")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -333,7 +333,7 @@ export const ProductChatScreen = () => {
                 style={styles.input}
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder="Je suis intéressé par ce produit"
+                placeholder={t("chat.input_product_message")}
                 multiline
               />
               <TouchableOpacity

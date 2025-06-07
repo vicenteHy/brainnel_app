@@ -1943,7 +1943,7 @@ export const OrderDetails = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>选择国家</Text>
+              <Text style={styles.modalTitle}>{t("order.preview.select_country_modal")}</Text>
               <TouchableOpacity
                 onPress={() => setShowCountryModal(false)}
                 style={styles.closeButtonContainer}

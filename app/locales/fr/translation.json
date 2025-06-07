@@ -133,7 +133,13 @@
       "login_required_title": "Veuillez vous connecter d'abord",
       "login_required_subtitle": "Connectez-vous pour utiliser les fonctionnalités de chat",
       "login_now": "Se connecter maintenant",
-      "continue_inquiry": "Continuer la consultation"
+      "continue_inquiry": "Continuer la consultation",
+      "welcome_title": "Bienvenue !",
+      "welcome_message": "Vous voulez en savoir plus sur nos produits ? Rejoignez la discussion 😊",
+      "welcome_time": "17h43",
+      "read_status": "Lu",
+      "no_product_inquiries": "Aucune demande produit enregistrée",
+      "product_inquiry_hint": "Commencez votre première consultation produit en cliquant sur le bouton de consultation dans la page de détails du produit"
   },
   "searchProducts":"Rechercher des produits",
   "recommendations":"Recommandations",
@@ -357,6 +363,7 @@
       },
       "add_new": "Ajouter une nouvelle adresse",
       "default": "Par défaut",
+      "edit": "Modifier",
       "delete": "Supprimer",
       "preview": {
           "default_address": "Adresse par défaut",
@@ -700,6 +707,7 @@
       "add_to_cart": "Ajouter au panier",
       "reorder": "Commander à nouveau",
       "unable_to_load": "Impossible de charger les détails de la commande",
+      "status_title": "Statut de la commande",
       "error": {
           "phone_open": "Impossible d'ouvrir le composeur téléphonique",
           "payment_update": "Mise à jour du paiement échouée",

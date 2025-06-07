@@ -9,12 +9,14 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Dimensions,
 } from "react-native";
+import PagerView from 'react-native-pager-view';
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { productStatus } from "../../constants/productStatus";
 import BackIcon from "../../components/BackIcon";
 import MassageIcon from "../../components/MassageIcon";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import fontSize from "../../utils/fontsizeUtils";
 import widthUtils from "../../utils/widthUtils";
 import { useTranslation } from "react-i18next";
@@ -41,6 +43,13 @@ export function Status() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute<StatusScreenRouteProp>();
   const { t } = useTranslation();
+  const pagerRef = useRef<PagerView>(null);
+  
+  // 状态标签位置和宽度记录
+  const statusWidthsRef = useRef<Map<number | null, number>>(new Map());
+  const statusPositionsRef = useRef<Map<number | null, number>>(new Map());
+  const isScrollingRef = useRef(false); // 防止重复滚动的标志位
+  
   const [statusList, setStatusList] = useState(() => {
     const initialList = [...productStatus];
     initialList.unshift({
@@ -62,6 +71,113 @@ export function Status() {
   const statusItemRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
   const { orders, getAllOrders } = useOrderListStore();
   const [inquiries, setInquiries] = useState<InquiryResponseDataList['items']>([]);
+
+  // 记录状态标签的位置信息
+  const handleStatusLayout = useCallback((statusValue: number | null, event: any) => {
+    const { x, width } = event.nativeEvent.layout;
+    statusWidthsRef.current.set(statusValue, width);
+    statusPositionsRef.current.set(statusValue, x);
+  }, []);
+
+  // 精确居中当前选中的状态标签
+  const scrollStatusToCenter = useCallback((statusValue: number | null, immediate = false) => {
+    if (!statusScrollViewRef.current || isScrollingRef.current) return;
+    
+    const executeScroll = () => {
+      const position = statusPositionsRef.current.get(statusValue);
+      const width = statusWidthsRef.current.get(statusValue);
+      
+      if (position !== undefined && width !== undefined) {
+        const screenWidth = Dimensions.get('window').width;
+        const containerPadding = 6; // statusListScr的paddingHorizontal
+        
+        // 计算目标状态标签的中心点位置
+        const itemCenterX = position + (width / 2);
+        
+        // 计算需要滚动的距离，使状态标签居中显示
+        const scrollToX = Math.max(0, itemCenterX - (screenWidth / 2) + containerPadding);
+        
+        isScrollingRef.current = true;
+        statusScrollViewRef.current?.scrollTo({
+          x: scrollToX,
+          animated: !immediate,
+        });
+        
+        // 重置滚动标志位
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, immediate ? 0 : 300);
+      } else {
+        // 如果还没有布局信息，使用简单估算
+        const statusIndex = statusList.findIndex(item => item.status === statusValue);
+        if (statusIndex !== -1) {
+          const estimatedItemWidth = 80;
+          const screenWidth = Dimensions.get('window').width;
+          const scrollToX = Math.max(0, (statusIndex * estimatedItemWidth) - (screenWidth / 2));
+          
+          isScrollingRef.current = true;
+          statusScrollViewRef.current?.scrollTo({
+            x: scrollToX,
+            animated: !immediate,
+          });
+          
+          // 重置滚动标志位
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, immediate ? 0 : 300);
+        }
+      }
+    };
+    
+    if (immediate) {
+      executeScroll();
+    } else {
+      // 只在有布局信息时才延迟，否则立即执行
+      const hasLayoutInfo = statusPositionsRef.current.has(statusValue);
+      if (hasLayoutInfo) {
+        executeScroll();
+      } else {
+        setTimeout(executeScroll, 50);
+      }
+    }
+  }, [statusList]);
+
+  // 获取页面索引
+  const getPageIndex = (status: number | null): number => {
+    const index = statusList.findIndex(item => item.status === status);
+    return index >= 0 ? index : 0;
+  };
+
+  // 获取状态从索引
+  const getStatusFromIndex = (index: number): number | null => {
+    return statusList[index]?.status ?? null;
+  };
+
+  // 处理标签点击
+  const handleTabPress = (selectedStatus: number | null) => {
+    setStatus(selectedStatus);
+    const pageIndex = getPageIndex(selectedStatus);
+    pagerRef.current?.setPage(pageIndex);
+    changeStatus(selectedStatus);
+    
+    // 自动居中当前状态标签
+    requestAnimationFrame(() => {
+      scrollStatusToCenter(selectedStatus);
+    });
+  };
+
+  // 处理页面滑动
+  const handlePageSelected = (e: any) => {
+    const position = e.nativeEvent.position;
+    const newStatus = getStatusFromIndex(position);
+    setStatus(newStatus);
+    changeStatus(newStatus);
+    
+    // 自动居中当前状态标签
+    requestAnimationFrame(() => {
+      scrollStatusToCenter(newStatus);
+    });
+  };
 
   const getAllOrdersList = async () => {
     setLoading(true);
@@ -91,25 +207,18 @@ export function Status() {
     
   };
 
-  const scrollToStatus = () => {
-    const itemIndex = statusList.findIndex(
-      (item) => item.status === route.params.status
-    );
-    console.log(itemIndex);
-    statusItemRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      if (width) {
-        statusScrollViewRef.current?.scrollTo({
-          x: width * (itemIndex - 1),
-          animated: true,
-        });
-      }
-    });
-  };
   useEffect(() => {    
     setStatus(route.params.status);
-    scrollToStatus();
     setPage(1);
     getAllOrdersList();
+    
+    // 滑动到初始页面
+    const initialPageIndex = getPageIndex(route.params.status);
+    setTimeout(() => {
+      pagerRef.current?.setPage(initialPageIndex);
+      // 自动居中当前状态标签
+      scrollStatusToCenter(route.params.status, true);
+    }, 100);
   }, []);
 
   const getStatus = (status: number) => {
@@ -133,11 +242,11 @@ export function Status() {
   //     setImageViewerVisible(true);
   //   };
 
-  const changeStatus = async (status: number) => {
+  const changeStatus = async (selectedStatus: number | null) => {
     setLoading(true);
     setPage(1);
     
-    if (status === 8) {
+    if (selectedStatus === 8) {
       // 调用询价接口
       try {
         const res = await inquiriesApi.getInquiries(1, pageSize, 1);
@@ -151,16 +260,15 @@ export function Status() {
         page: 1,
         page_size: pageSize,
       };
-      if (status) {
-        data.status = status;
+      if (selectedStatus) {
+        data.status = selectedStatus;
       }
-      if (status === 0) {
+      if (selectedStatus === 0) {
         data.status = 0;
       }
 
       try {
         await getAllOrders(data, 1);
-        // 滚动状态列表到选中项
       } finally {
         setLoading(false);
       }
@@ -198,10 +306,8 @@ export function Status() {
                   status === item.status ? styles.statusItemActive : null,
                 ]}
                 key={index}
-                onPress={() => {
-                  setStatus(item.status as number);
-                  changeStatus(item.status as number);
-                }}
+                onPress={() => handleTabPress(item.status)}
+                onLayout={(event) => handleStatusLayout(item.status, event)}
               >
                 <Text
                   style={[
@@ -216,190 +322,192 @@ export function Status() {
           </ScrollView>
         </View>
 
-        <View style={styles.orderContent}>
-          {loading && page === 1 ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#f77f3a" />
-            </View>
-          ) : (
-            <ScrollView
-              horizontal={false}
-              showsVerticalScrollIndicator={false}
-              scrollEventThrottle={16}
-              onMomentumScrollEnd={async (event) => {
-                const { contentOffset, contentSize, layoutMeasurement } =
-                  event.nativeEvent;
-                console.log('Scroll values:', {
-                  contentOffsetY: contentOffset.y,
-                  layoutHeight: layoutMeasurement.height,
-                  contentHeight: contentSize.height,
-                  sum: contentOffset.y + layoutMeasurement.height
-                });
-                const isAtBottom =
-                  contentOffset.y + layoutMeasurement.height >=
-                  contentSize.height - 20;
-                                
-                if (isAtBottom) {
-                  setLoading(true);
-                  setPage(page + 1);
-                  
-                  if (status === 8) {
-                    // 询价分页加载
-                    try {
-                      const res = await inquiriesApi.getInquiries(page + 1, pageSize, 1);
-                      setInquiries(prev => [...prev, ...res.items]);
-                    } finally {
-                      setLoading(false);
-                    }
-                  } else {
-                    // 订单分页加载
-                    const data: PaginatedOrderRequest = {
-                      page: page,
-                      page_size: pageSize,
-                      status: status,
-                    };
-                    getAllOrders(data, page);
-                  }
-                }
-              }}
-            >
-              {status === 8 ? (
-                // 渲染询价数据
-                inquiries.map((item, index) => (
-                  <View key={index}>
-                    <View style={styles.orderItemContainer}>
-                      <View style={styles.orderItem}>
-                        <View style={styles.orderStatus}>
-                          <Text style={styles.orderStatusOrderText}>
-                            {item.inquiry_id}
-                          </Text>
-                          <Text style={styles.orderStatusText}>
-                            {getStatus(8)}
-                          </Text>
-                        </View>
-                        <View style={styles.orderProductList}>
-                          <View style={styles.orderProductItem}>
-                            <TouchableOpacity style={styles.orderProductItemImage}>
-                              <Image
-                                source={{ uri: item.image_url }}
-                                style={styles.orderProductItemImage}
-                              />
-                            </TouchableOpacity>
-                            <View style={styles.orderProductItemInfo}>
-                              <Text style={styles.orderProductItemInfoName}>
-                                {item.name}
-                              </Text>
-                              <Text style={styles.orderProductItemInfoPrice}>
-                                {t("quantity")}: {item.quantity}
-                              </Text>
-                              <Text style={styles.orderProductItemInfoPrice}>
-                                {t("material")}: {item.material}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                        <View style={styles.orderProductPrice}>
-                          <View style={styles.orderProductPriceItem}>
-                            {/* <Text style={styles.orderProductTotalText}>{t("order.status_title")}:</Text>
-                            <Text style={styles.orderProductPriceText}>
-                              {t("order.status.waiting_quote")}
-                            </Text> */}
-                          </View>
-                          <TouchableOpacity
-                            style={styles.orderProductView}
-                            onPress={() => {
-                              // 处理询价详情点击事件
-                              // TODO: 需要创建 InquiryDetails 页面或使用现有页面
-                              // navigation.navigate("InquiryDetails");
-                              console.log("查看询价详情:", item.inquiry_id);
-                              navigation.navigate("InquiryScreen");
-                            }}
-                          >
-                            <Text style={styles.orderProductViewText}>
-                              {t("order.view_details")}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </View>
-                    {/* 询价分隔线 */}
-                    {index < inquiries.length - 1 && (
-                      <View style={styles.orderDivider} />
-                    )}
+        <PagerView
+          ref={pagerRef}
+          style={styles.pagerView}
+          initialPage={getPageIndex(route.params.status)}
+          onPageSelected={handlePageSelected}
+          orientation="horizontal"
+        >
+          {statusList.map((statusItem, index) => (
+            <View key={index} style={styles.pageContainer}>
+              <View style={styles.orderContent}>
+                {loading && page === 1 ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#f77f3a" />
                   </View>
-                ))
-              ) : (
-                // 渲染订单数据
-                orders?.items.map((item, index) => (
-                  <View key={index}>
-                    <View style={styles.orderItemContainer}>
-                      <View style={styles.orderItem}>
-                        <View style={styles.orderStatus}>
-                          <Text style={styles.orderStatusOrderText}>
-                            {item.order_id}
-                          </Text>
-                          <Text style={styles.orderStatusText}>
-                            {getStatus(item.status)}
-                          </Text>
-                        </View>
-                        <View style={styles.orderProductList}>
-                          {item.items.map((item, index) => (
-                            <View style={styles.orderProductItem} key={index}>
-                              <TouchableOpacity style={styles.orderProductItemImage}>
-                                <Image
-                                  source={{ uri: item.sku_image }}
-                                  style={styles.orderProductItemImage}
-                                />
-                              </TouchableOpacity>
-                              <View style={styles.orderProductItemInfo}>
-                                <Text style={styles.orderProductItemInfoName}>
-                                  {getOrderTransLanguage(item) || item.product_name_fr}
+                ) : (
+                  <ScrollView
+                    horizontal={false}
+                    showsVerticalScrollIndicator={false}
+                    scrollEventThrottle={16}
+                    onMomentumScrollEnd={async (event) => {
+                      // 只在当前活跃页面处理滚动事件
+                      if (status !== statusItem.status) return;
+                      
+                      const { contentOffset, contentSize, layoutMeasurement } =
+                        event.nativeEvent;
+                      const isAtBottom =
+                        contentOffset.y + layoutMeasurement.height >=
+                        contentSize.height - 20;
+                                      
+                      if (isAtBottom) {
+                        setLoading(true);
+                        setPage(page + 1);
+                        
+                        if (statusItem.status === 8) {
+                          // 询价分页加载
+                          try {
+                            const res = await inquiriesApi.getInquiries(page + 1, pageSize, 1);
+                            setInquiries(prev => [...prev, ...res.items]);
+                          } finally {
+                            setLoading(false);
+                          }
+                        } else {
+                          // 订单分页加载
+                          const data: PaginatedOrderRequest = {
+                            page: page,
+                            page_size: pageSize,
+                            status: statusItem.status,
+                          };
+                          getAllOrders(data, page);
+                        }
+                      }
+                    }}
+                  >
+                    {statusItem.status === 8 ? (
+                      // 渲染询价数据
+                      inquiries.map((item, index) => (
+                        <View key={index}>
+                          <View style={styles.orderItemContainer}>
+                            <View style={styles.orderItem}>
+                              <View style={styles.orderStatus}>
+                                <Text style={styles.orderStatusOrderText}>
+                                  {item.inquiry_id}
                                 </Text>
-                                {item.sku_attributes?.map((attr, index) => (
-                                  <Text
-                                    style={styles.orderProductItemInfoPrice}
-                                    key={index}
-                                  >
-                                    {attr.attribute_name}:{attr.attribute_value}
+                                <Text style={styles.orderStatusText}>
+                                  {getStatus(8)}
+                                </Text>
+                              </View>
+                              <View style={styles.orderProductList}>
+                                <View style={styles.orderProductItem}>
+                                  <TouchableOpacity style={styles.orderProductItemImage}>
+                                    <Image
+                                      source={{ uri: item.image_url }}
+                                      style={styles.orderProductItemImage}
+                                    />
+                                  </TouchableOpacity>
+                                  <View style={styles.orderProductItemInfo}>
+                                    <Text style={styles.orderProductItemInfoName}>
+                                      {item.name}
+                                    </Text>
+                                    <Text style={styles.orderProductItemInfoPrice}>
+                                      {t("quantity")}: {item.quantity}
+                                    </Text>
+                                    <Text style={styles.orderProductItemInfoPrice}>
+                                      {t("material")}: {item.material}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+                              <View style={styles.orderProductPrice}>
+                                <View style={styles.orderProductPriceItem}>
+                                </View>
+                                <TouchableOpacity
+                                  style={styles.orderProductView}
+                                  onPress={() => {
+                                    console.log("查看询价详情:", item.inquiry_id);
+                                    navigation.navigate("InquiryScreen");
+                                  }}
+                                >
+                                  <Text style={styles.orderProductViewText}>
+                                    {t("order.view_details")}
                                   </Text>
-                                ))}
+                                </TouchableOpacity>
                               </View>
                             </View>
-                          ))}
-                        </View>
-                        <View style={styles.orderProductPrice}>
-                          <View style={styles.orderProductPriceItem}>
-                            <Text style={styles.orderProductTotalText}>{t("order.total_price")}:</Text>
-                            <Text style={styles.orderProductPriceText}>
-                              {item.actual_amount} {item?.currency}
-                            </Text>
                           </View>
-                          <TouchableOpacity
-                            style={styles.orderProductView}
-                            onPress={() => handleOrderDetailsPress(item.order_id)}
-                          >
-                            <Text style={styles.orderProductViewText}>
-                              {t("order.view_details")}
-                            </Text>
-                          </TouchableOpacity>
+                          {/* 询价分隔线 */}
+                          {index < inquiries.length - 1 && (
+                            <View style={styles.orderDivider} />
+                          )}
                         </View>
-                      </View>
-                    </View>
-                    {/* 订单分隔线 */}
-                    {index < orders.items.length - 1 && (
-                      <View style={styles.orderDivider} />
+                      ))
+                    ) : (
+                      // 渲染订单数据
+                      orders?.items.map((item, index) => (
+                        <View key={index}>
+                          <View style={styles.orderItemContainer}>
+                            <View style={styles.orderItem}>
+                              <View style={styles.orderStatus}>
+                                <Text style={styles.orderStatusOrderText}>
+                                  {item.order_id}
+                                </Text>
+                                <Text style={styles.orderStatusText}>
+                                  {getStatus(item.status)}
+                                </Text>
+                              </View>
+                              <View style={styles.orderProductList}>
+                                {item.items.map((item, index) => (
+                                  <View style={styles.orderProductItem} key={index}>
+                                    <TouchableOpacity style={styles.orderProductItemImage}>
+                                      <Image
+                                        source={{ uri: item.sku_image }}
+                                        style={styles.orderProductItemImage}
+                                      />
+                                    </TouchableOpacity>
+                                    <View style={styles.orderProductItemInfo}>
+                                      <Text style={styles.orderProductItemInfoName}>
+                                        {getOrderTransLanguage(item) || item.product_name_fr}
+                                      </Text>
+                                      {item.sku_attributes?.map((attr, index) => (
+                                        <Text
+                                          style={styles.orderProductItemInfoPrice}
+                                          key={index}
+                                        >
+                                          {attr.attribute_name}:{attr.attribute_value}
+                                        </Text>
+                                      ))}
+                                    </View>
+                                  </View>
+                                ))}
+                              </View>
+                              <View style={styles.orderProductPrice}>
+                                <View style={styles.orderProductPriceItem}>
+                                  <Text style={styles.orderProductTotalText}>{t("order.total_price")}:</Text>
+                                  <Text style={styles.orderProductPriceText}>
+                                    {item.actual_amount} {item?.currency}
+                                  </Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={styles.orderProductView}
+                                  onPress={() => handleOrderDetailsPress(item.order_id)}
+                                >
+                                  <Text style={styles.orderProductViewText}>
+                                    {t("order.view_details")}
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          </View>
+                          {/* 订单分隔线 */}
+                          {index < orders.items.length - 1 && (
+                            <View style={styles.orderDivider} />
+                          )}
+                        </View>
+                      ))
                     )}
-                  </View>
-                ))
-              )}
-              {loading && page > 1 && (
-                <View style={styles.loadingMoreContainer}>
-                  <ActivityIndicator size="small" color="#f77f3a" />
-                </View>
-              )}
-            </ScrollView>
-          )}
-        </View>
+                    {loading && page > 1 && (
+                      <View style={styles.loadingMoreContainer}>
+                        <ActivityIndicator size="small" color="#f77f3a" />
+                      </View>
+                    )}
+                  </ScrollView>
+                )}
+              </View>
+            </View>
+          ))}
+        </PagerView>
         {/* <ImageView
           images={images.map(uri => ({ uri }))}
           imageIndex={currentImageIndex}
@@ -444,12 +552,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   statusItem: {
-    padding: 16,
-    paddingHorizontal: 20,
+    padding: 12,
+    paddingHorizontal: 16,
     backgroundColor: "white",
   },
   statusItemText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(12),
     textAlign: "center",
   },
   statusItemTextActive: {
@@ -574,5 +682,11 @@ const styles = StyleSheet.create({
   },
   headerPlaceholder: {
     width: 24, // Same width as BackIcon to balance the layout
+  },
+  pagerView: {
+    flex: 1,
+  },
+  pageContainer: {
+    flex: 1,
   },
 });

@@ -8,7 +8,7 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
-  Alert,
+  Modal,
 } from "react-native";
 import React, { Fragment } from "react";
 import BackIcon from "../../components/BackIcon";
@@ -25,10 +25,11 @@ import { useTranslation } from "react-i18next";
 import useUserStore from "../../store/user";
 export function AddressList() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { addresses, fetchAddresses, loading, setDefaultAddressStatic } =
+  const { addresses, fetchAddresses, loading, setDefaultAddressStatic, updateAddress } =
     useAddressStore();
-  const [addressList, setAddressList] = useState<AddressItem[]>();
   const [address, setAddress] = useState<number>();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteAddressId, setDeleteAddressId] = useState<number | null>(null);
   const { t } = useTranslation();
   const { user } = useUserStore();
   const getAddress = async () => {
@@ -37,40 +38,62 @@ export function AddressList() {
   useEffect(() => {
     getAddress();
   }, []);
-  React.useEffect(() => {
-    setAddressList(addresses);
-  }, [addresses]);
   const deleteAddress = async (address_id: number) => {
-    setAddressList(
-      addressList?.filter((item) => item.address_id !== address_id)
-    );
-    addressApi.deleteAddress(address_id);
+    // 使用 store 的 deleteAddress 方法
+    await useAddressStore.getState().deleteAddress(address_id);
+    setShowDeleteModal(false);
+    setDeleteAddressId(null);
   };
+  
   const confirmDeleteAddress = (address_id: number) => {
-    Alert.alert(
-      t("cart.delete_item"),
-      t("cart.delete_item_message"),
-      [
-        {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("common.confirm"),
-          style: "destructive",
-          onPress: () => deleteAddress(address_id),
-        },
-      ]
-    );
+    setDeleteAddressId(address_id);
+    setShowDeleteModal(true);
   };
-  useFocusEffect(
-    useCallback(() => {
-      getAddress();
-    }, [])
-  );
+  
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteAddressId(null);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (deleteAddressId) {
+      deleteAddress(deleteAddressId);
+    }
+  };
+  // 移除 useFocusEffect，避免自动刷新覆盖用户操作
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getAddress();
+  //   }, [])
+  // );
   const setAddressId = (address_id: number) => {
     setDefaultAddressStatic(address_id);
     navigation.goBack();
+  };
+
+  const handleSetDefault = (address_id: number, currentIsDefault: number) => {
+    // 如果当前已经是默认地址，不执行任何操作
+    if (currentIsDefault === 1) {
+      return;
+    }
+
+    // 立即更新 UI 状态，确保只有一个地址为默认
+    const currentAddresses = addresses || [];
+    const updatedAddresses = currentAddresses.map(addr => ({
+      ...addr,
+      is_default: addr.address_id === address_id ? 1 : 0
+    }));
+    
+    // 立即更新本地状态实现即时 UI 响应
+    useAddressStore.setState({ addresses: updatedAddresses });
+    
+    // 异步调用 API 更新服务器
+    addressApi.updateAddress({
+      address_id: address_id,
+      is_default: 1
+    }).catch(error => {
+      console.error("设置默认地址API调用失败:", error);
+    });
   };
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -80,6 +103,7 @@ export function AddressList() {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
+            activeOpacity={1}
           >
             <BackIcon size={fontSize(22)} />
           </TouchableOpacity>
@@ -96,7 +120,7 @@ export function AddressList() {
               style={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {addressList?.map((item, index) => (
+              {addresses?.map((item, index) => (
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
@@ -109,6 +133,7 @@ export function AddressList() {
                     }
                     setAddressId(item.address_id);
                   }}
+                  activeOpacity={1}
                 >
                   <View
                     style={[
@@ -134,32 +159,41 @@ export function AddressList() {
                         >
                           {item.receiver_phone}
                         </Text>
-                        <View style={styles.addressEmit}>
-                          {/* <Text>{t("address.set_default")}</Text> */}
-                          <TouchableOpacity
-                            onPress={() => confirmDeleteAddress(item.address_id)}
+                        <View style={styles.addressActions}>
+                          <TouchableOpacity 
+                            style={styles.defaultCheckbox}
+                            onPress={() => handleSetDefault(item.address_id, item.is_default)}
+                            activeOpacity={1}
                           >
-                            <Text>{t("address.delete")}</Text>
+                            <View style={[styles.checkbox, item.is_default === 1 && styles.checkedBox]}>
+                              {item.is_default === 1 && <Text style={styles.checkmark}>✓</Text>}
+                            </View>
+                            <Text style={styles.defaultLabel}>{t("address.set_default")}</Text>
                           </TouchableOpacity>
+                          
+                          <View style={styles.actionButtons}>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => confirmDeleteAddress(item.address_id)}
+                              activeOpacity={1}
+                            >
+                              <Text style={styles.actionButtonText}>{t("address.delete")}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={() => {
+                                navigation.navigate("EditAddress", {
+                                  address: item,
+                                });
+                              }}
+                              activeOpacity={1}
+                            >
+                              <Text style={styles.actionButtonText}>{t("address.edit")}</Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </View>
-                      {item.is_default === 1 && (
-                        <View style={styles.centeredBoxWithText}>
-                          <Text style={styles.blueHeadingTextStyle}>{t("address.default")}</Text>
-                        </View>
-                      )}
                     </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        navigation.navigate("EditAddress", {
-                          address: item,
-                        });
-                      }}
-                    >
-                      <View style={styles.svgContainer}>
-                        <FileEditIcon size={24} />
-                      </View>
-                    </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -169,6 +203,7 @@ export function AddressList() {
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => navigation.navigate("AddAddress")}
+                activeOpacity={1}
               >
                   <Text style={styles.addButtonText}>{t("address.add_new")}</Text>
                 </TouchableOpacity>
@@ -177,6 +212,47 @@ export function AddressList() {
           </Fragment>
         )}
       </View>
+      
+      {/* 删除确认弹窗 */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModalContainer}>
+            <Text style={styles.deleteModalTitle}>
+              {t("cart.delete_item")}
+            </Text>
+            <Text style={styles.deleteModalMessage}>
+              {t("cart.delete_item_message")}
+            </Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.cancelButton]}
+                onPress={handleCancelDelete}
+                activeOpacity={1}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {t("common.cancel")}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.confirmButton]}
+                onPress={handleConfirmDelete}
+                activeOpacity={1}
+              >
+                <Text style={styles.confirmButtonText}>
+                  {t("common.confirm")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -249,9 +325,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   userCardContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: "column",
     width: "100%",
     padding: 16,
     backgroundColor: "white",
@@ -267,11 +341,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   userInfoCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    flex: 1,
-    marginRight: 12,
+    width: "100%",
   },
   userCardInfo2: {
     flex: 1,
@@ -288,46 +358,67 @@ const styles = StyleSheet.create({
   userCardInfo1: {
     fontSize: fontSize(14),
     lineHeight: 20,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     fontWeight: "400",
     color: "#666666",
     marginTop: 4,
     letterSpacing: 0.1,
   },
-  centeredBoxWithText: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 28,
-    paddingHorizontal: 12,
-    marginLeft: 8,
-    backgroundColor: "#fff4f0",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FF6F30",
-  },
-  blueHeadingTextStyle: {
-    fontSize: fontSize(12),
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    fontWeight: "600",
-    color: "#FF6F30",
-    letterSpacing: 0.2,
-  },
-  svgContainer: {
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f8f8",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e8e8e8",
-  },
-  addressEmit: {
-    paddingTop: 12,
+  addressActions: {
     flexDirection: "row",
-    gap: 16,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
   },
+  defaultCheckbox: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: "#d0d0d0",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+  checkedBox: {
+    backgroundColor: "#666",
+    borderColor: "#666",
+  },
+  checkmark: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  defaultLabel: {
+    fontSize: fontSize(14),
+    color: "#666",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: "#f5f5f5",
+  },
+  actionButtonText: {
+    fontSize: fontSize(13),
+    color: "#666",
+  },
+
+
   addButton: {
     width: "100%",
     height: 56,
@@ -349,7 +440,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: fontSize(16),
     fontWeight: "600",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     letterSpacing: 0.3,
   },
   loadingContainer: {
@@ -364,4 +454,91 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingBottom: 20,
   },
+  
+  // 删除确认弹窗样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  deleteModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    width: '85%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#f3f4f8',
+  },
+  deleteModalTitle: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: fontSize(22),
+  },
+  deleteModalMessage: {
+    fontSize: fontSize(14),
+    fontWeight: '400',
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: fontSize(20),
+    marginBottom: 28,
+    paddingHorizontal: 8,
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  deleteModalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+    borderWidth: 1,
+  },
+  cancelButton: {
+    backgroundColor: '#fff',
+    borderColor: '#f3f4f8',
+  },
+  confirmButton: {
+    backgroundColor: '#FF6F30',
+    borderColor: '#FF6F30',
+    shadowColor: '#FF6F30',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  cancelButtonText: {
+    fontSize: fontSize(16),
+    fontWeight: '500',
+    color: '#666',
+    lineHeight: fontSize(16),
+  },
+  confirmButtonText: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#fff',
+    lineHeight: fontSize(16),
+  },
+
 });

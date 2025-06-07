@@ -139,7 +139,7 @@ export const SettingList = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {isLoading && (
         <View style={styles.loadingWrapper} pointerEvents="auto">
-          <ActivityIndicator size="large" color="#ff4444" />
+          <ActivityIndicator size="large" color="#FF6F30" />
         </View>
       )}
       <View style={styles.safeAreaContent}>
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   logoutButton: {
-    backgroundColor: "#ff4444",
+    backgroundColor: "#FF6F30",
     padding: 15,
     borderRadius: 5,
     alignItems: "center",

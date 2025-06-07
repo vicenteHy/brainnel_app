@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
 } from "react-native";
+import PagerView from 'react-native-pager-view';
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import customRF from "../../utils/customRF";
@@ -29,6 +30,7 @@ import {
 
 export const ChatScreen = () => {
   const [activeTab, setActiveTab] = useState<TabType>("customer");
+  const pagerRef = useRef<PagerView>(null);
   const { user } = useUserStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "ChatScreen">>();
@@ -57,36 +59,45 @@ export const ChatScreen = () => {
     navigation.navigate("Login");
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "customer":
-        return (
-          <CustomerTab
-            messages={messages}
-            keyExtractor={keyExtractor}
-            flatListRef={flatListRef}
-            userLoggedIn={!!user.user_id}
-          />
-        );
-      case "product":
-        return (
-          <ProductTab
-            productInquiries={productInquiries}
-            userLoggedIn={!!user.user_id}
-          />
-        );
-      case "notification":
-        return (
-          <NotificationTab
-            notifications={notifications}
-            notificationKeyExtractor={notificationKeyExtractor}
-            onMarkAsRead={markMessageAsRead}
-            onLoadMore={loadMoreNotifications}
-            notificationLoading={notificationLoading}
-            userLoggedIn={!!user.user_id}
-          />
-        );
+  // 获取页面索引
+  const getPageIndex = (tab: TabType): number => {
+    switch (tab) {
+      case "customer": return 0;
+      case "product": return 1;
+      case "notification": return 2;
+      default: return 0;
     }
+  };
+
+  // 获取标签名称
+  const getTabFromIndex = (index: number): TabType => {
+    switch (index) {
+      case 0: return "customer";
+      case 1: return "product";
+      case 2: return "notification";
+      default: return "customer";
+    }
+  };
+
+  // 处理标签点击
+  const handleTabPress = (tab: TabType) => {
+    if (!user.user_id) return;
+    
+    setActiveTab(tab);
+    const pageIndex = getPageIndex(tab);
+    pagerRef.current?.setPage(pageIndex);
+  };
+
+  // 处理页面滑动
+  const handlePageSelected = (e: any) => {
+    const position = e.nativeEvent.position;
+    const newTab = getTabFromIndex(position);
+    setActiveTab(newTab);
+  };
+
+  // 处理页面滑动中
+  const handlePageScroll = (e: any) => {
+    // 可以在这里添加滑动中的效果
   };
 
   return (
@@ -117,12 +128,45 @@ export const ChatScreen = () => {
               
               <TabBar
                 activeTab={activeTab}
-                onTabPress={setActiveTab}
+                onTabPress={handleTabPress}
                 unreadCount={unreadCount}
                 userLoggedIn={!!user.user_id}
               />
               
-              {renderTabContent()}
+              <PagerView
+                ref={pagerRef}
+                style={styles.pagerView}
+                initialPage={0}
+                onPageSelected={handlePageSelected}
+                onPageScroll={handlePageScroll}
+                scrollEnabled={!!user.user_id}
+                orientation="horizontal"
+              >
+                <View key="customer" style={styles.pageContainer}>
+                  <CustomerTab
+                    messages={messages}
+                    keyExtractor={keyExtractor}
+                    flatListRef={flatListRef}
+                    userLoggedIn={!!user.user_id}
+                  />
+                </View>
+                <View key="product" style={styles.pageContainer}>
+                  <ProductTab
+                    productInquiries={productInquiries}
+                    userLoggedIn={!!user.user_id}
+                  />
+                </View>
+                <View key="notification" style={styles.pageContainer}>
+                  <NotificationTab
+                    notifications={notifications}
+                    notificationKeyExtractor={notificationKeyExtractor}
+                    onMarkAsRead={markMessageAsRead}
+                    onLoadMore={loadMoreNotifications}
+                    notificationLoading={notificationLoading}
+                    userLoggedIn={!!user.user_id}
+                  />
+                </View>
+              </PagerView>
               
               {activeTab === "customer" && (
                 <ChatInput
@@ -187,5 +231,11 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 44,
     height: 44,
+  },
+  pagerView: {
+    flex: 1,
+  },
+  pageContainer: {
+    flex: 1,
   },
 });

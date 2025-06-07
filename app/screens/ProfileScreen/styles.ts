@@ -799,6 +799,23 @@ export const styles = StyleSheet.create({
   settingsButton: {
     paddingTop: 0, // Add padding to increase touchable area
   },
+  countryButton: {
+    marginRight: 15,
+    padding: 1,
+    backgroundColor: 'rgb(167, 73, 26)',
+    borderRadius: 20,
+    width: 25,
+    height: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countryFlag: {
+    width: 25,
+    height: 25,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgb(211, 98, 41)',
+  },
   profileInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',

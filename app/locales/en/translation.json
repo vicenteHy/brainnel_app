@@ -128,7 +128,13 @@
       "login_required_title": "Please Login First",
       "login_required_subtitle": "Login to use chat features",
       "login_now": "Login Now",
-      "continue_inquiry": "Continue Inquiry"
+      "continue_inquiry": "Continue Inquiry",
+      "welcome_title": "Welcome!",
+      "welcome_message": "Want to know more about our products? Join the discussion 😊",
+      "welcome_time": "5:43 PM",
+      "read_status": "Read",
+      "no_product_inquiries": "No product inquiry records",
+      "product_inquiry_hint": "Start your first product inquiry by clicking the inquiry button on the product details page"
   },
   "login":{
       "error":"Login failed, please try again",
@@ -422,6 +428,7 @@
       },
       "add_new": "Add New Address",
       "default": "Default",
+      "edit": "Edit",
       "delete": "Delete",
       "preview": {
           "default_address": "Default Address",
@@ -620,6 +627,7 @@
       "converting": "Converting...",
       "equivalent_amount": "Equivalent amount:",
       "select_currency": "Select Currency",
+      "status_title": "Order Status",
       "preview": {
           "login_required": "Please login first",
           "payment_failed": "Payment failed",
@@ -774,7 +782,7 @@
         "title": "My Services",
         "item": {
           "collection": "Collection",
-          "history": "Browse History",
+          "history": "History",
           "address": "My Address",
           "share": "Share"
         }
