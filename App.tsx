@@ -1,12 +1,12 @@
 import "react-native-gesture-handler";
 import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { userApi } from "./app/services/api/userApi";
 import useUserStore from "./app/store/user";
 import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
-import { View, ActivityIndicator, Alert } from "react-native";
+import { View, ActivityIndicator, Alert, Text, Image, Animated } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
 import * as Linking from "expo-linking";
@@ -14,6 +14,7 @@ import { EventEmitter } from 'events';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import LanguageSelectionScreen, { checkLanguageSelected } from "./app/screens/LanguageSelectionScreen";
 import  useAnalyticsStore  from "./app/store/analytics";
+import { preloadService } from "./app/services/preloadService";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -38,11 +39,25 @@ export const PAYMENT_FAILURE_EVENT = "PAYMENT_FAILURE_EVENT";
 
 function AppContent() {
   const analyticsData = useAnalyticsStore();
-  const { setUser } = useUserStore();
+  const userStore = useUserStore();
+  const { setUser } = userStore;
   const { login, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [languageSelected, setLanguageSelected] = useState<boolean>(false);
   const [checkingLanguage, setCheckingLanguage] = useState(true);
+  
+  // 开屏动画时间控制
+  const splashStartTime = useRef<number>(Date.now());
+  const [splashMinTimeElapsed, setSplashMinTimeElapsed] = useState(false);
+  const SPLASH_MIN_DURATION = 2500; // 2.5秒
+  
+  // Logo动画
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  
+  // 开屏时间监控
+  const appStartTime = useRef(Date.now());
+  const [splashDuration, setSplashDuration] = useState(0);
   
   // 获取用户资料的函数
   const fetchUserProfile = async () => {
@@ -55,6 +70,30 @@ function AppContent() {
       return false;
     }
   };
+
+  // 开屏动画最小时长控制
+  useEffect(() => {
+    // 启动logo动画
+    Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      })
+    ]).start();
+
+    const timer = setTimeout(() => {
+      setSplashMinTimeElapsed(true);
+    }, SPLASH_MIN_DURATION);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // 检查语言选择状态
   useEffect(() => {
@@ -79,22 +118,45 @@ function AppContent() {
       const initApp = async () => {
         try {
           analyticsData.logAppLaunch(1);
+          
+          // 在开屏动画期间开始预加载推荐产品
+          console.log('[App] 开始预加载推荐产品');
+          preloadService.startPreloading().catch(error => {
+            console.error('[App] 预加载推荐产品失败:', error);
+          });
+          
         } catch (error) {
           console.error('App initialization error:', error);
         } finally {
-          setIsLoading(false);
+          // 只有当开屏最小时长也完成时才隐藏加载屏幕
+          const checkCanHideSplash = () => {
+            if (splashMinTimeElapsed) {
+              setIsLoading(false);
+            } else {
+              // 如果最小时长未完成，等待一下再检查
+              setTimeout(checkCanHideSplash, 100);
+            }
+          };
+          checkCanHideSplash();
         }
       };
       
       initApp();
     }
-  }, [checkingLanguage, languageSelected]);
+  }, [checkingLanguage, languageSelected, splashMinTimeElapsed]);
 
   // 监听登录成功事件，刷新用户资料
   useEffect(() => {
     fetchUserProfile();
     const handleLoginSuccess = () => {
       fetchUserProfile();
+      // 登录成功后，重新预加载推荐产品（使用用户ID）
+      if (userStore.user?.user_id) {
+        console.log('[App] 登录成功，重新预加载推荐产品');
+        preloadService.clearCache().then(() => {
+          preloadService.startPreloading(userStore.user?.user_id?.toString());
+        });
+      }
     };
 
     // 注册事件监听器
@@ -104,7 +166,7 @@ function AppContent() {
     return () => {
       global.EventEmitter.off(AUTH_EVENTS.LOGIN_SUCCESS, handleLoginSuccess);
     };
-  }, []);
+  }, [userStore.user?.user_id]);
 
   // 添加深度链接处理
   useEffect(() => {
@@ -198,8 +260,25 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0066FF" />
+      <View style={{ 
+        flex: 1, 
+        justifyContent: "center", 
+        alignItems: "center", 
+        backgroundColor: "#ffffff" 
+      }}>
+        <Animated.View style={{
+          transform: [{ scale: logoScale }],
+          opacity: logoOpacity,
+        }}>
+          <Image
+            source={require("./assets/logo/logo2.png")}
+            style={{
+              width: 200,
+              height: 200,
+              resizeMode: "contain",
+            }}
+          />
+        </Animated.View>
       </View>
     );
   }

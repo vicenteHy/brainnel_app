@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { productApi, ProductParams, Product } from '../../../services/api/productApi';
 import { getCurrentLanguage } from '../../../i18n';
 import useUserStore from '../../../store/user';
+import { preloadService } from '../../../services/preloadService';
 
 interface PageData {
   categoryId: number;
@@ -147,13 +148,37 @@ export const useMultiPageData = (categories: any[]) => {
       let apiResponse: Product[] = [];
       
       if (categoryId === -1) {
-        // 推荐页面 - 每次调用获取10个随机产品
+        // 推荐页面 - 优先使用预加载数据，然后调用API获取更多产品
         // console.log(`[useMultiPageData] 调用推荐API - categoryId: ${categoryId}`);
         
-        apiResponse = await productApi.getPersonalRecommendations({
-          count: 20,
-          ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
-        });
+        // 如果是第一次加载且没有现有产品，尝试使用预加载数据
+        if (!isLoadMore && currentData.products.length === 0) {
+          console.log(`[useMultiPageData] 尝试使用预加载数据 - categoryId: ${categoryId}`);
+          const preloadedProducts = await preloadService.getPreloadedRecommendations(
+            userStore.user?.user_id?.toString()
+          );
+          
+          if (preloadedProducts.length > 0) {
+            console.log(`[useMultiPageData] 使用预加载数据 - categoryId: ${categoryId}`, {
+              count: preloadedProducts.length
+            });
+            apiResponse = preloadedProducts;
+          } else {
+            // 如果没有预加载数据，调用API
+            console.log(`[useMultiPageData] 预加载数据为空，调用API - categoryId: ${categoryId}`);
+            apiResponse = await productApi.getPersonalRecommendations({
+              count: 20,
+              ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+            });
+          }
+        } else {
+          // 加载更多时直接调用API
+          console.log(`[useMultiPageData] 加载更多，调用API - categoryId: ${categoryId}`);
+          apiResponse = await productApi.getPersonalRecommendations({
+            count: 20,
+            ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+          });
+        }
         
         // console.log(`[useMultiPageData] 推荐API响应 - categoryId: ${categoryId}`, {
         //   responseLength: apiResponse.length

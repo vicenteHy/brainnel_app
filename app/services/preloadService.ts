@@ -1,0 +1,190 @@
+import { productApi, Product } from './api/productApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface PreloadedData {
+  products: Product[];
+  timestamp: number;
+  expiry: number; // 缓存过期时间 (ms)
+}
+
+const PRELOAD_CACHE_KEY = '@app_preload_recommendations';
+const CACHE_DURATION = 10 * 60 * 1000; // 10分钟缓存，适应不同的开屏时长
+
+class PreloadService {
+  private static instance: PreloadService;
+  private preloadPromise: Promise<Product[]> | null = null;
+  private cachedData: PreloadedData | null = null;
+
+  private constructor() {}
+
+  public static getInstance(): PreloadService {
+    if (!PreloadService.instance) {
+      PreloadService.instance = new PreloadService();
+    }
+    return PreloadService.instance;
+  }
+
+  /**
+   * 在应用启动时开始预加载推荐产品
+   */
+  public async startPreloading(userId?: string): Promise<void> {
+    console.log('[PreloadService] 开始预加载推荐产品', { userId });
+    
+    // 检查是否已有缓存
+    const cachedData = await this.getCachedData();
+    if (cachedData && Date.now() < cachedData.expiry) {
+      console.log('[PreloadService] 使用缓存数据', { 
+        count: cachedData.products.length,
+        cacheAge: Date.now() - cachedData.timestamp
+      });
+      this.cachedData = cachedData;
+      return;
+    }
+
+    // 如果已经在预加载中，不重复启动
+    if (this.preloadPromise) {
+      console.log('[PreloadService] 预加载已在进行中');
+      return;
+    }
+
+    this.preloadPromise = this.fetchRecommendations(userId);
+    
+    try {
+      const products = await this.preloadPromise;
+      
+      // 缓存数据
+      const preloadedData: PreloadedData = {
+        products,
+        timestamp: Date.now(),
+        expiry: Date.now() + CACHE_DURATION
+      };
+      
+      this.cachedData = preloadedData;
+      await this.setCachedData(preloadedData);
+      
+      console.log('[PreloadService] 预加载完成', { 
+        count: products.length,
+        cached: true
+      });
+    } catch (error) {
+      console.error('[PreloadService] 预加载失败:', error);
+    } finally {
+      this.preloadPromise = null;
+    }
+  }
+
+  /**
+   * 获取预加载的推荐产品
+   */
+  public async getPreloadedRecommendations(userId?: string): Promise<Product[]> {
+    console.log('[PreloadService] 获取预加载数据');
+    
+    // 如果有缓存且未过期，直接返回
+    if (this.cachedData && Date.now() < this.cachedData.expiry) {
+      console.log('[PreloadService] 返回缓存数据', { 
+        count: this.cachedData.products.length 
+      });
+      return this.cachedData.products;
+    }
+
+    // 如果正在预加载中，等待完成
+    if (this.preloadPromise) {
+      console.log('[PreloadService] 等待预加载完成');
+      try {
+        await this.preloadPromise;
+        return this.cachedData?.products || [];
+      } catch (error) {
+        console.error('[PreloadService] 等待预加载失败:', error);
+        return [];
+      }
+    }
+
+    // 如果没有缓存也没有正在预加载，立即开始加载
+    console.log('[PreloadService] 立即开始加载');
+    try {
+      const products = await this.fetchRecommendations(userId);
+      
+      // 更新缓存
+      const preloadedData: PreloadedData = {
+        products,
+        timestamp: Date.now(),
+        expiry: Date.now() + CACHE_DURATION
+      };
+      
+      this.cachedData = preloadedData;
+      await this.setCachedData(preloadedData);
+      
+      return products;
+    } catch (error) {
+      console.error('[PreloadService] 立即加载失败:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 清除预加载缓存
+   */
+  public async clearCache(): Promise<void> {
+    console.log('[PreloadService] 清除缓存');
+    this.cachedData = null;
+    this.preloadPromise = null;
+    await AsyncStorage.removeItem(PRELOAD_CACHE_KEY);
+  }
+
+  /**
+   * 检查是否有可用的预加载数据
+   */
+  public hasPreloadedData(): boolean {
+    return this.cachedData !== null && Date.now() < this.cachedData.expiry;
+  }
+
+  /**
+   * 获取预加载数据的状态信息
+   */
+  public getPreloadStatus() {
+    return {
+      hasCache: this.cachedData !== null,
+      isExpired: this.cachedData ? Date.now() >= this.cachedData.expiry : true,
+      isLoading: this.preloadPromise !== null,
+      cacheCount: this.cachedData?.products.length || 0,
+      cacheAge: this.cachedData ? Date.now() - this.cachedData.timestamp : 0
+    };
+  }
+
+  private async fetchRecommendations(userId?: string): Promise<Product[]> {
+    console.log('[PreloadService] 开始获取推荐产品', { userId });
+    
+    const response = await productApi.getPersonalRecommendations({
+      count: 20, // 预加载更多产品
+      ...(userId ? { user_id: parseInt(userId) } : {})
+    });
+
+    console.log('[PreloadService] 获取推荐产品成功', { count: response.length });
+    return response;
+  }
+
+  private async getCachedData(): Promise<PreloadedData | null> {
+    try {
+      const cached = await AsyncStorage.getItem(PRELOAD_CACHE_KEY);
+      if (cached) {
+        const data = JSON.parse(cached) as PreloadedData;
+        if (Date.now() < data.expiry) {
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error('[PreloadService] 读取缓存失败:', error);
+    }
+    return null;
+  }
+
+  private async setCachedData(data: PreloadedData): Promise<void> {
+    try {
+      await AsyncStorage.setItem(PRELOAD_CACHE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('[PreloadService] 保存缓存失败:', error);
+    }
+  }
+}
+
+export const preloadService = PreloadService.getInstance(); 

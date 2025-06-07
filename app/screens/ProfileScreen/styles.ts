@@ -639,7 +639,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     marginHorizontal: 10,
-    marginTop: 16,
+    marginTop: 12,
     alignItems: 'center',
     elevation: 6,
     shadowColor: '#FF6F30',
@@ -727,9 +727,9 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     marginHorizontal: 10,
-    marginTop: 16,
-    padding: 16,
-  },
+    marginTop: 12,
+    padding: 12,
+  },  
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -802,7 +802,7 @@ export const styles = StyleSheet.create({
   profileInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 12,
   },
   avatarContainer: {
     width: 70,
