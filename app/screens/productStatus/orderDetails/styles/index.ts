@@ -845,10 +845,13 @@ export const styles = StyleSheet.create<Styles>({
   recipientInfo: {
     gap: 8,
   },
+  contactMethods: {
+    gap: 6,
+  },
   contactItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
   contactLabel: {
     fontSize: fontSize(13),

@@ -609,18 +609,19 @@ export const OrderDetails = () => {
                           <Text style={styles.recipientName}>
                             {orderDetails.receiver_name}
                           </Text>
-                          <View style={styles.contactItem}>
-                            <PhoneIcon size={14} color="#666" />
-                            <Text style={styles.contactText}>
-                              {formatPhoneNumber(orderDetails.receiver_phone)}
-                            </Text>
-                          </View>
-                          <View style={styles.contactItem}>
-                            <WhatsAppIcon size={14} />
-                            <Text style={styles.contactLabel}>WhatsApp:</Text>
-                            <Text style={styles.contactText}>
-                              {formatPhoneNumber(orderDetails.receiver_phone)}
-                            </Text>
+                          <View style={styles.contactMethods}>
+                            <View style={styles.contactItem}>
+                              <PhoneIcon size={14} color="#666" />
+                              <Text style={styles.contactText}>
+                                {formatPhoneNumber(orderDetails.receiver_phone)}
+                              </Text>
+                            </View>
+                            <View style={styles.contactItem}>
+                              <WhatsAppIcon size={14} />
+                              <Text style={styles.contactText}>
+                                {formatPhoneNumber(orderDetails.receiver_phone)}
+                              </Text>
+                            </View>
                           </View>
                         </View>
                       </View>

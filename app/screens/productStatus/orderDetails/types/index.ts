@@ -161,6 +161,7 @@ export type Styles = {
   contactNotice: ViewStyle;
   contactNoticeText: TextStyle;
   recipientInfo: ViewStyle;
+  contactMethods: ViewStyle;
   contactItem: ViewStyle;
   contactLabel: TextStyle;
   contactText: TextStyle;
