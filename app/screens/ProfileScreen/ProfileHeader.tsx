@@ -4,6 +4,7 @@ import { styles } from './styles';
 import SettingsIcon from '../../components/SettingsIcon';
 import fontSize from '../../utils/fontsizeUtils';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAvatarCache } from '../../hooks/useAvatarCache';
 
 interface ProfileHeaderProps {
   user: any;
@@ -19,6 +20,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   uploadingAvatar,
 }) => {
   const avatarText = user?.username?.charAt(0);
+  const { avatarUri, isLoading: isLoadingAvatar } = useAvatarCache(user?.user_id, user?.avatar_url);
 
   return (
     <View style={styles.profileHeaderContainer}>
@@ -28,17 +30,20 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               disabled={uploadingAvatar}
               style={styles.avatarContainer}
             >
-              {user?.avatar_url ? (
+              {avatarUri ? (
                 <Image
-                  source={{ uri: user?.avatar_url }}
-                  style={styles.avatarImage}
+                  source={{ uri: avatarUri }}
+                  style={[
+                    styles.avatarImage,
+                    (uploadingAvatar || isLoadingAvatar) && { opacity: 0.7 }
+                  ]}
                 />
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <Text style={styles.avatarPlaceholderText}>{avatarText}</Text>
                 </View>
               )}
-              {uploadingAvatar && (
+              {(uploadingAvatar || isLoadingAvatar) && (
                 <View style={styles.uploadingOverlay} />
               )}
             </TouchableOpacity>

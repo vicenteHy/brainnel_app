@@ -104,7 +104,7 @@
   "noMoreProducts": "No more products",
   "chatNow": "Consult Product",
   "popularCategories": "Popular Categories",
-  "my":"My",
+  "my":"My Brainnel",
   "categories": "Categories",
   "chat": {
       "title": "Chat",
@@ -763,11 +763,11 @@
         "title": "My Orders",
         "view_all": "View All",
         "status": {
-          "to_pay": "To Pay",
-          "to_ship": "To Ship",
-          "to_receive": "To Receive",
-          "to_review": "To Review",
-          "after_sales": "After Sales"
+          "to_pay": "Unpaid",
+          "to_ship": "Shipping",
+          "to_receive": "Delivery",
+          "to_review": "Review",
+          "after_sales": "Support"
         }
       },
       "services": {

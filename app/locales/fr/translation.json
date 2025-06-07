@@ -109,7 +109,7 @@
   "noMoreProducts": "Plus de produits",
   "chatNow": "Consulter le produit",
   "popularCategories": "Catégories populaires",
-  "my":"Mon",
+  "my":"Mon Brainnel",
   "categories":"Catégories",
   "chat": {
       "title": "Discussion",
@@ -862,11 +862,11 @@
         "title": "Mes Commandes",
         "view_all": "Voir Tout",
         "status": {
-          "to_pay": "À Payer",
-          "to_ship": "À Expédier",
-          "to_receive": "À Recevoir",
-          "to_review": "À Évaluer",
-          "after_sales": "SAV"
+          "to_pay": "Impayé",
+          "to_ship": "Expédier",
+          "to_receive": "Recevoir",
+          "to_review": "Avis",
+          "after_sales": "Service"
         }
       },
       "services": {

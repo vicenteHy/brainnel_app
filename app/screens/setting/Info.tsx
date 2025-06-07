@@ -9,15 +9,18 @@ import {
   SafeAreaView,
   Platform,
 } from "react-native";
+import React from 'react';
 import useUserStore from "../../store/user";
 import { t } from "../../i18n";
 import BackIcon from "../../components/BackIcon";
 import { useNavigation } from "@react-navigation/native";
 import userApi from "../../services/api/userApi";
+import { useAvatarCache } from "../../hooks/useAvatarCache";
 
 export const Info = () => {
   const { user } = useUserStore();
   const navigation = useNavigation();
+  const { avatarUri } = useAvatarCache(user?.user_id, user?.avatar_url);
 
   // 删除账号确认对话框
   const handleDeleteAccount = () => {
@@ -76,8 +79,8 @@ export const Info = () => {
           </View>
 
           <View style={styles.notLoggedInContainer}>
-            {user.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} />
             ) : (
               <View
                 style={[styles.avatarPlaceholder, { backgroundColor: "white" }]}
@@ -137,8 +140,8 @@ export const Info = () => {
         {/* 头像和基本信息 */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            {user.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarPlaceholderText}>

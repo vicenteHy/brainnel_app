@@ -21,6 +21,7 @@ import { OrderSection, ToolSection } from "./Sections";
 import { ProfileHeader } from "./ProfileHeader";
 import { VipCard } from "./VipCard";
 import { BalanceCard } from "./BalanceCard";
+import { avatarCacheService } from "../../services/avatarCacheService";
 
 type RootStackParamList = {
   SettingList: undefined;
@@ -87,6 +88,12 @@ export const ProfileScreen = () => {
         image_base64: base64String,
         image_filename: filename,
       });
+      
+      // 清理旧的头像缓存
+      if (user.user_id) {
+        await avatarCacheService.deleteCachedAvatar(user.user_id.toString());
+        console.log('[ProfileScreen] 已清理旧的头像缓存');
+      }
       
       setUser(updatedProfile);
       Toast.show({

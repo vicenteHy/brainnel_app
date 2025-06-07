@@ -24,6 +24,7 @@ import useUserStore from "../../store/user";
 import { useAuth } from "../../contexts/AuthContext";
 import { userApi } from "../../services/api/userApi";
 import { getAgreement } from "../../services/api/agreement";
+import { avatarCacheService } from "../../services/avatarCacheService";
 
 export const SettingList = () => {
   const { t } = useTranslation();
@@ -79,6 +80,10 @@ export const SettingList = () => {
       await logout();
       console.log("Auth state cleared");
 
+      // 清除所有头像缓存
+      await avatarCacheService.clearAllCache();
+      console.log("Avatar cache cleared");
+
       // 清除所有AsyncStorage数据
       await AsyncStorage.clear();
       console.log("AsyncStorage cleared");
@@ -103,6 +108,7 @@ export const SettingList = () => {
       // 即使接口调用失败，也要清除本地状态
       clearUser();
       await logout();
+      await avatarCacheService.clearAllCache();
       await AsyncStorage.clear();
       navigation.navigate("CountrySelect");
     } finally {
