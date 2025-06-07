@@ -122,6 +122,7 @@ export const CategoryScreen = () => {
         styles.menuItem,
         item.category_id === activeMainCategory && styles.menuItemActive,
       ]}
+      activeOpacity={1}
       onPress={() => {
         setActiveMainCategory(item.category_id);
         analyticsData.logCategory({
@@ -151,6 +152,7 @@ export const CategoryScreen = () => {
     return (
       <TouchableOpacity
         style={styles.subCategoryItem}
+        activeOpacity={1}
         onPress={() => {
           analyticsData.logSubCategory({
             category_id: item.category_id,
@@ -186,7 +188,7 @@ export const CategoryScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#e60012" />
+        <ActivityIndicator size="large" color="#FF6F30" />
       </View>
     );
   }
@@ -199,6 +201,7 @@ export const CategoryScreen = () => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
+            activeOpacity={1}
             onPress={() => navigation.goBack()}
           >
             <BackIcon size={fontSize(24)} />
@@ -219,7 +222,7 @@ export const CategoryScreen = () => {
           <View style={styles.rightContent}>
             {subLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#e60012" />
+                <ActivityIndicator size="large" color="#FF6F30" />
               </View>
             ) : (
               <FlatList
@@ -302,7 +305,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   menuTextActive: {
-    color: "#e60012",
+    color: "#FF6F30",
     fontWeight: "bold",
   },
   rightContent: {

@@ -230,7 +230,7 @@ export const TabNavigator = () => {
           }}
         />
         <Tab.Screen
-          name="productCollection"
+          name="CategoryScreen"
           component={CategoryScreen}
           options={{
             tabBarLabel: t('common.categoryTab'),

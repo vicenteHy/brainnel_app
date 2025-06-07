@@ -835,7 +835,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
               state: {
                 routes: [
                   { name: 'Home' },
-                  { name: 'productCollection' },
+                  { name: 'CategoryScreen' },
                   { name: 'Chat' },
                   { name: 'Cart' },
                   { name: 'Profile' },

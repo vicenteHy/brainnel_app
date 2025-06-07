@@ -43,6 +43,7 @@ import { Info } from '../screens/setting/Info';
 import {ChangePassword} from '../screens/setting/ChangePassword';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { CategoryScreen } from '../screens/CategoryScreen';
 
 export {
   CountrySelect,
@@ -90,4 +91,5 @@ export {
   ChangePassword,
   HomeScreen as Home,
   ProfileScreen,
+  CategoryScreen,
 }; 
