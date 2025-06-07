@@ -302,8 +302,8 @@
   "order.id": "Order ID",
   "order.create_time": "Order Time",
   "order.shipping_type": "Shipping Method",
-  "order.shipping.sea": "Sea Shipping",
-  "order.shipping.air": "Air Shipping",
+  "order.shipping.sea": "Sea Freight",
+  "order.shipping.air": "Air Freight",
   "order.shipping.method": "Shipping Method",
   "order.shipping.economical": "Economical",
   "order.shipping.express": "Express",
@@ -601,8 +601,8 @@
       "create_time": "Create Time",
       "shipping_type": "Shipping Method",
       "shipping": {
-          "sea": "Sea Shipping",
-          "air": "Air Shipping"
+          "sea": "Sea Freight",
+          "air": "Air Freight"
       },
       "delivery_info": "Delivery Information",
       "warehouse": "Warehouse Address",
@@ -661,7 +661,8 @@
           "cash": "Cash Payment",
           "add_recipient_required": "Please add recipient information",
           "select_payment_required": "Please select a payment method",
-          "calculating": "Calculating..."
+          "calculating": "Calculating...",
+          "Cash_on_delivery": "Cash on Delivery"
       }
   },
   "confirmOrder": {

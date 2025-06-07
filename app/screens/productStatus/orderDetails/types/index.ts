@@ -1,0 +1,182 @@
+import { ViewStyle, TextStyle, ImageStyle } from "react-native";
+
+// 定义选项类型
+export interface PaymentOption {
+  id: string;
+  label: string;
+  key: string;
+}
+
+// 定义标签页类型
+export interface TabType {
+  id: string;
+  label: string;
+  options: PaymentOption[];
+}
+
+// 定义本地存储的国家数据类型
+export interface LocalCountryData {
+  code: string;
+  flag: string;
+  name: string;
+  country: number | string;
+  phoneCode: string;
+  userCount: number;
+  valid_digits?: number[];
+}
+
+// 样式类型定义
+export type Styles = {
+  safeArea: ViewStyle;
+  safeAreaContent: ViewStyle;
+  container: ViewStyle;
+  header: ViewStyle;
+  title: TextStyle;
+  orderStatus: ViewStyle;
+  orderStatusContent: ViewStyle;
+  orderStatusTitle: ViewStyle;
+  orderStatusTitleText: TextStyle;
+  orderStatusContentPreview: ViewStyle;
+  productItem: ViewStyle;
+  orderStatusTitleContainer: ViewStyle;
+
+  productItemImage: ViewStyle;
+  productItemInfo: ViewStyle;
+  productItemNum: ViewStyle;
+  productItemNumText: TextStyle;
+  productItemInfoName: ViewStyle;
+  productItemInfoNameText: TextStyle;
+  productItemInfoSkuText: TextStyle;
+  productItemInfoSku: ViewStyle;
+  productItemInfoPrice: ViewStyle;
+  orderStatusContentPreviewInformation: ViewStyle;
+  loadingContainer: ViewStyle;
+  orderId: ViewStyle;
+  orderIdText: TextStyle;
+  orderIdText1: TextStyle;
+  TotalText: TextStyle;
+  TotalPrice: TextStyle;
+  warehouse: ViewStyle;
+  recipientTitle: ViewStyle;
+  recipientPhoneContainer: ViewStyle;
+  recipient: ViewStyle;
+  orderStatusContentPreviewInformationText: TextStyle;
+  warehousePhone: ViewStyle;
+  warehousePhoneText: TextStyle;
+  warehousePhoneTextContainer: ViewStyle;
+  recipientName: TextStyle;
+  recipientPhone: TextStyle;
+  dottedLine: ViewStyle;
+  orderRemakeText: TextStyle;
+  addCard: ViewStyle;
+  addCardBox: ViewStyle;
+  addCardText: TextStyle;
+  bottomButtons: ViewStyle;
+  bottomButton1: ViewStyle;
+  bottomButton: ViewStyle;
+  bottomButtonText: TextStyle;
+  bottomButtonText1: TextStyle;
+  modalOverlay: ViewStyle;
+  modalContent: ViewStyle;
+  modalHeader: ViewStyle;
+  modalTitle: TextStyle;
+  closeButtonContainer: ViewStyle;
+  closeButtonText: TextStyle;
+  tabContainer: ViewStyle;
+  tab: ViewStyle;
+  tabActive: ViewStyle;
+  tabText: TextStyle;
+  tabTextActive: TextStyle;
+  underline: ViewStyle;
+  paymentOptions: ViewStyle;
+  cardContainer: ViewStyle;
+  iconRow: ViewStyle;
+  imageContainer: ViewStyle;
+  paymentIconContainer: ViewStyle;
+  paymentIcon: TextStyle;
+  checkboxContainer: ViewStyle;
+  checkmarkContainer: ViewStyle;
+  currencyTitle: TextStyle;
+  paypalExpandedContainer: ViewStyle;
+  paypalCurrencyContainer: ViewStyle;
+  currencyButtonsContainer: ViewStyle;
+  currencyButton: ViewStyle;
+  currencyButtonActive: ViewStyle;
+  currencyButtonText: TextStyle;
+  currencyButtonTextActive: TextStyle;
+  convertingContainer: ViewStyle;
+  convertingText: TextStyle;
+  convertedAmountContainer: ViewStyle;
+  convertedAmountLabel: TextStyle;
+  convertedAmountValue: TextStyle;
+  actionButtonsContainer: ViewStyle;
+  actionButtons: ViewStyle;
+  cancelButton: ViewStyle;
+  confirmButton: ViewStyle;
+  confirmButtonDisabled: ViewStyle;
+  buttonTextDark: TextStyle;
+  buttonTextWhite: TextStyle;
+  operatorImage: ImageStyle;
+  mobileMoneyTextContainer: ViewStyle;
+  mobileMoneyImgContainer: ViewStyle;
+  mobileMoneyImg: ImageStyle;
+  mobileMoneyText: TextStyle;
+  outerContainer: ViewStyle;
+  flexContainer: ViewStyle;
+  imageStyle: ImageStyle;
+  verticalAlignEndContent: ViewStyle;
+  svgContainer: ViewStyle;
+  leftInfo: ViewStyle;
+  blueBox: ViewStyle;
+  balanceText: TextStyle;
+  modalPopup: ViewStyle;
+  modalWarningIcon: ViewStyle;
+  modalPromptText: TextStyle;
+  modalCancelPopup: ViewStyle;
+  modalCancelText: TextStyle;
+  modalCancelButtonsContainer: ViewStyle;
+  modalCancelActionButton: ViewStyle;
+  modalCancelButtonOutline: ViewStyle;
+  modalCancelButtonFilled: ViewStyle;
+  modalCancelButtonOutlineText: TextStyle;
+  modalCancelButtonFilledText: TextStyle;
+  
+  // 新增的样式类型定义
+  orderInfoHeader: ViewStyle;
+  checkPaymentButton: ViewStyle;
+  checkPaymentText: TextStyle;
+  orderInfoItem: ViewStyle;
+  orderInfoLabel: TextStyle;
+  orderInfoValue: TextStyle;
+  shippingTypeContainer: ViewStyle;
+  shippingTypeText: TextStyle;
+  shippingTypeSea: TextStyle;
+  shippingTypeAir: TextStyle;
+  deliveryInfoContainer: ViewStyle;
+  warehouseSection: ViewStyle;
+  recipientSection: ViewStyle;
+  sectionTitle: TextStyle;
+  warehouseInfo: ViewStyle;
+  warehouseAddress: TextStyle;
+  contactNotice: ViewStyle;
+  contactNoticeText: TextStyle;
+  recipientInfo: ViewStyle;
+  contactItem: ViewStyle;
+  contactLabel: TextStyle;
+  contactText: TextStyle;
+  productsList: ViewStyle;
+  productImage: ImageStyle;
+  productPriceContainer: ViewStyle;
+  productPrice: TextStyle;
+  addToCartButton: ViewStyle;
+  addToCartText: TextStyle;
+  priceBreakdown: ViewStyle;
+  priceItem: ViewStyle;
+  priceLabel: TextStyle;
+  priceValue: TextStyle;
+  totalSection: ViewStyle;
+  totalRow: ViewStyle;
+  totalLabel: TextStyle;
+  totalPrice: TextStyle;
+  shippingNote: TextStyle;
+}; 

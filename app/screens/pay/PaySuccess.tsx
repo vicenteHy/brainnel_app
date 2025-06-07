@@ -67,7 +67,7 @@ export const PaymentSuccessScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#FF6F30" />
+      <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Success Header */}
         <View style={styles.successHeader}>
@@ -173,14 +173,14 @@ export const PaymentSuccessScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#4CAF50",
   },
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
   successHeader: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#4CAF50",
     paddingHorizontal: 20,
     paddingVertical: 40,
     alignItems: "center",
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     fontSize: fontSize(32),
-    color: "#FF6F30",
+    color: "#4CAF50",
     fontWeight: "bold",
   },
   successTitle: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   tipBullet: {
     fontSize: fontSize(16),
-    color: "#FF6F30",
+    color: "#4CAF50",
     marginRight: 12,
     marginTop: 2,
     fontWeight: "bold",

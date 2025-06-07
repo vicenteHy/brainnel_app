@@ -12,16 +12,33 @@ interface ProgressProps {
 const Progress: React.FC<ProgressProps> = ({ statuses, labels = [] }) => {
   const { t } = useTranslation();
   
-  const statusMap: Record<number, string> = {
-    4: t('order.status.expired'),
-    5: t('order.status.cancelled'),
-    6: t('order.status.refunded'),
+  const statusMap: Record<number, { text: string; color: string; bgColor: string }> = {
+    4: { 
+      text: t('order.status.expired'), 
+      color: '#ff6b6b', 
+      bgColor: '#fff5f5' 
+    },
+    5: { 
+      text: t('order.status.cancelled'), 
+      color: '#ff6b6b', 
+      bgColor: '#fff5f5' 
+    },
+    6: { 
+      text: t('order.status.refunded'), 
+      color: '#74b9ff', 
+      bgColor: '#f0f8ff' 
+    },
   };
 
   if (statusMap[statuses]) {
+    const status = statusMap[statuses];
     return (
       <View style={styles.mainContainer}>
-        <Text style={styles.specialStatus}>{statusMap[statuses]}</Text>
+        <View style={[styles.specialStatusContainer, { backgroundColor: status.bgColor }]}>
+          <Text style={[styles.specialStatus, { color: status.color }]}>
+            {status.text}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -29,27 +46,41 @@ const Progress: React.FC<ProgressProps> = ({ statuses, labels = [] }) => {
   return (
     <View style={styles.mainContainer}>
       <View style={styles.progressContainer}>
+        {/* 节点和标签 */}
         {labels.map((label, index) => (
-          <React.Fragment key={index}>
-            <View style={styles.stepContainer}>
-              <View 
-                style={[
-                  styles.node,
-                  index < statuses + 1 && styles.completedNode
-                ]} 
-              />
-              <Text style={styles.label}>{label}</Text>
+          <View style={styles.stepContainer} key={index}>
+            <View 
+              style={[
+                styles.node,
+                index < statuses + 1 ? styles.completedNode : styles.pendingNode
+              ]} 
+            >
+              {index < statuses + 1 && (
+                <Text style={styles.checkmarkText}>✓</Text>
+              )}
             </View>
-            {index < labels.length - 1 && (
-              <View 
-                style={[
-                  styles.line,
-                  index < statuses && styles.completedLine
-                ]} 
-              />
-            )}
-          </React.Fragment>
+            <Text 
+              style={[
+                styles.label,
+                index < statuses + 1 ? styles.completedLabel : styles.pendingLabel
+              ]}
+              numberOfLines={2}
+            >
+              {label}
+            </Text>
+          </View>
         ))}
+        
+        {/* 背景连接线 */}
+        <View style={styles.backgroundLine} />
+        
+        {/* 进度连接线 */}
+        <View 
+          style={[
+            styles.progressLine,
+            { width: `${(statuses / (labels.length - 1)) * 100}%` }
+          ]} 
+        />
       </View>
     </View>
   );
@@ -58,47 +89,103 @@ const Progress: React.FC<ProgressProps> = ({ statuses, labels = [] }) => {
 const styles = StyleSheet.create({
   mainContainer: {
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    width: '100%',
   },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: 320,
+    position: 'relative',
   },
   stepContainer: {
     flexDirection: 'column',
     alignItems: 'center',
+    flex: 1,
+    position: 'relative',
+    zIndex: 2,
   },
   node: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#E0E0E0',
-    marginBottom: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   completedNode: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#f77f3a',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  line: {
+  pendingNode: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  checkmarkText: {
+    color: '#fff',
+    fontSize: fontSize(12),
+    fontWeight: '700',
+  },
+  backgroundLine: {
+    position: 'absolute',
+    top: 14,
+    left: '12.5%',
+    right: '12.5%',
     height: 2,
-    width: 40,
-    backgroundColor: '#E0E0E0',
-    marginTop: 10,
+    backgroundColor: '#e8e8e8',
+    zIndex: 1,
   },
-  completedLine: {
-    backgroundColor: '#4CAF50',
+  progressLine: {
+    position: 'absolute',
+    top: 14,
+    left: '12.5%',
+    height: 2,
+    backgroundColor: '#f77f3a',
+    zIndex: 1,
+    borderRadius: 1,
   },
   label: {
-    fontSize: fontSize(12),
-    color: '#666',
+    fontSize: fontSize(9),
     textAlign: 'center',
-    width: 60,
+    lineHeight: fontSize(12),
+    fontWeight: '500',
+    width: '100%',
+    paddingHorizontal: 1,
+    marginTop: 4,
+  },
+  completedLabel: {
+    color: '#1a1a1a',
+    fontWeight: '600',
+  },
+  pendingLabel: {
+    color: '#999',
+    fontWeight: '500',
+  },
+  specialStatusContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
   },
   specialStatus: {
-    fontSize: fontSize(16),
-    color: '#FF5722',
-    fontWeight: 'bold',
-    marginVertical: 20,
+    fontSize: fontSize(15),
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
 });
 

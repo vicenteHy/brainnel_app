@@ -22,7 +22,7 @@ import { GoogleScreen } from "../screens/login/Google";
 import { ConfirmOrder } from "../screens/Recipient/ConfirmOrder";
 import { Pay } from "../screens/pay/Pay";
 import { Status } from "../screens/productStatus/Status";
-import { OrderDetails } from "../screens/productStatus/OrderDatails";
+import { OrderDetails } from "../screens/productStatus/OrderDetails";
 import { TikTokScreen } from "../screens/banner/TikTokScreen";
 import { BrowseHistoryScreen } from "../screens/function/BrowseHistoryScreen";
 import { Collection } from "../screens/function/Collection";

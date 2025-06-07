@@ -301,10 +301,7 @@ export function Status() {
             {statusList.map((item, index) => (
               <TouchableOpacity
                 ref={statusItemRef}
-                style={[
-                  styles.statusItem,
-                  status === item.status ? styles.statusItemActive : null,
-                ]}
+                style={styles.statusItem}
                 key={index}
                 onPress={() => handleTabPress(item.status)}
                 onLayout={(event) => handleStatusLayout(item.status, event)}
@@ -317,6 +314,7 @@ export function Status() {
                 >
                   {t(item.textKey)}
                 </Text>
+                {status === item.status && <View style={styles.underline} />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -555,22 +553,26 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingHorizontal: 16,
     backgroundColor: "white",
+    position: "relative",
   },
   statusItemText: {
     fontSize: fontSize(12),
     textAlign: "center",
-  },
-  statusItemTextActive: {
-    color: "#f77f3a",
-    borderBottomWidth: 1,
-    borderColor: "#f77f3a",
-  },
-  statusItemActive: {
-    borderBottomWidth: 2,
-    borderColor: "#f77f3a",
+    color: "#666666",
+    fontWeight: "400",
   },
   statusItemActiveText: {
-    color: "#f77f3a",
+    color: "#000000",
+    fontWeight: "700",
+  },
+  underline: {
+    position: "absolute",
+    bottom: 0,
+    left: "20%",
+    right: "20%",
+    height: 2,
+    backgroundColor: "#000000",
+    borderRadius: 1,
   },
   orderContent: {
     flex: 1,

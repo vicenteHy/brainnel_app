@@ -20,10 +20,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   return (
     <View style={styles.tabBar}>
       <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === "customer" && styles.activeTab,
-        ]}
+        style={styles.tab}
         onPress={() => userLoggedIn && onTabPress("customer")}
         disabled={!userLoggedIn}
         activeOpacity={1}
@@ -37,12 +34,10 @@ export const TabBar: React.FC<TabBarProps> = ({
         >
           {t("chat.customer_service")}
         </Text>
+        {activeTab === "customer" && <View style={styles.underline} />}
       </TouchableOpacity>
       <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === "product" && styles.activeTab,
-        ]}
+        style={styles.tab}
         onPress={() => userLoggedIn && onTabPress("product")}
         disabled={!userLoggedIn}
         activeOpacity={1}
@@ -56,12 +51,10 @@ export const TabBar: React.FC<TabBarProps> = ({
         >
           {t("chat.product_support")}
         </Text>
+        {activeTab === "product" && <View style={styles.underline} />}
       </TouchableOpacity>
       <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === "notification" && styles.activeTab,
-        ]}
+        style={styles.tab}
         onPress={() => userLoggedIn && onTabPress("notification")}
         disabled={!userLoggedIn}
         activeOpacity={1}
@@ -84,6 +77,7 @@ export const TabBar: React.FC<TabBarProps> = ({
             </View>
           )}
         </View>
+        {activeTab === "notification" && <View style={styles.underline} />}
       </TouchableOpacity>
     </View>
   );
@@ -102,28 +96,30 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     backgroundColor: "transparent",
     flex: 1,
-    marginHorizontal: -4,
-  },
-  activeTab: {
-    backgroundColor: "#FF6F30",
-    borderWidth: 1,
-    borderColor: "#FF6F30",
-    borderRadius: 16,
+    position: "relative",
   },
   tabText: {
-    fontSize: customRF(13),
-    color: "black",
+    fontSize: customRF(11),
+    color: "#666666",
     fontWeight: "400",
     textAlign: "center",
   },
   activeTabText: {
-    color: "white",
-    fontWeight: "600",
+    color: "#000000",
+    fontWeight: "700",
+  },
+  underline: {
+    position: "absolute",
+    bottom: 0,
+    left: "20%",
+    right: "20%",
+    height: 2,
+    backgroundColor: "#000000",
+    borderRadius: 1,
   },
   tabWithBadge: {
     flexDirection: "row",

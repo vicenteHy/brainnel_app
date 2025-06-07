@@ -16,7 +16,7 @@ import AddressIcon from "../../components/AddressIcon";
 import BackIcon from "../../components/BackIcon";
 import widthUtils from "../../utils/widthUtils";
 import FileEditIcon from "../../components/FileEditIcon";
-import PlusIcon from "../../components/PlusIconIcon";
+import PlusIcon from "../../components/PlusIcon";
 import {
   addressApi,
   addressData,
