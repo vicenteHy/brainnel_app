@@ -57,4 +57,5 @@ export type RootStackParamList = {
   Info: undefined;
   ChangePassword: undefined;
   PrivacyPolicyScreen: undefined;
+  TermsOfUseScreen: undefined;
 };

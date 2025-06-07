@@ -11,11 +11,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { privacyApi, PrivacyPolicyResponse } from '../../services/api/privacyApi';
+import { termsApi, TermsOfUseResponse } from '../../services/api/termsApi';
 import BackIcon from '../../components/BackIcon';
 import fontSize from '../../utils/fontsizeUtils';
 
-interface PrivacyPolicyData {
+interface TermsOfUseData {
   remark: string;
   info_en: string; // 英文内容
   info_fr?: string; // 法文内容
@@ -24,7 +24,7 @@ interface PrivacyPolicyData {
   pid: number;
 }
 
-export const PrivacyPolicyScreen = () => {
+export const TermsOfUseScreen = () => {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -33,11 +33,11 @@ export const PrivacyPolicyScreen = () => {
   const [webViewLoading, setWebViewLoading] = useState(false);
 
   useEffect(() => {
-    loadPrivacyPolicy();
+    loadTermsOfUse();
   }, [i18n.language]); // 当语言改变时重新加载内容
 
   // 根据当前语言获取对应的内容
-  const getContentByLanguage = (data: PrivacyPolicyData): string => {
+  const getContentByLanguage = (data: TermsOfUseData): string => {
     const currentLanguage = i18n.language;
     console.log('当前语言:', currentLanguage);
     console.log('可用的内容字段:', {
@@ -184,28 +184,28 @@ export const PrivacyPolicyScreen = () => {
     `;
   };
 
-  const loadPrivacyPolicy = async () => {
+  const loadTermsOfUse = async () => {
     try {
       setLoading(true);
       setError(false);
       
-      console.log('开始加载隐私政策...');
-      const response = await privacyApi.getPrivacyPolicy();
+      console.log('开始加载使用条款...');
+      const response = await termsApi.getTermsOfUse();
       console.log('API响应:', response);
       
       if (response && typeof response === 'object') {
         // 检查多种可能的数据结构
-        let data: PrivacyPolicyData | null = null;
+        let data: TermsOfUseData | null = null;
         
         // 尝试不同的数据结构路径
         if (response.data && typeof response.data === 'object') {
-          data = response.data as PrivacyPolicyData;
+          data = response.data as TermsOfUseData;
           console.log('使用response.data作为数据源');
         } else if (response.info_en || response.info_fr) {
-          data = response as PrivacyPolicyData;
+          data = response as TermsOfUseData;
           console.log('直接使用response作为数据源');
         } else if (Array.isArray(response.data) && response.data.length > 0) {
-          data = response.data[0] as PrivacyPolicyData;
+          data = response.data[0] as TermsOfUseData;
           console.log('使用response.data[0]作为数据源');
         }
         
@@ -227,17 +227,17 @@ export const PrivacyPolicyScreen = () => {
           if (typeof response === 'string') {
             setHtmlContent(wrapContentInHTML(response));
           } else {
-            throw new Error('隐私政策内容格式错误: 未找到有效的内容字段');
+            throw new Error('使用条款内容格式错误: 未找到有效的内容字段');
           }
         }
       } else if (typeof response === 'string') {
         console.log('响应是字符串，直接使用');
         setHtmlContent(wrapContentInHTML(response));
       } else {
-        throw new Error('无法获取隐私政策内容: 响应格式不正确');
+        throw new Error('无法获取使用条款内容: 响应格式不正确');
       }
     } catch (error) {
-      console.error('加载隐私政策失败:', error);
+      console.error('加载使用条款失败:', error);
       setError(true);
       setHtmlContent(`
         <html>
@@ -266,7 +266,7 @@ export const PrivacyPolicyScreen = () => {
           <body>
             <div class="error">
               <h2>加载失败</h2>
-              <p>无法加载隐私条款内容，请检查网络连接后重试。</p>
+              <p>无法加载使用条款内容，请检查网络连接后重试。</p>
               <div class="retry-text">
                 错误信息: ${error instanceof Error ? error.message : '未知错误'}
               </div>
@@ -285,7 +285,7 @@ export const PrivacyPolicyScreen = () => {
   };
 
   const handleRetry = () => {
-    loadPrivacyPolicy();
+    loadTermsOfUse();
   };
 
   return (
@@ -298,7 +298,7 @@ export const PrivacyPolicyScreen = () => {
         >
           <BackIcon />
         </TouchableOpacity>
-        <Text style={styles.title}>{t('settings.privacy_policy')}</Text>
+        <Text style={styles.title}>{t('settings.terms_of_use')}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -427,4 +427,4 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
   },
-}); 
+});

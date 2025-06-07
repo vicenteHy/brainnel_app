@@ -515,6 +515,15 @@ export const AppNavigator = () => {
             gestureDirection: "horizontal",
           }}
         />
+        <Stack.Screen
+          name="TermsOfUseScreen"
+          component={Screens.TermsOfUseScreen}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

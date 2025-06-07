@@ -2,10 +2,12 @@ import apiService from './apiClient';
 
 // 隐私政策API响应类型
 export interface PrivacyPolicyResponse {
-  content?: string;
-  data?: any;
-  message?: string;
-  [key: string]: any;
+  remark: string;
+  info_en: string; // 英文内容
+  info_fr?: string; // 法文内容
+  sort: number;
+  status: number;
+  pid: number;
 }
 
 export const privacyApi = {

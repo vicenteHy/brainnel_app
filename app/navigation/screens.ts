@@ -42,6 +42,7 @@ import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
 import {ChangePassword} from '../screens/setting/ChangePassword';
 import { PrivacyPolicyScreen } from '../screens/setting/PrivacyPolicyScreen';
+import { TermsOfUseScreen } from '../screens/setting/TermsOfUseScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
@@ -91,6 +92,7 @@ export {
   Info,
   ChangePassword,
   PrivacyPolicyScreen,
+  TermsOfUseScreen,
   HomeScreen as Home,
   ProfileScreen,
   CategoryScreen,

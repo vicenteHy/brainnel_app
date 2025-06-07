@@ -209,7 +209,12 @@ export const SettingList = () => {
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.item}>
+          <TouchableOpacity 
+            style={styles.item}
+            onPress={() => {
+              navigation.navigate("TermsOfUseScreen");
+            }}
+          >
             <Text>{t("settings.terms_of_use")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />

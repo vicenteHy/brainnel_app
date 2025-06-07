@@ -2,6 +2,8 @@
 export * from './apiClient';
 export * from './userApi';
 export * from './chat';
+export * from './privacyApi';
+export * from './termsApi';
 
 // 按需导出其他API服务
 // export * from './productApi';
