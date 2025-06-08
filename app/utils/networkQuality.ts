@@ -132,11 +132,11 @@ class NetworkQualityDetector {
     switch (quality.type) {
       case 'slow':
         return {
-          initialCount: 8,  // 2G/3G网络：减少初始加载
-          preloadCount: 4,  // 预加载数量小
-          triggerThreshold: 40, // 剩余40%时触发预加载
+          initialCount: 10, // 2G/3G网络：适当增加初始加载（原8改为10）
+          preloadCount: 6,  // 预加载数量适中（原4改为6）
+          triggerThreshold: 35, // 剩余35%时触发预加载（原40改为35）
           enableImageLazyLoad: true,
-          maxConcurrentRequests: 1, // 限制并发请求
+          maxConcurrentRequests: 2, // 增加并发请求（原1改为2）
         };
       
       case 'medium':
@@ -231,10 +231,10 @@ class NetworkQualityDetector {
       case 'low':
         return {
           ...baseStrategy,
-          initialCount: Math.max(6, Math.floor(baseStrategy.initialCount * 0.7)),
-          preloadCount: Math.max(3, Math.floor(baseStrategy.preloadCount * 0.6)),
-          triggerThreshold: Math.min(50, baseStrategy.triggerThreshold + 10),
-          maxConcurrentRequests: 1,
+          initialCount: Math.max(8, Math.floor(baseStrategy.initialCount * 0.8)), // 提高最小值从6到8
+          preloadCount: Math.max(4, Math.floor(baseStrategy.preloadCount * 0.7)), // 提高最小值从3到4
+          triggerThreshold: Math.min(45, baseStrategy.triggerThreshold + 8), // 降低触发阈值从50到45
+          maxConcurrentRequests: 2, // 增加并发数从1到2
           enableImageLazyLoad: true,
         };
       

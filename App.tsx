@@ -112,6 +112,7 @@ function AppContent() {
     checkLanguage();
   }, []);
 
+  // 应用初始化（只执行一次）
   useEffect(() => {
     // 只有在语言检查完成且用户已选择语言后才初始化应用
     if (!checkingLanguage && languageSelected) {
@@ -127,21 +128,17 @@ function AppContent() {
           
         } catch (error) {
           console.error('App initialization error:', error);
-        } finally {
-          // 只有当开屏最小时长也完成时才隐藏加载屏幕
-          const checkCanHideSplash = () => {
-            if (splashMinTimeElapsed) {
-              setIsLoading(false);
-            } else {
-              // 如果最小时长未完成，等待一下再检查
-              setTimeout(checkCanHideSplash, 100);
-            }
-          };
-          checkCanHideSplash();
         }
       };
       
       initApp();
+    }
+  }, [checkingLanguage, languageSelected]);
+
+  // 控制加载屏幕显示（独立的useEffect）
+  useEffect(() => {
+    if (!checkingLanguage && languageSelected && splashMinTimeElapsed) {
+      setIsLoading(false);
     }
   }, [checkingLanguage, languageSelected, splashMinTimeElapsed]);
 
