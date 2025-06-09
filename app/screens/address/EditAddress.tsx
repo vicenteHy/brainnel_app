@@ -18,8 +18,6 @@ import {
   ScrollView,
 } from "react-native";
 import { useState, useEffect } from "react";
-import DropDownPicker from "react-native-dropdown-picker";
-import { countries } from "../../constants/countries";
 import BackIcon from "../../components/BackIcon";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { AddressItem } from "../../services/api/addressApi";
@@ -29,12 +27,11 @@ import { settingApi } from "../../services/api/setting";
 import flagMap from "../../utils/flagMap";
 import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
-import { getCountryTransLanguage } from "../../utils/languageUtils";
 type RootStackParamList = {
-  AddRess: { address?: AddressItem };
+  EditAddress: { address?: AddressItem };
   AddressList: undefined;
 };
-type AddRessRouteProp = RouteProp<RootStackParamList, "AddRess">;
+type EditAddressRouteProp = RouteProp<RootStackParamList, "EditAddress">;
 // Define a custom item type for the dropdown
 type CountryItemType = {
   label: string;
@@ -47,82 +44,76 @@ export const EditAddress = () => {
   const { setLoading, updateAddress, loading } = useAddressStore();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<AddRessRouteProp>();
+  const route = useRoute<EditAddressRouteProp>();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<string | null>(null);
-  const [items, setItems] = useState<{ label: string; value: string }[]>([]);
-  const [selectedCountryLabel, setSelectedCountryLabel] = useState<string>("");
   const [countryList, setCountryList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     receiver_first_name: "",
     receiver_last_name: "",
-    country: "",
+    country_code: "225", // 默认科特迪瓦区号
     receiver_phone: "",
     receiver_phone_again: "",
     whatsapp_phone: "",
-    is_default: 0,
-    province: "",
-    city: "",
-    district: "",
-    detail_address: "",
+    is_default: false,
   });
-  const [selectedCountry, setSelectedCountry] = useState<any>(null);
-  const [copyPhoneToWhatsApp, setCopyPhoneToWhatsApp] = useState(false);
+  const [whatsappSameAsPhone, setWhatsappSameAsPhone] = useState(true);
   const [phoneNumbersMatch, setPhoneNumbersMatch] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   // 初始化加载
   useEffect(() => {
     // 如果有路由参数中的地址，优先使用它
     if (route.params?.address) {
+      const address = route.params.address;
+      const phoneNumber = address.receiver_phone || "";
+      const whatsappPhone = address.whatsapp_phone || "";
+      
+      // 检查 WhatsApp 是否与手机号相同
+      const fullPhoneNumber = `225${phoneNumber}`;
+      const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
+      
       setFormData({
-        ...route.params.address,
-        receiver_phone_again: route.params.address.receiver_phone,
-        is_default: route.params.address.is_default,
+        receiver_first_name: address.receiver_first_name || "",
+        receiver_last_name: address.receiver_last_name || "",
+        country_code: "225", // 默认科特迪瓦区号
+        receiver_phone: phoneNumber,
+        receiver_phone_again: phoneNumber,
+        whatsapp_phone: whatsappPhone,
+        is_default: Boolean(address.is_default),
       });
+      
+      setWhatsappSameAsPhone(isWhatsappSameAsPhone);
     }
   }, []);
   // 加载国家列表
   useEffect(() => {
     settingApi.getCountryList().then((res) => {
       const formattedCountries = res.map((item) => ({
-        label: `${getCountryTransLanguage(item)} (${item.country})`,
+        label: `${item.name_en} (+${item.country})`,
         value: item.name.toString(),
         flag: flagMap.get(item.name_en),
-        name_en: getCountryTransLanguage(item),
-        country: item.country,
+        name_en: item.name_en,
+        country: item.country
       }));
-      setItems(formattedCountries);
       setCountryList(formattedCountries);
     });
   }, []);
-  // 当countryList加载完成后，设置选中的国家标签
+  // 监听手机号码变化，如果 whatsapp 与手机号相同则自动更新 WhatsApp 号码
   useEffect(() => {
-    if (countryList.length > 0) {
-      // 如果有路由参数中的地址
-      const addressFromRoute = route.params?.address;
-      if (addressFromRoute && addressFromRoute.country) {
-        const selectedCountry = countryList.find(
-          (item) =>
-            item.name_en === addressFromRoute.country ||
-            item.value === addressFromRoute.country
-        );
-        if (selectedCountry) {
-          setSelectedCountryLabel(selectedCountry.label);
-          setValue(selectedCountry.value);
-        }
-      }
-    }
-  }, [countryList, route.params?.address]);
-  // 监听手机号码变化，如果勾选了复制选项则自动更新 WhatsApp 号码
-  useEffect(() => {
-    if (copyPhoneToWhatsApp) {
+    if (whatsappSameAsPhone && formData.receiver_phone) {
+      const fullPhoneNumber = `${formData.country_code}${formData.receiver_phone}`;
       setFormData((prev) => ({
         ...prev,
-        whatsapp_phone: prev.receiver_phone,
+        whatsapp_phone: fullPhoneNumber,
+      }));
+    } else if (!whatsappSameAsPhone) {
+      // 当取消勾选时，清空 WhatsApp 字段让用户输入不同号码
+      setFormData((prev) => ({
+        ...prev,
+        whatsapp_phone: "",
       }));
     }
-  }, [formData.receiver_phone, copyPhoneToWhatsApp]);
+  }, [formData.receiver_phone, formData.country_code, whatsappSameAsPhone]);
   // 监听手机号码变化，验证两次输入是否一致
   useEffect(() => {
     if (formData.receiver_phone && formData.receiver_phone_again) {
@@ -145,14 +136,12 @@ export const EditAddress = () => {
       newErrors.receiver_phone = t("address.errors.phone_required");
     }
     if (!formData.receiver_phone_again) {
-      newErrors.receiver_phone_again = t(
-        "address.errors.confirm_phone_required"
-      );
+      newErrors.receiver_phone_again = t("address.errors.confirm_phone_required");
     }
     if (formData.receiver_phone !== formData.receiver_phone_again) {
       newErrors.receiver_phone_again = t("address.errors.phone_mismatch");
     }
-    if (!formData.whatsapp_phone) {
+    if (!whatsappSameAsPhone && !formData.whatsapp_phone) {
       newErrors.whatsapp_phone = t("address.errors.whatsapp_required");
     }
     setErrors(newErrors);
@@ -160,27 +149,42 @@ export const EditAddress = () => {
   };
   const handleSubmit = async () => {
     if (validateForm()) {
-      const selectedCountryObj = countryList.find(
-        (item) => item.value === value
+      // 准备地址数据
+      const whatsappNumber = whatsappSameAsPhone 
+        ? `${formData.country_code}${formData.receiver_phone}` 
+        : formData.whatsapp_phone;
+
+      // 获取选中的国家信息
+      const selectedCountryInfo = countryList.find(item => 
+        item.country === formData.country_code
       );
-      const submitData = {
-        ...formData,
-        country: selectedCountryObj ? selectedCountryObj.name_en : "",
-        receiver_phone_again: undefined,
+
+      const addressData = {
+        receiver_first_name: formData.receiver_first_name,
+        receiver_last_name: formData.receiver_last_name,
+        country: selectedCountryInfo?.name_en || "",
+        receiver_phone: formData.receiver_phone,
+        whatsapp_phone: whatsappNumber,
+        province: "",
+        city: "",
+        district: "",
+        detail_address: "",
         is_default: formData.is_default ? 1 : 0,
       };
-      delete submitData.receiver_phone_again;
+
       setLoading(true);
       if (route.params?.address?.address_id) {
-        await updateAddress(route.params.address.address_id, submitData);
+        await updateAddress(route.params.address.address_id, addressData);
       }
       setLoading(false);
       navigation.goBack();
     }
   };
   const handleCountrySelect = (item: any) => {
-    setValue(item.value);
-    setSelectedCountryLabel(item.label);
+    setFormData(prev => ({
+      ...prev,
+      country_code: item.country
+    }));
     setOpen(false);
   };
   return (
@@ -198,8 +202,8 @@ export const EditAddress = () => {
             </View>
           ) : (
             <ScrollView 
-              style={styles.scrollContainer}
-              contentContainerStyle={styles.scrollContentContainer}
+              style={styles.container}
+              contentContainerStyle={styles.scrollContainer}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
@@ -210,26 +214,23 @@ export const EditAddress = () => {
                       <View style={styles.titleContainer}>
                         <View style={styles.backIconContainer}>
                           <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <BackIcon size={20} />
+                            <BackIcon size={fontSize(20)} />
                           </TouchableOpacity>
                         </View>
-                        <Text style={styles.titleHeading}>
-                          {t("address.select_recipient")}
-                        </Text>
+                        <Text style={styles.titleHeading}>{t("address.edit_recipient")}</Text>
                       </View>
                       <View style={styles.recipientInfoForm}>
                         <View style={styles.contactFormContainer}>
                           {/* First Name Field */}
                           <View style={styles.formFieldContainer}>
                             <View style={styles.flexRowCentered}>
-                              <Text style={styles.elegantTextSnippet}>
-                                {t("address.first_name")}
-                              </Text>
+                              <Text style={styles.elegantTextSnippet}>{t("address.first_name")}</Text>
                               <Text style={styles.redTextHeading}>*</Text>
                             </View>
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.first_name")}
+                              placeholderTextColor="#9ca3af"
                               value={formData.receiver_first_name}
                               onChangeText={(text) =>
                                 setFormData({
@@ -247,20 +248,16 @@ export const EditAddress = () => {
                           {/* Last Name Field */}
                           <View style={styles.lastNameInputContainer}>
                             <View style={styles.flexRowCentered}>
-                              <Text style={styles.elegantTextSnippet}>
-                                {t("address.last_name")}
-                              </Text>
+                              <Text style={styles.elegantTextSnippet}>{t("address.last_name")}</Text>
                               <Text style={styles.redAsteriskTextStyle}>*</Text>
                             </View>
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.last_name")}
+                              placeholderTextColor="#9ca3af"
                               value={formData.receiver_last_name}
                               onChangeText={(text) =>
-                                setFormData({
-                                  ...formData,
-                                  receiver_last_name: text,
-                                })
+                                setFormData({ ...formData, receiver_last_name: text })
                               }
                             />
                             {errors.receiver_last_name && (
@@ -268,29 +265,6 @@ export const EditAddress = () => {
                                 {errors.receiver_last_name}
                               </Text>
                             )}
-                          </View>
-                          {/* 国家 */}
-                          <View style={styles.lastNameInputContainer}>
-                            <View style={styles.flexRowCentered}>
-                              <Text style={styles.elegantTextSnippet}>
-                                {t("address.country")}
-                              </Text>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.countrySelectorButton}
-                              onPress={() => setOpen(true)}
-                            >
-                              {selectedCountryLabel ? (
-                                <Text style={styles.selectedCountryText}>
-                                  {selectedCountryLabel}
-                                </Text>
-                              ) : (
-                                <Text style={styles.placeholderStyle}>
-                                  {t("address.placeholder.select_country")}
-                                </Text>
-                              )}
-                              <Text style={styles.dropdownArrow}>▼</Text>
-                            </TouchableOpacity>
                           </View>
                           {/* Phone Number Section */}
                           <View style={styles.formContainer}>
@@ -300,23 +274,29 @@ export const EditAddress = () => {
                                   <Text style={styles.elegantTextSnippet}>
                                     {t("address.phone_number")}
                                   </Text>
-                                  <Text style={styles.redAsteriskTextStyle}>
-                                    *
-                                  </Text>
+                                  <Text style={styles.redAsteriskTextStyle}>*</Text>
                                 </View>
-                                <TextInput
-                                  style={styles.pingFangText1}
-                                  placeholder={t(
-                                    "address.placeholder.phone_number"
-                                  )}
-                                  value={formData.receiver_phone}
-                                  onChangeText={(text) =>
-                                    setFormData({
-                                      ...formData,
-                                      receiver_phone: text,
-                                    })
-                                  }
-                                />
+                                <View style={styles.phoneInputContainer}>
+                                  <TouchableOpacity
+                                    style={styles.countryCodeSelector}
+                                    onPress={() => setOpen(true)}
+                                  >
+                                    <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
+                                    <Text style={styles.dropdownArrow}>▼</Text>
+                                  </TouchableOpacity>
+                                  <TextInput
+                                    style={styles.phoneInput}
+                                    placeholder={t("address.placeholder.phone_number")}
+                                    value={formData.receiver_phone}
+                                    onChangeText={(text) =>
+                                      setFormData({
+                                        ...formData,
+                                        receiver_phone: text,
+                                      })
+                                    }
+                                    keyboardType="numeric"
+                                  />
+                                </View>
                                 {errors.receiver_phone && (
                                   <Text style={styles.errorText}>
                                     {errors.receiver_phone}
@@ -328,23 +308,25 @@ export const EditAddress = () => {
                                   <Text style={styles.elegantTextSnippet}>
                                     {t("address.confirm_phone_number")}
                                   </Text>
-                                  <Text style={styles.redAsteriskTextStyle}>
-                                    *
-                                  </Text>
+                                  <Text style={styles.redAsteriskTextStyle}>*</Text>
                                 </View>
-                                <TextInput
-                                  style={styles.pingFangText1}
-                                  placeholder={t(
-                                    "address.placeholder.confirm_phone_number"
-                                  )}
-                                  value={formData.receiver_phone_again}
-                                  onChangeText={(text) =>
-                                    setFormData({
-                                      ...formData,
-                                      receiver_phone_again: text,
-                                    })
-                                  }
-                                />
+                                <View style={styles.phoneInputContainer}>
+                                  <View style={styles.countryCodeDisplay}>
+                                    <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
+                                  </View>
+                                  <TextInput
+                                    style={styles.phoneInput}
+                                    placeholder={t("address.placeholder.confirm_phone_number")}
+                                    value={formData.receiver_phone_again}
+                                    onChangeText={(text) =>
+                                      setFormData({
+                                        ...formData,
+                                        receiver_phone_again: text,
+                                      })
+                                    }
+                                    keyboardType="numeric"
+                                  />
+                                </View>
                                 {errors.receiver_phone_again && (
                                   <Text style={styles.errorText}>
                                     {errors.receiver_phone_again}
@@ -358,84 +340,85 @@ export const EditAddress = () => {
                               )}
                             </View>
                           </View>
-                          {/* WhatsApp Field */}
-                          <View style={styles.lastNameInputContainer}>
-                            <View style={styles.flexRowCentered}>
-                              <Text style={styles.elegantTextSnippet}>
-                                {t("address.whatsapp")}
-                              </Text>
-                              <Text style={styles.redTextHeading}>*</Text>
-                            </View>
-                            <TextInput
-                              style={styles.pingFangText}
-                              placeholder={t("address.placeholder.whatsapp")}
-                              value={formData.whatsapp_phone}
-                              onChangeText={(text) =>
-                                setFormData({ ...formData, whatsapp_phone: text })
-                              }
-                            />
-                            {errors.whatsapp_phone && (
-                              <Text style={styles.errorText}>
-                                {errors.whatsapp_phone}
-                              </Text>
-                            )}
-                          </View>
-                          <View style={styles.copyContainer}>
+                          {/* WhatsApp Section */}
+                          <View style={styles.whatsappSection}>
                             <TouchableOpacity
                               style={styles.checkboxContainer}
                               onPress={() =>
-                                setCopyPhoneToWhatsApp(!copyPhoneToWhatsApp)
+                                setWhatsappSameAsPhone(!whatsappSameAsPhone)
                               }
                             >
                               <View
                                 style={[
                                   styles.checkbox,
-                                  copyPhoneToWhatsApp && styles.checked,
+                                  whatsappSameAsPhone && styles.checked,
                                 ]}
                               >
-                                {copyPhoneToWhatsApp && (
+                                {whatsappSameAsPhone && (
                                   <Text style={styles.checkmark}>✓</Text>
                                 )}
                               </View>
                               <Text style={styles.checkboxLabel}>
-                                {t("address.copy_phone_to_whatsapp")}
+                                {t("address.whatsapp_same_as_phone")}
                               </Text>
                             </TouchableOpacity>
                           </View>
+
+                          {/* WhatsApp Input Field - Only show when different from phone */}
+                          {!whatsappSameAsPhone && (
+                            <View style={styles.lastNameInputContainer}>
+                              <View style={styles.flexRowCentered}>
+                                <Text style={styles.elegantTextSnippet}>{t("address.whatsapp")}</Text>
+                                <Text style={styles.redTextHeading}>*</Text>
+                              </View>
+                              <TextInput
+                                style={styles.pingFangText}
+                                placeholder={t("address.placeholder.whatsapp")}
+                                placeholderTextColor="#9ca3af"
+                                value={formData.whatsapp_phone}
+                                onChangeText={(text) =>
+                                  setFormData({ ...formData, whatsapp_phone: text })
+                                }
+                                keyboardType="numeric"
+                              />
+                              {errors.whatsapp_phone && (
+                                <Text style={styles.errorText}>
+                                  {errors.whatsapp_phone}
+                                </Text>
+                              )}
+                            </View>
+                          )}
                           {/* Default Setting Section */}
                           <View style={styles.defaultSettingSection}>
                             <Text style={styles.defaultTextDisplayStyle}>
                               {t("address.set_default")}
                             </Text>
                             <Switch
-                              value={!!formData.is_default}
+                              style={styles.switchStyle}
+                              value={formData.is_default}
                               onValueChange={() =>
                                 setFormData({
                                   ...formData,
-                                  is_default: formData.is_default ? 0 : 1,
+                                  is_default: !formData.is_default,
                                 })
                               }
-                              trackColor={{ false: "#767577", true: "#81b0ff" }}
-                              thumbColor={
-                                formData.is_default ? "#002fa7" : "#f4f3f4"
-                              }
+                              trackColor={{ false: "#767577", true: "#FF6F30" }}
+                              thumbColor={formData.is_default ? "#ffffff" : "#f4f3f4"}
                               ios_backgroundColor="#3e3e3e"
                             />
                           </View>
                         </View>
                       </View>
-                      {/* Submit Button */}
-                      <View style={styles.submitButtonContainer}>
-                        <TouchableOpacity
-                          style={styles.primaryButtonStyle}
-                          onPress={handleSubmit}
-                        >
-                          <Text style={styles.buttonText}>
-                            {t("address.submit")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
                     </View>
+                  </View>
+                  {/* Submit Button */}
+                  <View style={styles.submitButtonContainer}>
+                    <TouchableOpacity
+                      style={styles.primaryButtonStyle}
+                      onPress={handleSubmit}
+                    >
+                      <Text style={styles.buttonText}>{t("address.submit")}</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -450,9 +433,7 @@ export const EditAddress = () => {
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>
-                    {t("address.select_country")}
-                  </Text>
+                  <Text style={styles.modalTitle}>{t("address.select_country_code")}</Text>
                   <TouchableOpacity onPress={() => setOpen(false)}>
                     <Text style={styles.closeButton}>{t("address.close")}</Text>
                   </TouchableOpacity>
@@ -466,10 +447,13 @@ export const EditAddress = () => {
                       onPress={() => handleCountrySelect(item)}
                     >
                       {item.flag && (
-                        <Image source={item.flag} style={styles.flagImage} />
+                        <Image 
+                          source={item.flag} 
+                          style={styles.flagImage} 
+                        />
                       )}
-                      <Text style={styles.countryItemText}>{item.label}</Text>
-                      {value === item.value && (
+                      <Text style={styles.countryItemText}>{item.name_en} (+{item.country})</Text>
+                      {formData.country_code === item.country && (
                         <Text style={styles.checkIcon}>✓</Text>
                       )}
                     </TouchableOpacity>
@@ -488,20 +472,17 @@ export const EditAddress = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: 0,
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: '#fff',
   },
   scrollContainer: {
-    flex: 1,
-  },
-  scrollContentContainer: {
     flexGrow: 1,
     paddingBottom: 20,
   },
@@ -518,7 +499,7 @@ const styles = StyleSheet.create({
   },
   recipientFormContainer1: {
     width: "100%",
-    padding: 15,
+    padding: 20,
     paddingBottom: 32,
   },
   recipientFormContainer2: {
@@ -533,6 +514,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    paddingVertical: 10,
   },
   backIconContainer: {
     position: "absolute",
@@ -540,51 +522,59 @@ const styles = StyleSheet.create({
   },
   titleHeading: {
     fontWeight: "600",
-    fontSize: fontSize(20),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontSize: 20,
+    lineHeight: 28,
+    color: "#1a1a1a",
+    letterSpacing: 0.3,
   },
   recipientInfoForm: {
-    marginTop: 35,
+    marginTop: 30,
   },
   recipientInfoHeadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 16,
   },
   recipientInfoHeading: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(18),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    fontWeight: "600",
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#1a1a1a",
+    letterSpacing: 0.2,
   },
-  recipientInfoHeadingEmit: {
+  recipientInfoHeadingEmit:{
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#ff731e",
+    color: "#FF6F30",
     textDecorationLine: "underline",
   },
   contactFormContainer: {
     width: "100%",
-    marginTop: 9,
+    marginTop: 8,
   },
   formFieldContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
+    padding: 16,
+    paddingBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   flexRowCentered: {
     flexDirection: "row",
@@ -595,42 +585,45 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(12),
-    fontFamily: "PingFang SC",
-    color: "#646472",
+    fontSize: 14,
+    color: "#666666",
+    letterSpacing: 0.1,
   },
   redTextHeading: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    color: "#ff4444",
   },
   pingFangText: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
+    marginTop: 8,
     fontWeight: "400",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    color: "#333333",
   },
   pingFangText1: {
     padding: 0,
     margin: 0,
-    marginTop: -2,
+    marginTop: 8,
     fontWeight: "400",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    color: "#333333",
   },
   copyContainer: {
-    marginTop: 10,
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  whatsappSection: {
+    marginTop: 16,
+    marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -639,74 +632,88 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checkbox: {
-    width: 15,
-    height: 15,
-    borderWidth: 1,
-    borderColor: "#dbdce0",
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: "#e8e8e8",
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   checked: {
-    backgroundColor: "#002fa7",
-    borderColor: "#002fa7",
+    backgroundColor: "#FF6F30",
+    borderColor: "#FF6F30",
   },
   checkmark: {
     color: "white",
-    fontSize: fontSize(12),
+    fontSize: 12,
+    fontWeight: "bold",
   },
   checkboxLabel: {
-    fontSize: fontSize(14),
-    color: "#646472",
-    fontFamily: "PingFang SC",
+    fontSize: 14,
+    color: "#666666",
+    letterSpacing: 0.1,
   },
   lastNameInputContainer: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
-    marginTop: 12,
+    padding: 16,
+    paddingBottom: 12,
+    marginBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   lastNameInputContainer1: {
     width: "100%",
-    padding: 6,
-    paddingLeft: 8,
-    paddingBottom: 10,
+    padding: 16,
+    paddingBottom: 12,
     backgroundColor: "white",
     borderTopWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e8e8e8",
   },
   redAsteriskTextStyle: {
     padding: 0,
     margin: 0,
-    marginLeft: 1,
+    marginLeft: 2,
     fontWeight: "500",
-    fontSize: fontSize(18),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "#fe1e00",
+    color: "#ff4444",
   },
   formContainer: {
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "center",
     width: "100%",
-    marginTop: 12,
+    marginBottom: 12,
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#dbdce0",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   optionListDropdown: {},
   verticalCenteredColumn: {
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "center",
-    marginTop: -1,
   },
   phoneNumberContainer: {
     flexDirection: "row",
@@ -717,23 +724,21 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     backgroundColor: "white",
     borderWidth: 1,
-    borderColor: "#dbdce0",
+    borderColor: "#e8e8e8",
   },
   mobilePhoneNumberLabel: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontWeight: "400",
+    fontSize: 14,
+    color: "#666666",
   },
   mobilePhoneNumberLabel1: {
     padding: 0,
     margin: 0,
-    fontWeight: "500",
-    fontSize: fontSize(14),
-    fontFamily: "PingFang SC",
-    color: "#807e7e",
+    fontWeight: "400",
+    fontSize: 14,
+    color: "#666666",
   },
   phoneNumberPromptContainer: {
     flexDirection: "row",
@@ -745,123 +750,62 @@ const styles = StyleSheet.create({
     marginTop: -1,
     backgroundColor: "white",
     borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    borderColor: "#e8e8e8",
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   defaultSettingSection: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    marginTop: 15.5,
+    marginTop: 20,
     gap: 8,
   },
   defaultTextDisplayStyle: {
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "black",
+    color: "#1a1a1a",
+    letterSpacing: 0.1,
   },
   submitButtonContainer: {
-    paddingRight: 11,
-    paddingLeft: 11,
-    marginTop: 60,
+    paddingHorizontal: 20,
+    marginTop: 40,
   },
   primaryButtonStyle: {
     width: "100%",
-    height: 50,
+    height: 56,
     justifyContent: "center",
     alignItems: "center",
-    fontWeight: "600",
-    fontSize: fontSize(16),
-    lineHeight: 22,
-    fontFamily: "PingFang SC",
-    color: "white",
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF6F30",
     borderWidth: 0,
-    borderRadius: 25,
+    borderRadius: 16,
+    shadowColor: "#FF6F30",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
     color: "white",
     fontWeight: "600",
-    fontSize: fontSize(16),
+    fontSize: 16,
     lineHeight: 22,
-    fontFamily: "PingFang SC",
-  },
-  dropdown: {
-    borderColor: "#dbdce0",
-    borderWidth: 1,
-    borderRadius: 5,
-    marginTop: 8,
-    backgroundColor: "white",
-    minHeight: 40,
-    paddingHorizontal: 10,
-  },
-  dropdownContainer: {
-    borderColor: "#dbdce0",
-    borderWidth: 1,
-    borderRadius: 5,
-    backgroundColor: "white",
-    marginTop: 2,
-  },
-  dropdownText: {
-    fontSize: fontSize(16),
-    color: "#333",
-  },
-  dropdownLabel: {
-    fontSize: fontSize(16),
-    color: "#333",
-  },
-  arrowIcon: {
-    width: 20,
-    height: 20,
-  },
-  placeholderStyle: {
-    color: "#999",
-  },
-  searchContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#dbdce0",
-    padding: 10,
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
-    padding: 8,
-    fontSize: fontSize(16),
-  },
-  phoneNumberError: {
-    borderColor: "#fe1e00",
-  },
-  errorText: {
-    color: "#fe1e00",
-    fontSize: fontSize(12),
-    marginTop: 4,
-    fontFamily: "PingFang SC",
-  },
-  countrySelectorButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#dbdce0",
-    borderRadius: 5,
+    letterSpacing: 0.3,
   },
   selectedCountryText: {
-    fontSize: fontSize(16),
-    color: "#333",
-    fontFamily: "PingFang SC",
-  },
-  dropdownArrow: {
-    fontSize: fontSize(12),
-    color: "#646472",
-    fontFamily: "PingFang SC",
+    padding: 0,
+    margin: 0,
+    fontWeight: "400",
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#333333",
   },
   modalContainer: {
     flex: 1,
@@ -870,57 +814,133 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     width: "100%",
-    height: Dimensions.get("window").height * 0.8,
+    height: Dimensions.get('window').height * 0.8,
     display: "flex",
     flexDirection: "column",
   },
   modalHeader: {
-    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
-    padding: 15,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e8e8e8",
   },
   modalTitle: {
-    fontSize: fontSize(18),
-    fontWeight: "bold",
+    fontWeight: "600",
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#1a1a1a",
+    letterSpacing: 0.2,
   },
   closeButton: {
-    fontSize: fontSize(16),
-    fontWeight: "bold",
-    color: "#002fa7",
+    fontWeight: "500",
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#FF6F30",
   },
   countryItem: {
-    width: "100%",
-    padding: 10,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#dbdce0",
-  },
-  flagImage: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
   },
   countryItemText: {
-    fontSize: fontSize(16),
-    fontWeight: "500",
+    fontSize: 16,
+    color: "#333333",
+    flex: 1,
   },
-  checkIcon: {
-    fontSize: fontSize(16),
-    fontWeight: "bold",
-    color: "#002fa7",
-    marginLeft: "auto",
+  errorText: {
+    color: "#ff4444",
+    fontSize: 12,
+    marginTop: 6,
+  },
+  countrySelectorButton: {
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 12,
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fafafa",
+  },
+  placeholderStyle: {
+    color: "#999999",
+    fontSize: 16,
+  },
+  flagImage: {
+    width: 24,
+    height: 16,
+    marginRight: 12,
+  },
+  dropdownArrow: {
+    fontSize: 14,
+    color: "#666666",
   },
   flatList: {
-    width: "100%",
+    flex: 1,
+    height: "100%",
   },
   flatListContent: {
-    padding: 10,
+    flexGrow: 1,
+  },
+  checkIcon: {
+    color: "#FF6F30",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  phoneInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  countryCodeSelector: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginRight: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 80,
+    justifyContent: "space-between",
+  },
+  countryCodeDisplay: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginRight: 8,
+    minWidth: 80,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  countryCodeText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333333",
+  },
+  phoneInput: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333333",
+  },
+  switchStyle: {
+    transform: [{ scaleX: 0.6 }, { scaleY: 0.6 }],
   },
 });

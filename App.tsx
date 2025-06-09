@@ -275,8 +275,8 @@ function AppContent() {
           <Image
             source={require("./assets/logo/logo2.png")}
             style={{
-              width: 200,
-              height: 200,
+              width: 600,
+              height: 800,
               resizeMode: "contain",
             }}
           />

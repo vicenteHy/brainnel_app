@@ -39,6 +39,7 @@ import { useTranslation } from "react-i18next";
 import { getCurrentLanguage } from "../../i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAnalyticsStore from "../../store/analytics";
+import flagMap from "../../utils/flagMap";
 
 type RootStackParamList = {
   ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean };
@@ -520,6 +521,8 @@ export const ShippingFee = () => {
                     freightForwarderAddress?.other_addresses || []
                   }
                   keyExtractor={(item, index) => index.toString()}
+                  contentContainerStyle={styles.flatListContent}
+                  showsVerticalScrollIndicator={false}
                   renderItem={({ item }) => {
                     const label =
                       (getCurrentLanguage() === "fr"
@@ -528,6 +531,9 @@ export const ShippingFee = () => {
                       " | " +
                       item.city +
                       (item.detail_address ? (" | " + item.detail_address) : "");
+                    const countryName = getCurrentLanguage() === "fr" ? item.country_name : item.country_name_en;
+                    const flagSource = flagMap.get(countryName);
+                    
                     return (
                       <TouchableOpacity
                         style={[
@@ -542,12 +548,21 @@ export const ShippingFee = () => {
                         }
                         activeOpacity={1}
                       >
-                        <Text style={styles.optionText} numberOfLines={1} ellipsizeMode="tail">
-                          {label}
-                        </Text>
-                        {warehouse === label && (
-                          <Text style={styles.checkmark}>✓</Text>
-                        )}
+                        <View style={styles.warehouseItemContainer}>
+                          <View style={styles.warehouseItemHeader}>
+                            {flagSource && (
+                              <Image source={flagSource} style={styles.countryFlag} />
+                            )}
+                            <Text style={styles.countryNameText}>{countryName}</Text>
+                            {warehouse === label && (
+                              <Text style={styles.checkmark}>✓</Text>
+                            )}
+                          </View>
+                          <Text style={styles.cityText}>{item.city}</Text>
+                          {item.detail_address && (
+                            <Text style={styles.addressDetailText}>{item.detail_address}</Text>
+                          )}
+                        </View>
                       </TouchableOpacity>
                     );
                   }}
@@ -811,6 +826,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
+    flex: 1,
+    paddingBottom: Platform.OS === "ios" ? 34 : 20,
   },
   modalHeader: {
     flexDirection: "row",
@@ -831,10 +848,10 @@ const styles = StyleSheet.create({
     color: "#FF6F30",
     fontWeight: "500",
   },
+  flatListContent: {
+    paddingBottom: 20,
+  },
   optionItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
@@ -853,6 +870,42 @@ const styles = StyleSheet.create({
     color: "#FF6F30",
     fontWeight: "bold",
     fontSize: fontSize(16),
+  },
+  warehouseItemContainer: {
+    flex: 1,
+  },
+  warehouseItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  countryFlag: {
+    width: 24,
+    height: 16,
+    marginRight: 12,
+    borderRadius: 2,
+  },
+  countryNameText: {
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    color: "#1a1a1a",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    flex: 1,
+  },
+  cityText: {
+    fontSize: fontSize(14),
+    color: "#666666",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginLeft: 36,
+    marginBottom: 4,
+  },
+  addressDetailText: {
+    fontSize: fontSize(12),
+    color: "#999999",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginLeft: 36,
+    lineHeight: 16,
   },
   shippingInfo: {
     marginTop: 16,

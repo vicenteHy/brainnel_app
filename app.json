@@ -12,7 +12,7 @@
     "deepLinking": true,
     "splash": {
       "image": "./assets/logo/logo2.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {

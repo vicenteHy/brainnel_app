@@ -38,6 +38,9 @@ export const SettingList = () => {
     try {
       const res = await settingApi.getMySetting();
       setMySetting(res);
+    } catch (error) {
+      console.warn('Failed to get user settings:', error);
+      // 如果获取设置失败，可以设置默认值或忽略
     } finally {
       setIsLoading(false);
     }

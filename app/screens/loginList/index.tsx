@@ -217,13 +217,31 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
   // 辅助函数：获取 Facebook 用户资料 (可选，需要 'public_profile' 权限)
   const fetchFacebookProfile = async (token:string) => {
     try {
-      const response = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
+      console.log('📡 开始获取Facebook用户资料...');
+      console.log('🔑 使用的Token:', token);
+      
+      const url = `https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`;
+      console.log('🌐 请求URL:', url);
+      
+      const response = await fetch(url);
+      console.log('📊 响应状态:', response.status);
+      console.log('📊 响应头:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
+      
       const profile = await response.json();
+      console.log('📋 Facebook User Info (完整响应):', JSON.stringify(profile, null, 2));
+      
+      // 检查是否有错误
+      if (profile.error) {
+        console.error('❌ Facebook API返回错误:', JSON.stringify(profile.error, null, 2));
+        throw new Error(`Facebook API错误: ${profile.error.message} (代码: ${profile.error.code})`);
+      }
+      
       setUserInfo(profile);
-      console.log('Facebook User Info:', profile);
+      console.log('✅ Facebook用户资料获取成功');
       return profile;
     } catch (error) {
-      console.error('获取 Facebook 用户资料错误:', error);
+      console.error('❌ 获取 Facebook 用户资料错误:', error);
+      console.error('❌ 错误详情:', JSON.stringify(error, null, 2));
       Alert.alert("获取资料失败", "无法从 Facebook 获取用户详细资料，请检查网络或权限设置。");
       throw error;
     }
@@ -232,13 +250,28 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
   // 处理Facebook登录
   const handleFacebookLogin = async () => {
     console.log("🚀 Facebook登录按钮被点击");
+    console.log("📱 设备平台:", Platform.OS);
+    console.log("🔧 开发模式:", __DEV__);
     
     try {
       console.log("✅ 开始Facebook登录流程");
       
+      // 先检查Facebook SDK状态
+      console.log("🔍 检查Facebook SDK状态...");
+      try {
+        const currentToken = await AccessToken.getCurrentAccessToken();
+        console.log("📋 当前Facebook Token状态:", currentToken ? "已存在Token" : "无Token");
+        if (currentToken) {
+          console.log("📋 当前Token信息:", JSON.stringify(currentToken, null, 2));
+        }
+      } catch (sdkError) {
+        console.error("❌ Facebook SDK检查错误:", sdkError);
+      }
+      
       // 可选: 先退出登录，确保每次都是全新登录 (主要用于测试)
       // await LoginManager.logOut();
 
+      console.log("🚀 开始Facebook权限请求...");
       const result = await LoginManager.logInWithPermissions([
         "public_profile",
         "email",
@@ -251,30 +284,40 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
       }
 
       console.log("✅ Facebook登录授权成功");
+      console.log("📋 Facebook登录结果:", JSON.stringify(result, null, 2));
+      
       const data = await AccessToken.getCurrentAccessToken();
+      console.log("📋 Facebook AccessToken 数据:", JSON.stringify(data, null, 2));
       
       // 确保 accessToken 存在且为字符串
       if (!data || !data.accessToken) {
         console.error("❌ 无法获取Facebook AccessToken");
+        console.error("❌ data对象:", JSON.stringify(data, null, 2));
         Alert.alert("登录失败", "无法获取有效的 Facebook AccessToken。");
         return;
       }
 
       const tokenString = data.accessToken.toString();
       console.log("🔑 Facebook Access Token:", tokenString);
+      console.log("🕒 Token到期时间:", data.expirationTime);
+      console.log("🔐 Token权限:", JSON.stringify(data.permissions, null, 2));
 
       // 获取 Facebook 用户信息
       console.log("👤 获取Facebook用户信息...");
       const facebookProfile = await fetchFacebookProfile(tokenString);
       
       try {
-        // 调用后端API进行Facebook登录
-        console.log("📡 调用后端API进行Facebook登录验证...");
-        const res = await loginApi.facebookLogin({
+        // 准备发送给后端的数据
+        const backendData = {
           access_token: tokenString,
           profile: facebookProfile
-        });
-        console.log("✅ 后端Facebook登录验证成功:", res);
+        };
+        console.log("📤 准备发送给后端的数据:", JSON.stringify(backendData, null, 2));
+        
+        // 调用后端API进行Facebook登录
+        console.log("📡 调用后端API进行Facebook登录验证...");
+        const res = await loginApi.facebookLogin(backendData);
+        console.log("✅ 后端Facebook登录验证成功:", JSON.stringify(res, null, 2));
         
         // 保存access_token到AsyncStorage
         if (res.access_token) {
@@ -285,7 +328,7 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
-        console.log("✅ 用户信息获取成功:", user);
+        console.log("✅ 用户信息获取成功:", JSON.stringify(user, null, 2));
         
         setUser(user);
         
@@ -297,9 +340,24 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ Facebook登录流程完成");
         
-      } catch (err) {
+      } catch (err: any) {
         console.error("❌ 后端Facebook登录验证失败:", err);
-        Alert.alert("登录失败", "服务器处理Facebook登录时出错，请稍后重试");
+        
+        // 详细记录错误信息
+        if (err.response) {
+          console.error("📊 响应状态:", err.response.status);
+          console.error("📊 响应头:", JSON.stringify(err.response.headers, null, 2));
+          console.error("📊 响应数据:", JSON.stringify(err.response.data, null, 2));
+        } else if (err.request) {
+          console.error("📡 请求信息:", JSON.stringify(err.request, null, 2));
+          console.error("❌ 没有收到响应");
+        } else {
+          console.error("❌ 错误配置:", err.message);
+        }
+        
+        console.error("❌ 完整错误对象:", JSON.stringify(err, null, 2));
+        
+        Alert.alert("登录失败", `服务器处理Facebook登录时出错: ${err.message || '未知错误'}`);
       }
 
     } catch (error: any) {
