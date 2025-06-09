@@ -37,7 +37,8 @@ try {
   console.log("Google Sign-in模块导入错误:", error);
 }
 
-// import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next";
+import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next";
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 const isDevelopment = __DEV__; // 开发模式检测
 const isSimulator = Platform.OS === 'ios' && Platform.isPad === false && __DEV__;
@@ -196,83 +197,204 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
   };
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  // useEffect(() => {
-  //   // 确保在 App 启动时初始化 SDK。这通常在您的 App.js 的顶层完成。
-  //   // 如果您在 app.json 中配置了 Facebook App ID，这里可以省略 Settings.setAppID 和 Settings.setDisplayName
-  //   Settings.initializeSDK();
+  useEffect(() => {
+    // 确保在 App 启动时初始化 SDK。这通常在您的 App.js 的顶层完成。
+    // 如果您在 app.json 中配置了 Facebook App ID，这里可以省略 Settings.setAppID 和 Settings.setDisplayName
+    Settings.initializeSDK();
 
-  //   // 在应用程序启动时检查是否已经登录（可选）
-  //   AccessToken.getCurrentAccessToken().then(data => {
-  //     if (data) {
-  //       console.log("已登录 Facebook，Token:", data.accessToken);
-  //       // 可以尝试获取用户信息
-  //       // fetchFacebookProfile(data.accessToken);
-  //     }
-  //   });
+    // 在应用程序启动时检查是否已经登录（可选）
+    AccessToken.getCurrentAccessToken().then(data => {
+      if (data) {
+        console.log("已登录 Facebook，Token:", data.accessToken);
+        // 可以尝试获取用户信息
+        // fetchFacebookProfile(data.accessToken);
+      }
+    });
 
-  // }, []);
+  }, []);
 
 
   // 辅助函数：获取 Facebook 用户资料 (可选，需要 'public_profile' 权限)
-  // const fetchFacebookProfile = async (token:string) => {
-  //   try {
-  //     const response = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
-  //     const profile = await response.json();
-  //     setUserInfo(profile);
-  //     console.log('Facebook User Info:', profile);
-  //   } catch (error) {
-  //     console.error('获取 Facebook 用户资料错误:', error);
-  //     Alert.alert("获取资料失败", "无法从 Facebook 获取用户详细资料，请检查网络或权限设置。");
-  //   }
-  // };
+  const fetchFacebookProfile = async (token:string) => {
+    try {
+      const response = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
+      const profile = await response.json();
+      setUserInfo(profile);
+      console.log('Facebook User Info:', profile);
+      return profile;
+    } catch (error) {
+      console.error('获取 Facebook 用户资料错误:', error);
+      Alert.alert("获取资料失败", "无法从 Facebook 获取用户详细资料，请检查网络或权限设置。");
+      throw error;
+    }
+  };
 
   // 处理Facebook登录
   const handleFacebookLogin = async () => {
-    // try {
-    //   // 可选: 先退出登录，确保每次都是全新登录 (主要用于测试)
-    //   // await LoginManager.logOut();
+    console.log("🚀 Facebook登录按钮被点击");
+    
+    try {
+      console.log("✅ 开始Facebook登录流程");
+      
+      // 可选: 先退出登录，确保每次都是全新登录 (主要用于测试)
+      // await LoginManager.logOut();
 
-    //   const result = await LoginManager.logInWithPermissions([
-    //     "public_profile",
-    //     "email",
-    //   ]);
+      const result = await LoginManager.logInWithPermissions([
+        "public_profile",
+        "email",
+      ]);
 
-    //   if (result.isCancelled) {
-    //     Alert.alert("登录取消", "用户取消了 Facebook 登录。");
-    //     return;
-    //   }
+      if (result.isCancelled) {
+        console.log("⏹️ 用户取消Facebook登录");
+        Alert.alert("登录取消", "用户取消了 Facebook 登录。");
+        return;
+      }
 
-    //   const data = await AccessToken.getCurrentAccessToken();
-    //   // 确保 accessToken 存在且为字符串
-    //   if (!data || !data.accessToken) {
-    //     Alert.alert("登录失败", "无法获取有效的 Facebook AccessToken。");
-    //     return;
-    //   }
+      console.log("✅ Facebook登录授权成功");
+      const data = await AccessToken.getCurrentAccessToken();
+      
+      // 确保 accessToken 存在且为字符串
+      if (!data || !data.accessToken) {
+        console.error("❌ 无法获取Facebook AccessToken");
+        Alert.alert("登录失败", "无法获取有效的 Facebook AccessToken。");
+        return;
+      }
 
-    //   const tokenString = data.accessToken.toString();
-    //   console.log("Facebook Access Token:", tokenString);
+      const tokenString = data.accessToken.toString();
+      console.log("🔑 Facebook Access Token:", tokenString);
 
-    //   // 直接获取 Facebook 用户信息并打印
-    //   await fetchFacebookProfile(tokenString);
+      // 获取 Facebook 用户信息
+      console.log("👤 获取Facebook用户信息...");
+      const facebookProfile = await fetchFacebookProfile(tokenString);
+      
+      try {
+        // 调用后端API进行Facebook登录
+        console.log("📡 调用后端API进行Facebook登录验证...");
+        const res = await loginApi.facebookLogin({
+          access_token: tokenString,
+          profile: facebookProfile
+        });
+        console.log("✅ 后端Facebook登录验证成功:", res);
+        
+        // 保存access_token到AsyncStorage
+        if (res.access_token) {
+          const token = `${res.token_type} ${res.access_token}`;
+          await AsyncStorage.setItem("token", token);
+          console.log("✅ Token已保存:", token);
+        }
+        
+        console.log("👤 获取用户信息...");
+        const user = await userApi.getProfile();
+        console.log("✅ 用户信息获取成功:", user);
+        
+        setUser(user);
+        
+        // 导航到主页
+        console.log("🏠 导航到主页...");
+        if (isModal && onClose) {
+          onClose();
+        }
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log("✅ Facebook登录流程完成");
+        
+      } catch (err) {
+        console.error("❌ 后端Facebook登录验证失败:", err);
+        Alert.alert("登录失败", "服务器处理Facebook登录时出错，请稍后重试");
+      }
 
-    //   // 移除之前的 Alert, 因为 fetchFacebookProfile 内部会处理打印和可能的错误提示
-    //   // 如果 fetchFacebookProfile 成功，信息已在控制台，如果失败，它会 Alert
-    //   // 可以选择在这里加一个通用成功提示，表明流程已执行
-    //   Alert.alert("操作完成", "已尝试 Facebook 登录并获取用户信息，请查看控制台输出。");
-
-    // } catch (error: any) {
-    //   console.error("Facebook 登录或获取资料时发生错误:", error);
-    //   let errorMessage = "发生未知错误";
-    //   if (error && typeof error.message === 'string') {
-    //     errorMessage = error.message;
-    //   }
-    //   Alert.alert("登录错误", `Facebook 操作失败：${errorMessage}`);
-    // }
+    } catch (error: any) {
+      console.error("❌ Facebook登录错误:", error);
+      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
+      
+      let errorMessage = "发生未知错误";
+      if (error && typeof error.message === 'string') {
+        errorMessage = error.message;
+      }
+      Alert.alert("登录错误", `Facebook 操作失败：${errorMessage}`);
+    }
   };
 
   // 处理Apple登录
-  const handleAppleLogin = () => {
-    // 处理Apple登录
+  const handleAppleLogin = async () => {
+    console.log("🚀 Apple登录按钮被点击");
+    
+    try {
+      console.log("✅ 开始Apple登录流程");
+      
+      // 检查Apple登录是否可用
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        console.error("❌ Apple登录不可用");
+        Alert.alert("登录失败", "Apple登录在此设备上不可用");
+        return;
+      }
+      
+      console.log("✅ Apple登录可用，开始认证...");
+      
+      // 执行Apple登录
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      
+      console.log("🎉 Apple登录成功:", JSON.stringify(credential, null, 2));
+      
+      // 构造用户信息
+      const appleUserData = {
+        user: credential.user,
+        email: credential.email,
+        fullName: credential.fullName,
+        identityToken: credential.identityToken,
+        authorizationCode: credential.authorizationCode,
+        state: credential.state,
+      };
+      
+      try {
+        // 调用后端API进行Apple登录
+        console.log("📡 调用后端API进行Apple登录验证...");
+        const res = await loginApi.appleLogin(appleUserData);
+        console.log("✅ 后端Apple登录验证成功:", res);
+        
+        // 保存access_token到AsyncStorage
+        if (res.access_token) {
+          const token = `${res.token_type} ${res.access_token}`;
+          await AsyncStorage.setItem("token", token);
+          console.log("✅ Token已保存:", token);
+        }
+        
+        console.log("👤 获取用户信息...");
+        const user = await userApi.getProfile();
+        console.log("✅ 用户信息获取成功:", user);
+        
+        setUser(user);
+        
+        // 导航到主页
+        console.log("🏠 导航到主页...");
+        if (isModal && onClose) {
+          onClose();
+        }
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log("✅ Apple登录流程完成");
+        
+      } catch (err) {
+        console.error("❌ 后端Apple登录验证失败:", err);
+        Alert.alert("登录失败", "服务器处理Apple登录时出错，请稍后重试");
+      }
+      
+    } catch (error: any) {
+      console.error("❌ Apple登录错误:", error);
+      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
+      
+      if (error.code === 'ERR_CANCELED') {
+        console.log("⏹️ 用户取消Apple登录");
+        // 用户取消，不显示错误
+      } else {
+        console.error("❌ 其他错误:", error.message);
+        Alert.alert("登录失败", `Apple登录出现错误: ${error.message || '未知错误'}`);
+      }
+    }
   };
 
 
