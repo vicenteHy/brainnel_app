@@ -273,7 +273,7 @@ function AppContent() {
           opacity: logoOpacity,
         }}>
           <Image
-            source={require("./assets/logo/logo2.png")}
+            source={require("./assets/logo/launch.png")}
             style={{
               width: 600,
               height: 800,
