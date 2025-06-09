@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   Alert
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // @ts-ignore
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useTranslation } from "react-i18next";
@@ -25,29 +26,36 @@ import { userApi } from "../../services";
 import useUserStore from "../../store/user";
 
 // 使用标准的ES6模块导入
-// import {
-//   GoogleSignin,
-//   statusCodes,
-// } from "@react-native-google-signin/google-signin";
+let GoogleSignin: any = null;
+let statusCodes: any = null;
+
+try {
+  const googleSigninModule = require("@react-native-google-signin/google-signin");
+  GoogleSignin = googleSigninModule.GoogleSignin;
+  statusCodes = googleSigninModule.statusCodes;
+} catch (error) {
+  console.log("Google Sign-in模块导入错误:", error);
+}
 
 // import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next";
 
 const isDevelopment = __DEV__; // 开发模式检测
+const isSimulator = Platform.OS === 'ios' && Platform.isPad === false && __DEV__;
 
-// 移出条件块，始终尝试配置 Google 登录
-// try {
-//   // 配置 Google 登录
-//   GoogleSignin.configure({
-//     iosClientId: "YOUR_IOS_CLIENT_ID_HERE.apps.googleusercontent.com", // iOS CLIENT_ID
-//     webClientId:
-//       "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com", // <-- 更新为此 Web Client ID
-//     scopes: ["profile", "email"],
-//     offlineAccess: false, // <-- 确保为 false 或移除
-//     forceCodeForRefreshToken: false, // <-- 确保为 false 或移除
-//   });
-// } catch (error) {
-//   console.log("Google Sign-in模块配置错误:", error); // 稍微修改了日志信息
-// }
+// 配置 Google 登录 - 自动从 GoogleService-Info.plist 读取配置
+if (GoogleSignin && !isSimulator) {
+  try {
+    GoogleSignin.configure({
+      // 不指定 iosClientId，让 SDK 自动从 GoogleService-Info.plist 读取
+      webClientId: "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com", // Web Client ID
+      scopes: ["profile", "email"],
+      offlineAccess: false,
+      forceCodeForRefreshToken: false,
+    });
+  } catch (error) {
+    console.log("Google Sign-in模块配置错误:", error);
+  }
+}
 
 type RootStackParamList = {
   Login: undefined;
@@ -110,47 +118,81 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
 
   // 处理谷歌登录
   const handleGoogleLogin = async () => {
-    // try {
-    //   if (!GoogleSignin || typeof GoogleSignin.signIn !== "function") {
-    //     console.log("Google Sign-in模块未正确初始化或配置失败");
-    //     return;
-    //   }
-    //   await GoogleSignin.hasPlayServices();
-    //   const userInfo = await GoogleSignin.signIn();
-    //   console.log("Google 登录成功:", userInfo);
-    //   try {
-    //     const res = await loginApi.googleLogin(userInfo);
-    //     const user = await userApi.getProfile();
-    //     setUser(user);
-    //     navigation.navigate("MainTabs", { screen: "Home" });
-    //   } catch (err) {
-    //     console.log("Google 登录失败:", err);
-    //     navigation.navigate("Login");
-    //   }
-    //   // 这里可以处理登录成功后的逻辑
-    //   // 比如导航到主页面或保存用户信息
-    //   // navigation.navigate("MainTabs", { screen: "Home" });
-    // } catch (error: any) {
-    //   console.log("Google 登录错误:", error);
-    //   // 开发模式下的错误处理
-    //   if (isDevelopment) {
-    //     console.log("开发模式：忽略Google登录错误，但已尝试真实登录"); // 修改日志，表明已尝试真实登录
-    //     return;
-    //   }
-    //   if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
-    //     console.log("用户取消登录");
-    //   } else if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
-    //     console.log("登录正在进行中");
-    //   } else if (
-    //     statusCodes &&
-    //     error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE
-    //   ) {
-    //     console.log("Play Services 不可用");
-    //   } else {
-    //     console.log("其他错误:", error.message);
-    //     navigation.navigate("Login");
-    //   }
-    // }
+    console.log("🚀 Google登录按钮被点击");
+    console.log("🔧 GoogleSignin模块:", GoogleSignin);
+    console.log("🔧 statusCodes:", statusCodes);
+    
+    try {
+      console.log("✅ 开始Google登录流程");
+      
+      if (!GoogleSignin || typeof GoogleSignin.signIn !== "function") {
+        console.error("❌ Google Sign-in模块未正确初始化或配置失败");
+        Alert.alert("登录失败", "Google登录服务未正确配置");
+        return;
+      }
+      
+      console.log("✅ Google Sign-in模块验证通过");
+      
+      // 检查Play Services是否可用（仅Android需要）
+      console.log("🔍 检查Play Services...");
+      await GoogleSignin.hasPlayServices();
+      console.log("✅ Play Services检查通过");
+      
+      // 执行登录
+      console.log("🔐 开始执行Google登录...");
+      const userInfo = await GoogleSignin.signIn();
+      console.log("🎉 Google 登录成功:", JSON.stringify(userInfo, null, 2));
+      
+      try {
+        // 调用后端API进行登录
+        console.log("📡 调用后端API进行登录验证...");
+        const res = await loginApi.googleLogin(userInfo);
+        console.log("✅ 后端登录验证成功:", res);
+        
+        // 保存access_token到AsyncStorage
+        if (res.access_token) {
+          const token = `${res.token_type} ${res.access_token}`;
+          await AsyncStorage.setItem("token", token);
+          console.log("✅ Token已保存:", token);
+        }
+        
+        console.log("👤 获取用户信息...");
+        const user = await userApi.getProfile();
+        console.log("✅ 用户信息获取成功:", user);
+        
+        setUser(user);
+        
+        // 导航到主页
+        console.log("🏠 导航到主页...");
+        if (isModal && onClose) {
+          onClose();
+        }
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log("✅ 登录流程完成");
+        
+      } catch (err) {
+        console.error("❌ 后端登录验证失败:", err);
+        Alert.alert("登录失败", "服务器处理Google登录时出错，请稍后重试");
+      }
+      
+    } catch (error: any) {
+      console.error("❌ Google 登录错误:", error);
+      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
+      
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("⏹️ 用户取消登录");
+        // 用户取消，不显示错误
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("⏳ 登录正在进行中");
+        Alert.alert("请稍候", "登录正在进行中，请不要重复操作");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("❌ Play Services 不可用");
+        Alert.alert("登录失败", "Google Play服务不可用，请更新Google Play服务后重试");
+      } else {
+        console.error("❌ 其他错误:", error.message);
+        Alert.alert("登录失败", `Google登录出现错误: ${error.message || '未知错误'}`);
+      }
+    }
   };
   const [userInfo, setUserInfo] = useState<any>(null);
 
@@ -314,31 +356,39 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
             <Text style={styles.subtitle}>{t("loginSubtitle")}</Text>
           </View>
 
-          {/* 登录按钮 */}
+          {/* 主要登录按钮 - Google */}
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[styles.loginButton, styles.primaryButton]}
             onPress={handleGoogleLogin}
           >
-            <View style={styles.loginButtonIcon}>
+            <View style={[styles.loginButtonIcon, styles.googleIcon]}>
               <Image
                 source={require("../../../assets/img/google.png")}
-                style={{ width: 20, height: 20 }}
+                style={{ width: 24, height: 24 }}
               />
             </View>
-            <Text style={styles.loginButtonText}>
-              Google
+            <Text style={[styles.loginButtonText, styles.primaryButtonText]}>
+              使用 Google 继续
             </Text>
           </TouchableOpacity>
 
+          {/* 分隔线 */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>或</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* 其他登录方式 */}
           <TouchableOpacity
             style={styles.loginButton}
             onPress={handleFacebookLogin}
           >
             <View style={[styles.loginButtonIcon, styles.facebookIcon]}>
-              <Text style={{ color: "#fff" }}>f</Text>
+              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: fontSize(16) }}>f</Text>
             </View>
             <Text style={styles.loginButtonText}>
-              Facebook
+              使用 Facebook 登录
             </Text>
           </TouchableOpacity>
 
@@ -349,29 +399,28 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
             >
               <View style={[styles.loginButtonIcon, styles.appleIconBg]}>
                 {/* @ts-ignore */}
-                <Icon name="apple" size={16} color="#fff" />
+                <Icon name="apple" size={18} color="#fff" />
               </View>
               <Text style={styles.loginButtonText}>
-                Apple
+                使用 Apple 登录
               </Text>
             </TouchableOpacity>
           )}
 
-
           <TouchableOpacity style={styles.loginButton} onPress={showEmailModal}>
             <View style={styles.loginButtonIcon}>
               {/* @ts-ignore */}
-              <Icon name="envelope" size={16} color="#666" />
+              <Icon name="envelope" size={18} color="#666" />
             </View>
-            <Text style={styles.loginButtonText}>Email</Text>
+            <Text style={styles.loginButtonText}>使用邮箱登录</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.loginButton} onPress={showPhoneModal}>
             <View style={styles.loginButtonIcon}>
               {/* @ts-ignore */}
-              <Icon name="phone" size={16} color="#666" />
+              <Icon name="phone" size={18} color="#666" />
             </View>
-            <Text style={styles.loginButtonText}>Phone</Text>
+            <Text style={styles.loginButtonText}>使用手机号登录</Text>
           </TouchableOpacity>
 
           {/* 忘记密码 */}
@@ -407,6 +456,7 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: "#fff",
   },
   safeAreaContent: {
     flex: 1,
@@ -419,124 +469,177 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     top: 15,
-    left: 10,
-    width: 24,
-    height: 24,
+    right: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
   },
   closeButtonText: {
-    color: "#000",
-    fontSize: fontSize(24),
+    color: "#fff",
+    fontSize: fontSize(20),
     fontWeight: "300",
   },
   blueHeader: {
-    backgroundColor: "#0066FF",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    backgroundColor: "#FF6B35", // 橙色品牌色
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    elevation: 8,
+    shadowColor: "#FF6B35",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   logo: {
-    fontSize: fontSize(28),
-    fontWeight: "bold",
+    fontSize: fontSize(34),
+    fontWeight: "700",
     color: "#fff",
-    marginBottom: 15,
+    marginBottom: 8,
+    textAlign: "center",
   },
   features: {
     flexDirection: "row",
-    gap: 16,
+    justifyContent: "center",
+    gap: 24,
+    marginTop: 16,
   },
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   featureIconContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 8,
-    width: 24,
-    height: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    borderRadius: 12,
+    width: 32,
+    height: 32,
     justifyContent: "center",
     alignItems: "center",
   },
   featureIcon: {
-    fontSize: fontSize(12),
+    fontSize: fontSize(16),
   },
   featureText: {
-    fontSize: fontSize(14),
+    fontSize: fontSize(15),
     color: "#fff",
+    fontWeight: "500",
   },
   loginContainer: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 40 : 20,
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    backgroundColor: "#fafafa",
   },
   titleContainer: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 40,
     paddingTop: 20,
     position: "relative",
   },
   subtitle: {
-    fontSize: fontSize(14),
+    fontSize: fontSize(16),
     color: "#666",
     textAlign: "center",
+    fontWeight: "400",
+    lineHeight: 22,
   },
   loginButton: {
     flexDirection: "row",
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#E8E8E8",
     alignItems: "center",
-    marginBottom: 12,
-    paddingHorizontal: 16,
+    marginBottom: 16,
+    paddingHorizontal: 20,
     backgroundColor: "#fff",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   loginButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
   },
   facebookIcon: {
-    backgroundColor: "#3b5998",
+    backgroundColor: "#1877F2",
   },
   appleIconBg: {
     backgroundColor: "#000",
   },
+  googleIcon: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+  },
   loginButtonText: {
     flex: 1,
     fontSize: fontSize(16),
-    color: "#000",
+    color: "#333",
     textAlign: "center",
     marginRight: 16,
+    fontWeight: "500",
+  },
+  primaryButton: {
+    backgroundColor: "#FF6B35",
+    borderColor: "#FF6B35",
+    marginTop: 8,
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   forgotPassword: {
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
   },
   forgotPasswordText: {
-    color: "#0066FF",
-    fontSize: fontSize(14),
+    color: "#FF6B35",
+    fontSize: fontSize(15),
+    fontWeight: "500",
   },
   termsContainer: {
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 16,
+    paddingBottom: 24,
   },
   terms: {
-    fontSize: fontSize(12),
-    color: "#666",
+    fontSize: fontSize(13),
+    color: "#888",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 20,
   },
   link: {
-    color: "#0066FF",
+    color: "#FF6B35",
+    fontWeight: "500",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E8E8E8",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: fontSize(14),
+    color: "#999",
+    fontWeight: "400",
   },
 });
 

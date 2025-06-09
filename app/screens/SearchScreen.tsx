@@ -186,19 +186,28 @@ export const SearchScreen = () => {
     setSearchText('');
   }, []);
 
+  // 检查是否为产品ID格式（纯数字，长度8-15位）
+  const isProductId = useCallback((text: string) => {
+    const trimmed = text.trim();
+    return /^\d{8,15}$/.test(trimmed);
+  }, []);
+
   // 处理搜索提交 - 使用useCallback优化函数引用
   const handleSearch = useCallback(() => {
     if (searchText.trim()) {
-      // 记录搜索事件
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logSearch(searchText.trim(), "search");
+      const trimmedText = searchText.trim();
+      const isIdSearch = isProductId(trimmedText);
       
-      saveSearchHistory(searchText.trim());
+      // 记录搜索事件，区分ID搜索和关键词搜索
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logSearch(trimmedText, isIdSearch ? "product_id_search" : "search");
+      
+      saveSearchHistory(trimmedText);
       Keyboard.dismiss();
       // 导航到搜索结果页面，并传递搜索关键词
-      navigation.navigate('SearchResult', { keyword: searchText.trim() });
+      navigation.navigate('SearchResult', { keyword: trimmedText });
     }
-  }, [searchText, saveSearchHistory, navigation]);
+  }, [searchText, saveSearchHistory, navigation, isProductId]);
 
   // 点击搜索标签
   const handleTagPress = (tag: string) => {
@@ -299,7 +308,10 @@ export const SearchScreen = () => {
                   <SearchIcon color="#373737" size={20} />
                 </View>
                 <TextInput
-                  style={styles.searchInput}
+                  style={[
+                    styles.searchInput,
+                    isProductId(searchText) && styles.productIdInput
+                  ]}
                   placeholder={t('searchProducts')}
                   placeholderTextColor="#777"
                   value={searchText}
@@ -308,6 +320,12 @@ export const SearchScreen = () => {
                   onSubmitEditing={handleSearch}
                   autoFocus={true}
                 />
+                {/* 产品ID搜索提示 */}
+                {isProductId(searchText) && (
+                  <View style={styles.productIdHint}>
+                    <Text style={styles.productIdHintText}>🔍 {t('productIdSearch')}</Text>
+                  </View>
+                )}
                 {searchText.length > 0 && (
                   <TouchableOpacity 
                     style={styles.clearButton} 
@@ -453,6 +471,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 15,
     height: 40,
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
@@ -460,6 +479,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     height: 40,
+  },
+  productIdInput: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#0066FF',
+    fontWeight: '600',
+  },
+  productIdHint: {
+    position: 'absolute',
+    top: -25,
+    right: 15,
+    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 102, 255, 0.3)',
+  },
+  productIdHintText: {
+    fontSize: 11,
+    color: '#0066FF',
+    fontWeight: '600',
   },
   clearButton: {
     padding: 2,

@@ -33,6 +33,7 @@ export type RootStackParamList = {
   SettingList: undefined;
   CountrySetting: { mySetting?: MySetting };
   MyAddress: undefined;
+  CartScreen: undefined;
   PaymentSuccessScreen: { paymentId?: string; PayerID?: string };
   PayError: undefined;
   MyAccount: undefined;

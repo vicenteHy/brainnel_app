@@ -502,4 +502,19 @@ export const styles = StyleSheet.create({
     paddingLeft: 10,
     marginBottom: 12,
   },
+  // 产品ID水印样式
+  productIdWatermark: {
+    marginTop: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  productIdText: {
+    fontSize: fontSize(11),
+    color: '#999',
+    fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
 });

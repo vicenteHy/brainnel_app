@@ -16,7 +16,9 @@ interface VipCardProps {
 export const VipCard: React.FC<VipCardProps> = ({ user }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
-  const progress = user.next_level_points_threshold > 0 ? Math.min((user.points / user.next_level_points_threshold) * 100, 100) : 0;
+  
+  const isMaxLevel = user?.vip_level === 5;
+  const progress = user.next_level_points_threshold > 0 ? Math.min((user.points / user.next_level_points_threshold) * 100, 100) : 100;
   const remaining = user.next_level_points_threshold - user.points;
 
   return (
@@ -30,18 +32,33 @@ export const VipCard: React.FC<VipCardProps> = ({ user }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.vipProgressBarOuter}>
-        <View style={[styles.vipProgressBarInner, { width: `${progress}%` }]} />
+        <View style={[
+          styles.vipProgressBarInner, 
+          { width: isMaxLevel ? '100%' : `${progress}%` }
+        ]} />
       </View>
       <View style={styles.vipProgressLabels}>
         <Text style={styles.vipProgressLabel}>VIP{user.vip_level}</Text>
-        <Text style={styles.vipProgressPercentage}>{progress.toFixed(0)}%</Text>
-        <Text style={styles.vipProgressLabel}>VIP{user.vip_level + 1}</Text>
+        {isMaxLevel ? (
+          <Text style={[styles.vipProgressLabel, { textAlign: 'right', flex: 1 }]}>
+            {t('profile.vip.max_level_progress')}
+          </Text>
+        ) : (
+          <>
+            <Text style={styles.vipProgressPercentage}>
+              {`${progress.toFixed(0)}%`}
+            </Text>
+            <Text style={styles.vipProgressLabel}>
+              VIP{user.vip_level + 1}
+            </Text>
+          </>
+        )}
       </View>
       <Text style={styles.vipBenefits}>
-        {t('profile.vip.benefits_summary_prefix')}
-        <Text style={styles.vipBenefitsHighlight}>{remaining}</Text>
-        {t('profile.vip.benefits_summary_suffix')}
-        <Text style={styles.vipBenefitsHighlight}>VIP{user.vip_level + 1}</Text>
+        {isMaxLevel 
+          ? t('profile.vip.max_level_message')
+          : `${t('profile.vip.benefits_summary_prefix')}${remaining}${t('profile.vip.benefits_summary_suffix')}VIP${user.vip_level + 1}`
+        }
       </Text>
     </View>
   );

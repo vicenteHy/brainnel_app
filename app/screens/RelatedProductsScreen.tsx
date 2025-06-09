@@ -426,12 +426,12 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
       InteractionManager.runAfterInteractions(() => {
         navigation.navigate("ProductDetail", {
           offer_id: product.offer_id,
-          searchKeyword: route.params?.product_name,
+          searchKeyword: product.subject_trans || product.subject || '',
           price: product.min_price,
         });
       });
     },
-    [navigation, route.params?.product_name]
+    [navigation]
   );
 
   // 返回上一页

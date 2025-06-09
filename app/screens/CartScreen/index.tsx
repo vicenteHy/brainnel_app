@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -19,6 +19,7 @@ import { deleteCartItem } from "../../services/api/cart";
 import { t } from "../../i18n";
 import { getSubjectTransLanguage } from "../../utils/languageUtils";
 import Toast from "react-native-toast-message";
+import { eventBus } from "../../utils/eventBus";
 
 // 导入拆分的组件和hooks
 import { CartItem, CartBottom, CartModals, LoginOverlay } from "./components";
@@ -79,6 +80,31 @@ export const CartScreen = () => {
       }
     }, [user_id])
   );
+
+  // 监听设置变更事件，刷新购物车数据以更新价格和货币
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('[CartScreen] 设置发生变更，刷新购物车数据');
+      
+      // 重新获取购物车数据以更新价格和货币显示
+      if (user_id) {
+        setTimeout(() => {
+          console.log('[CartScreen] 重新获取购物车数据');
+          getCart();
+        }, 300);
+      }
+    };
+
+    // 监听设置变更事件
+    eventBus.on('settingsChanged', handleSettingsChanged);
+    eventBus.on('refreshSetting', handleSettingsChanged);
+    
+    // 清理监听器
+    return () => {
+      eventBus.off('settingsChanged', handleSettingsChanged);
+      eventBus.off('refreshSetting', handleSettingsChanged);
+    };
+  }, [user_id, getCart]);
 
   // 统一的提示函数
   const showMinQuantityModal = (message: string) => {
@@ -448,6 +474,11 @@ export const CartScreen = () => {
     }
   };
 
+  // 处理返回按钮逻辑
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
   // 导航到登录页面
   const goToLogin = () => {
     navigation.navigate("Login");
@@ -461,7 +492,7 @@ export const CartScreen = () => {
         <View style={styles.headerContainer}>
           <TouchableOpacity 
             style={styles.backButton} 
-            onPress={() => navigation.goBack()}
+            onPress={handleBackPress}
             activeOpacity={1}
           >
             <BackIcon size={20} />
@@ -545,3 +576,5 @@ export const CartScreen = () => {
     </SafeAreaView>
   );
 };
+
+export { CartScreen };

@@ -45,10 +45,10 @@ export const ProductTab: React.FC<ProductTabProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f5f5f5",
   },
   listContainer: {
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 20,
   },
   emptyContainer: {

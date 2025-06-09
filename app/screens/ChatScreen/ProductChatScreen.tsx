@@ -21,6 +21,7 @@ import useUserStore from "../../store/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { t } from "../../i18n";
 import BackIcon from "../../components/BackIcon";
+import { loadChatMessages, saveChatMessages } from "./utils/storage";
 
 interface Message {
   id?: string;
@@ -45,6 +46,7 @@ interface ProductInfo {
 
 type RootStackParamList = {
   ProductChatScreen: ProductInfo;
+  ProductDetail: { productId: string; searchKeyword?: string };
   Login: undefined;
 };
 
@@ -59,6 +61,15 @@ export const ProductChatScreen = () => {
 
   const productInfo = route.params;
 
+  // 跳转到产品详情页
+  const navigateToProductDetail = () => {
+    if (productInfo?.offer_id) {
+      navigation.navigate("ProductDetail", {
+        productId: productInfo.offer_id.toString()
+      });
+    }
+  };
+
   // 自动滚动到底部
   useEffect(() => {
     if (messages.length > 0 && user.user_id) {
@@ -67,6 +78,18 @@ export const ProductChatScreen = () => {
       }, 100);
     }
   }, [messages]);
+
+  // 加载历史聊天记录
+  useEffect(() => {
+    const loadHistoryMessages = async () => {
+      if (productInfo?.offer_id && user.user_id) {
+        const historyMessages = await loadChatMessages("product", productInfo.offer_id.toString());
+        setMessages(historyMessages);
+      }
+    };
+    
+    loadHistoryMessages();
+  }, [productInfo?.offer_id, user.user_id]);
 
   // 设置默认消息
   useEffect(() => {
@@ -138,7 +161,8 @@ export const ProductChatScreen = () => {
     };
 
     // 添加用户消息
-    setMessages(prev => [...prev, newMessage]);
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
     setInputText("");
 
     // 保存产品咨询历史
@@ -161,7 +185,13 @@ export const ProductChatScreen = () => {
         id: `product-reply-${Date.now()}`,
       };
       
-      setMessages(prev => [...prev, replyMessage]);
+      const finalMessages = [...updatedMessages, replyMessage];
+      setMessages(finalMessages);
+      
+      // 保存聊天记录
+      if (productInfo?.offer_id) {
+        await saveChatMessages(finalMessages, "product", productInfo.offer_id.toString());
+      }
     } catch (error) {
       const errorMessage: Message = {
         mimetype: "text/plain",
@@ -175,7 +205,13 @@ export const ProductChatScreen = () => {
         timestamp: new Date(),
         id: `product-error-${Date.now()}`,
       };
-      setMessages(prev => [...prev, errorMessage]);
+      const errorMessages = [...updatedMessages, errorMessage];
+      setMessages(errorMessages);
+      
+      // 保存聊天记录（包括错误消息）
+      if (productInfo?.offer_id) {
+        await saveChatMessages(errorMessages, "product", productInfo.offer_id.toString());
+      }
     } finally {
       setSending(false);
     }
@@ -309,7 +345,17 @@ export const ProductChatScreen = () => {
               <Text style={styles.headerTitle}>
                 {t("chat.product_inquiry", "商品咨询")}
               </Text>
-              <View style={styles.headerRight} />
+              <TouchableOpacity 
+                style={styles.headerRight} 
+                onPress={navigateToProductDetail}
+                activeOpacity={0.7}
+              >
+                <View style={styles.detailButton}>
+                  <Text style={styles.detailButtonText}>
+                    {t("chat.product_detail_button", "详情")}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* 聊天记录 */}
@@ -389,8 +435,31 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   headerRight: {
-    width: 36,
+    width: 60,
     height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  detailButton: {
+    backgroundColor: "#FF6F30",
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FF6F30",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  detailButtonText: {
+    color: "white",
+    fontSize: customRF(12),
+    fontWeight: "600",
   },
   welcomeContainer: {
     alignItems: "center",

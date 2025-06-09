@@ -16,7 +16,10 @@ class AvatarCacheService {
   private static instance: AvatarCacheService;
 
   private constructor() {
-    this.initializeDirectory();
+    // 异步初始化，不阻塞构造函数
+    this.initializeDirectory().catch(error => {
+      console.warn('[AvatarCache] 初始化目录失败，将在使用时重试:', error);
+    });
   }
 
   public static getInstance(): AvatarCacheService {
@@ -44,6 +47,13 @@ class AvatarCacheService {
     try {
       if (!serverUrl || !userId) {
         return null;
+      }
+
+      // 确保目录存在
+      const directoryReady = await this.ensureDirectoryExists();
+      if (!directoryReady) {
+        console.warn('[AvatarCache] 目录创建失败，跳过缓存');
+        return serverUrl;
       }
 
       // 检查是否有缓存记录
@@ -80,7 +90,8 @@ class AvatarCacheService {
       }
 
       // 从服务器下载并缓存头像
-      return await this.downloadAndCacheAvatar(userId, serverUrl);
+      const cachedUri = await this.downloadAndCacheAvatar(userId, serverUrl);
+      return cachedUri || serverUrl;
     } catch (error) {
       console.error('[AvatarCache] 获取缓存头像失败:', error);
       return serverUrl; // 如果缓存失败，返回原始URL
@@ -92,13 +103,31 @@ class AvatarCacheService {
     try {
       console.log('[AvatarCache] 从服务器下载头像:', serverUrl);
       
+      // 确保缓存目录存在
+      const directoryReady = await this.ensureDirectoryExists();
+      if (!directoryReady) {
+        console.warn('[AvatarCache] 目录创建失败，返回原始URL');
+        return serverUrl;
+      }
+      
+      // 验证URL格式
+      if (!this.isValidUrl(serverUrl)) {
+        console.warn('[AvatarCache] 无效的URL格式:', serverUrl);
+        return serverUrl;
+      }
+      
       // 生成本地文件名
       const fileExtension = this.getFileExtension(serverUrl);
       const fileName = `avatar_${userId}_${Date.now()}${fileExtension}`;
       const localUri = AVATAR_CACHE_DIRECTORY + fileName;
 
-      // 下载文件
-      const downloadResult = await FileSystem.downloadAsync(serverUrl, localUri);
+      // 下载文件（设置10秒超时）
+      const downloadPromise = FileSystem.downloadAsync(serverUrl, localUri);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Download timeout')), 10000);
+      });
+      
+      const downloadResult = await Promise.race([downloadPromise, timeoutPromise]);
       
       if (downloadResult.status === 200) {
         // 保存缓存记录
@@ -170,6 +199,35 @@ class AvatarCacheService {
       }
     } catch (error) {
       console.error('[AvatarCache] 清除所有缓存失败:', error);
+    }
+  }
+
+  // 确保目录存在
+  private async ensureDirectoryExists(): Promise<boolean> {
+    try {
+      const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
+        console.log('[AvatarCache] 重新创建头像缓存目录');
+      }
+      return true;
+    } catch (error) {
+      console.error('[AvatarCache] 确保目录存在失败:', error);
+      return false;
+    }
+  }
+
+  // 验证URL格式
+  private isValidUrl(url: string): boolean {
+    try {
+      if (!url || typeof url !== 'string') {
+        return false;
+      }
+      
+      // 检查是否是有效的HTTP/HTTPS URL
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch {
+      return false;
     }
   }
 

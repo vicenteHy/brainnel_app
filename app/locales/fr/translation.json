@@ -77,6 +77,8 @@
   "monthlySales": "Ventes mensuelles",
   "search": "Rechercher",
   "searchPlaceholder": "Rechercher des produits",
+  "productIdSearch": "ID Produit",
+  "searchingProductId": "Recherche ID Produit:",
   "cancel": "Annuler",
   "searchHistory": "Historique de recherche",
   "hotSearch": "Recherches populaires",
@@ -138,6 +140,7 @@
       "welcome_message": "Vous voulez en savoir plus sur nos produits ? Rejoignez la discussion 😊",
       "welcome_time": "17h43",
       "read_status": "Lu",
+      "product_detail_button": "Détails",
       "no_product_inquiries": "Aucune demande produit enregistrée",
       "product_inquiry_hint": "Commencez votre première consultation produit en cliquant sur le bouton de consultation dans la page de détails du produit"
   },
@@ -891,7 +894,10 @@
         "view_benefits": "Avantages",
         "benefits_summary_prefix": "Il te reste ",
         "benefits_summary_suffix": " points pour atteindre ",
-        "benefits_summary": "Il te reste {{amount}} points pour atteindre VIP{{level}}"
+        "benefits_summary": "Il te reste {{amount}} points pour atteindre VIP{{level}}",
+        "max_level_title": "VIP Suprême",
+        "max_level_message": "Félicitations ! Vous avez atteint le niveau VIP le plus élevé et profitez de tous les avantages premium",
+        "max_level_progress": "Niveau Maximum Atteint"
       },
       "balance": {
         "title": "Solde",

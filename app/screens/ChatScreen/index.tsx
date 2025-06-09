@@ -119,11 +119,7 @@ export const ChatScreen = () => {
                   <BackIcon size={20} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{t("chat.title")}</Text>
-                <View style={styles.headerRight}>
-                  <TouchableOpacity style={styles.moreButton}>
-                    <Text style={styles.moreButtonText}>⋯</Text>
-                  </TouchableOpacity>
-                </View>
+                <View style={styles.headerRight} />
               </View>
               
               <TabBar
@@ -219,14 +215,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginLeft: 12,
     flex: 1,
-  },
-  moreButton: {
-    padding: 8,
-  },
-  moreButtonText: {
-    fontSize: 20,
-    color: "#333",
-    fontWeight: "600",
   },
   headerRight: {
     width: 44,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -26,6 +27,7 @@ import { getSubjectTransLanguage } from "../utils/languageUtils";
 import Toast from "react-native-toast-message";
 import { getCurrentLanguage } from "../i18n";
 import useAnalyticsStore from "../store/analytics";
+import { eventBus } from "../utils/eventBus";
 
 import { IconComponent, ProductSkeleton, ProductItem } from "./SearchResultScreen/components";
 import { useSearchProducts, useSearchFilters } from "./SearchResultScreen/hooks";
@@ -48,6 +50,12 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const flatListRef = useRef<FlatList>(null);
   const userStore = useUserStore();
   const [showSkeleton, setShowSkeleton] = useState(true);
+  
+  // 检查是否为产品ID搜索
+  const isProductIdSearch = useMemo(() => {
+    const keyword = searchText.trim();
+    return /^\d{8,15}$/.test(keyword);
+  }, [searchText]);
   const LANGUAGE_KEY = '@app_language';
   const [searchParams, setSearchParams] = useState<ProductParams>({
     keyword: route.params?.keyword || "",
@@ -101,8 +109,8 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       
       const fetchData = async () => {
         try {
-          setLoading(true);
           const res = await searchProducts(newParams);
+          console.log('[SearchResult] 初始搜索完成, 产品数量:', res?.products?.length || 0);
         } catch (error) {
           console.error("Error fetching products:", error);
         } finally {
@@ -114,9 +122,11 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       fetchData();
     }
     if (route.params?.category_id) {
+      setSearchText(""); // 清空搜索框显示
       setShowSkeleton(true);
       const newParams = {
         ...searchParams,
+        keyword: "", // 清空关键词，因为这是分类搜索
         category_id: route.params.category_id,
         page: 1,
       };
@@ -124,8 +134,8 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       
       const fetchData = async () => {
         try {
-          setLoading(true);
           const res = await searchProducts(newParams);
+          console.log('[SearchResult] 分类搜索完成, 产品数量:', res?.products?.length || 0);
         } catch (error) {
           console.error("Error fetching products:", error);
         } finally {
@@ -137,6 +147,50 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       fetchData();
     }
   }, [route.params?.keyword, route.params?.category_id]);
+
+  // 监听设置变更事件，刷新搜索结果以更新价格和多语言显示
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('[SearchResultScreen] 设置发生变更，刷新搜索结果');
+      
+      // 重新执行搜索以获取更新的数据
+      setTimeout(() => {
+        console.log('[SearchResultScreen] 重新执行搜索');
+        
+        // 如果是关键词搜索
+        if (searchText.trim()) {
+          const newParams = {
+            ...searchParams,
+            keyword: searchText.trim(),
+            page: 1,
+          };
+          setSearchParams(newParams);
+          searchProducts(newParams);
+        } 
+        // 如果是分类搜索
+        else if (route.params?.category_id) {
+          const newParams = {
+            ...searchParams,
+            keyword: "",
+            category_id: route.params.category_id,
+            page: 1,
+          };
+          setSearchParams(newParams);
+          searchProducts(newParams);
+        }
+      }, 300);
+    };
+
+    // 监听设置变更事件
+    eventBus.on('settingsChanged', handleSettingsChanged);
+    eventBus.on('refreshSetting', handleSettingsChanged);
+    
+    // 清理监听器
+    return () => {
+      eventBus.off('settingsChanged', handleSettingsChanged);
+      eventBus.off('refreshSetting', handleSettingsChanged);
+    };
+  }, [searchText, searchParams, route.params?.category_id, searchProducts]);
 
   const handleSearch = useCallback(() => {
     if (searchText.trim()) {
@@ -199,12 +253,20 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       <View style={styles.emptyContainer}>
         <IconComponent name="search-outline" size={48} color="#ccc" />
         <Text style={styles.emptyText}>
-          {t("noResults")} "{searchText}"
+          {route.params?.category_id 
+            ? t("noCategoryResults") || "该分类暂无商品"
+            : `${t("noResults")} "${searchText}"`
+          }
         </Text>
-        <Text style={styles.emptySubtext}>{t("tryDifferentKeywords")}</Text>
+        <Text style={styles.emptySubtext}>
+          {route.params?.category_id 
+            ? t("tryOtherCategories") || "请尝试其他分类"
+            : t("tryDifferentKeywords")
+          }
+        </Text>
       </View>
     ),
-    [searchText, t]
+    [searchText, t, route.params?.category_id]
   );
 
   const renderItem = useCallback(({ item, index }: { item: any; index: number }) => {
@@ -244,23 +306,17 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const renderFooter = useCallback(() => {
     if (loadingMore) {
       return (
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          paddingHorizontal: 8,
-          width: '100%'
-        }}>
-          <View style={{ width: '48%' }}>
-            <ProductSkeleton />
-          </View>
-          <View style={{ width: '48%' }}>
-            <ProductSkeleton />
-          </View>
+        <View style={styles.loadMoreSkeletonContainer}>
+          {Array(6).fill(null).map((_, index) => (
+            <View key={`loading-skeleton-${index}`} style={styles.loadMoreSkeletonItem}>
+              <ProductSkeleton />
+            </View>
+          ))}
         </View>
       );
     }
     
-    if (!hasMore) {
+    if (!hasMore && products.length > 0) {
       return (
         <View style={styles.footerContainer}>
           <Text style={styles.footerText}>{t("noMoreData")}</Text>
@@ -287,22 +343,14 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     [handleTabChange, originalProducts, setProducts, scrollToTop]
   );
 
-  const renderSkeletonGrid = useCallback(() => {
-    const skeletonArray = Array(8).fill(null);
-    
+  const renderLoadingSpinner = useCallback(() => {
     return (
-      <View style={styles.productGrid}>
-        <FlatList
-          data={skeletonArray}
-          renderItem={() => <ProductSkeleton />}
-          keyExtractor={(_, index) => `skeleton-${index}`}
-          numColumns={2}
-          scrollEnabled={false}
-          contentContainerStyle={styles.productGrid}
-        />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6F30" />
+        <Text style={styles.loadingText}>{t("loading") || "加载中..."}</Text>
       </View>
     );
-  }, []);
+  }, [t]);
 
   const ensureEvenItems = useCallback((): (Product | any)[] => {
     if (products.length % 2 !== 0) {
@@ -420,6 +468,16 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
 
           {/* 搜索结果 */}
           <View style={styles.resultsContainer}>
+            {/* 产品ID搜索提示 */}
+            {isProductIdSearch && (
+              <View style={styles.productIdSearchHint}>
+                <IconComponent name="barcode-outline" size={18} color="#0066FF" />
+                <Text style={styles.productIdSearchText}>
+                  {t('searchingProductId')} <Text style={styles.productIdValue}>{searchText}</Text>
+                </Text>
+              </View>
+            )}
+            
             {/* 搜索结果标题栏和排序选项 */}
             {isFilterVisible && (
               <View style={styles.resultsHeader}>
@@ -553,7 +611,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
             
             {/* 加载指示器或产品列表 */}
             {loading && showSkeleton ? (
-              renderSkeletonGrid()
+              renderLoadingSpinner()
             ) : (
               <>
                 <FlatList
@@ -567,7 +625,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                     paddingBottom: 15,
                     backgroundColor: "transparent",
                   }}
-                  ListEmptyComponent={renderEmptyList}
+                  ListEmptyComponent={!loading && !showSkeleton ? renderEmptyList : null}
                   ListFooterComponent={renderFooter}
                   showsVerticalScrollIndicator={false}
                   initialNumToRender={8}

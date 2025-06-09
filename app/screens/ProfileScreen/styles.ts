@@ -895,6 +895,21 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 8,
   },
+  vipMaxLevelTag: {
+    backgroundColor: '#FFD700',
+    color: '#4B0000',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginRight: 8,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   vipCardLink: {
     fontSize: 12,
     color: '#999',
@@ -912,6 +927,16 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FF6F30',
     borderRadius: 3,
   },
+  vipMaxLevelProgressBar: {
+    height: '100%',
+    backgroundColor: '#FFD700',
+    borderRadius: 3,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   vipProgressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -927,6 +952,11 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     left: '48%' // Adjust to center
+  },
+  vipMaxLevelLabel: {
+    fontSize: 10,
+    color: '#FFD700',
+    fontWeight: 'bold',
   },
   vipBenefits: {
     fontSize: 12,

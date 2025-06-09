@@ -5,6 +5,7 @@ export interface PreloadedData {
   products: Product[];
   timestamp: number;
   expiry: number; // 缓存过期时间 (ms)
+  userId?: string; // 记录获取数据时的用户ID
 }
 
 const PRELOAD_CACHE_KEY = '@app_preload_recommendations';
@@ -30,15 +31,22 @@ class PreloadService {
   public async startPreloading(userId?: string): Promise<void> {
     console.log('[PreloadService] 开始预加载推荐产品', { userId });
     
-    // 检查是否已有缓存
+    // 检查是否已有缓存且用户ID匹配
     const cachedData = await this.getCachedData();
-    if (cachedData && Date.now() < cachedData.expiry) {
+    if (cachedData && Date.now() < cachedData.expiry && cachedData.userId === userId) {
       console.log('[PreloadService] 使用缓存数据', { 
         count: cachedData.products.length,
-        cacheAge: Date.now() - cachedData.timestamp
+        cacheAge: Date.now() - cachedData.timestamp,
+        userId: cachedData.userId
       });
       this.cachedData = cachedData;
       return;
+    } else if (cachedData && cachedData.userId !== userId) {
+      console.log('[PreloadService] 缓存用户ID不匹配，清除缓存', {
+        cachedUserId: cachedData.userId,
+        requestUserId: userId
+      });
+      await this.clearCache();
     }
 
     // 如果已经在预加载中，不重复启动
@@ -56,7 +64,8 @@ class PreloadService {
       const preloadedData: PreloadedData = {
         products,
         timestamp: Date.now(),
-        expiry: Date.now() + CACHE_DURATION
+        expiry: Date.now() + CACHE_DURATION,
+        userId
       };
       
       this.cachedData = preloadedData;
@@ -77,14 +86,25 @@ class PreloadService {
    * 获取预加载的推荐产品
    */
   public async getPreloadedRecommendations(userId?: string): Promise<Product[]> {
-    console.log('[PreloadService] 获取预加载数据');
+    console.log('[PreloadService] 获取预加载数据', { requestUserId: userId });
     
-    // 如果有缓存且未过期，直接返回
+    // 如果有缓存且未过期，检查用户ID是否匹配
     if (this.cachedData && Date.now() < this.cachedData.expiry) {
-      console.log('[PreloadService] 返回缓存数据', { 
-        count: this.cachedData.products.length 
-      });
-      return this.cachedData.products;
+      // 检查缓存的用户ID是否与请求的用户ID匹配
+      if (this.cachedData.userId === userId) {
+        console.log('[PreloadService] 返回缓存数据 - 用户ID匹配', { 
+          count: this.cachedData.products.length,
+          cachedUserId: this.cachedData.userId
+        });
+        return this.cachedData.products;
+      } else {
+        console.log('[PreloadService] 缓存数据用户ID不匹配，需要重新加载', {
+          cachedUserId: this.cachedData.userId,
+          requestUserId: userId
+        });
+        // 用户ID不匹配，清除缓存，重新加载
+        await this.clearCache();
+      }
     }
 
     // 如果正在预加载中，等待完成
@@ -108,7 +128,8 @@ class PreloadService {
       const preloadedData: PreloadedData = {
         products,
         timestamp: Date.now(),
-        expiry: Date.now() + CACHE_DURATION
+        expiry: Date.now() + CACHE_DURATION,
+        userId
       };
       
       this.cachedData = preloadedData;

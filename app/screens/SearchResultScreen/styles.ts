@@ -112,6 +112,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  loadingText: {
+    fontSize: fontSize(16),
+    color: "#666",
+    marginTop: 12,
+  },
   productGrid: {
     padding: 8,
   },
@@ -363,5 +368,40 @@ export const styles = StyleSheet.create({
   productColumnWrapper: {
     justifyContent: 'space-between',
     paddingHorizontal: 8,
+  },
+  loadMoreSkeletonContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingTop: 8,
+  },
+  loadMoreSkeletonItem: {
+    width: '48%',
+    marginBottom: 8,
+  },
+  // 产品ID搜索提示样式
+  productIdSearchHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+    marginHorizontal: 8,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#0066FF',
+  },
+  productIdSearchText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+    flex: 1,
+  },
+  productIdValue: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontWeight: '600',
+    color: '#0066FF',
   },
 });

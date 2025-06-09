@@ -35,6 +35,7 @@ import * as FileSystem from "expo-file-system";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCategoryImageSource } from "../../utils/categoryImageUtils";
+import { eventBus } from "../../utils/eventBus";
 
 // 导入拆分的组件
 import {
@@ -471,6 +472,49 @@ export const HomeScreen = () => {
       }
     }
   }, [userStore.user?.user_id, selectedCategoryId, refreshPageData, hasUserDismissedLoginModal]);
+
+  // 监听设置变更事件，强制刷新首页数据
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('[HomeScreen] 设置发生变更，强制刷新首页数据');
+      
+      // 强制刷新当前页面的数据
+      if (selectedCategoryId === -1) {
+        // 如果当前在推荐页面，刷新推荐数据
+        setTimeout(() => {
+          console.log('[HomeScreen] 刷新推荐页面数据');
+          refreshPageData(-1);
+        }, 300);
+      } else if (selectedCategoryId > 0) {
+        // 如果当前在分类页面，刷新分类数据
+        setTimeout(() => {
+          console.log('[HomeScreen] 刷新分类页面数据:', selectedCategoryId);
+          refreshPageData(selectedCategoryId);
+        }, 300);
+      }
+      
+      // 重新获取一级类目（可能因为语言变更需要重新获取）
+      setTimeout(async () => {
+        try {
+          console.log('[HomeScreen] 重新获取一级类目');
+          const res = await productApi.getFirstCategory();
+          setCategories(res);
+        } catch (error) {
+          console.error('[HomeScreen] 重新获取一级类目失败:', error);
+        }
+      }, 500);
+    };
+
+    // 监听设置变更事件
+    eventBus.on('settingsChanged', handleSettingsChanged);
+    eventBus.on('refreshSetting', handleSettingsChanged);
+    
+    // 清理监听器
+    return () => {
+      eventBus.off('settingsChanged', handleSettingsChanged);
+      eventBus.off('refreshSetting', handleSettingsChanged);
+    };
+  }, [selectedCategoryId, refreshPageData]);
 
 
   // 渲染分类区域（性能优化版）

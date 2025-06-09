@@ -30,14 +30,8 @@
             "CFBundleURLSchemes": [
               "com.brainnel.app",
               "myapp",
-              "fb995035562798467"
-            ]
-          },
-          {
-            "CFBundleURLSchemes": [
-              "com.brainnel.app",
-              "myapp",
-              "fb995035562798467"
+              "fb995035562798467",
+              "com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec"
             ]
           }
         ],
@@ -119,6 +113,12 @@
           "displayName": "newBrainnelApp",
           "scheme": "fb995035562798467",
           "clientToken": "2005c337398b1c286e2a189e4e4417ac"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec"
         }
       ],
       "expo-web-browser"

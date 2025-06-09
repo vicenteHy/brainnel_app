@@ -86,11 +86,11 @@ export default function ProductDetailScreen() {
   };
 
   const handleCartPress = () => {
-    navigation.navigate("MainTabs", { screen: "Cart" });
+    navigation.navigate("CartScreen");
   };
 
   const handleProductPress = (item: any) => {
-    navigation.push("ProductDetail", {
+    navigation.navigate("ProductDetail", {
       offer_id: item.offer_id,
       price: item.min_price,
     });

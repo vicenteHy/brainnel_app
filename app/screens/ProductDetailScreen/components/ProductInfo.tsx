@@ -34,6 +34,15 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
             {/* {product?.sold_out} {t("sales")} */}
           </Text>
         </View>
+        
+        {/* 产品ID水印 */}
+        {product?.offer_id && (
+          <View style={styles.productIdWatermark}>
+            <Text style={styles.productIdText}>
+              ID: {product.offer_id}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

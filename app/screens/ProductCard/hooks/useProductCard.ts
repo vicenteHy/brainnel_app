@@ -453,9 +453,10 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
 
   const handleNavigateToCart = useCallback(() => {
     setDeleteModalVisible(false);
+    
     InteractionManager.runAfterInteractions(() => {
-      // 导航到Tab Navigator中的Cart tab
-      navigation.navigate("MainTabs", { screen: "Cart" });
+      // 导航到独立的CartScreen
+      navigation.navigate("CartScreen");
     });
   }, [navigation]);
 

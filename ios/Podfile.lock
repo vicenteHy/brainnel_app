@@ -17,7 +17,7 @@ PODS:
   - EXImageLoader (5.1.0):
     - ExpoModulesCore
     - React-Core
-  - Expo (53.0.10):
+  - Expo (53.0.11):
     - DoubleConversion
     - ExpoModulesCore
     - glog
@@ -2714,7 +2714,7 @@ SPEC CHECKSUMS:
   EXApplication: 63b87ca5204304007fac6b1be432f8afa3731c17
   EXConstants: 9f310f44bfedba09087042756802040e464323c0
   EXImageLoader: 4d3d3284141f1a45006cc4d0844061c182daf7ee
-  Expo: 8c19e656be789af96dd7a4bc21f22af4ec0dea34
+  Expo: 4e8bda07d30b024b1732f87843a5349a3ecc1316
   ExpoAdapterFBSDKNext: 16c905ebd6449c37bd5dfbb2784a678ce084b26e
   ExpoAdapterGoogleSignIn: b48e2797d1b090bd284b32ecb0de8f4a7bc45b13
   ExpoAppleAuthentication: 4d2e0c88a4463229760f1fbb9a937a810efb6863

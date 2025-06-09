@@ -120,9 +120,15 @@ function AppContent() {
         try {
           analyticsData.logAppLaunch(1);
           
-          // 在开屏动画期间开始预加载推荐产品
+          // 先尝试获取用户资料，然后开始预加载推荐产品
           console.log('[App] 开始预加载推荐产品');
-          preloadService.startPreloading().catch(error => {
+          const userProfileSuccess = await fetchUserProfile();
+          const currentUserId = userProfileSuccess && userStore.user?.user_id 
+            ? userStore.user.user_id.toString() 
+            : undefined;
+          
+          console.log('[App] 预加载推荐产品，用户ID:', currentUserId);
+          preloadService.startPreloading(currentUserId).catch(error => {
             console.error('[App] 预加载推荐产品失败:', error);
           });
           
@@ -144,12 +150,11 @@ function AppContent() {
 
   // 监听登录成功事件，刷新用户资料
   useEffect(() => {
-    fetchUserProfile();
-    const handleLoginSuccess = () => {
-      fetchUserProfile();
+    const handleLoginSuccess = async () => {
+      const success = await fetchUserProfile();
       // 登录成功后，重新预加载推荐产品（使用用户ID）
-      if (userStore.user?.user_id) {
-        console.log('[App] 登录成功，重新预加载推荐产品');
+      if (success && userStore.user?.user_id) {
+        console.log('[App] 登录成功，重新预加载推荐产品', { userId: userStore.user.user_id });
         preloadService.clearCache().then(() => {
           preloadService.startPreloading(userStore.user?.user_id?.toString());
         });

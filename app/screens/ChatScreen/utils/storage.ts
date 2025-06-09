@@ -3,28 +3,38 @@ import { Message, ProductInquiry } from "../types";
 
 export const saveChatMessages = async (
   messages: Message[],
-  type: "customer" | "product"
+  type: "customer" | "product",
+  productId?: string
 ): Promise<void> => {
   try {
-    if (type === "product") {
-      return;
+    const latestMessages = messages.slice(-50);
+    let key: string;
+    
+    if (type === "product" && productId) {
+      key = `@product_chat_messages_${productId}`;
+    } else {
+      key = "@customer_chat_messages";
     }
     
-    const latestMessages = messages.slice(-10);
-    const key = "@customer_chat_messages";
     await AsyncStorage.setItem(key, JSON.stringify(latestMessages));
   } catch (error) {
     console.error(`Error saving ${type} chat messages:`, error);
   }
 };
 
-export const loadChatMessages = async (type: "customer" | "product"): Promise<Message[]> => {
+export const loadChatMessages = async (
+  type: "customer" | "product",
+  productId?: string
+): Promise<Message[]> => {
   try {
-    if (type === "product") {
-      return [];
+    let key: string;
+    
+    if (type === "product" && productId) {
+      key = `@product_chat_messages_${productId}`;
+    } else {
+      key = "@customer_chat_messages";
     }
     
-    const key = "@customer_chat_messages";
     const savedMessages = await AsyncStorage.getItem(key);
     if (savedMessages) {
       const messages = JSON.parse(savedMessages);

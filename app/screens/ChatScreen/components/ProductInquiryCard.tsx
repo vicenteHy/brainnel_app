@@ -39,7 +39,7 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
         </View>
         
         <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={3}>
+          <Text style={styles.productName} numberOfLines={2}>
             {item.subject_trans || t("chat.product_name_unavailable", "商品名称不可用")}
           </Text>
           {item.min_price && (
@@ -53,10 +53,8 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
             </Text>
           )}
         </View>
-      </View>
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.continueButton} onPress={navigateToProductChat} activeOpacity={1}>
+        
+        <TouchableOpacity style={styles.continueButton} onPress={navigateToProductChat} activeOpacity={0.8}>
           <Text style={styles.continueButtonText}>
             {t("chat.continue_inquiry", "继续咨询")}
           </Text>
@@ -69,32 +67,9 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
 const styles = StyleSheet.create({
   productCard: {
     backgroundColor: "white",
-    borderRadius: 20,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  productContent: {
-    padding: 24,
-    alignItems: "center",
-  },
-  imageContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#f8f9fa",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-    overflow: "hidden",
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -102,60 +77,62 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
+    overflow: "hidden",
+  },
+  productContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  imageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: "#f8f9fa",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    marginRight: 12,
   },
   productImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
   },
   productInfo: {
-    alignItems: "center",
-    width: "100%",
+    flex: 1,
+    justifyContent: "center",
+    paddingRight: 12,
   },
   productName: {
-    fontSize: customRF(15),
+    fontSize: customRF(14),
     fontWeight: "600",
     color: "#2c3e50",
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 16,
-    paddingHorizontal: 10,
-  },
-  productPrice: {
-    fontSize: customRF(22),
-    fontWeight: "700",
-    color: "#e74c3c",
-    marginBottom: 8,
-  },
-  productId: {
-    fontSize: customRF(13),
-    color: "#95a5a6",
+    lineHeight: 20,
     marginBottom: 4,
   },
-  actionButtons: {
-    borderTopWidth: 1,
-    borderTopColor: "#ecf0f1",
-    padding: 16,
+  productPrice: {
+    fontSize: customRF(16),
+    fontWeight: "700",
+    color: "#e74c3c",
+    marginBottom: 2,
+  },
+  productId: {
+    fontSize: customRF(12),
+    color: "#95a5a6",
   },
   continueButton: {
     backgroundColor: "#FF6F30",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#FF6F30",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    minWidth: 80,
   },
   continueButtonText: {
-    fontSize: customRF(15),
+    fontSize: customRF(13),
     fontWeight: "600",
     color: "white",
   },

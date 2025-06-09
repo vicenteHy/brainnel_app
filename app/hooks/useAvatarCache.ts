@@ -13,6 +13,12 @@ export const useAvatarCache = (userId: string | number | undefined, serverUrl: s
         return;
       }
 
+      // 如果不是有效的URL，直接使用原始URL
+      if (typeof serverUrl === 'string' && (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://'))) {
+        setCachedAvatarUri(serverUrl);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
@@ -23,7 +29,7 @@ export const useAvatarCache = (userId: string | number | undefined, serverUrl: s
         );
         setCachedAvatarUri(cachedUri);
       } catch (err) {
-        console.error('[useAvatarCache] 加载缓存头像失败:', err);
+        console.warn('[useAvatarCache] 加载缓存头像失败，使用原始URL:', err);
         setError(err as Error);
         setCachedAvatarUri(serverUrl); // 使用原始URL作为备用
       } finally {

@@ -24,6 +24,7 @@ import { getSubCategoryTransLanguage } from "../utils/languageUtils";
 import useAnalyticsStore from "../store/analytics";
 import BackIcon from "../components/BackIcon";
 import { getCategoryImageSource } from "../utils/categoryImageUtils";
+import { eventBus } from "../utils/eventBus";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MENU_WIDTH = widthUtils(140, 140).width; // 增加菜单宽度
@@ -61,6 +62,33 @@ export const CategoryScreen = () => {
     if (activeMainCategory) {
       fetchSubCategories(activeMainCategory);
     }
+  }, [activeMainCategory]);
+
+  // 监听设置变更事件，刷新分类数据以更新多语言显示
+  useEffect(() => {
+    const handleSettingsChanged = () => {
+      console.log('[CategoryScreen] 设置发生变更，刷新分类数据');
+      
+      // 重新获取主分类和子分类数据以更新多语言显示
+      setTimeout(async () => {
+        console.log('[CategoryScreen] 重新获取分类数据');
+        await fetchMainCategories();
+        // 如果有活跃的主分类，也重新获取子分类
+        if (activeMainCategory) {
+          fetchSubCategories(activeMainCategory);
+        }
+      }, 300);
+    };
+
+    // 监听设置变更事件
+    eventBus.on('settingsChanged', handleSettingsChanged);
+    eventBus.on('refreshSetting', handleSettingsChanged);
+    
+    // 清理监听器
+    return () => {
+      eventBus.off('settingsChanged', handleSettingsChanged);
+      eventBus.off('refreshSetting', handleSettingsChanged);
+    };
   }, [activeMainCategory]);
 
   const sortCategoriesByPopularity = (categories: Category[]) => {

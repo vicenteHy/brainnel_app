@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>449517618313-9ctfhij5j4rrinchehq12027eoq00c8h.apps.googleusercontent.com</string>
+	<string>449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.449517618313-9ctfhij5j4rrinchehq12027eoq00c8h</string>
+	<string>com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>449517618313-s1bmot9r3ic4s0g84ff13b5uasn2l0nv.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.brainnel.app</string>
+	<string>uni.UNIC87CC93</string>
 	<key>PROJECT_ID</key>
 	<string>brainnel-7eead</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:449517618313:ios:3e9f674f16a8ca5174b258</string>
+	<string>1:449517618313:ios:6fc58230dac8900b74b258</string>
 </dict>
 </plist>

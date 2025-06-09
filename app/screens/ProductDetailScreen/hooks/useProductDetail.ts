@@ -252,7 +252,7 @@ export const useProductDetail = () => {
 
   useEffect(() => {
     getProductDetail();
-  }, []);
+  }, [route.params?.offer_id]);
 
   return {
     product,

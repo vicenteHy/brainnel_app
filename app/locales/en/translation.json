@@ -72,6 +72,8 @@
   "monthlySales": "ventes",
   "search": "Search",
   "searchPlaceholder": "Search products",
+  "productIdSearch": "Product ID",
+  "searchingProductId": "Searching Product ID:",
   "cancel": "Cancel",
   "searchHistory": "Search History",
   "hotSearch": "Hot Search",
@@ -133,6 +135,7 @@
       "welcome_message": "Want to know more about our products? Join the discussion 😊",
       "welcome_time": "5:43 PM",
       "read_status": "Read",
+      "product_detail_button": "Details",
       "no_product_inquiries": "No product inquiry records",
       "product_inquiry_hint": "Start your first product inquiry by clicking the inquiry button on the product details page"
   },
@@ -793,7 +796,10 @@
         "view_benefits": "View Benefits",
         "benefits_summary_prefix": "You need ",
         "benefits_summary_suffix": " more points to reach ",
-        "benefits_summary": "You need {{amount}} more points to reach VIP{{level}}"
+        "benefits_summary": "You need {{amount}} more points to reach VIP{{level}}",
+        "max_level_title": "Supreme VIP",
+        "max_level_message": "Congratulations! You've reached the highest VIP level and enjoy all premium benefits",
+        "max_level_progress": "Maximum Level Achieved"
       },
       "balance": {
         "title": "My Balance",

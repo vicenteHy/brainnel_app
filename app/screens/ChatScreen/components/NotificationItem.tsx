@@ -16,12 +16,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     <View
       style={styles.notificationItem}
     >
-      <View
-        style={[
-          styles.notificationDot,
-          item.is_read && styles.notificationDotRead,
-        ]}
-      />
       <View style={styles.notificationContent}>
         <View style={styles.notificationTitleContainer}>
           {item.icon && (
@@ -60,17 +54,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  notificationDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#ff0000",
-    marginRight: 15,
-    marginTop: 5,
-  },
-  notificationDotRead: {
-    backgroundColor: "#007a6d",
   },
   notificationContent: {
     flex: 1,

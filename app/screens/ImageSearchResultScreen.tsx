@@ -251,7 +251,6 @@ export const ImageSearchResultScreen = ({
   const searchInProgress = useRef(false);
   const [isImageSearch, setIsImageSearch] = useState(false);
   const searchImageInProgress = useRef(false);
-  const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
 
   // 获取初始图片URI
   const imageUri = useMemo(() => {
@@ -286,7 +285,6 @@ export const ImageSearchResultScreen = ({
       console.log("没有有效的图片URI，停止搜索。");
       setLoading(false);
       setShowSkeleton(false);
-      setIsImageSearchLoading(false);
       return;
     }
 
@@ -302,7 +300,6 @@ export const ImageSearchResultScreen = ({
       if (!isLoadMore) {
         setLoading(true);
         setShowSkeleton(true);
-        setIsImageSearchLoading(true);
       } else {
         setLoadingMore(true);
       }
@@ -361,7 +358,6 @@ export const ImageSearchResultScreen = ({
       setLoading(false);
       setLoadingMore(false);
       setShowSkeleton(false);
-      setIsImageSearchLoading(false);
       searchImageInProgress.current = false;
     }
   };
@@ -630,14 +626,13 @@ export const ImageSearchResultScreen = ({
     if (imageUri && !imageProcessed.current) {
       setLoading(true);
       setShowSkeleton(true);
-      setIsImageSearchLoading(true);
+      // 不在这里设置isImageSearchLoading，在searchByImage中处理
       setCurrentPage(1);
       console.log("useEffect: 图片URI存在且未处理，设置加载状态。");
     } else if (!imageUri) {
       console.log("useEffect: 没有图片URI，立即结束加载状态。");
       setLoading(false);
       setShowSkeleton(false);
-      setIsImageSearchLoading(false);
       return;
     }
 
@@ -929,16 +924,6 @@ export const ImageSearchResultScreen = ({
           </View>
         </View>
         
-        {/* 图片搜索全屏加载覆盖层 */}
-        {isImageSearchLoading && (
-          <View style={styles.fullScreenLoading}>
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#0066FF" />
-              <Text style={styles.loadingText}>{t("searchingImage") || "Searching image"}</Text>
-              <Text style={styles.loadingSubtext}>{t("pleaseWait") || "Please wait"}</Text>
-            </View>
-          </View>
-        )}
       </View>
     </SafeAreaView>
   );
@@ -1243,32 +1228,5 @@ const styles = StyleSheet.create({
   skeletonText: {
     backgroundColor: "#EAEAEA",
     borderRadius: 4,
-  },
-  fullScreenLoading: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  loadingText: {
-    fontSize: fontSize(18),
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  loadingSubtext: {
-    fontSize: fontSize(14),
-    color: "#666",
   },
 });
