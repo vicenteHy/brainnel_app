@@ -47,7 +47,7 @@
     <key>FacebookAutoLogAppEventsEnabled</key>
     <false/>
     <key>FacebookClientToken</key>
-    <string>2005c337398b1c286e2a189e4e4417ac</string>
+    <string>83c780425cf53d1e4529171beac9d450</string>
     <key>FacebookDisplayName</key>
     <string>newBrainnelApp</string>
     <key>ITSAppUsesNonExemptEncryption</key>
@@ -74,8 +74,6 @@
     <string>此应用程序需要访问您的相机以拍照。</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>此应用程序需要访问您的照片库以上传图片。</string>
-    <key>GIDClientID</key>
-    <string>449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec.apps.googleusercontent.com</string>
     <key>SKAdNetworkItems</key>
     <array>
       <dict>
