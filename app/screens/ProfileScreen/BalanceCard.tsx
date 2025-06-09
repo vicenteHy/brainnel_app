@@ -14,9 +14,10 @@ type RootStackParamList = {
 interface BalanceCardProps {
   balance: string;
   currency: string;
+  onRechargePress?: () => void;
 }
 
-export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency }) => {
+export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency, onRechargePress }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
 
@@ -33,7 +34,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency }) =
       <View style={styles.balanceActions}>
         <TouchableOpacity 
           style={styles.balanceButton} 
-          onPress={() => navigation.navigate('Recharge')}
+          onPress={onRechargePress || (() => navigation.navigate('Recharge'))}
           activeOpacity={0.8}
         >
           <View style={styles.balanceButtonContent}>

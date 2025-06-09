@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,45 +9,137 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import BackIcon from "../../components/BackIcon";
 import fontSize from "../../utils/fontsizeUtils";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../navigation/types';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import widthUtils from "../../utils/widthUtils";
+import { useBrowseHistoryStore, BrowseHistoryItem } from "../../store/browseHistory";
+import { useTranslation } from "react-i18next";
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ConfirmModal } from "../../components/ConfirmModal";
 
-const browseData = [
-  {
-    id: "1",
-    name: "商品名称示例",
-    time: "14:32",
-    price: 199.0,
-    image: "https://via.placeholder.com/60",
-  },
-  {
-    id: "2",
-    name: "另一商品示例",
-    time: "09:15",
-    price: 89.9,
-    image: "https://via.placeholder.com/60",
-  },
-  
-];
 
 export function BrowseHistoryScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const [date, setDate] = useState(new Date());
-
   const [show, setShow] = useState(false);
+  const [viewMode, setViewMode] = useState<'all' | 'date'>('all');
+  const [refreshing, setRefreshing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  const { 
+    items, 
+    loading, 
+    loadHistory, 
+    removeBrowseItem, 
+    clearHistory, 
+    getHistoryByDate 
+  } = useBrowseHistoryStore();
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
 
 
   const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShow(Platform.OS === "ios"); // iOS 会保持显示
+    setShow(Platform.OS === "ios");
     if (selectedDate) {
       setDate(selectedDate);
+      setViewMode('date');
     }
   };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadHistory();
+    setRefreshing(false);
+  };
+
+  const handleDeleteItem = (productId: string) => {
+    setItemToDelete(productId);
+    setShowDeleteModal(true);
+  };
+
+  const handleClearAll = () => {
+    setShowClearAllModal(true);
+  };
+
+  const confirmDeleteItem = () => {
+    if (itemToDelete) {
+      removeBrowseItem(itemToDelete);
+      setItemToDelete(null);
+    }
+    setShowDeleteModal(false);
+  };
+
+  const confirmClearAll = () => {
+    clearHistory();
+    setShowClearAllModal(false);
+  };
+
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('zh-CN', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return t('common.today');
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return t('common.yesterday');
+    } else {
+      return date.toLocaleDateString('zh-CN', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  };
+
+  const displayItems = viewMode === 'all' ? items : getHistoryByDate(date);
+
+  const renderItem = ({ item }: { item: BrowseHistoryItem }) => (
+    <TouchableOpacity 
+      style={styles.item}
+      onPress={() => navigation.navigate('ProductDetail', { productId: item.product_id })}
+    >
+      <Image source={{ uri: item.product_image }} style={styles.image} />
+      <View style={styles.info}>
+        <View style={styles.row}>
+          <Text style={styles.name} numberOfLines={2}>{item.product_name}</Text>
+          <TouchableOpacity 
+            style={styles.deleteButton}
+            onPress={() => handleDeleteItem(item.product_id)}
+          >
+            <Ionicons name="close-circle" size={20} color="#ccc" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.price}>{item.currency} {item.price.toFixed(2)}</Text>
+          <Text style={styles.time}>
+            {formatDate(item.browse_time)} {formatTime(item.browse_time)}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
 
 
@@ -63,16 +155,35 @@ export function BrowseHistoryScreen() {
           >
             <BackIcon size={fontSize(22)} />
           </TouchableOpacity>
-          <Text style={styles.title}>浏览历史</Text>
+          <Text style={styles.title}>{t('history.title')}</Text>
           <View style={styles.placeholder} />
         </View>
 
-        <TouchableOpacity
-          style={styles.dateInput}
-          onPress={() => setShow(true)}
-        >
-          <Text style={styles.dateText}>筛选浏览记录</Text>
-        </TouchableOpacity>
+        <View style={styles.filterContainer}>
+          <View style={styles.filterButtons}>
+            <TouchableOpacity
+              style={[styles.filterButton, viewMode === 'all' && styles.filterButtonActive]}
+              onPress={() => setViewMode('all')}
+            >
+              <Text style={[styles.filterButtonText, viewMode === 'all' && styles.filterButtonTextActive]}>
+                {t('common.all')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterButton, viewMode === 'date' && styles.filterButtonActive]}
+              onPress={() => setShow(true)}
+            >
+              <Text style={[styles.filterButtonText, viewMode === 'date' && styles.filterButtonTextActive]}>
+                {viewMode === 'date' ? date.toLocaleDateString('zh-CN') : t('history.filter_by_date')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {items.length > 0 && (
+            <TouchableOpacity style={styles.clearButton} onPress={handleClearAll}>
+              <Text style={styles.clearButtonText}>{t('history.clear_all')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {show && (
           <DateTimePicker
@@ -84,25 +195,65 @@ export function BrowseHistoryScreen() {
           />
         )}
 
-        <FlatList
-          data={browseData}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.item}>
-              <Image source={{ uri: item.image }} style={styles.image} />
-              <View style={styles.info}>
-                <View style={styles.row}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.price}>¥{item.price.toFixed(2)}</Text>
-                </View>
-                <Text style={styles.time}>浏览时间：{item.time}</Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF6F30" />
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={displayItems}
+            keyExtractor={(item) => `${item.product_id}_${item.browse_time}`}
+            contentContainerStyle={styles.list}
+            renderItem={renderItem}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#FF6F30']}
+                tintColor={'#FF6F30'}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="time-outline" size={64} color="#ccc" />
+                <Text style={styles.empty}>
+                  {viewMode === 'date' 
+                    ? t('history.no_records_for_date')
+                    : t('history.no_records')
+                  }
+                </Text>
+                <Text style={styles.emptySubtext}>
+                  {t('history.start_browsing')}
+                </Text>
               </View>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.empty}>当前日期没有浏览记录</Text>
-          }
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+        {/* Delete Item Modal */}
+        <ConfirmModal
+          visible={showDeleteModal}
+          title={t('common.delete')}
+          message={t('history.confirm_delete')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
+          onConfirm={confirmDeleteItem}
+          onCancel={() => setShowDeleteModal(false)}
+          isDestructive={true}
+        />
+
+        {/* Clear All Modal */}
+        <ConfirmModal
+          visible={showClearAllModal}
+          title={t('history.clear_all')}
+          message={t('history.confirm_clear_all')}
+          confirmText={t('history.clear_all')}
+          cancelText={t('common.cancel')}
+          onConfirm={confirmClearAll}
+          onCancel={() => setShowClearAllModal(false)}
+          isDestructive={true}
         />
       </View>
     </SafeAreaView>
@@ -112,24 +263,20 @@ export function BrowseHistoryScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   safeAreaContent: {
     flex: 1,
     paddingTop: 0,
   },
-  container: {
-    backgroundColor: "#f8f8f8",
-    flex: 1,
-  },
   header: {
-    paddingInline: 19,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "white",
     width: "100%",
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#e9ecef",
     shadowColor: "#000",
@@ -146,65 +293,134 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
     textAlign: "center",
+    color: '#333',
   },
   placeholder: {
     width: widthUtils(24,24).width,
   },
-
-  dateInput: {
-    padding: 20,
-    backgroundColor: "#fff",
-    marginBottom: 16,
+  filterContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  dateText: {
+  filterButtons: {
+    flexDirection: 'row',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    padding: 2,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginHorizontal: 2,
+  },
+  filterButtonActive: {
+    backgroundColor: '#FF6F30',
+  },
+  filterButtonText: {
+    fontSize: fontSize(14),
+    color: '#666',
+    fontWeight: '500',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  clearButtonText: {
+    fontSize: fontSize(14),
+    color: '#FF6F30',
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
     fontSize: fontSize(16),
-    color: "#333",
+    color: '#666',
+    marginTop: 12,
   },
   list: {
-    gap: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   item: {
     flexDirection: "row",
     backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   image: {
-    width: widthUtils(60,60).width,
-    height: widthUtils(60,60).height,
-    borderRadius: 6,
-    backgroundColor: "#eee",
+    width: widthUtils(70,70).width,
+    height: widthUtils(70,70).height,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
   },
   info: {
     flex: 1,
-    justifyContent: "center",
+    marginLeft: 12,
+    justifyContent: "space-between",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: 'center',
   },
   name: {
     fontSize: fontSize(16),
     fontWeight: "500",
+    color: '#333',
     flex: 1,
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 4,
   },
   price: {
-    fontSize: fontSize(14),
+    fontSize: fontSize(16),
     fontWeight: "bold",
-    color: "#e60012",
-    marginLeft: 8,
+    color: "#FF6F30",
   },
   time: {
     fontSize: fontSize(12),
-    color: "#888",
-    marginTop: 4,
+    color: "#999",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
   },
   empty: {
     textAlign: "center",
-    color: "#aaa",
-    fontSize: fontSize(15),
-    marginTop: 40,
+    color: "#999",
+    fontSize: fontSize(16),
+    fontWeight: '500',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    textAlign: "center",
+    color: "#ccc",
+    fontSize: fontSize(14),
+    marginTop: 8,
   },
 });

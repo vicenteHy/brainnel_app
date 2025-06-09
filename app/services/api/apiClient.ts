@@ -13,6 +13,7 @@ import {
   DEFAULT_HEADERS,
   STORAGE_KEYS,
 } from "../../constants/config";
+import i18n from "../../i18n";
 // import { Platform } from "react-native";
 
 // 定义响应类型接口
@@ -86,6 +87,13 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `${token}`;
     }
+    
+    // 添加当前语言到请求头
+    if (config.headers) {
+      const currentLanguage = i18n.language;
+      config.headers['Accept-Language'] = currentLanguage;
+    }
+    
     return config;
   },
   (error: AxiosError) => {

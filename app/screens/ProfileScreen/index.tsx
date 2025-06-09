@@ -6,6 +6,7 @@ import {
   Alert,
   StyleSheet,
   View,
+  Modal,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
@@ -22,6 +23,7 @@ import { ProfileHeader } from "./ProfileHeader";
 import { VipCard } from "./VipCard";
 import { BalanceCard } from "./BalanceCard";
 import { avatarCacheService } from "../../services/avatarCacheService";
+import RechargeScreen from "../BalanceScreen/RechargeScreen";
 
 type RootStackParamList = {
   SettingList: undefined;
@@ -42,6 +44,7 @@ export const ProfileScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showRechargeModal, setShowRechargeModal] = useState(false);
 
   const handleLogin = () => {
     navigation.navigate("Login");
@@ -108,6 +111,14 @@ export const ProfileScreen = () => {
       setUploadingAvatar(false);
     }
   };
+
+  const handleRechargePress = () => {
+    setShowRechargeModal(true);
+  };
+
+  const handleCloseRecharge = () => {
+    setShowRechargeModal(false);
+  };
   
   return (
           <LinearGradient
@@ -130,7 +141,11 @@ export const ProfileScreen = () => {
                   uploadingAvatar={uploadingAvatar}
                 />
                 <VipCard user={user} />
-                <BalanceCard balance={String(user.balance)} currency={user.currency} />
+                <BalanceCard 
+                  balance={String(user.balance)} 
+                  currency={user.currency} 
+                  onRechargePress={handleRechargePress}
+                />
               </>
             ) : (
               <LoggedOutView t={t} navigation={navigation} handleLogin={handleLogin} />
@@ -142,6 +157,16 @@ export const ProfileScreen = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Recharge Modal */}
+      <Modal
+        visible={showRechargeModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCloseRecharge}
+      >
+        <RechargeScreen onClose={handleCloseRecharge} />
+      </Modal>
     </LinearGradient>
   );
 };

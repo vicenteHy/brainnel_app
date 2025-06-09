@@ -63,6 +63,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
               <Image
                 source={{ uri: item as string }}
                 style={{ width: "100%", height: "100%" }}
+                resizeMode="contain"
               />
             </View>
           )}

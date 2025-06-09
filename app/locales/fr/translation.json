@@ -545,7 +545,16 @@
           "converting": "Conversion en cours...",
           "confirm": "Confirmer",
           "cancel": "Annuler",
-          "balance_remaining": "Vous avez encore un solde de"
+          "balance_remaining": "Vous avez encore un solde de",
+          "opening_wave": "Ouverture de l'application Wave...",
+          "complete_payment_wave": "Veuillez terminer votre paiement dans l'application Wave",
+          "opening_paypal": "Ouverture de PayPal...",
+          "complete_payment_paypal": "Veuillez terminer votre paiement dans PayPal",
+          "opening_payment": "Ouverture de la page de paiement...",
+          "complete_payment": "Veuillez terminer votre paiement",
+          "payment_success": "Paiement Réussi",
+          "payment_success_desc": "Votre compte a été rechargé avec succès",
+          "payment_failed_desc": "Paiement échoué, veuillez réessayer ou contacter le service client"
       },
       "phone_modal": {
           "title": "Recharger",
@@ -557,7 +566,8 @@
           "enter_phone": "Entrez votre numéro",
           "supported_operators": "Opérateurs pris en charge",
           "pay": "PAYER",
-          "payment_failed": "Paiement échoué, veuillez réessayer"
+          "payment_failed": "Paiement échoué, veuillez réessayer",
+          "phone_required": "Le numéro de téléphone est requis"
       }
   },
   "pay":{
@@ -818,7 +828,10 @@
       "allCategories": "Toutes les catégories",
       "categoryTab": "Catégorie",
       "success": "Succès",
-      "loading": "Chargement..."
+      "loading": "Chargement...",
+      "loading_more": "Chargement en cours...",
+      "no_more_data": "Plus de données",
+      "delete": "Supprimer"
   },
   "categories": {
       "daily_use": "Quotidien",
@@ -932,5 +945,41 @@
       "internationalShipping": "Expédition internationale",
       "actualAmount": "Montant réel",
       "payNow": "Payer maintenant"
+  },
+  "favorites": {
+      "title": "Mes Favoris",
+      "empty_title": "Aucun produit favori",
+      "empty_subtitle": "Commencez à naviguer et enregistrez vos produits préférés"
+  },
+  "history": {
+      "title": "Historique de Navigation",
+      "filter_by_date": "Filtrer par Date",
+      "clear_all": "Tout Effacer",
+      "confirm_delete": "Êtes-vous sûr de vouloir supprimer cet élément de votre historique de navigation ?",
+      "confirm_clear_all": "Êtes-vous sûr de vouloir effacer tout l'historique de navigation ? Cette action ne peut pas être annulée.",
+      "no_records": "Aucun historique de navigation",
+      "no_records_for_date": "Aucun historique de navigation pour la date sélectionnée",
+      "start_browsing": "Commencez à naviguer dans les produits pour voir votre historique ici"
+  },
+  "common": {
+      "all": "Tout",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "confirm": "Confirmer",
+      "login_required": "Connexion requise",
+      "error": "Erreur",
+      "success": "Succès",
+      "ok": "OK",
+      "something_went_wrong": "Quelque chose s'est mal passé",
+      "collapse": "Réduire",
+      "viewAll": "Voir tout",
+      "recommendations": "Recommandations",
+      "allCategories": "Toutes les catégories",
+      "categoryTab": "Catégorie",
+      "loading": "Chargement...",
+      "loading_more": "Chargement en cours...",
+      "no_more_data": "Plus de données"
   }
 } 

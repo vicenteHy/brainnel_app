@@ -29,6 +29,7 @@ import ProductCard from "../ProductCard";
 import { useProductDetail } from "./hooks/useProductDetail";
 import { useSimilarProducts } from "./hooks/useSimilarProducts";
 import { useImagePicker } from "./hooks/useImagePicker";
+import { useBrowseHistoryStore } from "../../store/browseHistory";
 import { styles } from "./styles";
 import widthUtils from "../../utils/widthUtils";
 
@@ -37,6 +38,7 @@ export default function ProductDetailScreen() {
   const { t } = useTranslation();
   const { updateCartItemCount } = useCartStore();
   const { user } = useUserStore();
+  const { addBrowseItem } = useBrowseHistoryStore();
 
   // 页面加载时更新购物车数量
   useEffect(() => {
@@ -44,6 +46,25 @@ export default function ProductDetailScreen() {
       updateCartItemCount();
     }
   }, [user?.user_id]);
+
+  // 添加浏览记录
+  useEffect(() => {
+    if (product && product.offer_id && product.subject_trans) {
+      const browseItem = {
+        product_id: product.offer_id,
+        product_name: product.subject_trans,
+        product_image: product.product_image_urls?.[0] || '',
+        price: product.price || 0,
+        currency: product.currency || user.currency || '$',
+        category_id: product.category_id,
+        seller_id: product.seller_open_id,
+      };
+      
+      addBrowseItem(browseItem).catch(error => {
+        console.warn('Failed to add browse history:', error);
+      });
+    }
+  }, [product, addBrowseItem, user.currency]);
 
   const {
     product,

@@ -30,23 +30,24 @@ export const SettingList = () => {
   const { t } = useTranslation();
   const [mySetting, setMySetting] = useState<MySetting>();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { user, clearUser, setUser } = useUserStore();
   const { logout } = useAuth();
   const getMySetting = async () => {
-    setIsLoading(true);
     try {
       const res = await settingApi.getMySetting();
       setMySetting(res);
     } catch (error) {
       console.warn('Failed to get user settings:', error);
-      // 如果获取设置失败，可以设置默认值或忽略
-    } finally {
-      setIsLoading(false);
+      // 第三方登录已经处理了首次登录设置，这里只记录错误
+      // 如果仍然是404错误，说明可能存在其他问题
+      if (error.status === 404) {
+        console.warn('用户设置不存在，可能需要重新登录或联系支持');
+      }
     }
   };
 
   useEffect(() => {
+    // 静默获取设置数据，不显示加载动画
     if (user?.user_id) {
       getMySetting();
     }
@@ -71,6 +72,9 @@ export const SettingList = () => {
     console.log("Logout button pressed"); // 添加调试日志
     setIsLoggingOut(true);
     try {
+      // 保存当前国家设置，避免重新选择
+      const savedCountry = await AsyncStorage.getItem('@selected_country');
+      
       // 调用退出登录接口
       await userApi.logout();
       console.log("API logout successful");
@@ -91,6 +95,12 @@ export const SettingList = () => {
       await AsyncStorage.clear();
       console.log("AsyncStorage cleared");
 
+      // 恢复国家设置，避免重新选择
+      if (savedCountry) {
+        await AsyncStorage.setItem('@selected_country', savedCountry);
+        console.log("Country setting restored");
+      }
+
       // 重新获取用户信息（此时应该是未登录状态）
       try {
         const profile = await userApi.getProfile();
@@ -103,17 +113,27 @@ export const SettingList = () => {
         );
       }
 
-      // 导航到国家选择页面
-      navigation.navigate("CountrySelect");
-      console.log("Navigated to CountrySelect");
+      // 直接导航到主页面，不需要重新选择国家
+      navigation.navigate("MainTabs");
+      console.log("Navigated to MainTabs");
     } catch (error) {
       console.error("Logout error:", error);
+      
+      // 保存当前国家设置（在清除之前获取）
+      const savedCountry = await AsyncStorage.getItem('@selected_country');
+      
       // 即使接口调用失败，也要清除本地状态
       clearUser();
       await logout();
       await avatarCacheService.clearAllCache();
       await AsyncStorage.clear();
-      navigation.navigate("CountrySelect");
+      
+      // 恢复国家设置
+      if (savedCountry) {
+        await AsyncStorage.setItem('@selected_country', savedCountry);
+      }
+      
+      navigation.navigate("MainTabs");
     } finally {
       setIsLoggingOut(false);
     }
@@ -140,14 +160,9 @@ export const SettingList = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      {isLoading && (
-        <View style={styles.loadingWrapper} pointerEvents="auto">
-          <ActivityIndicator size="large" color="#FF6F30" />
-        </View>
-      )}
       <View style={styles.safeAreaContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
             <BackIcon size={fontSize(24)} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("settings.title")}</Text>
@@ -158,6 +173,7 @@ export const SettingList = () => {
           <TouchableOpacity
             style={styles.item}
             onPress={() => navigation.navigate("Info")}
+            activeOpacity={1}
           >
             <Text>{t("settings.profile")}</Text>
             <Text>
@@ -167,6 +183,7 @@ export const SettingList = () => {
           <TouchableOpacity
             style={styles.item}
             onPress={() => navigation.navigate("ChangePassword")}
+            activeOpacity={1}
           >
             <Text>{t("settings.change_password")}</Text>
             <Text>
@@ -189,6 +206,7 @@ export const SettingList = () => {
               }
             }}
             style={styles.item}
+            activeOpacity={1}
           >
             <Text>{t("settings.my_address")}</Text>
             <Text>
@@ -206,6 +224,7 @@ export const SettingList = () => {
             onPress={() => {
               navigation.navigate("PrivacyPolicyScreen");
             }}
+            activeOpacity={1}
           >
             <Text>{t("settings.privacy_policy")}</Text>
             <Text>
@@ -217,6 +236,7 @@ export const SettingList = () => {
             onPress={() => {
               navigation.navigate("TermsOfUseScreen");
             }}
+            activeOpacity={1}
           >
             <Text>{t("settings.terms_of_use")}</Text>
             <Text>
@@ -245,6 +265,7 @@ export const SettingList = () => {
                 // }
               }}
               style={styles.item}
+              activeOpacity={1}
             >
               <Text>{t("settings.language_currency")}</Text>
               <Text>
@@ -265,6 +286,7 @@ export const SettingList = () => {
                 handleLogout(); // 暂时使用测试函数
               }}
               disabled={isLoggingOut}
+              activeOpacity={1}
             >
               {isLoggingOut ? (
                 <View style={styles.loadingContainer}>

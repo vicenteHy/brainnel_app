@@ -16,6 +16,7 @@ import { Product } from '../../../services/api/productApi';
 import { ProductItem, ProductSkeleton, FeatureNavigationBar, CarouselBanner } from './';
 import { styles } from '../styles';
 import { getCategoryImageSource } from '../../../utils/categoryImageUtils';
+import i18n from '../../../i18n';
 
 // Icon组件
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -73,6 +74,22 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   const loadMoreRef = useRef(false); // 防止重复调用加载更多
   const [showAllSubcategories, setShowAllSubcategories] = React.useState(false); // 控制是否显示所有二级分类
   const [isUserRefreshing, setIsUserRefreshing] = React.useState(false); // 跟踪是否是用户主动下拉刷新
+
+  // 获取正确语言的类目名称
+  const getCategoryName = useCallback((category: any) => {
+    const currentLanguage = i18n.language;
+    switch(currentLanguage) {
+      case 'en':
+        return category.name_en || category.name;
+      case 'fr':
+        return category.name;
+      case 'cn':
+      case 'zh':
+        return category.name_cn || category.name;
+      default:
+        return category.name;
+    }
+  }, []);
   
   // 智能预加载相关
   const lastVisibleIndex = useRef(0);
@@ -205,7 +222,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           numberOfLines={2}
           ellipsizeMode="tail"
         >
-          {item.name}
+          {getCategoryName(item)}
         </Text>
       </TouchableOpacity>
     );

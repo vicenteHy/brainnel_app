@@ -19,6 +19,8 @@ import BackIcon from "../../components/BackIcon";
 import { useNavigation } from "@react-navigation/native";
 import { productApi } from "../../services/api/productApi";
 import {getSubjectTransLanguage} from "../../utils/languageUtils";
+import { useTranslation } from "react-i18next";
+import useUserStore from "../../store/user";
 
 
 // 收藏商品项组件
@@ -33,6 +35,8 @@ const FavoriteItem = ({
 }) => {
   const product = favoriteItem.product;
   const navigation = useNavigation();
+  const { t } = useTranslation();
+  const userStore = useUserStore();
   return (
     <View style={styles.item}>
       <Image 
@@ -48,10 +52,18 @@ const FavoriteItem = ({
           {getSubjectTransLanguage(product) || product.subject_trans}
         </Text>
         <Text style={styles.price}>
-          {product.min_price}{product.currency}
-          {product.vip_discount > 0 && (
+          {(userStore.user?.currency || product.currency || 'FCFA')} {
+            product.min_price && typeof product.min_price === 'number' 
+              ? product.min_price.toFixed(2) 
+              : 'N/A'
+          }
+          {product.original_min_price && product.original_min_price > product.min_price && (
             <Text style={styles.originalPrice}>
-              {product.original_min_price}{product.currency}
+              {' '}{(userStore.user?.currency || product.currency || 'FCFA')} {
+                typeof product.original_min_price === 'number' 
+                  ? product.original_min_price.toFixed(2) 
+                  : product.original_min_price
+              }
             </Text>
           )}
         </Text>
@@ -65,7 +77,7 @@ const FavoriteItem = ({
             style={[styles.btn, styles.delete]}
             onPress={() => onDelete(product.offer_id)}
           >
-            <Text style={styles.deleteText}>删除</Text>
+            <Text style={styles.deleteText}>{t('common.delete') || '删除'}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -75,6 +87,7 @@ const FavoriteItem = ({
 
 export const Collection = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   
   // 状态管理
   const [favorites, setFavorites] = useState<any[]>([]);
@@ -171,8 +184,8 @@ export const Collection = () => {
   // 渲染加载指示器
   const renderLoadingIndicator = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#ff5100" />
-      <Text style={styles.loadingText}>加载中...</Text>
+      <ActivityIndicator size="large" color="#FF6F30" />
+      <Text style={styles.loadingText}>{t('common.loading') || '加载中...'}</Text>
     </View>
   );
 
@@ -181,8 +194,8 @@ export const Collection = () => {
     if (loadingMore) {
       return (
         <View style={styles.footerContainer}>
-          <ActivityIndicator size="small" color="#ff5100" />
-          <Text style={styles.footerText}>加载更多...</Text>
+          <ActivityIndicator size="small" color="#FF6F30" />
+          <Text style={styles.footerText}>{t('common.loading_more') || '加载更多...'}</Text>
         </View>
       );
     }
@@ -190,7 +203,7 @@ export const Collection = () => {
     if (!hasMore && favorites.length > 0) {
       return (
         <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>没有更多数据了</Text>
+          <Text style={styles.footerText}>{t('common.no_more_data') || '没有更多数据了'}</Text>
         </View>
       );
     }
@@ -201,8 +214,8 @@ export const Collection = () => {
   // 渲染空状态
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>暂无收藏商品</Text>
-      <Text style={styles.emptySubtext}>去逛逛，收藏喜欢的商品吧</Text>
+      <Text style={styles.emptyText}>{t('favorites.empty_title') || '暂无收藏商品'}</Text>
+      <Text style={styles.emptySubtext}>{t('favorites.empty_subtitle') || '去逛逛，收藏喜欢的商品吧'}</Text>
     </View>
   );
 
@@ -217,7 +230,7 @@ export const Collection = () => {
           >
             <BackIcon size={fontSize(22)} />
           </TouchableOpacity>
-          <Text style={styles.titles}>我的收藏 ({total})</Text>
+          <Text style={styles.titles}>{t('favorites.title') || '我的收藏'} ({total})</Text>
           <View style={styles.placeholder} />
         </View>
         
@@ -231,8 +244,8 @@ export const Collection = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={["#ff5100"]}
-                tintColor="#ff5100"
+                colors={["#FF6F30"]}
+                tintColor="#FF6F30"
               />
             }
             onScroll={handleScroll}
@@ -302,17 +315,24 @@ const styles = StyleSheet.create({
   },
   item: {
     flexDirection: "row",
-    padding: 19,
+    padding: 16,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    marginBottom: 8,
-    borderRadius: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   image: {
     width: widthUtils(100, 100).width,
     height: widthUtils(100, 100).height,
-    borderRadius: 4,
+    borderRadius: 8,
     marginRight: 12,
   },
   info: {
@@ -326,7 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   price: {
-    color: "#f40",
+    color: "#FF6F30",
     fontSize: fontSize(16),
     marginBottom: 10,
     fontWeight: "600",
@@ -343,25 +363,24 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignItems: "center",
   },
   cart: {
-    backgroundColor: "#ff5100",
+    backgroundColor: "#FF6F30",
   },
   delete: {
-    backgroundColor: "#f5f5f5",
-    borderWidth: 1,
-    borderColor: "#ddd",
+    backgroundColor: "#FF6F30",
+    borderWidth: 0,
   },
   cartText: {
     color: "#fff",
     fontSize: fontSize(14),
   },
   deleteText: {
-    color: "#666",
+    color: "#fff",
     fontSize: fontSize(14),
   },
   loadingContainer: {

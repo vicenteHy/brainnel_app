@@ -26,6 +26,7 @@ import { useAddressStore } from "../../store/address";
 import { settingApi } from "../../services/api/setting";
 import flagMap from "../../utils/flagMap";
 import { useTranslation } from "react-i18next";
+import useUserStore from "../../store/user";
 import fontSize from "../../utils/fontsizeUtils";
 type RootStackParamList = {
   EditAddress: { address?: AddressItem };
@@ -46,12 +47,13 @@ export const EditAddress = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<EditAddressRouteProp>();
   const { t } = useTranslation();
+  const { user } = useUserStore();
   const [open, setOpen] = useState(false);
   const [countryList, setCountryList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     receiver_first_name: "",
     receiver_last_name: "",
-    country_code: "225", // 默认科特迪瓦区号
+    country_code: user.country_code ? user.country_code.toString() : "225", // 使用用户设置的国家区号，默认科特迪瓦区号
     receiver_phone: "",
     receiver_phone_again: "",
     whatsapp_phone: "",
@@ -69,13 +71,14 @@ export const EditAddress = () => {
       const whatsappPhone = address.whatsapp_phone || "";
       
       // 检查 WhatsApp 是否与手机号相同
-      const fullPhoneNumber = `225${phoneNumber}`;
+      const userCountryCode = user.country_code ? user.country_code.toString() : "225";
+      const fullPhoneNumber = `${userCountryCode}${phoneNumber}`;
       const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
       
       setFormData({
         receiver_first_name: address.receiver_first_name || "",
         receiver_last_name: address.receiver_last_name || "",
-        country_code: "225", // 默认科特迪瓦区号
+        country_code: userCountryCode, // 使用用户设置的国家区号，默认科特迪瓦区号
         receiver_phone: phoneNumber,
         receiver_phone_again: phoneNumber,
         whatsapp_phone: whatsappPhone,
@@ -85,6 +88,16 @@ export const EditAddress = () => {
       setWhatsappSameAsPhone(isWhatsappSameAsPhone);
     }
   }, []);
+
+  // 监听用户状态变化，更新默认国家区号
+  useEffect(() => {
+    if (user.country_code && !route.params?.address) {
+      setFormData(prev => ({
+        ...prev,
+        country_code: user.country_code.toString()
+      }));
+    }
+  }, [user.country_code]);
   // 加载国家列表
   useEffect(() => {
     settingApi.getCountryList().then((res) => {

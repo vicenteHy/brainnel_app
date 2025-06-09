@@ -1140,12 +1140,12 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           size={fontSize(24)}
                           strokeColor={
                             selectedOperator === method.key
-                              ? "#007efa"
+                              ? "#FF6F30"
                               : undefined
                           }
                           fillColor={
                             selectedOperator === method.key
-                              ? "#007efa"
+                              ? "#FF6F30"
                               : undefined
                           }
                         />
@@ -1209,7 +1209,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           {/* 显示转换后的金额 */}
                           {isConverting ? (
                             <View style={styles.convertingContainer}>
-                              <ActivityIndicator size="small" color="#007efa" />
+                              <ActivityIndicator size="small" color="#FF6F30" />
                               <Text style={styles.convertingText}>
                                 {t("balance.recharge.converting")}
                               </Text>
@@ -1263,7 +1263,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           {/* 显示转换后的金额 */}
                           {isConverting ? (
                             <View style={styles.convertingContainer}>
-                              <ActivityIndicator size="small" color="#007efa" />
+                              <ActivityIndicator size="small" color="#FF6F30" />
                               <Text style={styles.convertingText}>
                                 {t("balance.recharge.converting")}
                               </Text>
@@ -1308,10 +1308,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         <CircleOutlineIcon
                           size={fontSize(24)}
                           strokeColor={
-                            selectedOperator === "mtn" ? "#007efa" : undefined
+                            selectedOperator === "mtn" ? "#FF6F30" : undefined
                           }
                           fillColor={
-                            selectedOperator === "mtn" ? "#007efa" : undefined
+                            selectedOperator === "mtn" ? "#FF6F30" : undefined
                           }
                         />
                         {selectedOperator === "mtn" && (
@@ -1342,10 +1342,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         <CircleOutlineIcon
                           size={fontSize(24)}
                           strokeColor={
-                            selectedOperator === "mtn" ? "#007efa" : undefined
+                            selectedOperator === "mtn" ? "#FF6F30" : undefined
                           }
                           fillColor={
-                            selectedOperator === "mtn" ? "#007efa" : undefined
+                            selectedOperator === "mtn" ? "#FF6F30" : undefined
                           }
                         />
                         {selectedOperator === "mtn" && (
@@ -1461,53 +1461,55 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#ffffff",
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    paddingBottom: 0,
+    paddingBottom: 16,
     position: "relative",
-    marginTop: 20,
-    marginBottom: 20,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 111, 48, 0.1)",
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 0,
+    paddingTop: 20,
+    backgroundColor: "#f8f9fa",
   },
   container: {
     padding: 24,
-    backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    backgroundColor: "#f8f9fa",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
-    textTransform: "capitalize",
-    color: "black",
+    color: "#333333",
     position: "absolute",
     left: 0,
     right: 0,
     textAlign: "center",
+    letterSpacing: 0.5,
   },
   section: {
     marginTop: 44,
   },
   subtitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "black",
-    textTransform: "capitalize",
-    marginBottom: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
+    marginBottom: 16,
+    letterSpacing: 0.3,
   },
   priceGroup: {
     marginTop: 10,
@@ -1519,33 +1521,46 @@ const styles = StyleSheet.create({
   },
   priceBoxBlue: {
     width: "30%",
-    backgroundColor: "#edf2fa",
-    borderColor: "#002fa7",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingVertical: 9,
-    paddingHorizontal: 22,
+    backgroundColor: "rgba(255, 111, 48, 0.1)",
+    borderColor: "#FF6F30",
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: "center",
     marginRight: "5%",
+    elevation: 2,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   priceBoxWhite: {
     width: "30%",
     backgroundColor: "white",
-    borderRadius: 5,
-    paddingVertical: 9,
-    paddingHorizontal: 22,
+    borderColor: "#e0e0e0",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: "center",
     marginRight: "5%",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   priceTextBlue: {
     fontSize: fontSize(16),
     fontWeight: "700",
-    color: "#002fa7",
+    color: "#FF6F30",
   },
   currencyTextBlue: {
-    fontSize: fontSize(10),
-    color: "#002fa7",
-    marginTop: 1,
+    fontSize: fontSize(11),
+    color: "#FF6F30",
+    marginTop: 2,
+    fontWeight: "500",
   },
   priceText: {
     fontSize: fontSize(16),
@@ -1553,15 +1568,21 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   currencyText: {
-    fontSize: fontSize(10),
-    color: "#7f7e7e",
-    marginTop: 1,
+    fontSize: fontSize(11),
+    color: "#666666",
+    marginTop: 2,
+    fontWeight: "500",
   },
   operatorCard: {
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 5,
-    marginTop: 18,
+    borderRadius: 12,
+    marginTop: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   operatorImage: {
     width: 80,
@@ -1612,7 +1633,12 @@ const styles = StyleSheet.create({
     borderColor: "#007AFF",
   },
   currencyButtonActive: {
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF6F30",
+    elevation: 2,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   currencyButtonInactive: {
     backgroundColor: "#eeeeee",
@@ -1639,8 +1665,10 @@ const styles = StyleSheet.create({
   },
   actionButtonsContainer: {
     padding: 24,
-    paddingTop: 0,
-    backgroundColor: "#f0f0f0",
+    paddingTop: 16,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 111, 48, 0.1)",
   },
   actionButtons: {
     flexDirection: "row",
@@ -1658,26 +1686,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   confirmButton: {
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF6F30",
     borderRadius: 25,
     width: widthUtils(50, 160).width,
     height: widthUtils(50, 160).height,
     justifyContent: "center",
     alignItems: "center",
+    elevation: 3,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   confirmButtonDisabled: {
-    backgroundColor: "#b0bfdf",
+    backgroundColor: "#cccccc",
     opacity: 0.7,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   balanceInfoContainer: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 5,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    height: 50,
+    minHeight: 60,
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 14,
+    marginTop: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   leftInfo: {
     flexDirection: "row",
@@ -1686,11 +1726,11 @@ const styles = StyleSheet.create({
   },
   blueBox: {
     flexDirection: "row",
-    backgroundColor: "#3955f6",
+    backgroundColor: "#FF6F30",
     paddingHorizontal: 7,
     paddingLeft: 6,
     alignItems: "center",
-    borderRadius: 4,
+    borderRadius: 8,
   },
   saleText: {
     fontSize: 16,
@@ -1710,10 +1750,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "white",
-    borderRadius: 5,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    marginTop: 15,
-    paddingVertical: 10,
+    marginTop: 12,
+    paddingVertical: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
 
   imageSmall: {
@@ -1744,7 +1789,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonActive: {
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF6F30",
+    elevation: 2,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   buttonInactive: {
     backgroundColor: "#fdfefe",
@@ -1759,26 +1809,31 @@ const styles = StyleSheet.create({
     fontSize: fontSize(15),
   },
   priceBoxSelected: {
-    backgroundColor: "#edf2fa",
-    borderColor: "#002fa7",
-    borderWidth: 1,
+    backgroundColor: "rgba(255, 111, 48, 0.1)",
+    borderColor: "#FF6F30",
+    borderWidth: 2,
+    elevation: 3,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   priceBoxUnselected: {
     backgroundColor: "white",
-    borderColor: "#dddddd",
+    borderColor: "#e0e0e0",
     borderWidth: 1,
   },
   priceTextSelected: {
-    color: "#002fa7",
+    color: "#FF6F30",
   },
   priceTextUnselected: {
     color: "#333",
   },
   currencyTextSelected: {
-    color: "#002fa7",
+    color: "#FF6F30",
   },
   currencyTextUnselected: {
-    color: "#7f7e7e",
+    color: "#666666",
   },
   closeButton: {
     padding: 5,
@@ -1811,9 +1866,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    height: 60,
+    minHeight: 60,
     backgroundColor: "white",
-    borderRadius: 5,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
   },
   rechargePromptTextStyle: {
     flex: 0,
@@ -1828,18 +1890,28 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 5,
-    marginTop: 10,
-    padding: 5,
+    borderRadius: 12,
+    marginTop: 16,
+    padding: 4,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: "#002fa7",
+    backgroundColor: "#FF6F30",
+    elevation: 2,
+    shadowColor: "#FF6F30",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   tabText: {
     fontSize: fontSize(14),
@@ -1870,12 +1942,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    height: 50,
+    minHeight: 60,
     paddingRight: 16,
     paddingLeft: 16,
     backgroundColor: "white",
-    borderRadius: 5,
-    marginTop: 18,
+    borderRadius: 12,
+    marginTop: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   imageContainer: {
     flexDirection: "column",
@@ -2272,7 +2349,7 @@ const styles = StyleSheet.create({
   customAmountText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#002fa7",
+    color: "#FF6F30",
     textAlign: "center",
   },
   paypalExpandedContainer: {
@@ -2342,7 +2419,7 @@ const styles = StyleSheet.create({
   convertedAmountValue: {
     fontSize: fontSize(16),
     fontWeight: "700",
-    color: "#002fa7",
+    color: "#FF6F30",
   },
   mobileMoneyText: {
     fontSize: fontSize(12),

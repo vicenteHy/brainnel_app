@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, useWindowDimensions } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, useWindowDimensions, Image } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { styles } from '../styles';
@@ -7,6 +7,38 @@ import { styles } from '../styles';
 interface ProductDetailsProps {
   product: any;
 }
+
+const DetailImage: React.FC<{ src: string; width: number }> = ({ src, width }) => {
+  const [imageHeight, setImageHeight] = useState(300);
+
+  const handleImageLoad = useCallback((event: any) => {
+    const { width: imgWidth, height: imgHeight } = event.nativeEvent.source;
+    const aspectRatio = imgHeight / imgWidth;
+    const calculatedHeight = width * aspectRatio;
+    setImageHeight(calculatedHeight);
+  }, [width]);
+
+  return (
+    <View
+      style={{
+        width: width,
+        marginBottom: 15,
+        backgroundColor: "#ffffff",
+        overflow: 'hidden',
+      }}
+    >
+      <Image
+        style={{
+          width: width,
+          height: imageHeight,
+        }}
+        source={{ uri: src }}
+        resizeMode="contain"
+        onLoad={handleImageLoad}
+      />
+    </View>
+  );
+};
 
 export const ProductDetails: React.FC<ProductDetailsProps> = ({
   product,
@@ -23,6 +55,9 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
       imageUrls.push(match[1]);
     }
   }
+  
+  console.log('商品描述:', product?.description?.substring(0, 200));
+  console.log('提取到的图片URLs:', imageUrls);
 
   return (
     <View style={styles.productDetailsSection}>
@@ -30,24 +65,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
         {t('productDetails')}
       </Text>
       {imageUrls.map((src, index) => (
-        <View
-          key={index}
-          style={{
-            width: width,
-            marginBottom: 15,
-            backgroundColor: "#ffffff",
-            overflow: 'hidden',
-          }}
-        >
-          <ExpoImage
-            style={{
-              width: width,
-              height: 300,
-            }}
-            source={{ uri: src }}
-            contentFit="cover"
-          />
-        </View>
+        <DetailImage key={index} src={src} width={width} />
       ))}
     </View>
   );

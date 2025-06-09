@@ -22,11 +22,18 @@ export const useNotifications = (activeTab: string) => {
       const response = await chatService.getMessageList(page, 10);
 
       if (response && response.items) {
+        // 按时间降序排序（最新的在前）
+        const sortedItems = response.items.sort((a, b) => {
+          const timeA = new Date(a.create_time || a.sent_time).getTime();
+          const timeB = new Date(b.create_time || b.sent_time).getTime();
+          return timeB - timeA;
+        });
+
         if (isRefresh || page === 1) {
-          setNotifications(response.items.reverse());
+          setNotifications(sortedItems);
           setNotificationPage(1);
         } else {
-          setNotifications((prev) => [...response.items.reverse(), ...prev]);
+          setNotifications((prev) => [...prev, ...sortedItems]);
         }
         setNotificationHasMore(response.items.length === 10);
       }

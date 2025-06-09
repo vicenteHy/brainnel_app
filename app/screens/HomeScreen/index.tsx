@@ -29,6 +29,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import useUserStore from "../../store/user";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
@@ -71,6 +72,22 @@ export const HomeScreen = () => {
   const memoizedUserStore = useMemo(() => ({
     user: userStore.user,
   }), [userStore.user]);
+
+  // 获取正确语言的类目名称
+  const getCategoryName = useCallback((category: Category) => {
+    const currentLanguage = i18n.language;
+    switch(currentLanguage) {
+      case 'en':
+        return category.name_en || category.name;
+      case 'fr':
+        return category.name;
+      case 'cn':
+      case 'zh':
+        return category.name_cn || category.name;
+      default:
+        return category.name;
+    }
+  }, []);
 
   // 存储每个分类按钮的宽度信息
   const categoryWidthsRef = useRef<Map<number, number>>(new Map());
@@ -571,7 +588,7 @@ export const HomeScreen = () => {
                       styles.categoryTextActive,
                   ]}
                 >
-                  {cat.name}
+                  {getCategoryName(cat)}
                 </Text>
               </TouchableOpacity>
             ))}

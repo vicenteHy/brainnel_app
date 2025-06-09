@@ -97,7 +97,17 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     
     try {
       if (user?.user_id) {
-        await settingApi.putSetting(data);
+        try {
+          await settingApi.putSetting(data);
+        } catch (error) {
+          // 如果更新失败且是404错误，尝试创建首次登录设置
+          if (error.status === 404) {
+            console.log('用户设置不存在，创建首次登录设置');
+            await settingApi.postFirstLogin(selectedCountry);
+          } else {
+            throw error;
+          }
+        }
         eventBus.emit("refreshSetting");
         const userData = await userApi.getProfile();
         setUser(userData);
@@ -128,7 +138,20 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     try {
       eventBus.emit("settingsChanged");
       if (user?.user_id) {
-        await settingApi.putSetting(data);
+        try {
+          await settingApi.putSetting(data);
+        } catch (error) {
+          // 如果更新失败且是404错误，尝试创建首次登录设置
+          if (error.status === 404) {
+            console.log('用户设置不存在，使用默认国家创建首次登录设置');
+            const defaultCountry = country || 1; // 使用当前选中的国家或默认国家
+            await settingApi.postFirstLogin(defaultCountry);
+            // 重新尝试更新货币设置
+            await settingApi.putSetting(data);
+          } else {
+            throw error;
+          }
+        }
         eventBus.emit("refreshSetting");
         const userData = await userApi.getProfile();
         setUser(userData);

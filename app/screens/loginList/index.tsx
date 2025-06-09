@@ -24,6 +24,8 @@ import PhoneLoginModal from "./PhoneLoginModal";
 import { loginApi } from "../../services/api/login";
 import { userApi } from "../../services";
 import useUserStore from "../../store/user";
+import { settingApi } from "../../services/api/setting";
+import { changeLanguage } from "../../i18n";
 
 // 使用标准的ES6模块导入
 let GoogleSignin: any = null;
@@ -117,6 +119,53 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     }
   };
 
+  // 处理首次登录设置同步
+  const handleFirstLoginSettings = async (loginResponse: any) => {
+    try {
+      // 检查是否是首次登录
+      if (loginResponse.first_login) {
+        console.log("✅ 检测到首次登录，开始同步本地设置");
+        
+        // 读取本地存储的国家设置
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        let countryCode = 221; // 默认国家
+        
+        if (savedCountry) {
+          try {
+            const parsedCountry = JSON.parse(savedCountry);
+            countryCode = parsedCountry.country;
+            console.log("✅ 读取到本地国家设置:", countryCode);
+          } catch (e) {
+            console.error("❌ 解析本地国家设置失败:", e);
+          }
+        }
+        
+        // 调用首次登录API创建用户设置（包含国家对应的默认货币）
+        console.log("📡 调用首次登录API，国家代码:", countryCode);
+        const firstLoginData = await settingApi.postFirstLogin(countryCode);
+        console.log("✅ 首次登录设置创建成功:", firstLoginData);
+        
+        // 读取本地存储的语言设置
+        const savedLanguage = await AsyncStorage.getItem("app_language");
+        if (savedLanguage && savedLanguage !== firstLoginData.language) {
+          console.log("🌐 同步本地语言设置:", savedLanguage);
+          try {
+            await settingApi.putSetting({ language: savedLanguage });
+            console.log("✅ 语言设置同步成功");
+          } catch (error) {
+            console.error("❌ 语言设置同步失败:", error);
+          }
+        }
+        
+      } else {
+        console.log("ℹ️ 非首次登录，跳过设置同步");
+      }
+    } catch (error) {
+      console.error("❌ 处理首次登录设置失败:", error);
+      // 不阻断登录流程，只记录错误
+    }
+  };
+
   // 处理谷歌登录
   const handleGoogleLogin = async () => {
     console.log("🚀 Google登录按钮被点击");
@@ -157,9 +206,19 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
           console.log("✅ Token已保存:", token);
         }
         
+        // 处理首次登录设置同步
+        console.log("⚙️ 检查是否需要同步本地设置...");
+        await handleFirstLoginSettings(res);
+        
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
         console.log("✅ 用户信息获取成功:", user);
+        
+        // 同步语言设置
+        if (user.language) {
+          console.log("🌐 同步用户语言设置:", user.language);
+          await changeLanguage(user.language);
+        }
         
         setUser(user);
         
@@ -326,9 +385,19 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
           console.log("✅ Token已保存:", token);
         }
         
+        // 处理首次登录设置同步
+        console.log("⚙️ 检查是否需要同步本地设置...");
+        await handleFirstLoginSettings(res);
+        
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
         console.log("✅ 用户信息获取成功:", JSON.stringify(user, null, 2));
+        
+        // 同步语言设置
+        if (user.language) {
+          console.log("🌐 同步用户语言设置:", user.language);
+          await changeLanguage(user.language);
+        }
         
         setUser(user);
         
@@ -422,9 +491,19 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
           console.log("✅ Token已保存:", token);
         }
         
+        // 处理首次登录设置同步
+        console.log("⚙️ 检查是否需要同步本地设置...");
+        await handleFirstLoginSettings(res);
+        
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
         console.log("✅ 用户信息获取成功:", user);
+        
+        // 同步语言设置
+        if (user.language) {
+          console.log("🌐 同步用户语言设置:", user.language);
+          await changeLanguage(user.language);
+        }
         
         setUser(user);
         
