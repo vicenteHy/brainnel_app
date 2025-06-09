@@ -2,27 +2,27 @@
   "expo": {
     "name": "brainnel",
     "slug": "brainnel",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "orientation": "portrait",
-    "icon": "./assets/logo/logo2.png",
+    "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "com.brainnel.app",
     "owner": "newapp123",
     "deepLinking": true,
     "splash": {
-      "image": "./assets/logo/logo2.png",
+      "image": "./assets/logo/launch.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/logo/logo2.png",
+      "icon": "./assets/logo/logo.png",
       "bundleIdentifier": "uni.UNIC87CC93",
       "associatedDomains": [
         "applinks:api.brainnel.com"
       ],
-      "buildNumber": "3.1.0",
+      "buildNumber": "3.1.1",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "CFBundleURLTypes": [
@@ -60,7 +60,7 @@
       ],
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo/logo2.png",
+        "foregroundImage": "./assets/logo/logo.png",
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
@@ -92,7 +92,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/logo/logo2.png"
+      "favicon": "./assets/logo/logo.png"
     },
     "plugins": [
       "expo-video",
