@@ -439,7 +439,7 @@ export function Status() {
                             <View style={styles.orderItem}>
                               <View style={styles.orderStatus}>
                                 <Text style={styles.orderStatusOrderText}>
-                                  {item.order_id}
+                                  {item.order_no}
                                 </Text>
                                 <Text style={styles.orderStatusText}>
                                   {getStatus(item.status)}

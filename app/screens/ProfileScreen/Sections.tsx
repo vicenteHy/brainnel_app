@@ -11,11 +11,11 @@ interface SectionProps {
 }
 
 const orderItems = [
-  { nameKey: 'profile.orders.status.to_pay', iconName: 'wallet-outline', status: 1, badge: 2 },
-  { nameKey: 'profile.orders.status.to_ship', iconName: 'archive-outline', status: 2, badge: 0 },
-  { nameKey: 'profile.orders.status.to_receive', iconName: 'rocket-outline', status: 3, badge: 1 },
-  { nameKey: 'profile.orders.status.to_review', iconName: 'star-outline', status: 4, badge: 0 },
-  { nameKey: 'profile.orders.status.after_sales', iconName: 'shield-checkmark-outline', status: 5, badge: 0 },
+  { nameKey: 'profile.orders.status.to_pay', iconName: 'wallet-outline', status: 0 },
+  { nameKey: 'profile.orders.status.to_ship', iconName: 'archive-outline', status: 1 },
+  { nameKey: 'profile.orders.status.to_receive', iconName: 'rocket-outline', status: 2 },
+  { nameKey: 'profile.orders.status.to_review', iconName: 'star-outline', status: 3 },
+  { nameKey: 'profile.orders.status.after_sales', iconName: 'shield-checkmark-outline', status: 'chat' },
 ];
 
 const serviceItems = [
@@ -64,9 +64,14 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => (
       <SectionItem
         key={index}
         item={item}
-        hasBadge
         t={t}
-        onPress={() => navigation.navigate("Status", { status: item.status })}
+        onPress={() => {
+          if (item.status === 'chat') {
+            navigation.navigate("Chat");
+          } else {
+            navigation.navigate("Status", { status: item.status });
+          }
+        }}
       />
     ))}
   </SectionCard>

@@ -31,34 +31,35 @@ import { changeLanguage } from "../../i18n";
 let GoogleSignin: any = null;
 let statusCodes: any = null;
 
-try {
-  const googleSigninModule = require("@react-native-google-signin/google-signin");
-  GoogleSignin = googleSigninModule.GoogleSignin;
-  statusCodes = googleSigninModule.statusCodes;
-} catch (error) {
-  console.log("Google Sign-in模块导入错误:", error);
-}
+// 注释掉原生模块导入
+// try {
+//   const googleSigninModule = require("@react-native-google-signin/google-signin");
+//   GoogleSignin = googleSigninModule.GoogleSignin;
+//   statusCodes = googleSigninModule.statusCodes;
+// } catch (error) {
+//   console.log("Google Sign-in模块导入错误:", error);
+// }
 
-import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next";
-import * as AppleAuthentication from 'expo-apple-authentication';
+// import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next"; // 注释掉原生模块
+// import * as AppleAuthentication from 'expo-apple-authentication'; // 注释掉原生模块
 
 const isDevelopment = __DEV__; // 开发模式检测
 const isSimulator = Platform.OS === 'ios' && Platform.isPad === false && __DEV__;
 
-// 配置 Google 登录 - 自动从 GoogleService-Info.plist 读取配置
-if (GoogleSignin && !isSimulator) {
-  try {
-    GoogleSignin.configure({
-      // 不指定 iosClientId，让 SDK 自动从 GoogleService-Info.plist 读取
-      webClientId: "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com", // Web Client ID
-      scopes: ["profile", "email"],
-      offlineAccess: false,
-      forceCodeForRefreshToken: false,
-    });
-  } catch (error) {
-    console.log("Google Sign-in模块配置错误:", error);
-  }
-}
+// 配置 Google 登录 - 自动从 GoogleService-Info.plist 读取配置 (已注释)
+// if (GoogleSignin && !isSimulator) {
+//   try {
+//     GoogleSignin.configure({
+//       // 不指定 iosClientId，让 SDK 自动从 GoogleService-Info.plist 读取
+//       webClientId: "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com", // Web Client ID
+//       scopes: ["profile", "email"],
+//       offlineAccess: false,
+//       forceCodeForRefreshToken: false,
+//     });
+//   } catch (error) {
+//     console.log("Google Sign-in模块配置错误:", error);
+//   }
+// }
 
 type RootStackParamList = {
   Login: undefined;
@@ -166,8 +167,11 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     }
   };
 
-  // 处理谷歌登录
+  // 处理谷歌登录 (已禁用)
   const handleGoogleLogin = async () => {
+    Alert.alert("功能暂时不可用", "Google登录功能在开发模式下暂时禁用");
+    return;
+    /* 
     console.log("🚀 Google登录按钮被点击");
     console.log("🔧 GoogleSignin模块:", GoogleSignin);
     console.log("🔧 statusCodes:", statusCodes);
@@ -253,51 +257,70 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         Alert.alert("登录失败", `Google登录出现错误: ${error.message || '未知错误'}`);
       }
     }
+    */ // 注释结束
   };
   const [userInfo, setUserInfo] = useState<any>(null);
 
   useEffect(() => {
-    // 确保在 App 启动时初始化 SDK。这通常在您的 App.js 的顶层完成。
-    // 如果您在 app.json 中配置了 Facebook App ID，这里可以省略 Settings.setAppID 和 Settings.setDisplayName
-    Settings.initializeSDK();
+    // 确保在 App 启动时初始化 SDK (已注释)
+    // Settings.initializeSDK();
+    
+    console.log("✅ Facebook SDK初始化已禁用");
 
     // 在应用程序启动时检查是否已经登录（可选）
-    AccessToken.getCurrentAccessToken().then(data => {
-      if (data) {
-        console.log("已登录 Facebook，Token:", data.accessToken);
-        // 可以尝试获取用户信息
-        // fetchFacebookProfile(data.accessToken);
-      }
-    });
+    // AccessToken.getCurrentAccessToken().then(data => {
+    //   if (data) {
+    //     console.log("已登录 Facebook，Token:", data.accessToken);
+    //     // 可以尝试获取用户信息
+    //     // fetchFacebookProfile(data.accessToken);
+    //   }
+    // });
 
   }, []);
 
 
-  // 辅助函数：获取 Facebook 用户资料 (可选，需要 'public_profile' 权限)
-  const fetchFacebookProfile = async (token:string) => {
+  // 辅助函数：获取 Facebook 用户资料 - iOS Limited Login兼容版本
+  const fetchFacebookProfile = async (accessTokenData: any) => {
     try {
       console.log('📡 开始获取Facebook用户资料...');
-      console.log('🔑 使用的Token:', token);
+      console.log('🔑 AccessToken数据:', JSON.stringify(accessTokenData, null, 2));
       
-      const url = `https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`;
-      console.log('🌐 请求URL:', url);
-      
-      const response = await fetch(url);
-      console.log('📊 响应状态:', response.status);
-      console.log('📊 响应头:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
-      
-      const profile = await response.json();
-      console.log('📋 Facebook User Info (完整响应):', JSON.stringify(profile, null, 2));
-      
-      // 检查是否有错误
-      if (profile.error) {
-        console.error('❌ Facebook API返回错误:', JSON.stringify(profile.error, null, 2));
-        throw new Error(`Facebook API错误: ${profile.error.message} (代码: ${profile.error.code})`);
+      // 对于iOS Limited Login，需要使用Graph API的特殊方式
+      if (Platform.OS === 'ios' && accessTokenData.permissions && accessTokenData.permissions.includes('openid')) {
+        console.log('🍎 检测到iOS Limited Login模式');
+        
+        // 构造基本用户信息（Limited Login模式下可能无法获取完整信息）
+        const profile = {
+          id: accessTokenData.userID,
+          name: '用户', // Limited Login模式下可能无法获取真实姓名
+          email: null   // Limited Login模式下可能无法获取邮箱
+        };
+        
+        console.log('📋 Limited Login模式用户信息:', JSON.stringify(profile, null, 2));
+        setUserInfo(profile);
+        return profile;
+      } else {
+        // 标准模式的Graph API调用
+        const token = accessTokenData.accessToken;
+        const url = `https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`;
+        console.log('🌐 请求URL:', url);
+        
+        const response = await fetch(url);
+        console.log('📊 响应状态:', response.status);
+        
+        const profile = await response.json();
+        console.log('📋 Facebook User Info (完整响应):', JSON.stringify(profile, null, 2));
+        
+        // 检查是否有错误
+        if (profile.error) {
+          console.error('❌ Facebook API返回错误:', JSON.stringify(profile.error, null, 2));
+          throw new Error(`Facebook API错误: ${profile.error.message} (代码: ${profile.error.code})`);
+        }
+        
+        setUserInfo(profile);
+        console.log('✅ Facebook用户资料获取成功');
+        return profile;
       }
-      
-      setUserInfo(profile);
-      console.log('✅ Facebook用户资料获取成功');
-      return profile;
     } catch (error) {
       console.error('❌ 获取 Facebook 用户资料错误:', error);
       console.error('❌ 错误详情:', JSON.stringify(error, null, 2));
@@ -331,6 +354,7 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
       // await LoginManager.logOut();
 
       console.log("🚀 开始Facebook权限请求...");
+      // 使用标准的Facebook登录
       const result = await LoginManager.logInWithPermissions([
         "public_profile",
         "email",
@@ -363,14 +387,25 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
 
       // 获取 Facebook 用户信息
       console.log("👤 获取Facebook用户信息...");
-      const facebookProfile = await fetchFacebookProfile(tokenString);
+      const facebookProfile = await fetchFacebookProfile(data);
       
       try {
         // 准备发送给后端的数据
-        const backendData = {
-          access_token: tokenString,
-          profile: facebookProfile
-        };
+        const backendData = Platform.OS === 'ios' && data.permissions && data.permissions.includes('openid')
+          ? {
+              // iOS Limited Login模式 - 发送更多token信息给后端验证
+              access_token: tokenString,
+              user_id: data.userID,
+              application_id: data.applicationID,
+              permissions: data.permissions,
+              profile: facebookProfile,
+              limited_login: true
+            }
+          : {
+              // 标准模式
+              access_token: tokenString,
+              profile: facebookProfile
+            };
         console.log("📤 准备发送给后端的数据:", JSON.stringify(backendData, null, 2));
         
         // 调用后端API进行Facebook登录

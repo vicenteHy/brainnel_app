@@ -3,7 +3,6 @@ import { productApi, ProductParams, type Product } from "../../../services/api/p
 
 export const useSearchProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [originalProducts, setOriginalProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -31,7 +30,13 @@ export const useSearchProducts = () => {
       }
       
       try {
-        const res = await productApi.getSearchProducts(params);
+        // 确保空的keyword不被发送到API
+        const cleanParams = { ...params };
+        if (!cleanParams.keyword || cleanParams.keyword.trim() === '') {
+          delete cleanParams.keyword;
+        }
+        
+        const res = await productApi.getSearchProducts(cleanParams);
         console.log('请求成功, 获取商品数:', res.products.length);
         
         if (isLoadMore) {
@@ -47,18 +52,23 @@ export const useSearchProducts = () => {
           setCurrentPage(prev => prev + 1);
         } else {
           setProducts(res.products);
-          setOriginalProducts(res.products);
           setCurrentPage(1);
         }
         
-        setHasMore(res.products.length === params.page_size);
+        // 判断是否还有更多数据
+        setHasMore(res.products.length === cleanParams.page_size);
+        console.log('搜索完成:', {
+          获取产品数: res.products.length,
+          页面大小: cleanParams.page_size,
+          还有更多: res.products.length === cleanParams.page_size,
+          是否加载更多: isLoadMore
+        });
         return res;
       } catch (error) {
         console.error("Error searching products:", error);
         setHasMore(false);
         if (!isLoadMore) {
           setProducts([]);
-          setOriginalProducts([]);
         }
         throw error;
       } finally {
@@ -75,23 +85,35 @@ export const useSearchProducts = () => {
   );
 
   const handleLoadMore = useCallback((baseParams: Omit<ProductParams, 'page'>) => {
-    if (!hasMore || loadingMore) {
+    // 更严格的加载更多条件检查
+    if (!hasMore || loadingMore || loading) {
+      console.log('阻止加载更多:', { hasMore, loadingMore, loading });
       return;
     }
     
+    // 增加防抖间隔到1秒，避免频繁请求
     const now = Date.now();
-    if (now - lastLoadTime.current < 500) {
+    if (now - lastLoadTime.current < 1000) {
+      console.log('防抖阻止，时间间隔太短');
       return;
     }
     lastLoadTime.current = now;
     
+    console.log('开始加载更多产品 - 页面:', currentPage + 1);
     setLoadingMore(true);
     
+    // 确保空的keyword不被发送到API
+    const cleanBaseParams = { ...baseParams };
+    if (!cleanBaseParams.keyword || cleanBaseParams.keyword.trim() === '') {
+      delete cleanBaseParams.keyword;
+    }
+    
     const loadMoreParams = {
-      ...baseParams,
+      ...cleanBaseParams,
       page: currentPage + 1,
     };
     
+    console.log('加载更多参数:', loadMoreParams);
     productApi.getSearchProducts(loadMoreParams)
       .then(res => {
         setProducts(prev => {
@@ -104,10 +126,16 @@ export const useSearchProducts = () => {
         });
         
         setCurrentPage(prev => prev + 1);
+        // 判断是否还有更多数据：当返回的产品数量等于请求的page_size时，说明可能还有更多
         setHasMore(res.products.length === loadMoreParams.page_size);
+        console.log('加载更多成功:', {
+          获取产品数: res.products.length,
+          还有更多: res.products.length === loadMoreParams.page_size
+        });
       })
       .catch(error => {
         console.error("加载更多失败:", error);
+        // 加载失败时不改变hasMore状态，允许用户重试
       })
       .finally(() => {
         setTimeout(() => {
@@ -121,17 +149,27 @@ export const useSearchProducts = () => {
     
     setRefreshing(true);
     
+    // 确保空的keyword不被发送到API
+    const cleanBaseParams = { ...baseParams };
+    if (!cleanBaseParams.keyword || cleanBaseParams.keyword.trim() === '') {
+      delete cleanBaseParams.keyword;
+    }
+    
     const refreshParams = {
-      ...baseParams,
+      ...cleanBaseParams,
       page: 1,
     };
     
     productApi.getSearchProducts(refreshParams)
       .then(res => {
         setProducts(res.products);
-        setOriginalProducts(res.products);
         setCurrentPage(1);
         setHasMore(res.products.length === refreshParams.page_size);
+        console.log('刷新完成:', {
+          获取产品数: res.products.length,
+          页面大小: refreshParams.page_size,
+          还有更多: res.products.length === refreshParams.page_size
+        });
       })
       .catch(error => {
         console.error("刷新失败:", error);
@@ -145,11 +183,7 @@ export const useSearchProducts = () => {
 
   return {
     products,
-    setProducts,
-    originalProducts,
-    setOriginalProducts,
     loading,
-    setLoading,
     hasMore,
     loadingMore,
     currentPage,

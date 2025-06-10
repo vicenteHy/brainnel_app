@@ -30,7 +30,7 @@ import useAnalyticsStore from "../store/analytics";
 import { eventBus } from "../utils/eventBus";
 
 import { IconComponent, ProductSkeleton, ProductItem } from "./SearchResultScreen/components";
-import { useSearchProducts, useSearchFilters } from "./SearchResultScreen/hooks";
+import { useSearchProducts } from "./SearchResultScreen/hooks";
 import { styles } from "./SearchResultScreen/styles";
 
 type SearchResultRouteParams = {
@@ -60,7 +60,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const [searchParams, setSearchParams] = useState<ProductParams>({
     keyword: route.params?.keyword || "",
     page: 1,
-    page_size: 10,
+    page_size: 20,
     sort_order: "desc",
     category_id: null,
     sort_by: "default",
@@ -70,11 +70,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
 
   const {
     products,
-    setProducts,
-    originalProducts,
-    setOriginalProducts,
     loading,
-    setLoading,
     hasMore,
     loadingMore,
     refreshing,
@@ -83,18 +79,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     handleRefresh,
   } = useSearchProducts();
 
-  const {
-    isFilterVisible,
-    sortOrder,
-    sortField,
-    activeTab,
-    toggleFilter,
-    handleSort,
-    handleTabChange,
-    setActiveTab,
-    setSortField,
-    setSortOrder,
-  } = useSearchFilters();
 
   useEffect(() => {
     if (route.params?.keyword) {
@@ -197,9 +181,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logSearch(searchText.trim(), "search");
       
-      setSortField("price");
-      setSortOrder(null);
-      setActiveTab("default");
       setShowSkeleton(true);
       const newParams = {
         ...searchParams,
@@ -294,13 +275,30 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   }, []);
 
   const handleLoadMoreProducts = useCallback(() => {
+    // 只有当产品数量大于等于10个时才允许加载更多，避免刚进入页面就触发
+    if (products.length < 10) {
+      console.log('产品数量不足，跳过加载更多:', products.length);
+      return;
+    }
+    
+    console.log('触发加载更多, 当前产品数量:', products.length);
     const { page, ...baseParams } = searchParams;
-    handleLoadMore(baseParams);
-  }, [handleLoadMore, searchParams]);
+    // 确保空关键词不会影响分类搜索
+    const cleanParams = {
+      ...baseParams,
+      keyword: baseParams.keyword?.trim() || undefined
+    };
+    handleLoadMore(cleanParams);
+  }, [handleLoadMore, searchParams, products.length]);
 
   const handleRefreshProducts = useCallback(() => {
     const { page, ...baseParams } = searchParams;
-    handleRefresh(baseParams);
+    // 确保空关键词不会影响分类搜索
+    const cleanParams = {
+      ...baseParams,
+      keyword: baseParams.keyword?.trim() || undefined
+    };
+    handleRefresh(cleanParams);
   }, [handleRefresh, searchParams]);
 
   const renderFooter = useCallback(() => {
@@ -336,12 +334,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
-  const handleTabChangeWithProducts = useCallback(
-    (tab: "default" | "volume" | "price") => {
-      handleTabChange(tab, originalProducts, setProducts, scrollToTop);
-    },
-    [handleTabChange, originalProducts, setProducts, scrollToTop]
-  );
 
   const renderLoadingSpinner = useCallback(() => {
     return (
@@ -403,68 +395,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
             </View>
           </View>
 
-          {/* 标签筛选 */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "default" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChangeWithProducts("default")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "default" && styles.activeTabText,
-                ]}
-              >
-                {t('default')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "volume" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChangeWithProducts("volume")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "volume" && styles.activeTabText,
-                ]}
-              >
-                {t('volume')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "price" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChangeWithProducts("price")}
-            >
-              <View style={styles.tabButtonContent}>
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "price" && styles.activeTabText,
-                  ]}
-                >
-                  {t('price')}
-                </Text>
-                {activeTab === "price" && (
-                  <View style={styles.tabIcon}>
-                    <IconComponent
-                      name={sortOrder === "desc" ? "chevron-down" : "chevron-up"}
-                      size={16}
-                      color="#000"
-                    />
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
 
           {/* 搜索结果 */}
           <View style={styles.resultsContainer}>
@@ -478,136 +408,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
               </View>
             )}
             
-            {/* 搜索结果标题栏和排序选项 */}
-            {isFilterVisible && (
-              <View style={styles.resultsHeader}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.sortScrollView}
-                >
-                  <View style={styles.sortGroup}>
-                    <Text style={styles.sortLabel}>{t("price")}:</Text>
-                    <View style={styles.sortButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "price" && sortOrder === "asc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("price", "asc", products, setProducts)}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "price" && sortOrder === "asc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("lowToHigh")}
-                        </Text>
-                        {sortField === "price" && sortOrder === "asc" && (
-                          <IconComponent
-                            name="chevron-up"
-                            size={16}
-                            color="#FF6F30"
-                          />
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "price" && sortOrder === "desc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("price", "desc", products, setProducts)}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "price" && sortOrder === "desc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("highToLow")}
-                        </Text>
-                        {sortField === "price" && sortOrder === "desc" && (
-                          <IconComponent
-                            name="chevron-down"
-                            size={16}
-                            color="#FF6F30"
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <View style={styles.sortDivider} />
-                  <View style={styles.sortGroup}>
-                    <Text style={styles.sortLabel}>{t('time')}:</Text>
-                    <View style={styles.sortButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "time" && sortOrder === "asc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("time", "asc", products, setProducts)}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "time" && sortOrder === "asc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("oldest")}
-                        </Text>
-                        {sortField === "time" && sortOrder === "asc" && (
-                          <IconComponent
-                            name="chevron-up"
-                            size={16}
-                            color="#FF6F30"
-                          />
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "time" && sortOrder === "desc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("time", "desc", products, setProducts)}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "time" && sortOrder === "desc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("newest")}
-                        </Text>
-                        {sortField === "time" && sortOrder === "desc" && (
-                          <IconComponent
-                            name="chevron-down"
-                            size={16}
-                            color="#FF6F30"
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </ScrollView>
-              </View>
-            )}
             
             {/* 加载指示器或产品列表 */}
             {loading && showSkeleton ? (
@@ -628,13 +428,13 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
                   ListEmptyComponent={!loading && !showSkeleton ? renderEmptyList : null}
                   ListFooterComponent={renderFooter}
                   showsVerticalScrollIndicator={false}
-                  initialNumToRender={8}
-                  maxToRenderPerBatch={10}
-                  windowSize={5}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={20}
+                  windowSize={10}
                   removeClippedSubviews={Platform.OS !== "web"}
                   updateCellsBatchingPeriod={50}
                   onEndReached={handleLoadMoreProducts}
-                  onEndReachedThreshold={3}
+                  onEndReachedThreshold={0.5}
                   onScroll={handleScroll}
                   scrollEventThrottle={160}
                   refreshControl={

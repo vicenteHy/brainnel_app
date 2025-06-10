@@ -141,6 +141,7 @@
       "welcome_time": "17h43",
       "read_status": "Lu",
       "product_detail_button": "Détails",
+      "purchase": "Acheter",
       "no_product_inquiries": "Aucune demande produit enregistrée",
       "product_inquiry_hint": "Commencez votre première consultation produit en cliquant sur le bouton de consultation dans la page de détails du produit"
   },
@@ -532,6 +533,13 @@
           "balance_detail": "Détail du solde",
           "recharge_now": "Rechargez maintenant",
           "balance_title":"Solde"
+      },
+      "transaction_types": {
+          "order_payment": "Paiement de commande",
+          "recharge": "Recharge",
+          "refund": "Remboursement",
+          "withdrawal": "Retrait",
+          "transfer": "Virement"
       },
       "recharge": {
           "title": "Recharger",

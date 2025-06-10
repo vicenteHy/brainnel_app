@@ -110,9 +110,11 @@
         "react-native-fbsdk-next",
         {
           "appID": "995035562798467",
-          "displayName": "newBrainnelApp",
+          "displayName": "brainnel-new",
           "scheme": "fb995035562798467",
-          "clientToken": "83c780425cf53d1e4529171beac9d450"
+          "clientToken": "83c780425cf53d1e4529171beac9d450",
+          "iosDisplayName": "brainnel-new",
+          "isLimitedEventDataUsageEnabled": true
         }
       ],
       [

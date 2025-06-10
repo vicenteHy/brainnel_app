@@ -136,6 +136,7 @@
       "welcome_time": "5:43 PM",
       "read_status": "Read",
       "product_detail_button": "Details",
+      "purchase": "Purchase",
       "no_product_inquiries": "No product inquiry records",
       "product_inquiry_hint": "Start your first product inquiry by clicking the inquiry button on the product details page"
   },
@@ -519,6 +520,13 @@
           "balance_detail": "Balance Detail",
           "recharge_now": "Recharge Now",
           "balance_title":"Balance"
+      },
+      "transaction_types": {
+          "order_payment": "Order Payment",
+          "recharge": "Recharge",
+          "refund": "Refund",
+          "withdrawal": "Withdrawal",
+          "transfer": "Transfer"
       },
       "recharge": {
           "title": "Recharge",

@@ -21,7 +21,6 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
       subject_trans: item.subject_trans,
       min_price: item.min_price,
       offer_id: item.offer_id,
-      default_message: item.default_message,
     });
   };
 
@@ -56,7 +55,7 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
         
         <TouchableOpacity style={styles.continueButton} onPress={navigateToProductChat} activeOpacity={0.8}>
           <Text style={styles.continueButtonText}>
-            {t("chat.continue_inquiry", "继续咨询")}
+            {t("chat.purchase", "购买")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -126,10 +125,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF6F30",
     borderRadius: 8,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 80,
+    minWidth: 90,
   },
   continueButtonText: {
     fontSize: customRF(13),

@@ -278,15 +278,11 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
         }
       };
 
-      const orderStatusText = getOrderStatusText(status);
-      const defaultMessage = `${t("order.status.order_inquiry_prefix")} ${orderStatusText} ${t("order.status.order_inquiry_middle")} ${t("order.status.order_number_prefix")} ${orderDetails.order_id}`;
-
       navigation.navigate("ChatScreen", {
         product_image_urls: [firstItem.sku_image || firstItem.product_image],
         subject_trans: productName,
         min_price: firstItem.unit_price,
         offer_id: firstItem.offer_id,
-        default_message: defaultMessage,
       });
     }
   }, [navigation, orderDetails, t, status]);

@@ -16,14 +16,12 @@ export type RootStackParamList = {
     subject_trans?: string;
     min_price?: number;
     offer_id?: string;
-    default_message?: string;
   };
   ProductChatScreen: {
     product_image_urls?: string[];
     subject_trans?: string;
     min_price?: number;
     offer_id?: string;
-    default_message?: string;
   };
   Balance: undefined;
   ShippingDetailsSection: undefined;

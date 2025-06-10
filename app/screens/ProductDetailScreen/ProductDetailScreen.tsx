@@ -137,7 +137,6 @@ export default function ProductDetailScreen() {
         subject_trans: product.subject || product.subject_trans,
         min_price: product.price,
         offer_id: product.offer_id,
-        default_message: t('defaultProductMessage'),
       });
     }
   };

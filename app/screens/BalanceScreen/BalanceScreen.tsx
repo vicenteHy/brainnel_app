@@ -93,11 +93,15 @@ export const BalanceScreen = () => {
     }, [])
   );
 
+  const getTransactionTypeText = (type: string) => {
+    return t(`balance.transaction_types.${type}`, type);
+  };
+
   const renderTransactionItem = ({ item }: { item: Transaction }) => (
     <View style={styles.transactionHistoryList} key={item.transaction_id}>
       <View style={styles.transactionDetailsPanel}>
         <View style={styles.transactionDetailsRow}>
-          <Text style={styles.transactionDescriptionBold}>{item.type}</Text>
+          <Text style={styles.transactionDescriptionBold}>{getTransactionTypeText(item.type)}</Text>
           <Text
             style={[
               styles.transactionAmountDisplay,
@@ -111,7 +115,7 @@ export const BalanceScreen = () => {
         </View>
         <View style={styles.transactionInfoRow}>
           <Text style={styles.transactionDate}>{item.timestamp}</Text>
-          <Text style={styles.shipmentReference}>{item.type}</Text>
+          <Text style={styles.shipmentReference}>{getTransactionTypeText(item.type)}</Text>
         </View>
       </View>
     </View>

@@ -41,7 +41,6 @@ interface ProductInfo {
   subject_trans?: string;
   min_price?: number;
   offer_id?: string;
-  default_message?: string;
 }
 
 type RootStackParamList = {
@@ -91,12 +90,6 @@ export const ProductChatScreen = () => {
     loadHistoryMessages();
   }, [productInfo?.offer_id, user.user_id]);
 
-  // 设置默认消息
-  useEffect(() => {
-    if (productInfo?.default_message) {
-      setInputText(productInfo.default_message);
-    }
-  }, [productInfo]);
 
   // 保存产品咨询历史到本地存储
   const saveProductInquiry = async (productInfo: ProductInfo) => {
@@ -352,7 +345,7 @@ export const ProductChatScreen = () => {
               >
                 <View style={styles.detailButton}>
                   <Text style={styles.detailButtonText}>
-                    {t("chat.product_detail_button", "详情")}
+                    {t("chat.purchase", "购买")}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -435,7 +428,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   headerRight: {
-    width: 60,
+    width: 100,
     height: 36,
     justifyContent: "center",
     alignItems: "center",

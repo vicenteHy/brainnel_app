@@ -592,12 +592,6 @@ export const OrderDetails = () => {
                           <Text style={styles.warehouseAddress}>
                             {orderDetails.receiver_address}
                           </Text>
-                          <View style={styles.contactNotice}>
-                            <BrightnessIcon size={14} color="#666" />
-                            <Text style={styles.contactNoticeText}>
-                              {t("order.contact_after_payment")}
-                            </Text>
-                          </View>
                         </View>
                       </View>
 

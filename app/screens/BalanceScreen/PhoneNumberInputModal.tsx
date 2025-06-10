@@ -293,6 +293,7 @@ const PhoneNumberInputModal = ({
                       value={phoneNumber}
                       onChangeText={setPhoneNumber}
                       keyboardType="phone-pad"
+                      returnKeyType="done"
                       placeholder={t("balance.phone_modal.enter_phone")}
                       placeholderTextColor="#999"
                     />

@@ -66,46 +66,8 @@ export const styles = StyleSheet.create({
     color: "#333",
     fontWeight: "500",
   },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    position: "relative",
-  },
-  tabButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabIcon: {
-    marginLeft: 4,
-  },
-  tabText: {
-    fontSize: fontSize(16),
-    color: "#000",
-  },
-  activeTabText: {
-    color: "#0933a1",
-    fontWeight: "bold",
-  },
-  activeTabButton: {
-    // borderBottomColor: "#0933a1",
-  },
   resultsContainer: {
     flex: 1,
-  },
-  resultsHeader: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    paddingVertical: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -185,51 +147,6 @@ export const styles = StyleSheet.create({
     fontFamily: "PingFang SC",
     color: "#7c7c7c",
   },
-  sortScrollView: {
-    flexGrow: 0,
-  },
-  sortGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  sortLabel: {
-    fontSize: fontSize(16),
-    color: "#666",
-    marginRight: 8,
-  },
-  sortButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sortButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginLeft: 4,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  sortButtonActive: {
-    borderColor: "#FF6F30",
-    backgroundColor: "#fff8f5",
-  },
-  sortButtonText: {
-    fontSize: fontSize(14),
-    color: "#666",
-  },
-  sortButtonTextActive: {
-    color: "#FF6F30",
-    fontWeight: "bold",
-  },
-  sortDivider: {
-    width: 1,
-    height: widthUtils(20, 20).height,
-    backgroundColor: "#e0e0e0",
-    marginHorizontal: 16,
-  },
   footerContainer: {
     padding: 16,
     alignItems: "center",
@@ -281,20 +198,6 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: "#999",
     textAlign: "center",
-  },
-  resultsTitle: {
-    fontSize: fontSize(14),
-    fontWeight: "bold",
-    color: "#333",
-    flex: 1,
-  },
-  resultsCount: {
-    fontSize: fontSize(14),
-    color: "#999",
-  },
-  filterButton: {
-    marginLeft: 8,
-    padding: 4,
   },
   imagePlaceholder: {
     backgroundColor: '#EAEAEA',

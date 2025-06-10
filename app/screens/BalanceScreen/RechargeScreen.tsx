@@ -901,6 +901,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                     value={customAmount}
                     onChangeText={handleCustomAmountChange}
                     keyboardType="numeric"
+                    returnKeyType="done"
                     placeholder={t("balance.recharge.choose_amount")}
                     placeholderTextColor="#999"
                     onSubmitEditing={handleCustomAmountSubmit}
@@ -908,6 +909,12 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                     autoFocus
                   />
                   <Text style={styles.currencyLabel}>{user?.currency}</Text>
+                  <TouchableOpacity 
+                    style={styles.customAmountConfirmButton}
+                    onPress={handleCustomAmountSubmit}
+                  >
+                    <Text style={styles.customAmountConfirmButtonText}>✓</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <Text
@@ -2351,6 +2358,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FF6F30",
     textAlign: "center",
+  },
+  customAmountConfirmButton: {
+    backgroundColor: "#FF6F30",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  customAmountConfirmButtonText: {
+    color: "white",
+    fontSize: fontSize(18),
+    fontWeight: "bold",
   },
   paypalExpandedContainer: {
     backgroundColor: "#f9f9f9",
