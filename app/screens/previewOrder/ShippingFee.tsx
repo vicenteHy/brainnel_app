@@ -346,12 +346,12 @@ export const ShippingFee = () => {
                           {option.id === "sea" ? (
                             <ShipIcon 
                               size={60} 
-                              color={shippingMethod === option.id ? "#FF6F30" : "#999"} 
+                              color={shippingMethod === option.id ? "#FF5100" : "#999"} 
                             />
                           ) : (
                             <PlaneIcon 
                               size={60} 
-                              color={shippingMethod === option.id ? "#FF6F30" : "#999"} 
+                              color={shippingMethod === option.id ? "#FF5100" : "#999"} 
                             />
                           )}
                         </View>
@@ -412,7 +412,7 @@ export const ShippingFee = () => {
                             <Text style={styles.calculatingText}>{count}</Text>
                             <ActivityIndicator
                               size="small"
-                              color="#FF6F30"
+                              color="#FF5100"
                               style={{ marginLeft: 5 }}
                             />
                           </View>
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 0,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -629,11 +629,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16), 
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     letterSpacing: 0.2,
   },
   sectionAction: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(14),
     fontWeight: "600",
   },
@@ -674,13 +674,13 @@ const styles = StyleSheet.create({
   },
   addRecipientIcon: {
     fontSize: fontSize(20),
-    color: "#FF6F30",
+    color: "#FF5100",
     marginRight: 6,
   },
   addRecipientText: { 
     fontSize: fontSize(14), 
     color: "#666666",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
 
   shippingOptions: {
@@ -706,21 +706,21 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 0,
     minHeight: 120,
     justifyContent: "space-between",
   },
   shippingCardSelected: { 
-    borderColor: "#FF6F30", 
+    borderColor: "#FF5100", 
     backgroundColor: "#fff4f0",
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
   locationPin: {
     position: "absolute",
@@ -748,14 +748,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14), 
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     textAlign: "center",
     marginBottom: 4,
   },
   shippingDetail: { 
     fontSize: fontSize(12), 
     color: "#666666", 
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     textAlign: "center",
   },
   recipientFormContainer3: {
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     marginBottom: 8, 
     color: "#666666",
     fontWeight: "500",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   selectWrapper: {
     borderWidth: 1.5,
@@ -800,14 +800,14 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 0,
   },
   selectedText: {
     fontSize: fontSize(14),
     color: "#1a1a1a",
     maxWidth: '95%',
     overflow: 'hidden',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   dropdownIcon: {
     fontSize: fontSize(12),
@@ -841,11 +841,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize(18),
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   closeButton: {
     fontSize: fontSize(16),
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "500",
   },
   flatListContent: {
@@ -864,10 +864,10 @@ const styles = StyleSheet.create({
     maxWidth: '95%',
     overflow: 'hidden',
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   checkmark: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "bold",
     fontSize: fontSize(16),
   },
@@ -890,20 +890,20 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     flex: 1,
   },
   cityText: {
     fontSize: fontSize(14),
     color: "#666666",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     marginLeft: 36,
     marginBottom: 4,
   },
   addressDetailText: {
     fontSize: fontSize(12),
     color: "#999999",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     marginLeft: 36,
     lineHeight: 16,
   },
@@ -927,14 +927,14 @@ const styles = StyleSheet.create({
     color: "#666666",
     fontWeight: "500",
     fontSize: fontSize(14),
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     flex: 1,
   },
   shippingInfoPrice: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "600",
     fontSize: fontSize(14),
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     textAlign: "right",
   },
   loadingContainer: {
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: fontSize(20),
     lineHeight: 28,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     color: "#1a1a1a",
     letterSpacing: 0.3,
   },
@@ -976,24 +976,24 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderWidth: 0,
     borderRadius: 16,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 4,
     },
     shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 0,
   },
   buttonText: {
     color: "white",
     fontWeight: "600",
     fontSize: fontSize(16),
     lineHeight: 22,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     letterSpacing: 0.3,
   },
   selectedCountryText: {
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: fontSize(16),
     lineHeight: 22,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     color: "#1a1a1a",
   },
   disabledButtonStyle: {
@@ -1017,10 +1017,10 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   calculatingText: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(14),
     fontWeight: "500",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   delivery: {
     alignItems: "center",
@@ -1030,29 +1030,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
   },
   deliveryText: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(16),
     fontWeight: "700",
     textAlign: "center",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   estimatedTimeContainer: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 16,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
   timeRow: {
     flexDirection: "row",
@@ -1068,13 +1068,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "white",
     marginRight: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   timeValue: {
     fontSize: fontSize(16),
     fontWeight: "600",
     color: "white",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
   },
   paymentHeader: {
     marginBottom: 16,
@@ -1086,7 +1086,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'System',
     letterSpacing: 0.2,
   },
 });

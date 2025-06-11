@@ -62,13 +62,13 @@ const styles = StyleSheet.create({
     borderColor: "#e5e5e5",
   },
   sendButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 25,
     width: 50,
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,

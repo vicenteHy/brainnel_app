@@ -106,7 +106,7 @@ export const BalanceScreen = () => {
             style={[
               styles.transactionAmountDisplay,
               {
-                color: Number(item.amount) < 0 ? "#0035a4" : "#FF6F30",
+                color: Number(item.amount) < 0 ? "#0035a4" : "#FF5100",
               },
             ]}
           >

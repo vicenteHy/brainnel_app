@@ -1147,12 +1147,12 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           size={fontSize(24)}
                           strokeColor={
                             selectedOperator === method.key
-                              ? "#FF6F30"
+                              ? "#FF5100"
                               : undefined
                           }
                           fillColor={
                             selectedOperator === method.key
-                              ? "#FF6F30"
+                              ? "#FF5100"
                               : undefined
                           }
                         />
@@ -1216,7 +1216,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           {/* 显示转换后的金额 */}
                           {isConverting ? (
                             <View style={styles.convertingContainer}>
-                              <ActivityIndicator size="small" color="#FF6F30" />
+                              <ActivityIndicator size="small" color="#FF5100" />
                               <Text style={styles.convertingText}>
                                 {t("balance.recharge.converting")}
                               </Text>
@@ -1270,7 +1270,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                           {/* 显示转换后的金额 */}
                           {isConverting ? (
                             <View style={styles.convertingContainer}>
-                              <ActivityIndicator size="small" color="#FF6F30" />
+                              <ActivityIndicator size="small" color="#FF5100" />
                               <Text style={styles.convertingText}>
                                 {t("balance.recharge.converting")}
                               </Text>
@@ -1315,10 +1315,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         <CircleOutlineIcon
                           size={fontSize(24)}
                           strokeColor={
-                            selectedOperator === "mtn" ? "#FF6F30" : undefined
+                            selectedOperator === "mtn" ? "#FF5100" : undefined
                           }
                           fillColor={
-                            selectedOperator === "mtn" ? "#FF6F30" : undefined
+                            selectedOperator === "mtn" ? "#FF5100" : undefined
                           }
                         />
                         {selectedOperator === "mtn" && (
@@ -1349,10 +1349,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         <CircleOutlineIcon
                           size={fontSize(24)}
                           strokeColor={
-                            selectedOperator === "mtn" ? "#FF6F30" : undefined
+                            selectedOperator === "mtn" ? "#FF5100" : undefined
                           }
                           fillColor={
-                            selectedOperator === "mtn" ? "#FF6F30" : undefined
+                            selectedOperator === "mtn" ? "#FF5100" : undefined
                           }
                         />
                         {selectedOperator === "mtn" && (
@@ -1529,7 +1529,7 @@ const styles = StyleSheet.create({
   priceBoxBlue: {
     width: "30%",
     backgroundColor: "rgba(255, 111, 48, 0.1)",
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     borderWidth: 2,
     borderRadius: 12,
     paddingVertical: 12,
@@ -1537,7 +1537,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: "5%",
     elevation: 2,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1561,11 +1561,11 @@ const styles = StyleSheet.create({
   priceTextBlue: {
     fontSize: fontSize(16),
     fontWeight: "700",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   currencyTextBlue: {
     fontSize: fontSize(11),
-    color: "#FF6F30",
+    color: "#FF5100",
     marginTop: 2,
     fontWeight: "500",
   },
@@ -1640,9 +1640,9 @@ const styles = StyleSheet.create({
     borderColor: "#007AFF",
   },
   currencyButtonActive: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     elevation: 2,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1693,14 +1693,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   confirmButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 25,
     width: widthUtils(50, 160).width,
     height: widthUtils(50, 160).height,
     justifyContent: "center",
     alignItems: "center",
     elevation: 3,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -1733,7 +1733,7 @@ const styles = StyleSheet.create({
   },
   blueBox: {
     flexDirection: "row",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     paddingHorizontal: 7,
     paddingLeft: 6,
     alignItems: "center",
@@ -1796,9 +1796,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonActive: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     elevation: 2,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1817,10 +1817,10 @@ const styles = StyleSheet.create({
   },
   priceBoxSelected: {
     backgroundColor: "rgba(255, 111, 48, 0.1)",
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     borderWidth: 2,
     elevation: 3,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -1831,13 +1831,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   priceTextSelected: {
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   priceTextUnselected: {
     color: "#333",
   },
   currencyTextSelected: {
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   currencyTextUnselected: {
     color: "#666666",
@@ -1913,9 +1913,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     elevation: 2,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -2356,11 +2356,11 @@ const styles = StyleSheet.create({
   customAmountText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#FF6F30",
+    color: "#FF5100",
     textAlign: "center",
   },
   customAmountConfirmButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -2440,7 +2440,7 @@ const styles = StyleSheet.create({
   convertedAmountValue: {
     fontSize: fontSize(16),
     fontWeight: "700",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   mobileMoneyText: {
     fontSize: fontSize(12),

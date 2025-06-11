@@ -81,7 +81,7 @@ export function MyAccount() {
               </View>
               <View style={styles.userinfoDetails}>
                 <Text style={styles.userinfoDetailsText}>View Details</Text>
-                <ArrowRightIcon size={8} color="#FF6F30" />
+                <ArrowRightIcon size={8} color="#FF5100" />
               </View>
             </View>
           </View>
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     padding: 15,
     justifyContent: "space-between",
     alignItems: "center",
-    elevation: 3,
+    elevation: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderBottomWidth: 1,
     borderColor: "#e0e0e0",
-    elevation: 4,
+    elevation: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    elevation: 4,
+    elevation: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   userinfoDetailsText: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: 12,
     fontWeight: "600",
     marginRight: 5,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
     marginBottom: 10,
-    elevation: 4,
+    elevation: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

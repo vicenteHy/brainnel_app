@@ -282,12 +282,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   primaryButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginBottom: 12,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -310,10 +310,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 1.5,
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
   },
   secondaryButtonText: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(16),
     fontWeight: "600",
     textAlign: "center",

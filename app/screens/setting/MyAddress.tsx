@@ -67,7 +67,7 @@ export function MyAddress() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6F30" />
+            <ActivityIndicator size="large" color="#FF5100" />
           </View>
         ) : (
           <Fragment>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   addressItemSelected: {
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     borderWidth: 2,
   },
   addressItemNoSelected: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(13),
     fontFamily: "PingFang SC",
     fontWeight: "500",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   svgContainer: {
     width: widthUtils(24, 24).width,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: "100%",
     height: widthUtils(60, 60).height,
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 5,

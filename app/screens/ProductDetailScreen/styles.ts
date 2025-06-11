@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 0 : 0,
+    paddingTop: 0,
   },
   container: {
     flex: 1,
@@ -112,7 +112,7 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     fontWeight: "600",
     fontSize: fontSize(20),
-    color: "#FF6F30",
+    color: "#FF5100",
     marginLeft: 0,
   },
   currencyText: {
@@ -120,7 +120,7 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: fontSize(14),
     marginLeft: 1.25,
-    color: "#FF6F30",
+    color: "#FF5100",
     lineHeight: 28,
   },
   salesCountLabel: {
@@ -248,7 +248,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 11,
     fontWeight: "600",
     fontSize: fontSize(14),
-    color: "#FF6F30",
+    color: "#FF5100",
     borderRadius: 5,
     lineHeight: widthUtils(40, 40).height,
     marginBottom: 10,
@@ -319,13 +319,13 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: fontSize(10),
     lineHeight: 20,
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   smallCurrencyText: {
     fontWeight: "700",
     fontSize: fontSize(10),
     marginLeft: 1.25,
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   productTitleSimilar: {
     marginTop: 2,
@@ -405,7 +405,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 0,
     borderRadius: 21,
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     marginLeft: 8,
   },
   addToCartText: {

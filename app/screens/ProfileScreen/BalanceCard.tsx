@@ -24,7 +24,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency, onR
   return (
     <View style={styles.balanceCard}>
       <View style={styles.balanceCardHeader}>
-        <Ionicons name="wallet-outline" size={24} color="#FF6F30" />
+        <Ionicons name="wallet-outline" size={24} color="#FF5100" />
         <Text style={styles.balanceCardTitle}>{t('profile.balance.title')}</Text>
       </View>
       <View style={styles.balanceAmountContainer}>

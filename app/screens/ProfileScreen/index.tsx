@@ -122,7 +122,7 @@ export const ProfileScreen = () => {
   
   return (
           <LinearGradient
-        colors={['#FF6F30', '#f5f5f5']}
+        colors={['#FF5100', '#f5f5f5']}
           locations={[0.3,0.5]}
         style={componentStyles.gradientContainer}
         start={{ x: 0, y: 0 }}

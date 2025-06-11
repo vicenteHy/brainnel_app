@@ -197,7 +197,7 @@ export function BrowseHistoryScreen() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6F30" />
+            <ActivityIndicator size="large" color="#FF5100" />
             <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : (
@@ -210,8 +210,8 @@ export function BrowseHistoryScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={['#FF6F30']}
-                tintColor={'#FF6F30'}
+                colors={['#FF5100']}
+                tintColor={'#FF5100'}
               />
             }
             ListEmptyComponent={
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   filterButtonActive: {
-    backgroundColor: '#FF6F30',
+    backgroundColor: '#FF5100',
   },
   filterButtonText: {
     fontSize: fontSize(14),
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: fontSize(14),
-    color: '#FF6F30',
+    color: '#FF5100',
     fontWeight: '500',
   },
   loadingContainer: {
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: fontSize(16),
     fontWeight: "bold",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   time: {
     fontSize: fontSize(12),

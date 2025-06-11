@@ -184,7 +184,7 @@ export const Collection = () => {
   // 渲染加载指示器
   const renderLoadingIndicator = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#FF6F30" />
+      <ActivityIndicator size="large" color="#FF5100" />
       <Text style={styles.loadingText}>{t('common.loading') || '加载中...'}</Text>
     </View>
   );
@@ -194,7 +194,7 @@ export const Collection = () => {
     if (loadingMore) {
       return (
         <View style={styles.footerContainer}>
-          <ActivityIndicator size="small" color="#FF6F30" />
+          <ActivityIndicator size="small" color="#FF5100" />
           <Text style={styles.footerText}>{t('common.loading_more') || '加载更多...'}</Text>
         </View>
       );
@@ -244,8 +244,8 @@ export const Collection = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={["#FF6F30"]}
-                tintColor="#FF6F30"
+                colors={["#FF5100"]}
+                tintColor="#FF5100"
               />
             }
             onScroll={handleScroll}
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   price: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(16),
     marginBottom: 10,
     fontWeight: "600",
@@ -369,10 +369,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cart: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
   },
   delete: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderWidth: 0,
   },
   cartText: {

@@ -1045,7 +1045,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     backgroundColor: "#fff",
-    elevation: 3,
+    elevation: 0,
   },
   back: { fontSize: fontSize(20), marginRight: 16 },
   title: {
@@ -1310,17 +1310,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     marginTop: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
   },
   sectionHeader1: {
     flexDirection: "row",
@@ -1783,7 +1776,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   bottomButtonContent: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     width: "100%",
     justifyContent: "center",
     alignItems: "center",

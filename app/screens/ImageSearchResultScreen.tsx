@@ -788,7 +788,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#FF6F30"
+                            color="#FF5100"
                           />
                         )}
                       </TouchableOpacity>
@@ -815,7 +815,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#FF6F30"
+                            color="#FF5100"
                           />
                         )}
                       </TouchableOpacity>
@@ -848,7 +848,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-up"
                             size={16}
-                            color="#FF6F30"
+                            color="#FF5100"
                           />
                         )}
                       </TouchableOpacity>
@@ -875,7 +875,7 @@ export const ImageSearchResultScreen = ({
                           <IconComponent
                             name="chevron-down"
                             size={16}
-                            color="#FF6F30"
+                            color="#FF5100"
                           />
                         )}
                       </TouchableOpacity>
@@ -1126,7 +1126,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   sortButtonActive: {
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     backgroundColor: "#fff8f5",
   },
   sortButtonText: {
@@ -1134,7 +1134,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   sortButtonTextActive: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "bold",
   },
   sortDivider: {
@@ -1174,7 +1174,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 0,
   },
   emptyContainer: {
     flex: 1,

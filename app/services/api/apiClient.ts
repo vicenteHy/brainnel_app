@@ -42,14 +42,7 @@ const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
   headers: DEFAULT_HEADERS,
-  httpsAgent: Platform.OS === 'android' ? {
-    // 强制使用兼容的TLS参数
-    ciphers: [
-      'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
-      'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'
-    ].join(':'),
-    minVersion: 'TLSv1.2'
-  } : undefined
+  httpsAgent: undefined
 });
 
 // 请求拦截器
@@ -63,15 +56,9 @@ apiClient.interceptors.request.use(
       fullUrl += (fullUrl.includes('?') ? '&' : '?') + params.toString();
     }
 
-    // 根据平台设置请求方法大小写
+    // 统一使用小写方法
     if (config.method) {
-      if (Platform.OS === 'ios') {
-        // iOS使用小写方法
-        config.method = config.method.toLowerCase();
-      } else if (Platform.OS === 'android') {
-        // Android使用大写方法
-        config.method = config.method.toUpperCase();
-      }
+      config.method = config.method.toLowerCase();
     }
 
     // console.log("环境:", __DEV__ ? "开发环境" : "生产环境");

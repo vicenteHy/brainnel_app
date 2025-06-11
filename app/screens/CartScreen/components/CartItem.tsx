@@ -122,7 +122,7 @@ export const CartItem: React.FC<CartItemProps> = ({
               renderRightActions={() => (
                 <TouchableOpacity
                   style={{
-                    backgroundColor: "#FF6F30",
+                    backgroundColor: "#FF5100",
                     justifyContent: "center",
                     alignItems: "center",
                     width: 80,

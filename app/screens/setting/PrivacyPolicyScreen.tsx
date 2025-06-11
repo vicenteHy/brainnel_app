@@ -295,7 +295,7 @@ export const PrivacyPolicyScreen = () => {
       <View style={styles.content}>
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6F30" />
+            <ActivityIndicator size="large" color="#FF5100" />
             <Text style={styles.loadingText}>{t('loading')}</Text>
           </View>
         ) : (
@@ -324,7 +324,7 @@ export const PrivacyPolicyScreen = () => {
             
             {webViewLoading && (
               <View style={styles.webViewLoadingContainer}>
-                <ActivityIndicator size="small" color="#FF6F30" />
+                <ActivityIndicator size="small" color="#FF5100" />
               </View>
             )}
             
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   retryButton: {
-    backgroundColor: '#FF6F30',
+    backgroundColor: '#FF5100',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,

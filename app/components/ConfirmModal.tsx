@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   confirmButton: {
-    backgroundColor: '#FF6F30',
-    shadowColor: '#FF6F30',
+    backgroundColor: '#FF5100',
+    shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

@@ -40,7 +40,7 @@ const CartIconWithBadge = ({ color, size }: TabBarIconProps) => {
           position: 'absolute',
           top: -8,
           right: -8,
-          backgroundColor: '#FF6F30',
+          backgroundColor: '#FF5100',
           borderRadius: 8,
           minWidth: 16,
           height: 16,
@@ -192,7 +192,7 @@ export const TabNavigator = () => {
     <>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: '#FF6F30',
+          tabBarActiveTintColor: '#FF5100',
           tabBarInactiveTintColor: '#000000',
           tabBarStyle: {
             backgroundColor: '#FFFFFF',

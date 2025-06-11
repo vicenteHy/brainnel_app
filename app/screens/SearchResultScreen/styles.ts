@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
+    paddingTop: 0,
   },
   container: {
     flex: 1,
@@ -121,14 +121,14 @@ export const styles = StyleSheet.create({
   currentPrice: {
     fontSize: fontSize(24),
     fontWeight: "600",
-    color: "#FF6F30",
+    color: "#FF5100",
     marginRight: 4,
   },
   currency: {
     fontSize: fontSize(14),
     fontWeight: "600",
     fontFamily: "PingFang SC",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   originalPrice: {
     fontSize: fontSize(14),
@@ -178,7 +178,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 0,
   },
   emptyContainer: {
     flex: 1,
@@ -303,7 +303,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   productIdValue: {
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: 'Courier',
     fontWeight: '600',
     color: '#0066FF',
   },

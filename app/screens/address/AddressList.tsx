@@ -309,9 +309,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   addressItemSelected: {
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     borderWidth: 2,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -422,12 +422,12 @@ const styles = StyleSheet.create({
   addButton: {
     width: "100%",
     height: 56,
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 16,
     marginTop: 20,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -517,9 +517,9 @@ const styles = StyleSheet.create({
     borderColor: '#f3f4f8',
   },
   confirmButton: {
-    backgroundColor: '#FF6F30',
-    borderColor: '#FF6F30',
-    shadowColor: '#FF6F30',
+    backgroundColor: '#FF5100',
+    borderColor: '#FF5100',
+    shadowColor: '#FF5100',
     shadowOffset: {
       width: 0,
       height: 4,

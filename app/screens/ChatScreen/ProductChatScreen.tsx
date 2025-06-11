@@ -434,13 +434,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   detailButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 18,
     paddingHorizontal: 12,
     paddingVertical: 6,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   productInfoPrice: {
     fontSize: customRF(18),
     fontWeight: "700",
-    color: "#FF6F30",
+    color: "#FF5100",
     marginBottom: 5,
   },
   productInfoId: {
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   },
   myMessage: {
     alignSelf: "flex-end",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderBottomRightRadius: 4,
   },
   theirMessage: {
@@ -630,13 +630,13 @@ const styles = StyleSheet.create({
     borderColor: "#e5e5e5",
   },
   sendButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 25,
     width: 50,
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,

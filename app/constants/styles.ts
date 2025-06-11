@@ -93,7 +93,7 @@ export const shadow = {
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 2,
+    elevation: 0,
   },
   medium: {
     shadowColor: '#000',
@@ -103,7 +103,7 @@ export const shadow = {
     },
     shadowOpacity: 0.30,
     shadowRadius: 4.65,
-    elevation: 4,
+    elevation: 0,
   },
   large: {
     shadowColor: '#000',
@@ -113,6 +113,6 @@ export const shadow = {
     },
     shadowOpacity: 0.37,
     shadowRadius: 7.49,
-    elevation: 6,
+    elevation: 0,
   },
 }; 

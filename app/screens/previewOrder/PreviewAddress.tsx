@@ -372,7 +372,7 @@ export const PreviewAddress = () => {
     <SafeAreaView style={[styles.safeArea]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
         style={styles.safeAreaContent}
       >
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
+    paddingTop: 0,
   },
   container: {
     flex: 1,
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: "#FF6F30",
+    color: "#FF5100",
     textDecorationLine: "underline",
   },
   contactFormContainer: {
@@ -833,8 +833,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checked: {
-    backgroundColor: "#FF6F30",
-    borderColor: "#FF6F30",
+    backgroundColor: "#FF5100",
+    borderColor: "#FF5100",
   },
   checkmark: {
     color: "white",
@@ -977,10 +977,10 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderWidth: 0,
     borderRadius: 16,
-    shadowColor: "#FF6F30",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1041,7 +1041,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   countryItem: {
     padding: 16,
@@ -1096,7 +1096,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   checkIcon: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: 18,
     fontWeight: "bold",
   },

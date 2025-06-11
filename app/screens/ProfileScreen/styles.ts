@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 0 : 0,
+    paddingTop: 0,
   },
   flexColumnContainer1: {
     flex: 1,
@@ -585,7 +585,7 @@ export const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   loginButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     paddingHorizontal: 30,
     paddingVertical: 10,
     borderRadius: 20,
@@ -597,14 +597,14 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
   },
   fixedLoginButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     paddingHorizontal: 30,
     paddingVertical: 10,
     borderRadius: 20,
     position: "absolute",
     bottom: 20,
     alignSelf: "center",
-    elevation: 5,
+    elevation: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -641,13 +641,13 @@ export const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginTop: 12,
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#FF6F30',
+    elevation: 0,
+    shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 81, 0, 0.1)',
+    borderColor: 'rgba(255, 17, 0, 0.1)',
   },
   balanceCardHeader: {
     flexDirection: 'row',
@@ -694,11 +694,11 @@ export const styles = StyleSheet.create({
   },
   balanceButton: {
     width: '47%', // 固定宽度，确保两个按钮完全一致
-    backgroundColor: '#FF6F30',
+    backgroundColor: '#FF5100',
     minHeight: 40,
     borderRadius: 25,
-    elevation: 3,
-    shadowColor: '#FF6F30',
+    elevation: 0,
+    shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -771,7 +771,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: 15,
-    backgroundColor: '#FF6F30',
+    backgroundColor: '#FF5100',
     borderRadius: 7.5,
     minWidth: 15,
     height: 15,
@@ -870,7 +870,7 @@ export const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 10,
     marginTop: -20, // To overlap with the header
-    elevation: 3,
+    elevation: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -908,7 +908,7 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
   vipCardLink: {
     fontSize: 12,
@@ -924,7 +924,7 @@ export const styles = StyleSheet.create({
   },
   vipProgressBarInner: {
     height: '100%',
-    backgroundColor: '#FF6F30',
+    backgroundColor: '#FF5100',
     borderRadius: 3,
   },
   vipMaxLevelProgressBar: {
@@ -935,7 +935,7 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 0,
   },
   vipProgressLabels: {
     flexDirection: 'row',

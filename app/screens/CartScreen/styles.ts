@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 0 : 0,
+    paddingTop: 0,
   },
   headerContainer: {
     flexDirection: "row",
@@ -172,13 +172,13 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
     fontFamily: "Segoe UI",
     fontWeight: "700",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   productDetailsTextStyle: {
     fontSize: fontSize(10),
     fontFamily: "Segoe UI",
     fontWeight: "700",
-    color: "#FF6F30",
+    color: "#FF5100",
     lineHeight: fontSize(13),
     marginLeft: 3,
   },
@@ -306,7 +306,7 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
   },
   selectedIconContainer: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
   },
   checkmark: {
     color: "white",
@@ -357,7 +357,7 @@ export const styles = StyleSheet.create({
     lineHeight: fontSize(22),
     fontWeight: "500",
     color: "white",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
@@ -383,7 +383,7 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     backgroundColor: "#fff",
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     borderWidth: 2,
   },
   priceColumnContainer: {
@@ -456,7 +456,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 0,
     maxWidth: "80%",
   },
   loginIcon: {
@@ -471,7 +471,7 @@ export const styles = StyleSheet.create({
   loginIconText: {
     fontSize: 40,
     fontWeight: "bold",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   loginPromptTitle: {
     fontSize: fontSize(24),
@@ -488,7 +488,7 @@ export const styles = StyleSheet.create({
     lineHeight: fontSize(22),
   },
   loginButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
@@ -562,7 +562,7 @@ export const modalStyles = StyleSheet.create({
     minWidth: 120,
     height: 50,
     borderRadius: 30,
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 20,

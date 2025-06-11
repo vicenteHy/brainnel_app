@@ -107,7 +107,7 @@ export const styles = StyleSheet.create<StylesType>({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 0 : 0,
+    paddingTop: 0,
     backgroundColor: "#fff",
   },
   container: {
@@ -129,7 +129,7 @@ export const styles = StyleSheet.create<StylesType>({
     backgroundColor: "#fff",
     paddingHorizontal: 10,
     paddingVertical: 8,
-    paddingTop: Platform.OS === "ios" ? 8 : 8,
+    paddingTop: 8,
   },
   searchBar: {
     flexDirection: "row",
@@ -389,7 +389,7 @@ export const styles = StyleSheet.create<StylesType>({
     },
     shadowOpacity: 0,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 0,
     marginBottom: 8,
   },
   beautyCardContainer1: {
@@ -450,13 +450,13 @@ export const styles = StyleSheet.create<StylesType>({
   highlightedText: {
     fontWeight: "700",
     fontSize: fontSize(24),
-    color: "#FF6F30",
+    color: "#FF5100",
     marginLeft: 2,
   },
   highlightedText1: {
     fontWeight: "700",
     fontSize: fontSize(14),
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   priceContainer1: {},
   priceLabel1: {
@@ -671,7 +671,7 @@ export const loginModalStyles = StyleSheet.create({
     lineHeight: 22,
   },
   loginButton: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,

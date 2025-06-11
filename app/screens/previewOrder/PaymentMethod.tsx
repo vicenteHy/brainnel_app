@@ -1036,7 +1036,7 @@ export const PaymentMethod = () => {
         <View style={styles.container}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FF6F30" />
+              <ActivityIndicator size="large" color="#FF5100" />
             </View>
           ) : (
             <ScrollView
@@ -1294,7 +1294,7 @@ export const PaymentMethod = () => {
                           style={{
                             fontSize: fontSize(18),
                             fontWeight: "600",
-                            color: "#FF6F30",
+                            color: "#FF5100",
                           }}
                         >
                           {getConvertedTotalForCalculation().toFixed(2)}{" "}
@@ -1308,7 +1308,7 @@ export const PaymentMethod = () => {
                           style={{
                             fontSize: fontSize(18),
                             fontWeight: "600",
-                            color: "#FF6F30",
+                            color: "#FF5100",
                           }}
                         >
                           {getConvertedTotalForCalculation().toFixed(2)}{" "}
@@ -1322,7 +1322,7 @@ export const PaymentMethod = () => {
                         style={{
                           fontSize: fontSize(18),
                           fontWeight: "600",
-                          color: "#FF6F30",
+                          color: "#FF5100",
                         }}
                       >
                         {getConvertedTotalForCalculation().toFixed(2)}{" "}
@@ -1335,7 +1335,7 @@ export const PaymentMethod = () => {
                       style={{
                         fontSize: fontSize(18),
                         fontWeight: "600",
-                        color: "#FF6F30",
+                        color: "#FF5100",
                       }}
                     >
                       {(selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
@@ -1428,14 +1428,14 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF6F30",
+    borderBottomColor: "#FF5100",
   },
   tabText: {
     fontSize: fontSize(16),
     color: "#666",
   },
   tabTextActive: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "500",
   },
   paymentOptions: {
@@ -1454,7 +1454,7 @@ const styles = StyleSheet.create({
   paymentSelected: {
     backgroundColor: "#FFF0E8",
     borderWidth: 1,
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
   },
   paymentContent: {
     flex: 1,
@@ -1504,7 +1504,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   radioInnerSelected: {
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
   },
   titleContainer: {
     width: "100%",
@@ -1566,7 +1566,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   sectionAction: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(13),
     fontWeight: "500",
   },
@@ -1633,7 +1633,7 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontWeight: "600",
-    color: "#FF6F30",
+    color: "#FF5100",
     fontSize: fontSize(15),
     marginBottom: 5,
   },
@@ -1763,7 +1763,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   loadingIndicator: {
     marginLeft: 10,
@@ -1800,7 +1800,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF6F30",
+    borderBottomColor: "#FF5100",
   },
   bottomBar: {
     padding: 15,
@@ -1812,7 +1812,7 @@ const styles = StyleSheet.create({
     height: widthUtils(50, 50).height,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FF6F30",
+    backgroundColor: "#FF5100",
     borderRadius: 25,
   },
   submitButtonText: {
@@ -1857,10 +1857,10 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF6F30",
+    borderBottomColor: "#FF5100",
   },
   activeTabText: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "500",
   },
   tabContent: {
@@ -1982,14 +1982,14 @@ const styles = StyleSheet.create({
   },
   currencyButtonActive: {
     backgroundColor: "#FFF0E8",
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
   },
   currencyButtonText: {
     fontSize: fontSize(14),
     color: "#333",
   },
   currencyButtonTextActive: {
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "600",
   },
   convertingContainer: {
@@ -2014,7 +2014,7 @@ const styles = StyleSheet.create({
   convertedAmountValue: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   shippingFeeAmountRow: {
     flexDirection: "row",
@@ -2025,7 +2025,7 @@ const styles = StyleSheet.create({
   },
   warningIcon: {
     fontSize: fontSize(16),
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   cashOnDeliveryContainer: {
     marginTop: 4,
@@ -2034,12 +2034,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff4f0",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#FF6F30",
+    borderColor: "#FF5100",
     alignSelf: "flex-start",
   },
   cashOnDeliveryText: {
     fontSize: fontSize(12),
-    color: "#FF6F30",
+    color: "#FF5100",
     fontWeight: "500",
   },
   shippingLabelContainer: {

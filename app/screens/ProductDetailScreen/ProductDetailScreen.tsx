@@ -153,7 +153,7 @@ export default function ProductDetailScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6F30" />
+          <ActivityIndicator size="large" color="#FF5100" />
           <Text style={styles.loadingText}>{t('loading_product_details')}</Text>
         </View>
       </SafeAreaView>

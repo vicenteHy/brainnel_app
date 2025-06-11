@@ -139,12 +139,12 @@ const styles = StyleSheet.create({
   priceInfoText: {
     fontWeight: "700",
     fontSize: fontSize(26),
-    color: "#FF6F30",
+    color: "#FF5100",
   },
   priceInfoTextCon: {
     fontWeight: "700",
     fontSize: fontSize(14),
-    color: "#FF6F30",
+    color: "#FF5100",
     lineHeight: fontSize(30),
     alignSelf: "flex-end",
     marginLeft: 2,

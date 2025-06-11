@@ -2,7 +2,7 @@ import React from 'react';
 import { Svg, Path } from 'react-native-svg';
 
 const HeartIcon = ({ 
-  color = "#FF6F30", 
+  color = "#FF5100", 
   size = 18,
   filled = true,
   strokeColor = "#373737",

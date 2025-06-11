@@ -285,10 +285,10 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                   </View>
                   <View>
                     {country === item.country && !loading && (
-                      <CheckIcon size={fontSize(24)} color="#FF6F30" />
+                      <CheckIcon size={fontSize(24)} color="#FF5100" />
                     )}
                     {country === item.country && loading && (
-                      <ActivityIndicator size="small" color="#FF6F30" />
+                      <ActivityIndicator size="small" color="#FF5100" />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -320,10 +320,10 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                   </View>
                   <View>
                     {currency === item && !loading && (
-                      <CheckIcon size={fontSize(24)} color="#FF6F30" />
+                      <CheckIcon size={fontSize(24)} color="#FF5100" />
                     )}
                     {currency === item && loading && (
-                      <ActivityIndicator size="small" color="#FF6F30" />
+                      <ActivityIndicator size="small" color="#FF5100" />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -353,10 +353,10 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                   </View>
                   <View>
                     {language === item && !loading && (
-                      <CheckIcon size={fontSize(24)} color="#FF6F30" />
+                      <CheckIcon size={fontSize(24)} color="#FF5100" />
                     )}
                     {language === item && loading && (
-                      <ActivityIndicator size="small" color="#FF6F30" />
+                      <ActivityIndicator size="small" color="#FF5100" />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -430,8 +430,8 @@ const styles = StyleSheet.create({
   },
   changeTypeTextActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FF6F30",
-    color: "#FF6F30",
+    borderBottomColor: "#FF5100",
+    color: "#FF5100",
   },
   changeTypeTextLoggedIn: {
     width: "33%",

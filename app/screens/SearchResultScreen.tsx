@@ -338,7 +338,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const renderLoadingSpinner = useCallback(() => {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6F30" />
+        <ActivityIndicator size="large" color="#FF5100" />
         <Text style={styles.loadingText}>{t("loading") || "加载中..."}</Text>
       </View>
     );
