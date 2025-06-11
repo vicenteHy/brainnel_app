@@ -10,6 +10,7 @@ import CircleOutlineIcon from "../../../components/CircleOutlineIcon";
 import OrangeCircleIcon from "../../../components/OrangeCircleIcon";
 import { styles } from "../styles";
 import { t } from "../../../i18n";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface CartBottomProps {
   user_id: string | null;
@@ -53,7 +54,7 @@ export const CartBottom: React.FC<CartBottomProps> = ({
 
         <View style={styles.productInfoContainer}>
           <View style={styles.productInfoContainer}>
-            <Text style={styles.highlightedText1}>{totalAmount}</Text>
+            <Text style={styles.highlightedText1}>{formatPrice(totalAmount, currency)}</Text>
             <Text style={styles.priceLabel}>{currency}</Text>
           </View>
           <TouchableOpacity

@@ -972,10 +972,17 @@ export const PaymentMethod = () => {
 
     setCreateLoading(true);
 
+    console.log("=== 创建订单请求数据 ===");
+    console.log("createOrderData:", JSON.stringify(createOrderData, null, 2));
+    console.log("用户信息:", { userId: user.id, currency: user.currency });
+    console.log("订单数据:", { orderData, previewOrder });
+    console.log("========================");
+
     ordersApi
       .createOrder(createOrderData as unknown as CreateOrderRequest)
       .then((res) => {
         setCreateLoading(false);
+        console.log("订单创建成功:", res);
         // go to payment preview
         navigation.navigate("PreviewOrder", {
           data: res,
@@ -993,8 +1000,25 @@ export const PaymentMethod = () => {
       })
       .catch((error) => {
         setCreateLoading(false);
+        console.error("=== 订单创建错误详情 ===");
         console.error("Error creating order:", error);
-        Alert.alert("Error", "Failed to create order");
+        console.error("错误状态码:", error.status);
+        console.error("错误数据:", error.data);
+        if (error.data && error.data.detail) {
+          console.error("详细错误信息:", JSON.stringify(error.data.detail, null, 2));
+        }
+        console.error("请求的数据:", JSON.stringify(createOrderData, null, 2));
+        console.error("========================");
+        
+        let errorMessage = "创建订单失败";
+        if (error.status === 422) {
+          errorMessage = "数据验证失败，请检查订单信息";
+          if (error.data && error.data.detail) {
+            console.log("422错误详情:", error.data.detail);
+          }
+        }
+        
+        Alert.alert("错误", errorMessage);
       });
   };
   return (

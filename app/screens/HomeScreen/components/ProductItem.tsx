@@ -4,6 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Product } from "../../../services/api/productApi";
 import { getSubjectTransLanguage } from "../../../utils/languageUtils";
 import { styles } from "../styles";
+import { formatPrice } from "../../../utils/priceUtils";
 
 type IconProps = {
   name: string;
@@ -127,13 +128,13 @@ export const ProductItem = React.memo(
           <View style={styles.flexRowCentered}>
             {userStore.user?.user_id && (
               <Text style={styles.priceLabel1}>
-                {item.original_min_price || "0"}
+                {formatPrice(Number(item.original_min_price || 0), item.currency || "FCFA")}
                 {item.currency || "FCFA"}
               </Text>
             )}
             <View style={styles.priceContainer}>
               <Text style={styles.highlightedText}>
-                {item.min_price || "0"}
+                {formatPrice(Number(item.min_price || 0), userStore.user?.currency || item.currency || "FCFA")}
               </Text>
               <Text style={styles.highlightedText1}>
                 {userStore.user?.currency || item.currency || "FCFA"}

@@ -252,6 +252,9 @@ export const PreviewAddress = () => {
           item.country === formData.country_code
         );
 
+        // 如果用户没有地址，新地址应该设置为默认地址
+        const shouldBeDefault = addresses.length === 0 || formData.is_default;
+        
         const addressData = {
           receiver_first_name: formData.receiver_first_name,
           receiver_last_name: formData.receiver_last_name,
@@ -262,8 +265,10 @@ export const PreviewAddress = () => {
           city: "",
           district: "",
           detail_address: "",
-          is_default: formData.is_default ? 1 : 0,
+          is_default: shouldBeDefault ? 1 : 0,
         };
+        
+        console.log("地址数据:", addressData);
 
         // 检查是否已存在相同地址，避免重复保存
         const isDuplicateAddress = addresses.some(addr => 
@@ -273,17 +278,44 @@ export const PreviewAddress = () => {
           addr.whatsapp_phone === addressData.whatsapp_phone
         );
 
+        let newAddressId: number | undefined;
+
         if (!isDuplicateAddress) {
           // 保存地址到用户地址列表
           await addAddress(addressData);
           console.log("地址已保存到用户地址列表");
+          
+          // 重新获取地址列表以获取新创建的地址ID
+          await fetchAddresses();
+          await fetchDefaultAddress();
+          
+          // 获取最新的地址状态
+          const currentState = useAddressStore.getState();
+          
+          // 如果是新用户第一次创建地址，这个地址会成为默认地址
+          if (currentState.defaultAddress) {
+            newAddressId = currentState.defaultAddress.address_id;
+          } else if (currentState.addresses.length > 0) {
+            // 如果没有默认地址，使用最新创建的地址
+            newAddressId = currentState.addresses[currentState.addresses.length - 1].address_id;
+          }
         } else {
           console.log("地址已存在，跳过保存");
+          // 如果地址已存在，找到匹配的地址ID
+          const existingAddress = addresses.find(addr => 
+            addr.receiver_first_name === addressData.receiver_first_name &&
+            addr.receiver_last_name === addressData.receiver_last_name &&
+            addr.receiver_phone === addressData.receiver_phone &&
+            addr.whatsapp_phone === addressData.whatsapp_phone
+          );
+          newAddressId = existingAddress?.address_id || defaultAddress?.address_id;
         }
 
+        console.log("设置地址ID:", newAddressId);
+        
         setOrderData({
           ...orderData,
-          address_id: defaultAddress?.address_id,
+          address_id: newAddressId || 0,
         });
 
         // 准备埋点数据
@@ -309,9 +341,14 @@ export const PreviewAddress = () => {
       } catch (error) {
         console.error("保存地址失败:", error);
         // 即使保存地址失败，也继续进行下一步流程
+        const fallbackAddressId = defaultAddress?.address_id || 
+          (addresses.length > 0 ? addresses[0].address_id : 0);
+        
+        console.log("使用回退地址ID:", fallbackAddressId);
+        
         setOrderData({
           ...orderData,
-          address_id: defaultAddress?.address_id,
+          address_id: fallbackAddressId,
         });
         
         navigation.navigate("ShippingFee", {

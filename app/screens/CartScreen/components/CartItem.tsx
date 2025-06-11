@@ -17,6 +17,7 @@ import {
 import { GetCartList } from "../../../services/api/cart";
 import { styles } from "../styles";
 import { t } from "../../../i18n";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface CartItemProps {
   item: GetCartList;
@@ -213,7 +214,7 @@ export const CartItem: React.FC<CartItemProps> = ({
                       <View style={styles.productInfoContainer1}>
                         <View style={styles.priceInfoContainer1}>
                           <Text style={styles.discountPriceLabel}>
-                            {sku.original_price} {sku.currency}
+                            {formatPrice(Number(sku.original_price), sku.currency)} {sku.currency}
                           </Text>
                         </View>
                         <View style={styles.vipContainer}>
@@ -230,7 +231,7 @@ export const CartItem: React.FC<CartItemProps> = ({
                       {/* Actual price - right below discount price */}
                       <View style={styles.productInfoContainer4}>
                         <Text style={styles.productCodeLabel}>
-                          {sku.price}
+                          {formatPrice(Number(sku.price), sku.currency)}
                         </Text>
                         <Text style={styles.productDetailsTextStyle}>
                           {sku.currency}

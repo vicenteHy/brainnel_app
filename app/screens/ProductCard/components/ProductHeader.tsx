@@ -12,6 +12,7 @@ import fontSize from "../../../utils/fontsizeUtils";
 import CloseIcon from "../../../components/CloseIcon";
 import { ProductDetailParams } from "../../../services/api/productApi";
 import { t } from "../../../i18n";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface ProductHeaderProps {
   imgTitle: string;
@@ -68,7 +69,7 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
             </View>
             <View style={styles.priceContainer}>
               <View style={styles.price}>
-                <Text style={styles.priceInfoText}>{price}</Text>
+                <Text style={styles.priceInfoText}>{formatPrice(price, product.currency)}</Text>
                 <Text style={styles.priceInfoTextCon}>
                   {product.currency}
                 </Text>

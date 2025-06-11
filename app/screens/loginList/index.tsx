@@ -10,7 +10,10 @@ import {
   Image,
   Modal,
   SafeAreaView,
-  Alert
+  Alert,
+  TextInput,
+  ActivityIndicator,
+  FlatList
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // @ts-ignore
@@ -21,11 +24,15 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import fontSize from "../../utils/fontsizeUtils";
 import EmailLoginModal from "./EmailLoginModal";
 import PhoneLoginModal from "./PhoneLoginModal";
+import WhatsAppLoginModal from "./WhatsAppLoginModal";
 import { loginApi } from "../../services/api/login";
 import { userApi } from "../../services";
 import useUserStore from "../../store/user";
 import { settingApi } from "../../services/api/setting";
 import { changeLanguage } from "../../i18n";
+import { CountryList } from "../../constants/countries";
+import { getCountryTransLanguage } from "../../utils/languageUtils";
+import useAnalyticsStore from "../../store/analytics";
 
 // 使用标准的ES6模块导入
 let GoogleSignin: any = null;
@@ -75,18 +82,63 @@ type LoginScreenProps = {
 };
 
 export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
-  const { setUser } = useUserStore();
-  const { t } = useTranslation();
+  const { setUser, setSettings } = useUserStore();
+  const analyticsStore = useAnalyticsStore();
+  const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // 全新的状态管理方式
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [phoneModalVisible, setPhoneModalVisible] = useState(false);
+  const [whatsappModalVisible, setWhatsappModalVisible] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<CountryList>();
+  
+  // WhatsApp登录状态
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [phoneNumberError, setPhoneNumberError] = useState(false);
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [countryList, setCountryList] = useState<CountryList[]>([]);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
 
   // 防止多次触发
   const isProcessingEmail = useRef(false);
   const isProcessingPhone = useRef(false);
+  const isProcessingWhatsapp = useRef(false);
+
+  // 加载国家数据
+  useEffect(() => {
+    const loadCountryData = async () => {
+      try {
+        // 加载国家列表
+        const res = await settingApi.getSendSmsCountryList();
+        setCountryList(res);
+        
+        // 加载已保存的国家
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        if (savedCountry) {
+          const parsedCountry = JSON.parse(savedCountry);
+          const item = res.find(item => item.country === parsedCountry.country);
+          if (item) {
+            setSelectedCountry(item);
+          }
+        } else {
+          // 默认设置为科特迪瓦 +225
+          const defaultCountry = res.find(item => item.country === 225);
+          if (defaultCountry) {
+            setSelectedCountry(defaultCountry);
+          }
+        }
+      } catch (error) {
+        console.error("加载国家数据失败:", error);
+      }
+    };
+    loadCountryData();
+  }, []);
 
   // 处理Android返回按钮
   useEffect(() => {
@@ -99,6 +151,10 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         setPhoneModalVisible(false);
         return true;
       }
+      if (whatsappModalVisible) {
+        setWhatsappModalVisible(false);
+        return true;
+      }
       handleClose();
       return true;
     };
@@ -109,7 +165,7 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     );
 
     return () => backHandler.remove();
-  }, [emailModalVisible, phoneModalVisible]);
+  }, [emailModalVisible, phoneModalVisible, whatsappModalVisible]);
 
   // 关闭主屏幕
   const handleClose = () => {
@@ -575,8 +631,9 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     if (isProcessingEmail.current) return;
 
     isProcessingEmail.current = true;
-    // 确保手机模态框已关闭
+    // 确保其他模态框已关闭
     setPhoneModalVisible(false);
+    setWhatsappModalVisible(false);
 
     // 延迟打开邮箱模态框，避免冲突
     setTimeout(() => {
@@ -590,13 +647,36 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     if (isProcessingPhone.current) return;
 
     isProcessingPhone.current = true;
-    // 确保邮箱模态框已关闭
+    // 确保其他模态框已关闭
     setEmailModalVisible(false);
+    setWhatsappModalVisible(false);
 
     // 延迟打开手机模态框，避免冲突
     setTimeout(() => {
       setPhoneModalVisible(true);
       isProcessingPhone.current = false;
+    }, 100);
+  };
+
+  // 显示WhatsApp登录
+  const showWhatsappModal = () => {
+    console.log("🚀 WhatsApp登录按钮被点击");
+    if (isProcessingWhatsapp.current) {
+      console.log("⏳ WhatsApp登录正在处理中，跳过");
+      return;
+    }
+
+    isProcessingWhatsapp.current = true;
+    console.log("🔄 关闭其他登录模态框");
+    // 确保其他模态框已关闭
+    setEmailModalVisible(false);
+    setPhoneModalVisible(false);
+
+    // 延迟打开WhatsApp模态框，避免冲突
+    setTimeout(() => {
+      console.log("📱 显示WhatsApp登录模态框");
+      setWhatsappModalVisible(true);
+      isProcessingWhatsapp.current = false;
     }, 100);
   };
 
@@ -612,6 +692,171 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     setPhoneModalVisible(false);
   };
 
+  // 关闭WhatsApp登录
+  const hideWhatsappModal = () => {
+    console.log("❌ 关闭WhatsApp登录模态框");
+    setWhatsappModalVisible(false);
+  };
+
+  // 验证手机号 (8-11位)
+  const validatePhoneNumber = (phoneNum: string) => {
+    const length = phoneNum.length;
+    return length >= 8 && length <= 11;
+  };
+
+  // 处理手机号输入
+  const handlePhoneNumberChange = (text: string) => {
+    setPhoneNumber(text);
+    if (text.length > 0) {
+      setPhoneNumberError(!validatePhoneNumber(text));
+    } else {
+      setPhoneNumberError(false);
+    }
+    setWhatsappError(null);
+  };
+
+  // 选择国家
+  const handleCountrySelect = (country: CountryList) => {
+    console.log("🌍 用户选择国家:", country);
+    setSelectedCountry(country);
+    setShowCountryModal(false);
+    AsyncStorage.setItem("@selected_country", JSON.stringify(country));
+  };
+
+  // 发送WhatsApp OTP
+  const handleSendWhatsappOtp = async () => {
+    console.log("🚀 WhatsApp发送OTP");
+    
+    if (!validatePhoneNumber(phoneNumber)) {
+      console.log("❌ 手机号验证失败");
+      setPhoneNumberError(true);
+      return;
+    }
+
+    try {
+      setWhatsappLoading(true);
+      setWhatsappError(null);
+      
+      const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
+      console.log("📞 完整手机号:", fullPhoneNumber);
+      
+      const requestData = {
+        phone_number: fullPhoneNumber,
+        language: i18n.language || "zh"
+      };
+      
+      const response = await loginApi.sendWhatsappOtp(requestData);
+      console.log("✅ WhatsApp OTP发送成功:", response);
+      
+      setShowOtpInput(true);
+      setWhatsappLoading(false);
+      Alert.alert(t("whatsapp.verification_code_sent"), t("whatsapp.check_whatsapp"));
+    } catch (error: any) {
+      console.error("❌ 发送WhatsApp OTP失败:", error);
+      
+      let errorMessage = t("whatsapp.login_failed");
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = t("whatsapp.login_failed");
+      } else if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = t("whatsapp.login_failed");
+        } else if (error.response.status >= 500) {
+          errorMessage = t("whatsapp.login_failed");
+        } else if (error.response.status === 422) {
+          errorMessage = t("whatsapp.phone_error");
+        }
+      }
+      
+      setWhatsappLoading(false);
+      setWhatsappError(errorMessage);
+    }
+  };
+
+  // 验证WhatsApp OTP
+  const handleVerifyWhatsappOtp = async () => {
+    console.log("🔐 WhatsApp验证OTP");
+    
+    if (!otpCode.trim()) {
+      setWhatsappError(t("whatsapp.enter_code"));
+      return;
+    }
+
+    try {
+      setOtpLoading(true);
+      setWhatsappError(null);
+      
+      const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
+      const requestData = {
+        phone_number: fullPhoneNumber,
+        code: otpCode
+      };
+      
+      const res = await loginApi.verifyWhatsappOtp(requestData);
+      console.log("✅ WhatsApp OTP验证成功:", res);
+
+      if (res.access_token) {
+        const token = `${res.token_type} ${res.access_token}`;
+        await AsyncStorage.setItem("token", token);
+        
+        if (res.first_login) {
+          const countryCode = selectedCountry?.country || 225;
+          const data = await settingApi.postFirstLogin(countryCode);
+          setSettings(data);
+        }
+        
+        const user = await userApi.getProfile();
+        if (user.language) {
+          await changeLanguage(user.language);
+        }
+        
+        setUser(user);
+        setOtpLoading(false);
+        
+        // 记录登录成功
+        analyticsStore.logLogin(true, "whatsapp");
+        
+        navigation.replace("MainTabs", { screen: "Home" });
+        if (onClose) onClose();
+      } else {
+        setOtpLoading(false);
+        setWhatsappError(t("whatsapp.login_failed"));
+      }
+    } catch (error: any) {
+      console.error("❌ 验证WhatsApp OTP失败:", error);
+      setOtpLoading(false);
+      setWhatsappError(t("whatsapp.code_error"));
+      
+      // 记录登录失败
+      analyticsStore.logLogin(false, "whatsapp");
+    }
+  };
+
+  // 重新发送OTP
+  const handleResendOtp = () => {
+    setOtpCode("");
+    setWhatsappError(null);
+    handleSendWhatsappOtp();
+  };
+
+  // 渲染国家列表项
+  const renderCountryItem = ({ item }: { item: CountryList }) => (
+    <TouchableOpacity
+      style={styles.countryItem}
+      onPress={() => handleCountrySelect(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.countryItemContent}>
+        <Text style={styles.countryCode}>+{item.country}</Text>
+        <Text style={styles.countryItemName}>
+          {getCountryTransLanguage(item)}
+        </Text>
+      </View>
+      {selectedCountry && selectedCountry.country === item.country && (
+        <Text style={styles.checkmark}>✓</Text>
+      )}
+    </TouchableOpacity>
+  );
+
   // 处理忘记密码
   const handleForgotPassword = () => {
     // 处理忘记密码
@@ -619,121 +864,154 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <View style={styles.safeAreaContent}>
-        {/* 顶部蓝色背景区域 */}
-        <View style={styles.blueHeader}>
-          <Text style={styles.logo}>brainnel</Text>
-          <View style={styles.features}>
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconContainer}>
-                <Text style={styles.featureIcon}>💰</Text>
-              </View>
-              <Text style={styles.featureText}>{t("wholesalePrice")}</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconContainer}>
-                <Text style={styles.featureIcon}>🚚</Text>
-              </View>
-              <Text style={styles.featureText}>{t("fastShipping")}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 登录区域 */}
-        <View style={styles.loginContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#E5E5E5" />
+      <View style={styles.container}>
+        {/* 背景 */}
+        <View style={styles.background} />
+        
+        {/* 登录卡片 */}
+        <View style={styles.loginCard}>
+          {/* 关闭按钮 */}
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Text style={styles.closeButtonText}>×</Text>
+            <Text style={styles.closeButtonText}>←</Text>
           </TouchableOpacity>
 
+          {/* 标题 */}
           <View style={styles.titleContainer}>
-            <Text style={styles.subtitle}>{t("loginSubtitle")}</Text>
+            <Text style={styles.welcomeTitle}>Log in</Text>
+            <Text style={styles.subtitle}>By logging in, you agree to our Terms of Use.</Text>
           </View>
 
-          {/* 主要登录按钮 - Google */}
-          <TouchableOpacity
-            style={[styles.loginButton, styles.primaryButton]}
-            onPress={handleGoogleLogin}
-          >
-            <View style={[styles.loginButtonIcon, styles.googleIcon]}>
-              <Image
-                source={require("../../../assets/img/google.png")}
-                style={{ width: 24, height: 24 }}
-              />
-            </View>
-            <Text style={[styles.loginButtonText, styles.primaryButtonText]}>
-              使用 Google 继续
-            </Text>
-          </TouchableOpacity>
+          {/* WhatsApp登录区域 */}
+          <View style={styles.whatsappSection}>
+            <Text style={styles.inputLabel}>{t("whatsapp.title")}</Text>
+            
+            {!showOtpInput ? (
+              // 手机号输入阶段
+              <>
+                <View style={styles.whatsappInputField}>
+                  <TouchableOpacity
+                    style={styles.countryCodeButton}
+                    onPress={() => setShowCountryModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.countryPrefix}>+{selectedCountry?.country || "225"}</Text>
+                    <Text style={styles.countryCodeArrow}>▼</Text>
+                  </TouchableOpacity>
+                  <View style={styles.inputDivider} />
+                  <TextInput
+                    style={styles.phoneInput}
+                    placeholder={t("whatsapp.phone_placeholder")}
+                    value={phoneNumber}
+                    onChangeText={handlePhoneNumberChange}
+                    keyboardType="phone-pad"
+                    maxLength={11}
+                  />
+                </View>
+                
+                {phoneNumberError && (
+                  <Text style={styles.errorText}>{t("whatsapp.phone_error")}</Text>
+                )}
+                
+                {whatsappError && (
+                  <Text style={styles.errorText}>{whatsappError}</Text>
+                )}
+                
+                <Text style={styles.whatsappInfoText}>{t("whatsapp.info_text")}</Text>
+                
+                <TouchableOpacity 
+                  style={[
+                    styles.connectButton,
+                    (phoneNumberError || !phoneNumber.trim()) && styles.disabledButton
+                  ]} 
+                  onPress={handleSendWhatsappOtp}
+                  disabled={phoneNumberError || !phoneNumber.trim() || whatsappLoading}
+                >
+                  {whatsappLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.connectButtonText}>{t("whatsapp.send_code")}</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              // OTP验证阶段
+              <>
+                <TextInput
+                  style={styles.otpInput}
+                  placeholder={t("whatsapp.code_placeholder")}
+                  value={otpCode}
+                  onChangeText={setOtpCode}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  autoFocus
+                />
+                
+                <Text style={styles.otpInfoText}>
+                  {t("whatsapp.code_sent_info", {
+                    countryCode: selectedCountry?.country,
+                    phoneNumber: phoneNumber
+                  })}
+                </Text>
+                
+                {whatsappError && (
+                  <Text style={styles.errorText}>{whatsappError}</Text>
+                )}
+                
+                <TouchableOpacity
+                  style={[
+                    styles.connectButton,
+                    !otpCode.trim() && styles.disabledButton
+                  ]}
+                  onPress={handleVerifyWhatsappOtp}
+                  disabled={!otpCode.trim() || otpLoading}
+                >
+                  {otpLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.connectButtonText}>{t("whatsapp.connect")}</Text>
+                  )}
+                </TouchableOpacity>
+                
+                <View style={styles.resendContainer}>
+                  <Text style={styles.resendText}>{t("whatsapp.resend_text")} </Text>
+                  <TouchableOpacity onPress={handleResendOtp}>
+                    <Text style={styles.resendLink}>{t("whatsapp.resend_link")}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
 
           {/* 分隔线 */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>或</Text>
+            <Text style={styles.dividerText}>Or</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* 其他登录方式 */}
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleFacebookLogin}
-          >
-            <View style={[styles.loginButtonIcon, styles.facebookIcon]}>
-              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: fontSize(16) }}>f</Text>
-            </View>
-            <Text style={styles.loginButtonText}>
-              使用 Facebook 登录
-            </Text>
-          </TouchableOpacity>
-
-          {Platform.OS === "ios" && (
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={handleAppleLogin}
-            >
-              <View style={[styles.loginButtonIcon, styles.appleIconBg]}>
-                {/* @ts-ignore */}
-                <Icon name="apple" size={18} color="#fff" />
-              </View>
-              <Text style={styles.loginButtonText}>
-                使用 Apple 登录
-              </Text>
+          {/* 其他登录选项 */}
+          <View style={styles.otherOptionsContainer}>
+            <TouchableOpacity style={styles.optionButton} onPress={handleGoogleLogin}>
+              <Image
+                source={require("../../../assets/img/google.png")}
+                style={styles.optionIcon}
+              />
+              <Text style={styles.optionButtonText}>Sign in with Google</Text>
             </TouchableOpacity>
-          )}
 
-          <TouchableOpacity style={styles.loginButton} onPress={showEmailModal}>
-            <View style={styles.loginButtonIcon}>
-              {/* @ts-ignore */}
-              <Icon name="envelope" size={18} color="#666" />
-            </View>
-            <Text style={styles.loginButtonText}>使用邮箱登录</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.optionButton} onPress={showPhoneModal}>
+              <Text style={styles.optionButtonText}>Phone number</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginButton} onPress={showPhoneModal}>
-            <View style={styles.loginButtonIcon}>
-              {/* @ts-ignore */}
-              <Icon name="phone" size={18} color="#666" />
-            </View>
-            <Text style={styles.loginButtonText}>使用手机号登录</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.optionButton} onPress={showEmailModal}>
+              <Text style={styles.optionButtonText}>Email</Text>
+            </TouchableOpacity>
+          </View>
 
-          {/* 忘记密码 */}
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={handleForgotPassword}
-          >
-            <Text style={styles.forgotPasswordText}>{t("forgotPassword")}</Text>
-          </TouchableOpacity>
-
-          {/* 服务条款 */}
-          <View style={styles.termsContainer}>
-            <Text style={styles.terms}>
-              {t("termsText")}{" "}
-              <Text style={styles.link}>{t("termsOfUse")}</Text>
-            </Text>
-            <Text style={styles.terms}>
-              {t("and")} <Text style={styles.link}>{t("privacyPolicy")}</Text>
-            </Text>
+          {/* 隐私政策 */}
+          <View style={styles.privacyContainer}>
+            <Text style={styles.privacyText}>For more information, please see our Privacy policy.</Text>
           </View>
         </View>
       </View>
@@ -743,6 +1021,48 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
 
       {/* 手机登录模态框 - 直接渲染 */}
       <PhoneLoginModal visible={phoneModalVisible} onClose={hidePhoneModal} />
+
+      {/* WhatsApp登录模态框 - 直接渲染 */}
+      <WhatsAppLoginModal visible={whatsappModalVisible} onClose={hideWhatsappModal} />
+      
+      {/* 国家选择模态框 */}
+      <Modal
+        visible={showCountryModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCountryModal(false)}
+        statusBarTranslucent={true}
+      >
+        <View style={styles.countryModalContainer}>
+          <TouchableOpacity
+            style={styles.countryModalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowCountryModal(false)}
+          />
+          <View style={styles.countryModalContent}>
+            <View style={styles.modalHandleContainer}>
+              <View style={styles.modalHandle} />
+            </View>
+            <View style={styles.countryModalHeader}>
+              <TouchableOpacity
+                style={styles.countryModalCloseButton}
+                onPress={() => setShowCountryModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.countryModalCloseButtonText}>✕</Text>
+              </TouchableOpacity>
+              <Text style={styles.countryModalTitle}>{t("selectCountry")}</Text>
+            </View>
+            <FlatList
+              data={countryList}
+              renderItem={renderCountryItem}
+              keyExtractor={(item) => item.country.toString()}
+              style={styles.countryList}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -763,17 +1083,17 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     top: 15,
-    right: 15,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    left: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
   },
   closeButtonText: {
-    color: "#fff",
+    color: "#374151",
     fontSize: fontSize(20),
     fontWeight: "300",
   },
@@ -878,6 +1198,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E8E8E8",
   },
+  whatsappIcon: {
+    backgroundColor: "#25D366",
+  },
   loginButtonText: {
     flex: 1,
     fontSize: fontSize(16),
@@ -934,6 +1257,280 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: "#999",
     fontWeight: "400",
+  },
+  background: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#f0f0f0",
+  },
+  loginCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: 80,
+    marginBottom: 40,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  welcomeTitle: {
+    fontSize: fontSize(32),
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  whatsappSection: {
+    marginTop: 24,
+    marginBottom: 32,
+  },
+  inputLabel: {
+    fontSize: fontSize(16),
+    fontWeight: "500",
+    color: "#374151",
+    marginBottom: 12,
+  },
+  whatsappInputField: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    marginBottom: 12,
+  },
+  whatsappInputContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  countryPrefix: {
+    fontSize: fontSize(16),
+    color: "#374151",
+    fontWeight: "500",
+    marginRight: 8,
+  },
+  whatsappInputText: {
+    fontSize: fontSize(16),
+    color: "#9ca3af",
+    flex: 1,
+  },
+  whatsappInfoText: {
+    fontSize: fontSize(14),
+    color: "#6b7280",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  connectButton: {
+    backgroundColor: "#FF6B35",
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  connectButtonText: {
+    color: "#fff",
+    fontSize: fontSize(16),
+    fontWeight: "600",
+  },
+  otherOptionsContainer: {
+    marginTop: 24,
+    gap: 12,
+  },
+  optionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  optionIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+  },
+  optionButtonText: {
+    fontSize: fontSize(16),
+    color: "#374151",
+    fontWeight: "500",
+  },
+  privacyContainer: {
+    marginTop: 32,
+    alignItems: "center",
+  },
+  privacyText: {
+    fontSize: fontSize(14),
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  countryCodeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 12,
+    paddingLeft: 4,
+  },
+  inputDivider: {
+    width: 1,
+    height: "60%",
+    backgroundColor: "#d1d5db",
+    marginRight: 12,
+  },
+  countryCodeArrow: {
+    fontSize: fontSize(10),
+    color: "#6b7280",
+    marginLeft: 4,
+  },
+  phoneInput: {
+    flex: 1,
+    fontSize: fontSize(16),
+    color: "#374151",
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
+  errorText: {
+    color: "#ef4444",
+    fontSize: fontSize(14),
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  disabledButton: {
+    backgroundColor: "#d1d5db",
+  },
+  otpContainer: {
+    alignItems: "center",
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: fontSize(16),
+    textAlign: "center",
+    marginBottom: 12,
+    width: "100%",
+    letterSpacing: 2,
+  },
+  otpInfoText: {
+    fontSize: fontSize(14),
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  resendContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  resendText: {
+    fontSize: fontSize(14),
+    color: "#6b7280",
+    marginRight: 4,
+  },
+  resendLink: {
+    fontSize: fontSize(14),
+    color: "#FF6B35",
+    fontWeight: "600",
+  },
+  // 国家选择模态框样式
+  countryModalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  countryModalOverlay: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  countryModalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: "80%",
+    maxHeight: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  modalHandleContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#e5e7eb",
+    borderRadius: 2,
+  },
+  countryModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  countryModalCloseButton: {
+    padding: 4,
+  },
+  countryModalCloseButtonText: {
+    fontSize: fontSize(18),
+    color: "#6b7280",
+  },
+  countryModalTitle: {
+    flex: 1,
+    fontSize: fontSize(18),
+    fontWeight: "600",
+    textAlign: "center",
+    marginRight: 24,
+  },
+  countryList: {
+    padding: 8,
+  },
+  countryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+  },
+  countryItemContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  countryItemName: {
+    fontSize: fontSize(16),
+    color: "#374151",
+  },
+  countryCode: {
+    fontSize: fontSize(15),
+    color: "#6b7280",
+    marginRight: 12,
+    width: 50,
+    textAlign: "center",
+  },
+  checkmark: {
+    fontSize: fontSize(20),
+    color: "#FF6B35",
+    fontWeight: "bold",
   },
 });
 

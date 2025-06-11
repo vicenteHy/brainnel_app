@@ -9,6 +9,7 @@ import widthUtils from "../../../utils/widthUtils";
 import fontSize from "../../../utils/fontsizeUtils";
 import { ProductDetailParams } from "../../../services/api/productApi";
 import { t } from "../../../i18n";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface BottomActionBarProps {
   selectedSize: number;
@@ -39,7 +40,7 @@ const BottomActionBar: React.FC<BottomActionBarProps> = ({
             {t("productCard.totalPrice")}
           </Text>
           <Text style={styles.fixedBottomViewBoxPriceText}>
-            {Math.round(totalPrice)} {product.currency}
+            {formatPrice(totalPrice, product.currency)} {product.currency}
           </Text>
         </View>
       </View>

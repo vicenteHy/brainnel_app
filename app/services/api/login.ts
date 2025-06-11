@@ -18,6 +18,12 @@ export const loginApi = {
   // 脸书登录
   facebookLogin: (data: any) =>
     apiService.post<LoginResponse>("/api/users/auth/callback/facebook", data),
+  // WhatsApp发送OTP
+  sendWhatsappOtp: (data: { phone_number: string; language: string }) =>
+    apiService.post("/api/users/send-whatsapp-otp/", data),
+  // WhatsApp验证OTP
+  verifyWhatsappOtp: (data: { phone_number: string; code: string }) =>
+    apiService.post<LoginResponse>("/api/users/verify-whatsapp-otp/", data),
 };
 
 

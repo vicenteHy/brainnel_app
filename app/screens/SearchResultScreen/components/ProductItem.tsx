@@ -6,6 +6,7 @@ import LazyImage from "./LazyImage";
 import widthUtils from "../../../utils/widthUtils";
 import fontSize from "../../../utils/fontsizeUtils";
 import isSmallScreen from "../../../utils/isSmallScreen";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface ProductItemProps {
   product: Product;
@@ -135,13 +136,13 @@ const ProductItem = React.memo(({ product, onPress, t, userStore }: ProductItemP
           <View style={styles.flexRowCentered}>
             {userStore.user?.user_id && (
               <Text style={styles.priceLabel1}>
-                {product.original_min_price || "0"}
+                {formatPrice(Number(product.original_min_price || 0), product.currency || "FCFA")}
                 {product.currency || "FCFA"}
               </Text>
             )}
             <View style={styles.priceContainer}>
               <Text style={styles.highlightedText}>
-                {product.min_price || "0"}
+                {formatPrice(Number(product.min_price || 0), product.currency || "FCFA")}
               </Text>
               <Text style={styles.highlightedText1}>
                 {product.currency || "FCFA"}
