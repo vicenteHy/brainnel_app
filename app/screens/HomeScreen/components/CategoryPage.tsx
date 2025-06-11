@@ -424,30 +424,26 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       return null;
     }
 
-    // 如果正在加载更多，显示加载动画
+    // 如果正在加载更多，显示骨架屏
     if (pageData.loading && pageData.products.length > 0) {
+      const skeletonArray = Array(4).fill(null);
       return (
-        <View style={{
-          paddingVertical: 20,
-          alignItems: 'center',
-          backgroundColor: '#f5f5f5',
-        }}>
-          <ActivityIndicator size="small" color="#ff5100" />
-          <Text style={{
-            marginTop: 8,
-            fontSize: 14,
-            color: '#666',
-            textAlign: 'center',
-          }}>
-            {t('common.loading') || '正在加载...'}
-          </Text>
+        <View style={{ backgroundColor: '#f5f5f5', paddingBottom: 8 }}>
+          <FlatList
+            data={skeletonArray}
+            renderItem={() => <ProductSkeleton />}
+            keyExtractor={(_, index) => `footer-skeleton-${categoryId}-${index}`}
+            numColumns={2}
+            columnWrapperStyle={styles.productCardGroup}
+            scrollEnabled={false}
+          />
         </View>
       );
     }
 
     // 默认情况下不显示任何内容
     return null;
-  }, [pageData.hasMore, pageData.loading, pageData.products.length, t]);
+  }, [pageData.hasMore, pageData.loading, pageData.products.length, categoryId]);
 
   // 列表内容容器样式
   const flatListContentContainerStyle = useMemo(
