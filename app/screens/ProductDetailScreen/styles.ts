@@ -74,7 +74,7 @@ export const styles = StyleSheet.create({
     alignItems: "stretch",
     justifyContent: "center",
     width: "100%",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff",
   },
   productInfoCard: {
     width: "100%",

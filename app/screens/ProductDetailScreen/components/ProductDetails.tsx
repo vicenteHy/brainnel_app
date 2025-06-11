@@ -22,7 +22,6 @@ const DetailImage: React.FC<{ src: string; width: number }> = ({ src, width }) =
     <View
       style={{
         width: width,
-        marginBottom: 15,
         backgroundColor: "#ffffff",
         overflow: 'hidden',
       }}

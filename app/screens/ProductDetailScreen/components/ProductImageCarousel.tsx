@@ -46,9 +46,9 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
           data={product?.product_image_urls?.filter(url => url && typeof url === 'string') || []}
           height={widthUtils(430, 430).height}
           onSnapToItem={(index) => setActiveIndex(index)}
-          modeConfig={{
-            parallaxScrollingScale: 0.9,
-            parallaxScrollingOffset: 50,
+          style={{ backgroundColor: "#ffffff" }}
+          panGestureHandlerProps={{
+            activeOffsetX: [-10, 10],
           }}
           renderItem={({ item }) => (
             <View
@@ -56,13 +56,13 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: "#f2f2f2",
-                borderRadius: 10,
+                backgroundColor: "#ffffff",
+                width: screenWidth,
               }}
             >
               <Image
                 source={{ uri: item as string }}
-                style={{ width: "100%", height: "100%" }}
+                style={{ width: "100%", height: "100%", backgroundColor: "#ffffff" }}
                 resizeMode="contain"
               />
             </View>
