@@ -26,7 +26,6 @@ import useUserStore from "../../store/user";
 import useAnalyticsStore from "../../store/analytics";
 import { CountryList } from "../../constants/countries";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ForgotPhonePassword } from "./ForgotPhonePassword";
 import fontSize from "../../utils/fontsizeUtils";
 import { changeLanguage } from "../../i18n";
 import { getCountryTransLanguage } from "../../utils/languageUtils";
@@ -109,82 +108,106 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
 
   // Phone login state
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState(false);
   const [phoneNumberError, setPhoneNumberError] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const [password, setPassword] = useState("");
   const [showCountryModal, setShowCountryModal] = useState(false);
-  // Add state for forgot password modal
-  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   // Countries
   const [countryList, setCountryList] = useState<CountryList[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<CountryList>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Validate phone number against valid_digits
+  // Validate phone number with 8-11 digits
   const validatePhoneNumber = (phoneNum: string) => {
-    if (
-      !selectedCountry ||
-      !selectedCountry.valid_digits ||
-      selectedCountry.valid_digits.length === 0
-    ) {
-      return true; // No validation if no valid_digits available
-    }
-
-    return selectedCountry.valid_digits.includes(phoneNum.length);
+    const cleanNumber = phoneNum.replace(/\D/g, '');
+    return cleanNumber.length >= 8 && cleanNumber.length <= 11;
   };
 
   // Handle phone number input with validation
   const handlePhoneNumberChange = (text: string) => {
-    setPhoneNumber(text);
-    if (text.length > 0) {
-      setPhoneNumberError(!validatePhoneNumber(text));
-      setPhoneNumberError(false);
-      // todo 防止重复关闭
+    console.log('[PhoneLogin] 输入手机号:', text);
+    // Only allow digits
+    const numericText = text.replace(/\D/g, '');
+    console.log('[PhoneLogin] 过滤后手机号:', numericText);
+    setPhoneNumber(numericText);
+    if (numericText.length > 0) {
+      const isValid = validatePhoneNumber(numericText);
+      console.log('[PhoneLogin] 手机号验证结果:', isValid, '长度:', numericText.length);
+      setPhoneNumberError(!isValid);
     } else {
       setPhoneNumberError(false);
     }
-    setPasswordError(false);
+    setOtpError(false);
   };
 
   // useEffect替换为普通函数
   React.useEffect(() => {
+    console.log('[PhoneLogin] Modal可见性变化:', visible);
     if (visible) {
+      console.log('[PhoneLogin] Modal打开，加载数据');
       loadData();
+    } else {
+      console.log('[PhoneLogin] Modal关闭，重置状态');
+      // 重置所有状态
+      setPhoneNumber("");
+      setOtpCode("");
+      setPassword("");
+      setOtpError(false);
+      setPhoneNumberError(false);
+      setShowOtpInput(false);
+      setShowPasswordInput(false);
+      setOtpSent(false);
+      setCountdown(0);
+      setError(null);
     }
   }, [visible]);
 
   // 加载国家列表和选中的国家
   const loadData = async () => {
+    console.log('[PhoneLogin] 开始加载国家数据');
     try {
       const res = await settingApi.getSendSmsCountryList();
+      console.log('[PhoneLogin] 获取国家列表成功，数量:', res.length);
 
       setCountryList(res);
 
       const savedCountry = await AsyncStorage.getItem("@selected_country");
+      console.log('[PhoneLogin] 从存储获取的国家:', savedCountry);
       if (savedCountry) {
         try {
           const parsedCountry = JSON.parse(savedCountry);
+          console.log('[PhoneLogin] 解析的国家数据:', parsedCountry);
           const item = res.find(
             (item) => item.country === parsedCountry.country
           );
+          console.log('[PhoneLogin] 匹配到的国家:', item);
           setSelectedCountry(item);
         } catch (e) {
-          console.error("Error parsing stored country", e);
+          console.error("[PhoneLogin] 解析存储的国家数据错误:", e);
         }
+      } else {
+        console.log('[PhoneLogin] 未找到存储的国家，使用默认');
       }
     } catch (error) {
-      console.error("Failed to load country data", error);
+      console.error("[PhoneLogin] 加载国家数据失败:", error);
     }
   };
 
   // Select country
   const handleCountrySelect = (country: CountryList) => {
+    console.log('[PhoneLogin] 选择国家:', country);
     setSelectedCountry(country);
     setShowCountryModal(false);
 
     // Save selected country to AsyncStorage
     AsyncStorage.setItem("@selected_country", JSON.stringify(country));
+    console.log('[PhoneLogin] 保存国家到存储:', country);
   };
 
   // Render country list item - with performance optimization
@@ -211,46 +234,97 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
     [selectedCountry]
   );
 
-  // 忘记密码
-  const handleForgotPassword = () => {
-    // Open forgot password modal
-    setShowForgotPasswordModal(true);
-  };
 
-  // Handle phone login
-  const handlePhoneContinue = async () => {
-    // Validate phone number before proceeding
+  // Send OTP code
+  const handleSendOtp = async () => {
+    console.log('[PhoneLogin] 准备发送验证码');
+    console.log('[PhoneLogin] 当前手机号:', phoneNumber);
+    console.log('[PhoneLogin] 选择的国家:', selectedCountry);
+    
+    if (!validatePhoneNumber(phoneNumber)) {
+      console.log('[PhoneLogin] 手机号验证失败');
+      setPhoneNumberError(true);
+      return;
+    }
 
-    // todo 防止重复关闭
-    // if (!validatePhoneNumber(phoneNumber)) {
-    //   setPhoneNumberError(true);
-    //   return;
-    // }
-
-    const params = {
-      grant_type: "password",
-      username: phoneNumber,
-      password: password,
-      client_id: "2",
-      client_secret: "",
-      scope: "",
-    };
     try {
       setLoading(true);
-      const res = await userApi.login(params);
+      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+      console.log('[PhoneLogin] 完整手机号:', fullPhoneNumber);
+      console.log('[PhoneLogin] 开始调用发送验证码API');
+      
+      const response = await userApi.sendOtp(fullPhoneNumber);
+      console.log('[PhoneLogin] 发送验证码API响应:', response);
+      
+      setOtpSent(true);
+      setShowOtpInput(true);
+      setLoading(false);
+      setCountdown(60);
+      console.log('[PhoneLogin] 验证码发送成功，开始倒计时');
+      
+      // Start countdown
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            console.log('[PhoneLogin] 倒计时结束');
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      console.error('[PhoneLogin] 发送验证码失败:', error);
+      setError("发送验证码失败，请重试");
+      setLoading(false);
+      setPhoneNumberError(true);
+    }
+  };
+
+  // Verify OTP and login
+  const handleVerifyOtp = async () => {
+    console.log('[PhoneLogin] 准备验证OTP');
+    console.log('[PhoneLogin] 输入的验证码:', otpCode);
+    console.log('[PhoneLogin] 验证码长度:', otpCode?.length);
+    
+    if (!otpCode || otpCode.length !== 6) {
+      console.log('[PhoneLogin] 验证码格式错误');
+      setOtpError(true);
+      setError("请输入6位验证码");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+      console.log('[PhoneLogin] 验证的完整手机号:', fullPhoneNumber);
+      console.log('[PhoneLogin] 开始调用验证OTP API');
+      
+      const res = await userApi.verifyOtp(fullPhoneNumber, otpCode);
+      console.log('[PhoneLogin] 验证OTP API响应:', res);
+      
       if (res.access_token) {
+        console.log('[PhoneLogin] 获取到access_token，登录成功');
         const token = res.token_type + " " + res.access_token;
+        console.log('[PhoneLogin] 保存token:', token);
         await AsyncStorage.setItem("token", token);
+        
         if (res.first_login) {
+          console.log('[PhoneLogin] 首次登录，获取设置');
           const data = await settingApi.postFirstLogin(
             selectedCountry?.country || 221
           );
+          console.log('[PhoneLogin] 首次登录设置:', data);
           setSettings(data);
         }
+        
+        console.log('[PhoneLogin] 获取用户信息');
         const user = await userApi.getProfile();
+        console.log('[PhoneLogin] 用户信息:', user);
 
         // 根据用户的语言设置切换i18n语言
         if (user.language) {
+          console.log('[PhoneLogin] 切换语言到:', user.language);
           await changeLanguage(user.language);
         }
 
@@ -258,17 +332,93 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
         setLoading(false);
         
         // 收集登录成功埋点
+        console.log('[PhoneLogin] 记录登录成功埋点');
         analyticsStore.logLogin(true, "phone");
         
+        console.log('[PhoneLogin] 跳转到主页');
+        navigation.replace("MainTabs", { screen: "Home" });
+        onClose();
+      } else {
+        console.log('[PhoneLogin] API响应中没有access_token');
+      }
+    } catch (error) {
+      console.error('[PhoneLogin] 验证OTP失败:', error);
+      setError("验证码错误或已过期");
+      setLoading(false);
+      setOtpError(true);
+      
+      // 收集登录失败埋点
+      console.log('[PhoneLogin] 记录登录失败埋点');
+      analyticsStore.logLogin(false, "phone");
+    }
+  };
+
+  // Password login
+  const handlePasswordLogin = async () => {
+    console.log('[PhoneLogin] 准备密码登录');
+    console.log('[PhoneLogin] 手机号:', phoneNumber);
+    console.log('[PhoneLogin] 密码长度:', password?.length);
+
+    if (!validatePhoneNumber(phoneNumber)) {
+      console.log('[PhoneLogin] 手机号验证失败');
+      setPhoneNumberError(true);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      console.log('[PhoneLogin] 密码验证失败');
+      setError("密码至少6位");
+      setOtpError(true);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+      console.log('[PhoneLogin] 密码登录完整手机号:', fullPhoneNumber);
+
+      const params = {
+        grant_type: "password",
+        username: fullPhoneNumber,
+        password: password,
+        client_id: "2",
+        client_secret: "",
+        scope: "",
+      };
+      console.log('[PhoneLogin] 密码登录请求参数:', params);
+
+      const res = await userApi.login(params);
+      console.log('[PhoneLogin] 密码登录API响应:', res);
+
+      if (res.access_token) {
+        console.log('[PhoneLogin] 密码登录成功');
+        const token = res.token_type + " " + res.access_token;
+        await AsyncStorage.setItem("token", token);
+        
+        if (res.first_login) {
+          const data = await settingApi.postFirstLogin(
+            selectedCountry?.country || 221
+          );
+          setSettings(data);
+        }
+        
+        const user = await userApi.getProfile();
+        if (user.language) {
+          await changeLanguage(user.language);
+        }
+
+        setUser(user);
+        setLoading(false);
+        
+        analyticsStore.logLogin(true, "phone");
         navigation.replace("MainTabs", { screen: "Home" });
         onClose();
       }
     } catch (error) {
+      console.error('[PhoneLogin] 密码登录失败:', error);
       setError("用户名或密码错误");
       setLoading(false);
-      setPasswordError(true);
-      
-      // 收集登录失败埋点
+      setOtpError(true);
       analyticsStore.logLogin(false, "phone");
     }
   };
@@ -343,7 +493,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                 onChangeText={handlePhoneNumberChange}
                 keyboardType="phone-pad"
                 autoFocus
-                maxLength={15}
+                maxLength={11}
               />
               {phoneNumber.length > 0 ? (
                 <TouchableOpacity
@@ -351,7 +501,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                   onPress={() => {
                     setPhoneNumber("");
                     setPhoneNumberError(false);
-                    setPasswordError(false);
+                    setOtpError(false);
                   }}
                   activeOpacity={0.7}
                 >
@@ -373,78 +523,179 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
             {/* Phone number error message */}
             {phoneNumberError && (
               <Text style={styles.phoneNumberErrorText}>
-                {t("invalidPhoneNumber")}
-                {selectedCountry?.valid_digits &&
-                  `(${t("requiresDigits")}: ${selectedCountry.valid_digits.join(
-                    ", "
-                  )})`}
+                手机号必须为8-11位数字
               </Text>
             )}
 
-            {/* Password input */}
-            <View
-              style={[
-                styles.phoneInputContainer,
-                passwordError && styles.passwordErrorContainer,
-              ]}
-            >
-              <TextInput
-                style={styles.passwordInput}
-                placeholder={t("enterPassword")}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setPasswordError(false);
+            {/* Switch to password login button - positioned below phone input */}
+            {!showOtpInput && !showPasswordInput && (
+              <TouchableOpacity
+                style={styles.switchToPasswordButton}
+                onPress={() => {
+                  console.log('[PhoneLogin] 切换到密码登录');
+                  setShowPasswordInput(true);
                 }}
-                secureTextEntry={true}
-                autoCapitalize="none"
-              />
-              {passwordError && (
-                <View style={styles.passwordErrorIcon}>
-                  <Text style={styles.passwordErrorIconText}>!</Text>
-                </View>
-              )}
-            </View>
+                activeOpacity={0.7}
+              >
+                <Text style={styles.switchToPasswordText}>
+                  使用密码登录
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            {/* Password error message */}
-            {passwordError && (
+            {/* OTP input - only show when OTP is sent */}
+            {showOtpInput && (
               <>
-                <Text style={styles.passwordErrorText}>{error}</Text>
-
-                <TouchableOpacity
-                  style={styles.forgotPasswordLink}
-                  onPress={handleForgotPassword}
-                  activeOpacity={0.7}
+                <View
+                  style={[
+                    styles.phoneInputContainer,
+                    otpError && styles.passwordErrorContainer,
+                  ]}
                 >
-                  <Text style={styles.forgotPasswordLinkText}>
-                    {t("forgotPassword")}
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="请输入6位验证码"
+                    value={otpCode}
+                    onChangeText={(text) => {
+                      console.log('[PhoneLogin] 输入验证码:', text);
+                      const numericText = text.replace(/\D/g, '').slice(0, 6);
+                      console.log('[PhoneLogin] 过滤后验证码:', numericText);
+                      setOtpCode(numericText);
+                      setOtpError(false);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    autoFocus={showOtpInput}
+                  />
+                  {otpError && (
+                    <View style={styles.passwordErrorIcon}>
+                      <Text style={styles.passwordErrorIconText}>!</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* OTP error message */}
+                {otpError && (
+                  <Text style={styles.passwordErrorText}>{error}</Text>
+                )}
+
+                {/* Resend OTP */}
+                {countdown === 0 ? (
+                  <TouchableOpacity
+                    style={styles.forgotPasswordLink}
+                    onPress={handleSendOtp}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.forgotPasswordLinkText}>
+                      重新发送验证码
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.countdownText}>
+                    {countdown}秒后可重新发送
                   </Text>
-                </TouchableOpacity>
+                )}
+              </>
+            )}
+
+            {/* Password input - only show when password login is selected */}
+            {showPasswordInput && (
+              <>
+                <View
+                  style={[
+                    styles.phoneInputContainer,
+                    otpError && styles.passwordErrorContainer,
+                  ]}
+                >
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="请输入密码"
+                    value={password}
+                    onChangeText={(text) => {
+                      console.log('[PhoneLogin] 输入密码长度:', text.length);
+                      setPassword(text);
+                      setOtpError(false);
+                    }}
+                    secureTextEntry={true}
+                    autoCapitalize="none"
+                    autoFocus={showPasswordInput}
+                  />
+                  {otpError && (
+                    <View style={styles.passwordErrorIcon}>
+                      <Text style={styles.passwordErrorIconText}>!</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Password error message */}
+                {otpError && (
+                  <Text style={styles.passwordErrorText}>{error}</Text>
+                )}
               </>
             )}
 
             <Text
-              style={[styles.phoneInfoText, passwordError && { marginTop: 5 }]}
-            ></Text>
+              style={[styles.phoneInfoText, otpError && { marginTop: 5 }]}
+            >
+              {!showOtpInput && !showPasswordInput ? "我们将向您发送验证码短信" : ""}
+            </Text>
 
             <TouchableOpacity
               style={[
                 styles.phoneContinueButton,
-                (phoneNumberError || !phoneNumber.trim() || !password) &&
+                (showOtpInput
+                  ? (otpError || !otpCode.trim() || otpCode.length !== 6)
+                  : showPasswordInput
+                  ? (otpError || !password.trim() || password.length < 6)
+                  : (phoneNumberError || !phoneNumber.trim())) &&
                   styles.phoneDisabledButton,
               ]}
-              onPress={handlePhoneContinue}
-              disabled={phoneNumberError || !phoneNumber.trim() || !password}
+              onPress={
+                showOtpInput 
+                  ? handleVerifyOtp 
+                  : showPasswordInput 
+                  ? handlePasswordLogin 
+                  : handleSendOtp
+              }
+              disabled={
+                showOtpInput
+                  ? (otpError || !otpCode.trim() || otpCode.length !== 6)
+                  : showPasswordInput
+                  ? (otpError || !password.trim() || password.length < 6)
+                  : (phoneNumberError || !phoneNumber.trim())
+              }
               activeOpacity={0.7}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.phoneContinueButtonText}>
-                  {t("continue")}
+                  {showOtpInput 
+                    ? "验证并登录" 
+                    : showPasswordInput 
+                    ? "密码登录" 
+                    : "发送验证码"}
                 </Text>
               )}
             </TouchableOpacity>
+
+            {/* Switch back to OTP login when in password mode */}
+            {showPasswordInput && (
+              <TouchableOpacity
+                style={styles.switchLoginTypeButton}
+                onPress={() => {
+                  console.log('[PhoneLogin] 切换到验证码登录');
+                  setShowPasswordInput(false);
+                  setPassword("");
+                  setOtpError(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.switchLoginTypeText}>
+                  使用验证码登录
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Country selection modal */}
@@ -500,13 +751,6 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
           </Modal>
         </View>
 
-        {/* Add ForgotPhonePassword modal */}
-        <ForgotPhonePassword
-          visible={showForgotPasswordModal}
-          onClose={() => setShowForgotPasswordModal(false)}
-          selectedCountry={selectedCountry}
-          phoneNumber={phoneNumber}
-        />
       </View>
     </Modal>
   );
@@ -730,6 +974,34 @@ const styles = StyleSheet.create<Styles>({
   forgotPasswordLinkText: {
     color: "#0066FF",
     fontSize: fontSize(14),
+  },
+  countdownText: {
+    color: "#666",
+    fontSize: fontSize(14),
+    textAlign: "center",
+    marginTop: 5,
+  },
+  switchLoginTypeButton: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  switchLoginTypeText: {
+    color: "#0066FF",
+    fontSize: fontSize(14),
+    textDecorationLine: "underline",
+  },
+  switchToPasswordButton: {
+    alignSelf: "flex-end",
+    marginTop: 8,
+    marginBottom: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  switchToPasswordText: {
+    color: "#0066FF",
+    fontSize: fontSize(12),
+    textDecorationLine: "underline",
   },
   // Country modal styles
   countryModalContainer: {

@@ -55,7 +55,7 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
         
         <TouchableOpacity style={styles.continueButton} onPress={navigateToProductChat} activeOpacity={0.8}>
           <Text style={styles.continueButtonText}>
-            {t("chat.purchase", "购买")}
+            {t("continue", "继续")}
           </Text>
         </TouchableOpacity>
       </View>

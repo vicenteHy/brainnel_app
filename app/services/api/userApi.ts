@@ -123,6 +123,25 @@ export const userApi = {
   // 删除账号
   deleteAccount: () => {
     return apiService.delete('/api/users/me/');
+  },
+
+  // 发送OTP验证码
+  sendOtp: (phoneNumber: string) => {
+    console.log('[UserAPI] 发送OTP请求，手机号:', phoneNumber);
+    const requestData = { phone_number: phoneNumber };
+    console.log('[UserAPI] 发送OTP请求数据:', requestData);
+    return apiService.post('/api/users/send-otp/', requestData);
+  },
+
+  // 验证OTP验证码
+  verifyOtp: (phoneNumber: string, code: string) => {
+    console.log('[UserAPI] 验证OTP请求，手机号:', phoneNumber, '验证码:', code);
+    const requestData = {
+      phone_number: phoneNumber,
+      code: code
+    };
+    console.log('[UserAPI] 验证OTP请求数据:', requestData);
+    return apiService.post<AuthResponse>('/api/users/verify-otp/', requestData);
   }
 
 };
