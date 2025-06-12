@@ -190,15 +190,6 @@ export const SettingList = () => {
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
           </TouchableOpacity>
-          <View style={styles.item}>
-            <Text>{t("settings.change_phone")}</Text>
-            <Text>
-              <LeftArrowIcon size={fontSize(20)} color="#acacac" />
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.content}>
           <TouchableOpacity
             onPress={() => {
               if (mySetting?.language && mySetting?.currency) {
@@ -213,12 +204,6 @@ export const SettingList = () => {
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
           </TouchableOpacity>
-          {/* <View style={styles.item}>
-            <Text>{t("settings.feedback")}</Text>
-            <Text>
-              <LeftArrowIcon size={fontSize(20)} color="#acacac" />
-            </Text>
-          </View> */}
           <TouchableOpacity
             style={styles.item}
             onPress={() => {
@@ -243,36 +228,18 @@ export const SettingList = () => {
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
           </TouchableOpacity>
-          {/* 
           <TouchableOpacity
-            style={styles.item}
             onPress={() => {
-              AsyncStorage.clear();
-              navigation.navigate("CountrySelect");
+              navigation.navigate("CountrySetting", { mySetting });
             }}
+            style={styles.item}
+            activeOpacity={1}
           >
-            <Text>{t("settings.clear_cache")}</Text>
+            <Text>{t("settings.language_currency")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
-          </TouchableOpacity> */}
-
-          <View>
-            <TouchableOpacity
-              onPress={() => {
-                // if (mySetting?.language && mySetting?.currency) {
-                navigation.navigate("CountrySetting", { mySetting });
-                // }
-              }}
-              style={styles.item}
-              activeOpacity={1}
-            >
-              <Text>{t("settings.language_currency")}</Text>
-              <Text>
-                <LeftArrowIcon size={fontSize(20)} color="#acacac" />
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
         {user?.user_id && (
           <View style={styles.logoutContainer}>
