@@ -78,7 +78,7 @@ const Progress: React.FC<ProgressProps> = ({ statuses, labels = [] }) => {
         <View 
           style={[
             styles.progressLine,
-            { width: `${(statuses / (labels.length - 1)) * 100}%` }
+            { width: `${Math.min(statuses, labels.length - 1) / (labels.length - 1) * 75}%` }
           ]} 
         />
       </View>

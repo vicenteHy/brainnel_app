@@ -55,8 +55,6 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     }
   }
   
-  console.log('商品描述:', product?.description?.substring(0, 200));
-  console.log('提取到的图片URLs:', imageUrls);
 
   return (
     <View style={styles.productDetailsSection}>
