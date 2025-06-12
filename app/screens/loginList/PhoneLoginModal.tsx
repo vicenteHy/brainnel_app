@@ -659,6 +659,11 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                     }}
                     secureTextEntry={true}
                     autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="password"
+                    textContentType="password"
+                    importantForAutofill="yes"
+                    keyboardType="default"
                     autoFocus={showPasswordInput}
                   />
                   {otpError && (
