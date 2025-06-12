@@ -502,7 +502,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                   />
                 )} */}
                 <Text style={styles.countryCodeText}>
-                  +{selectedCountry?.country}
+                  +{selectedCountry?.country || "225"}
                 </Text>
                 <Text style={styles.countryCodeArrow}>▼</Text>
               </TouchableOpacity>

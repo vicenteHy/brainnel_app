@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -62,6 +62,22 @@ const isSimulator =
 //   }
 // }
 
+// 国家代码到Country对象的映射
+const countryCodeToCountry: { [key: number]: Country } = {
+  225: { name: 'Ivory Coast', code: 'CI', flag: '🇨🇮', userCount: 1100000, phoneCode: '+225' },
+  221: { name: 'Senegal', code: 'SN', flag: '🇸🇳', userCount: 400000, phoneCode: '+221' },
+  33: { name: 'France', code: 'FR', flag: '🇫🇷', userCount: 50000, phoneCode: '+33' },
+  229: { name: 'Benin', code: 'BJ', flag: '🇧🇯', userCount: 200000, phoneCode: '+229' },
+  241: { name: 'Gabon', code: 'GA', flag: '🇬🇦', userCount: 500000, phoneCode: '+241' },
+  243: { name: 'Democratic Republic of the Congo', code: 'CD', flag: '🇨🇩', userCount: 1000000, phoneCode: '+243' },
+  237: { name: 'Cameroon', code: 'CM', flag: '🇨🇲', userCount: 150000, phoneCode: '+237' },
+  242: { name: 'Republic of Congo', code: 'CG', flag: '🇨🇬', userCount: 300000, phoneCode: '+242' },
+  224: { name: 'Guinea', code: 'GN', flag: '🇬🇳', userCount: 600000, phoneCode: '+224' },
+  226: { name: 'Burkina Faso', code: 'BF', flag: '🇧🇫', userCount: 700000, phoneCode: '+226' },
+  223: { name: 'Mali', code: 'ML', flag: '🇲🇱', userCount: 800000, phoneCode: '+223' },
+  228: { name: 'Togo', code: 'TG', flag: '🇹🇬', userCount: 900000, phoneCode: '+228' },
+};
+
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -90,6 +106,30 @@ export const LoginScreen = () => {
     phoneCode: "+225",
   });
   const [showCountryModal, setShowCountryModal] = useState(false);
+
+  // 组件初始化时加载保存的国家设置
+  useEffect(() => {
+    const loadSavedCountry = async () => {
+      try {
+        const savedCountry = await AsyncStorage.getItem('@selected_country');
+        if (savedCountry) {
+          const parsedCountry = JSON.parse(savedCountry);
+          const countryInfo = countryCodeToCountry[parsedCountry.country];
+          
+          if (countryInfo) {
+            setSelectedCountry(countryInfo);
+            console.log('已加载保存的国家设置:', countryInfo);
+          } else {
+            console.log('未找到国家代码映射:', parsedCountry.country);
+          }
+        }
+      } catch (error) {
+        console.error('加载保存的国家设置失败:', error);
+      }
+    };
+
+    loadSavedCountry();
+  }, []);
 
   // 关闭主屏幕
   const handleClose = () => {

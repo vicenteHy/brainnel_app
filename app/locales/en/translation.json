@@ -905,7 +905,19 @@
   },
   "phoneLogin": {
     "smsVerificationLogin": "SMS Verification Login",
-    "passwordLogin": "Password Login"
+    "passwordLogin": "Password Login",
+    "verificationCode": {
+      "title": "Enter Verification Code",
+      "subtitle": "We sent a 4-digit verification code to {{phoneNumber}}",
+      "placeholder": "Verification code",
+      "resendCode": "Resend verification code",
+      "verify": "Verify",
+      "codeSent": "Verification code sent, please enter the code you received",
+      "codeRequired": "Please enter verification code",
+      "codeLength": "Verification code must be 4 digits",
+      "codeFormat": "Verification code can only contain numbers",
+      "codeIncorrect": "Verification code is incorrect, please try again"
+    }
   },
   "loginPrompt": {
     "chat": {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,22 @@ import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 
+// 国家代码到Country对象的映射
+const countryCodeToCountry: { [key: number]: Country } = {
+  225: { name: 'Ivory Coast', code: 'CI', flag: '🇨🇮', userCount: 1100000, phoneCode: '+225' },
+  221: { name: 'Senegal', code: 'SN', flag: '🇸🇳', userCount: 400000, phoneCode: '+221' },
+  33: { name: 'France', code: 'FR', flag: '🇫🇷', userCount: 50000, phoneCode: '+33' },
+  229: { name: 'Benin', code: 'BJ', flag: '🇧🇯', userCount: 200000, phoneCode: '+229' },
+  241: { name: 'Gabon', code: 'GA', flag: '🇬🇦', userCount: 500000, phoneCode: '+241' },
+  243: { name: 'Democratic Republic of the Congo', code: 'CD', flag: '🇨🇩', userCount: 1000000, phoneCode: '+243' },
+  237: { name: 'Cameroon', code: 'CM', flag: '🇨🇲', userCount: 150000, phoneCode: '+237' },
+  242: { name: 'Republic of Congo', code: 'CG', flag: '🇨🇬', userCount: 300000, phoneCode: '+242' },
+  224: { name: 'Guinea', code: 'GN', flag: '🇬🇳', userCount: 600000, phoneCode: '+224' },
+  226: { name: 'Burkina Faso', code: 'BF', flag: '🇧🇫', userCount: 700000, phoneCode: '+226' },
+  223: { name: 'Mali', code: 'ML', flag: '🇲🇱', userCount: 800000, phoneCode: '+223' },
+  228: { name: 'Togo', code: 'TG', flag: '🇹🇬', userCount: 900000, phoneCode: '+228' },
+};
+
 export const PhoneLoginScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -34,7 +50,9 @@ export const PhoneLoginScreen = () => {
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [isPasswordMode, setIsPasswordMode] = useState(true); // 默认为密码模式
+  const [showVerificationInput, setShowVerificationInput] = useState(false); // 是否显示验证码输入
   const [loading, setLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     name: 'Ivory Coast',
@@ -45,6 +63,30 @@ export const PhoneLoginScreen = () => {
   });
   const [showCountryModal, setShowCountryModal] = useState(false);
 
+  // 组件初始化时加载保存的国家设置
+  useEffect(() => {
+    const loadSavedCountry = async () => {
+      try {
+        const savedCountry = await AsyncStorage.getItem('@selected_country');
+        if (savedCountry) {
+          const parsedCountry = JSON.parse(savedCountry);
+          const countryInfo = countryCodeToCountry[parsedCountry.country];
+          
+          if (countryInfo) {
+            setSelectedCountry(countryInfo);
+            console.log('已加载保存的国家设置:', countryInfo);
+          } else {
+            console.log('未找到国家代码映射:', parsedCountry.country);
+          }
+        }
+      } catch (error) {
+        console.error('加载保存的国家设置失败:', error);
+      }
+    };
+
+    loadSavedCountry();
+  }, []);
+
   const handleBack = () => {
     navigation.goBack();
   };
@@ -52,6 +94,8 @@ export const PhoneLoginScreen = () => {
   const handleContinue = async () => {
     if (isPasswordMode) {
       await handlePasswordLogin();
+    } else if (showVerificationInput) {
+      await handleVerifyCode();
     } else {
       await handleSendOtp();
     }
@@ -75,7 +119,7 @@ export const PhoneLoginScreen = () => {
 
     try {
       setLoading(true);
-      const fullPhoneNumber = `${selectedCountry?.phoneCode?.replace('+', '') || '225'}${phoneNumber}`;
+      const fullPhoneNumber = `${selectedCountry?.phoneCode || '+225'}${phoneNumber}`;
       console.log('[PhoneLogin] 密码登录完整手机号:', fullPhoneNumber);
 
       const params = {
@@ -134,7 +178,7 @@ export const PhoneLoginScreen = () => {
 
     try {
       setLoading(true);
-      const fullPhoneNumber = `${selectedCountry?.phoneCode?.replace('+', '') || '225'}${phoneNumber}`;
+      const fullPhoneNumber = `${selectedCountry?.phoneCode || '+225'}${phoneNumber}`;
       console.log('[PhoneLogin] 完整手机号:', fullPhoneNumber);
       console.log('[PhoneLogin] 开始调用发送验证码API');
       
@@ -142,8 +186,8 @@ export const PhoneLoginScreen = () => {
       console.log('[PhoneLogin] 发送验证码API响应:', response);
       
       setLoading(false);
-      Alert.alert(t('success'), t('verificationCodeInfo'));
-      // TODO: 跳转到验证码输入页面或在当前页面显示验证码输入框
+      setShowVerificationInput(true);
+      Alert.alert(t('success'), t('phoneLogin.verificationCode.codeSent'));
       
     } catch (error) {
       console.error('[PhoneLogin] 发送验证码失败:', error);
@@ -152,10 +196,91 @@ export const PhoneLoginScreen = () => {
     }
   };
 
+  // 验证OTP验证码
+  const handleVerifyCode = async () => {
+    console.log('[PhoneLogin] 准备验证OTP');
+    console.log('[PhoneLogin] 验证码:', verificationCode);
+    
+    if (!verificationCode.trim()) {
+      Alert.alert(t('error'), t('phoneLogin.verificationCode.codeRequired'));
+      return;
+    }
+
+    if (verificationCode.length !== 4) {
+      Alert.alert(t('error'), t('phoneLogin.verificationCode.codeLength'));
+      return;
+    }
+
+    if (!/^\d{4}$/.test(verificationCode)) {
+      Alert.alert(t('error'), t('phoneLogin.verificationCode.codeFormat'));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const fullPhoneNumber = `${selectedCountry?.phoneCode || '+225'}${phoneNumber}`;
+      console.log('[PhoneLogin] 验证OTP完整手机号:', fullPhoneNumber);
+      console.log('[PhoneLogin] 开始调用验证OTP API');
+
+      const res = await userApi.verifyOtp(fullPhoneNumber, verificationCode);
+      console.log('[PhoneLogin] 验证OTP API响应:', res);
+
+      if (res.access_token) {
+        console.log('[PhoneLogin] OTP验证成功');
+        const token = res.token_type + " " + res.access_token;
+        await AsyncStorage.setItem("token", token);
+        
+        if (res.first_login) {
+          const countryCode = parseInt(selectedCountry?.phoneCode?.replace('+', '') || '225');
+          const data = await settingApi.postFirstLogin(countryCode);
+          setSettings(data);
+        }
+        
+        const user = await userApi.getProfile();
+        if (user.language) {
+          await changeLanguage(user.language);
+        }
+
+        setUser(user);
+        setLoading(false);
+        
+        analyticsStore.logLogin(true, "phone_otp");
+        navigation.replace("MainTabs");
+      }
+    } catch (error) {
+      console.error('[PhoneLogin] OTP验证失败:', error);
+      Alert.alert(t('error'), t('phoneLogin.verificationCode.codeIncorrect'));
+      setLoading(false);
+      analyticsStore.logLogin(false, "phone_otp");
+    }
+  };
+
   const handleCountrySelect = useCallback((country: Country) => {
     setSelectedCountry(country);
     setShowCountryModal(false);
   }, []);
+
+  // 获取按钮禁用状态
+  const getButtonDisabled = () => {
+    if (isPasswordMode) {
+      return !phoneNumber.trim() || !password.trim();
+    } else if (showVerificationInput) {
+      return !verificationCode.trim() || verificationCode.length !== 4;
+    } else {
+      return !phoneNumber.trim();
+    }
+  };
+
+  // 获取按钮文本
+  const getButtonText = () => {
+    if (isPasswordMode) {
+      return t('loginButton');
+    } else if (showVerificationInput) {
+      return t('phoneLogin.verificationCode.verify');
+    } else {
+      return t('continue');
+    }
+  };
 
   const renderCountryItem = ({ item }: { item: Country }) => (
     <TouchableOpacity 
@@ -247,7 +372,7 @@ export const PhoneLoginScreen = () => {
         )}
 
         {/* 验证码模式的提示文本和切换按钮 */}
-        {!isPasswordMode && (
+        {!isPasswordMode && !showVerificationInput && (
           <View style={styles.verificationContainer}>
             <Text style={styles.infoText}>
               {t('verificationCodeInfo')}
@@ -264,25 +389,57 @@ export const PhoneLoginScreen = () => {
           </View>
         )}
 
+        {/* 验证码输入框 - 仅在显示验证码输入时显示 */}
+        {showVerificationInput && (
+          <View style={styles.verificationInputContainer}>
+            <Text style={styles.verificationTitle}>{t('phoneLogin.verificationCode.title')}</Text>
+            <Text style={styles.verificationSubtitle}>
+              {t('phoneLogin.verificationCode.subtitle', { 
+                phoneNumber: `${selectedCountry?.phoneCode} ${phoneNumber}` 
+              })}
+            </Text>
+            <View style={styles.codeInputWrapper}>
+              <TextInput
+                style={styles.verificationInput}
+                placeholder={t('phoneLogin.verificationCode.placeholder')}
+                value={verificationCode}
+                onChangeText={(text) => {
+                  // 只允许输入数字，最多4位
+                  const numericText = text.replace(/[^0-9]/g, '').slice(0, 4);
+                  setVerificationCode(numericText);
+                }}
+                keyboardType="numeric"
+                returnKeyType="done"
+                autoFocus
+                maxLength={4}
+                textAlign="center"
+              />
+            </View>
+            <TouchableOpacity 
+              style={styles.resendContainer}
+              onPress={() => {
+                setShowVerificationInput(false);
+                setVerificationCode('');
+              }}
+            >
+              <Text style={styles.resendText}>{t('phoneLogin.verificationCode.resendCode')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <TouchableOpacity 
           style={[
             styles.continueButton, 
-            ((isPasswordMode ? 
-              (!phoneNumber.trim() || !password.trim()) : 
-              !phoneNumber.trim()
-            ) || loading) && styles.disabledButton
+            (getButtonDisabled() || loading) && styles.disabledButton
           ]}
           onPress={handleContinue}
-          disabled={loading || (isPasswordMode ? 
-            (!phoneNumber.trim() || !password.trim()) : 
-            !phoneNumber.trim())
-          }
+          disabled={loading || getButtonDisabled()}
         >
           {loading ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
             <Text style={styles.continueButtonText}>
-              {isPasswordMode ? t('loginButton') : t('continue')}
+              {getButtonText()}
             </Text>
           )}
         </TouchableOpacity>
@@ -520,5 +677,61 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  // 验证码输入相关样式
+  verificationInputContainer: {
+    marginTop: 30,
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  verificationTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  verificationSubtitle: {
+    fontSize: 15,
+    color: '#6b7280',
+    marginBottom: 32,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  codeInputWrapper: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 24,
+  },
+  verificationInput: {
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderRadius: 16,
+    padding: 20,
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: 12,
+    textAlign: 'center',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
+    minHeight: 64,
+  },
+  resendContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  resendText: {
+    fontSize: 16,
+    color: '#FF6B35',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 }); 

@@ -492,7 +492,7 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
                     onPress={() => setShowCountryModal(true)}
                   >
                     <Text style={styles.countryCodeText}>
-                      +{selectedCountry?.country || "1"}
+                      +{selectedCountry?.country || "225"}
                     </Text>
                     <Text style={styles.countryCodeArrow}>▼</Text>
                   </TouchableOpacity>

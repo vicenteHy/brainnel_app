@@ -1006,7 +1006,19 @@
   },
   "phoneLogin": {
     "smsVerificationLogin": "Connexion par code SMS",
-    "passwordLogin": "Connexion par mot de passe"
+    "passwordLogin": "Connexion par mot de passe",
+    "verificationCode": {
+      "title": "Saisissez le code de vérification",
+      "subtitle": "Nous avons envoyé un code de vérification à 4 chiffres au {{phoneNumber}}",
+      "placeholder": "Code de vérification",
+      "resendCode": "Renvoyer le code de vérification",
+      "verify": "Vérifier",
+      "codeSent": "Code de vérification envoyé, veuillez saisir le code reçu",
+      "codeRequired": "Veuillez saisir le code de vérification",
+      "codeLength": "Le code de vérification doit comporter 4 chiffres",
+      "codeFormat": "Le code de vérification ne peut contenir que des chiffres",
+      "codeIncorrect": "Le code de vérification est incorrect, veuillez réessayer"
+    }
   },
   "whatsapp": {
     "title": "Connexion WhatsApp",
