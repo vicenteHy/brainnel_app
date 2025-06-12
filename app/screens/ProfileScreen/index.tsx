@@ -7,6 +7,8 @@ import {
   View,
   Modal,
   Platform,
+  Text,
+  TouchableOpacity,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";

@@ -425,12 +425,21 @@ export const PreviewOrder = () => {
                 // 如果无法打开应用，提示用户下载或使用网页版
                 await Linking.openURL(res.payment_url);
               }
+              
+              // 打开Wave应用后，跳转到支付页面进行状态监听
+              navigation.navigate("Pay", {
+                payUrl: res.payment_url,
+                method: "wave",
+                order_id: route.params.data.order_id.toString()
+              });
             } catch (error) {
               console.error("Error opening Wave app:", error);
               Alert.alert(
                 t("error"),
                 t("order.error.wave_app_open") || "Failed to open Wave app"
               );
+              // 打开失败时跳转到支付失败页面
+              navigation.navigate("PayError", {});
             }
 
             return;
@@ -445,14 +454,8 @@ export const PreviewOrder = () => {
           if (route.params.payMethod === "mobile_money") {
             if (res.success === true) {
               setLoading(false);
-              Toast.show({
-                type: "success",
-                text1: res.msg,
-              });
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "MainTabs" }],
-              });
+              // 手机钱包支付成功，跳转到支付成功页面
+              navigation.navigate("PaymentSuccessScreen", res);
               return;
             } else {
               // 移动支付失败的埋点数据收集
@@ -462,52 +465,48 @@ export const PreviewOrder = () => {
               
               console.log("支付结账失败埋点数据:", checkoutFailData);
 
-              Toast.show({
-                type: "error",
-                text1: res.msg,
-              });
               setLoading(false);
+              // 手机钱包支付失败，跳转到支付失败页面
+              navigation.navigate("PayError", { msg: res.msg });
             }
           }
 
           if (route.params.payMethod === "paypal") {
             try {
-              // 首先检查是否可以打开Wave应用
-              const canOpen = await Linking.canOpenURL(res.payment_url);
-              if (canOpen) {
-                // 如果可以打开Wave应用，直接跳转
-                await Linking.openURL(res.payment_url);
-              } else {
-                // 如果无法打开应用，提示用户下载或使用网页版
-                await Linking.openURL(res.payment_url);
-              }
+              // 跳转到支付页面处理PayPal支付
+              navigation.navigate("Pay", {
+                payUrl: res.payment_url,
+                method: "paypal",
+                order_id: route.params.data.order_id.toString()
+              });
             } catch (error) {
-              console.error("Error opening Wave app:", error);
+              console.error("Error opening PayPal payment:", error);
               Alert.alert(
                 t("error"),
-                t("order.error.wave_app_open") || "Failed to open Wave app"
+                t("order.error.paypal_open") || "Failed to open PayPal payment"
               );
+              // 打开失败时跳转到支付失败页面
+              navigation.navigate("PayError", {});
             }
             return;
           }
 
           if (route.params.payMethod === "bank_card") {
             try {
-              // 首先检查是否可以打开Wave应用
-              const canOpen = await Linking.canOpenURL(res.payment_url);
-              if (canOpen) {
-                // 如果可以打开Wave应用，直接跳转
-                await Linking.openURL(res.payment_url);
-              } else {
-                // 如果无法打开应用，提示用户下载或使用网页版
-                await Linking.openURL(res.payment_url);
-              }
+              // 跳转到支付页面处理银行卡支付
+              navigation.navigate("Pay", {
+                payUrl: res.payment_url,
+                method: "bank_card",
+                order_id: route.params.data.order_id.toString()
+              });
             } catch (error) {
-              console.error("Error opening Wave app:", error);
+              console.error("Error opening bank card payment:", error);
               Alert.alert(
                 t("error"),
-                t("order.error.wave_app_open") || "Failed to open Wave app"
+                t("order.error.bank_card_open") || "Failed to open bank card payment"
               );
+              // 打开失败时跳转到支付失败页面
+              navigation.navigate("PayError", {});
             }
             return;
           }
@@ -519,10 +518,9 @@ export const PreviewOrder = () => {
           
           console.log("支付结账失败埋点数据:", checkoutFailData);
 
-          Toast.show({
-            type: "error",
-            text1: res.msg,
-          });
+          setLoading(false);
+          // API返回失败时，跳转到支付失败页面
+          navigation.navigate("PayError", { msg: res.msg });
         }
       })
       .catch((err) => {
@@ -535,7 +533,8 @@ export const PreviewOrder = () => {
         
         console.log("支付结账错误埋点数据:", checkoutErrorData);
 
-        Alert.alert(t("order.preview.payment_failed"));
+        // 网络请求失败时，跳转到支付失败页面
+        navigation.navigate("PayError", { msg: t("order.preview.payment_failed") });
       })
       .finally(() => {
         setLoading(false);

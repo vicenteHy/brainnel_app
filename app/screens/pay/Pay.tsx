@@ -175,10 +175,14 @@ export const Pay = () => {
                       .then((res) => {
                         if (res.status === 1) {
                           // 尝试跳转到支付成功页面
-                          safeNavigate("PaymentSuccessScreen", params);
+                          safeNavigate("PaymentSuccessScreen", res);
                         } else {
-                          safeNavigate("PayError", params);
+                          safeNavigate("PayError", res);
                         }
+                      })
+                      .catch((error) => {
+                        console.error("PayPal callback error:", error);
+                        safeNavigate("PayError", { msg: "Payment callback failed" });
                       });
                   }
 
@@ -189,6 +193,23 @@ export const Pay = () => {
                   // // 尝试跳转到支付失败页面
                   // safeNavigate('PayError', params);
                   // return false; // 不在WebView中加载
+                }
+              }
+            }
+
+            // 检查银行卡支付的结果
+            if (route.params.method === "bank_card") {
+              const { url } = request;
+              if (url) {
+                // 检查URL中是否包含支付成功或失败的标识
+                if (url.includes("payment_success=true") || url.includes("success") || url.includes("completed")) {
+                  // 支付成功
+                  safeNavigate("PaymentSuccessScreen", { success: true });
+                  return false;
+                } else if (url.includes("payment_success=false") || url.includes("cancel") || url.includes("error") || url.includes("failed")) {
+                  // 支付失败或取消
+                  safeNavigate("PayError", { msg: "Bank card payment failed" });
+                  return false;
                 }
               }
             }

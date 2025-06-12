@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,33 +6,24 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
-  BackHandler,
   Image,
-  Modal,
-  SafeAreaView,
   Alert,
   TextInput,
   ActivityIndicator,
-  FlatList
+  Modal,
+  FlatList,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// @ts-ignore
-import Icon from "react-native-vector-icons/FontAwesome";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import fontSize from "../../utils/fontsizeUtils";
-import EmailLoginModal from "./EmailLoginModal";
-import PhoneLoginModal from "./PhoneLoginModal";
-import WhatsAppLoginModal from "./WhatsAppLoginModal";
 import { loginApi } from "../../services/api/login";
 import { userApi } from "../../services";
 import useUserStore from "../../store/user";
 import { settingApi } from "../../services/api/setting";
 import { changeLanguage } from "../../i18n";
-import { CountryList } from "../../constants/countries";
-import { getCountryTransLanguage } from "../../utils/languageUtils";
-import useAnalyticsStore from "../../store/analytics";
+import { Country, countries } from "../../constants/countries";
 
 // 使用标准的ES6模块导入
 let GoogleSignin: any = null;
@@ -51,7 +42,8 @@ let statusCodes: any = null;
 // import * as AppleAuthentication from 'expo-apple-authentication'; // 注释掉原生模块
 
 const isDevelopment = __DEV__; // 开发模式检测
-const isSimulator = Platform.OS === 'ios' && Platform.isPad === false && __DEV__;
+const isSimulator =
+  Platform.OS === "ios" && Platform.isPad === false && __DEV__;
 
 // 配置 Google 登录 - 自动从 GoogleService-Info.plist 读取配置 (已注释)
 // if (GoogleSignin && !isSimulator) {
@@ -76,104 +68,30 @@ type RootStackParamList = {
   Home: { screen: string };
 };
 
-type LoginScreenProps = {
-  onClose?: () => void;
-  isModal?: boolean;
-};
-
-export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
+export const LoginScreen = () => {
   const { setUser, setSettings } = useUserStore();
-  const analyticsStore = useAnalyticsStore();
   const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // 全新的状态管理方式
-  const [emailModalVisible, setEmailModalVisible] = useState(false);
-  const [phoneModalVisible, setPhoneModalVisible] = useState(false);
-  const [whatsappModalVisible, setWhatsappModalVisible] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<CountryList>();
-  
   // WhatsApp登录状态
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [phoneNumberError, setPhoneNumberError] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showVerificationInput, setShowVerificationInput] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [selectedCountry, setSelectedCountry] = useState<Country>({
+    name: "Ivory Coast",
+    code: "CI",
+    flag: "🇨🇮",
+    userCount: 1100000,
+    phoneCode: "+225",
+  });
   const [showCountryModal, setShowCountryModal] = useState(false);
-  const [countryList, setCountryList] = useState<CountryList[]>([]);
-  const [whatsappLoading, setWhatsappLoading] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [whatsappError, setWhatsappError] = useState<string | null>(null);
-
-  // 防止多次触发
-  const isProcessingEmail = useRef(false);
-  const isProcessingPhone = useRef(false);
-  const isProcessingWhatsapp = useRef(false);
-
-  // 加载国家数据
-  useEffect(() => {
-    const loadCountryData = async () => {
-      try {
-        // 加载国家列表
-        const res = await settingApi.getSendSmsCountryList();
-        setCountryList(res);
-        
-        // 加载已保存的国家
-        const savedCountry = await AsyncStorage.getItem("@selected_country");
-        if (savedCountry) {
-          const parsedCountry = JSON.parse(savedCountry);
-          const item = res.find(item => item.country === parsedCountry.country);
-          if (item) {
-            setSelectedCountry(item);
-          }
-        } else {
-          // 默认设置为科特迪瓦 +225
-          const defaultCountry = res.find(item => item.country === 225);
-          if (defaultCountry) {
-            setSelectedCountry(defaultCountry);
-          }
-        }
-      } catch (error) {
-        console.error("加载国家数据失败:", error);
-      }
-    };
-    loadCountryData();
-  }, []);
-
-  // 处理Android返回按钮
-  useEffect(() => {
-    const backAction = () => {
-      if (emailModalVisible) {
-        setEmailModalVisible(false);
-        return true;
-      }
-      if (phoneModalVisible) {
-        setPhoneModalVisible(false);
-        return true;
-      }
-      if (whatsappModalVisible) {
-        setWhatsappModalVisible(false);
-        return true;
-      }
-      handleClose();
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, [emailModalVisible, phoneModalVisible, whatsappModalVisible]);
 
   // 关闭主屏幕
   const handleClose = () => {
-    if (isModal && onClose) {
-      onClose();
-    } else {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
   // 处理首次登录设置同步
@@ -182,11 +100,11 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
       // 检查是否是首次登录
       if (loginResponse.first_login) {
         console.log("✅ 检测到首次登录，开始同步本地设置");
-        
+
         // 读取本地存储的国家设置
         const savedCountry = await AsyncStorage.getItem("@selected_country");
         let countryCode = 221; // 默认国家
-        
+
         if (savedCountry) {
           try {
             const parsedCountry = JSON.parse(savedCountry);
@@ -196,12 +114,12 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
             console.error("❌ 解析本地国家设置失败:", e);
           }
         }
-        
+
         // 调用首次登录API创建用户设置（包含国家对应的默认货币）
         console.log("📡 调用首次登录API，国家代码:", countryCode);
         const firstLoginData = await settingApi.postFirstLogin(countryCode);
         console.log("✅ 首次登录设置创建成功:", firstLoginData);
-        
+
         // 读取本地存储的语言设置
         const savedLanguage = await AsyncStorage.getItem("app_language");
         if (savedLanguage && savedLanguage !== firstLoginData.language) {
@@ -213,7 +131,6 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
             console.error("❌ 语言设置同步失败:", error);
           }
         }
-        
       } else {
         console.log("ℹ️ 非首次登录，跳过设置同步");
       }
@@ -227,61 +144,61 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
   const handleGoogleLogin = async () => {
     Alert.alert("功能暂时不可用", "Google登录功能在开发模式下暂时禁用");
     return;
-    /* 
+    /*
     console.log("🚀 Google登录按钮被点击");
     console.log("🔧 GoogleSignin模块:", GoogleSignin);
     console.log("🔧 statusCodes:", statusCodes);
-    
+
     try {
       console.log("✅ 开始Google登录流程");
-      
+
       if (!GoogleSignin || typeof GoogleSignin.signIn !== "function") {
         console.error("❌ Google Sign-in模块未正确初始化或配置失败");
         Alert.alert("登录失败", "Google登录服务未正确配置");
         return;
       }
-      
+
       console.log("✅ Google Sign-in模块验证通过");
-      
+
       // 检查Play Services是否可用（仅Android需要）
       console.log("🔍 检查Play Services...");
       await GoogleSignin.hasPlayServices();
       console.log("✅ Play Services检查通过");
-      
+
       // 执行登录
       console.log("🔐 开始执行Google登录...");
       const userInfo = await GoogleSignin.signIn();
       console.log("🎉 Google 登录成功:", JSON.stringify(userInfo, null, 2));
-      
+
       try {
         // 调用后端API进行登录
         console.log("📡 调用后端API进行登录验证...");
         const res = await loginApi.googleLogin(userInfo);
         console.log("✅ 后端登录验证成功:", res);
-        
+
         // 保存access_token到AsyncStorage
         if (res.access_token) {
           const token = `${res.token_type} ${res.access_token}`;
           await AsyncStorage.setItem("token", token);
           console.log("✅ Token已保存:", token);
         }
-        
+
         // 处理首次登录设置同步
         console.log("⚙️ 检查是否需要同步本地设置...");
         await handleFirstLoginSettings(res);
-        
+
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
         console.log("✅ 用户信息获取成功:", user);
-        
+
         // 同步语言设置
         if (user.language) {
           console.log("🌐 同步用户语言设置:", user.language);
           await changeLanguage(user.language);
         }
-        
+
         setUser(user);
-        
+
         // 导航到主页
         console.log("🏠 导航到主页...");
         if (isModal && onClose) {
@@ -289,16 +206,16 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         }
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ 登录流程完成");
-        
+
       } catch (err) {
         console.error("❌ 后端登录验证失败:", err);
         Alert.alert("登录失败", "服务器处理Google登录时出错，请稍后重试");
       }
-      
+
     } catch (error: any) {
       console.error("❌ Google 登录错误:", error);
       console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
-      
+
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log("⏹️ 用户取消登录");
         // 用户取消，不显示错误
@@ -315,230 +232,14 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
     }
     */ // 注释结束
   };
-  const [userInfo, setUserInfo] = useState<any>(null);
-
-  useEffect(() => {
-    // 确保在 App 启动时初始化 SDK (已注释)
-    // Settings.initializeSDK();
-    
-    console.log("✅ Facebook SDK初始化已禁用");
-
-    // 在应用程序启动时检查是否已经登录（可选）
-    // AccessToken.getCurrentAccessToken().then(data => {
-    //   if (data) {
-    //     console.log("已登录 Facebook，Token:", data.accessToken);
-    //     // 可以尝试获取用户信息
-    //     // fetchFacebookProfile(data.accessToken);
-    //   }
-    // });
-
-  }, []);
-
-
-  // 辅助函数：获取 Facebook 用户资料 - iOS Limited Login兼容版本
-  const fetchFacebookProfile = async (accessTokenData: any) => {
-    try {
-      console.log('📡 开始获取Facebook用户资料...');
-      console.log('🔑 AccessToken数据:', JSON.stringify(accessTokenData, null, 2));
-      
-      // 对于iOS Limited Login，需要使用Graph API的特殊方式
-      if (Platform.OS === 'ios' && accessTokenData.permissions && accessTokenData.permissions.includes('openid')) {
-        console.log('🍎 检测到iOS Limited Login模式');
-        
-        // 构造基本用户信息（Limited Login模式下可能无法获取完整信息）
-        const profile = {
-          id: accessTokenData.userID,
-          name: '用户', // Limited Login模式下可能无法获取真实姓名
-          email: null   // Limited Login模式下可能无法获取邮箱
-        };
-        
-        console.log('📋 Limited Login模式用户信息:', JSON.stringify(profile, null, 2));
-        setUserInfo(profile);
-        return profile;
-      } else {
-        // 标准模式的Graph API调用
-        const token = accessTokenData.accessToken;
-        const url = `https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`;
-        console.log('🌐 请求URL:', url);
-        
-        const response = await fetch(url);
-        console.log('📊 响应状态:', response.status);
-        
-        const profile = await response.json();
-        console.log('📋 Facebook User Info (完整响应):', JSON.stringify(profile, null, 2));
-        
-        // 检查是否有错误
-        if (profile.error) {
-          console.error('❌ Facebook API返回错误:', JSON.stringify(profile.error, null, 2));
-          throw new Error(`Facebook API错误: ${profile.error.message} (代码: ${profile.error.code})`);
-        }
-        
-        setUserInfo(profile);
-        console.log('✅ Facebook用户资料获取成功');
-        return profile;
-      }
-    } catch (error) {
-      console.error('❌ 获取 Facebook 用户资料错误:', error);
-      console.error('❌ 错误详情:', JSON.stringify(error, null, 2));
-      Alert.alert("获取资料失败", "无法从 Facebook 获取用户详细资料，请检查网络或权限设置。");
-      throw error;
-    }
-  };
-
-  // 处理Facebook登录
-  const handleFacebookLogin = async () => {
-    console.log("🚀 Facebook登录按钮被点击");
-    console.log("📱 设备平台:", Platform.OS);
-    console.log("🔧 开发模式:", __DEV__);
-    
-    try {
-      console.log("✅ 开始Facebook登录流程");
-      
-      // 先检查Facebook SDK状态
-      console.log("🔍 检查Facebook SDK状态...");
-      try {
-        const currentToken = await AccessToken.getCurrentAccessToken();
-        console.log("📋 当前Facebook Token状态:", currentToken ? "已存在Token" : "无Token");
-        if (currentToken) {
-          console.log("📋 当前Token信息:", JSON.stringify(currentToken, null, 2));
-        }
-      } catch (sdkError) {
-        console.error("❌ Facebook SDK检查错误:", sdkError);
-      }
-      
-      // 可选: 先退出登录，确保每次都是全新登录 (主要用于测试)
-      // await LoginManager.logOut();
-
-      console.log("🚀 开始Facebook权限请求...");
-      // 使用标准的Facebook登录
-      const result = await LoginManager.logInWithPermissions([
-        "public_profile",
-        "email",
-      ]);
-
-      if (result.isCancelled) {
-        console.log("⏹️ 用户取消Facebook登录");
-        Alert.alert("登录取消", "用户取消了 Facebook 登录。");
-        return;
-      }
-
-      console.log("✅ Facebook登录授权成功");
-      console.log("📋 Facebook登录结果:", JSON.stringify(result, null, 2));
-      
-      const data = await AccessToken.getCurrentAccessToken();
-      console.log("📋 Facebook AccessToken 数据:", JSON.stringify(data, null, 2));
-      
-      // 确保 accessToken 存在且为字符串
-      if (!data || !data.accessToken) {
-        console.error("❌ 无法获取Facebook AccessToken");
-        console.error("❌ data对象:", JSON.stringify(data, null, 2));
-        Alert.alert("登录失败", "无法获取有效的 Facebook AccessToken。");
-        return;
-      }
-
-      const tokenString = data.accessToken.toString();
-      console.log("🔑 Facebook Access Token:", tokenString);
-      console.log("🕒 Token到期时间:", data.expirationTime);
-      console.log("🔐 Token权限:", JSON.stringify(data.permissions, null, 2));
-
-      // 获取 Facebook 用户信息
-      console.log("👤 获取Facebook用户信息...");
-      const facebookProfile = await fetchFacebookProfile(data);
-      
-      try {
-        // 准备发送给后端的数据
-        const backendData = Platform.OS === 'ios' && data.permissions && data.permissions.includes('openid')
-          ? {
-              // iOS Limited Login模式 - 发送更多token信息给后端验证
-              access_token: tokenString,
-              user_id: data.userID,
-              application_id: data.applicationID,
-              permissions: data.permissions,
-              profile: facebookProfile,
-              limited_login: true
-            }
-          : {
-              // 标准模式
-              access_token: tokenString,
-              profile: facebookProfile
-            };
-        console.log("📤 准备发送给后端的数据:", JSON.stringify(backendData, null, 2));
-        
-        // 调用后端API进行Facebook登录
-        console.log("📡 调用后端API进行Facebook登录验证...");
-        const res = await loginApi.facebookLogin(backendData);
-        console.log("✅ 后端Facebook登录验证成功:", JSON.stringify(res, null, 2));
-        
-        // 保存access_token到AsyncStorage
-        if (res.access_token) {
-          const token = `${res.token_type} ${res.access_token}`;
-          await AsyncStorage.setItem("token", token);
-          console.log("✅ Token已保存:", token);
-        }
-        
-        // 处理首次登录设置同步
-        console.log("⚙️ 检查是否需要同步本地设置...");
-        await handleFirstLoginSettings(res);
-        
-        console.log("👤 获取用户信息...");
-        const user = await userApi.getProfile();
-        console.log("✅ 用户信息获取成功:", JSON.stringify(user, null, 2));
-        
-        // 同步语言设置
-        if (user.language) {
-          console.log("🌐 同步用户语言设置:", user.language);
-          await changeLanguage(user.language);
-        }
-        
-        setUser(user);
-        
-        // 导航到主页
-        console.log("🏠 导航到主页...");
-        if (isModal && onClose) {
-          onClose();
-        }
-        navigation.navigate("MainTabs", { screen: "Home" });
-        console.log("✅ Facebook登录流程完成");
-        
-      } catch (err: any) {
-        console.error("❌ 后端Facebook登录验证失败:", err);
-        
-        // 详细记录错误信息
-        if (err.response) {
-          console.error("📊 响应状态:", err.response.status);
-          console.error("📊 响应头:", JSON.stringify(err.response.headers, null, 2));
-          console.error("📊 响应数据:", JSON.stringify(err.response.data, null, 2));
-        } else if (err.request) {
-          console.error("📡 请求信息:", JSON.stringify(err.request, null, 2));
-          console.error("❌ 没有收到响应");
-        } else {
-          console.error("❌ 错误配置:", err.message);
-        }
-        
-        console.error("❌ 完整错误对象:", JSON.stringify(err, null, 2));
-        
-        Alert.alert("登录失败", `服务器处理Facebook登录时出错: ${err.message || '未知错误'}`);
-      }
-
-    } catch (error: any) {
-      console.error("❌ Facebook登录错误:", error);
-      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
-      
-      let errorMessage = "发生未知错误";
-      if (error && typeof error.message === 'string') {
-        errorMessage = error.message;
-      }
-      Alert.alert("登录错误", `Facebook 操作失败：${errorMessage}`);
-    }
-  };
 
   // 处理Apple登录
   const handleAppleLogin = async () => {
     console.log("🚀 Apple登录按钮被点击");
-    
+
     try {
       console.log("✅ 开始Apple登录流程");
-      
+
       // 检查Apple登录是否可用
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
@@ -546,9 +247,9 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         Alert.alert("登录失败", "Apple登录在此设备上不可用");
         return;
       }
-      
+
       console.log("✅ Apple登录可用，开始认证...");
-      
+
       // 执行Apple登录
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -556,9 +257,9 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      
+
       console.log("🎉 Apple登录成功:", JSON.stringify(credential, null, 2));
-      
+
       // 构造用户信息
       const appleUserData = {
         user: credential.user,
@@ -568,593 +269,507 @@ export const LoginScreen = ({ onClose, isModal }: LoginScreenProps) => {
         authorizationCode: credential.authorizationCode,
         state: credential.state,
       };
-      
+
       try {
         // 调用后端API进行Apple登录
         console.log("📡 调用后端API进行Apple登录验证...");
         const res = await loginApi.appleLogin(appleUserData);
         console.log("✅ 后端Apple登录验证成功:", res);
-        
+
         // 保存access_token到AsyncStorage
         if (res.access_token) {
           const token = `${res.token_type} ${res.access_token}`;
           await AsyncStorage.setItem("token", token);
           console.log("✅ Token已保存:", token);
         }
-        
+
         // 处理首次登录设置同步
         console.log("⚙️ 检查是否需要同步本地设置...");
         await handleFirstLoginSettings(res);
-        
+
         console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
         console.log("✅ 用户信息获取成功:", user);
-        
+
         // 同步语言设置
         if (user.language) {
           console.log("🌐 同步用户语言设置:", user.language);
           await changeLanguage(user.language);
         }
-        
+
         setUser(user);
-        
+
         // 导航到主页
         console.log("🏠 导航到主页...");
-        if (isModal && onClose) {
-          onClose();
-        }
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ Apple登录流程完成");
-        
       } catch (err) {
         console.error("❌ 后端Apple登录验证失败:", err);
         Alert.alert("登录失败", "服务器处理Apple登录时出错，请稍后重试");
       }
-      
     } catch (error: any) {
       console.error("❌ Apple登录错误:", error);
       console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
-      
-      if (error.code === 'ERR_CANCELED') {
+
+      if (error.code === "ERR_CANCELED") {
         console.log("⏹️ 用户取消Apple登录");
         // 用户取消，不显示错误
       } else {
         console.error("❌ 其他错误:", error.message);
-        Alert.alert("登录失败", `Apple登录出现错误: ${error.message || '未知错误'}`);
+        Alert.alert(
+          "登录失败",
+          `Apple登录出现错误: ${error.message || "未知错误"}`,
+        );
       }
     }
   };
 
-
-  // 显示邮箱登录
-  const showEmailModal = () => {
-    if (isProcessingEmail.current) return;
-
-    isProcessingEmail.current = true;
-    // 确保其他模态框已关闭
-    setPhoneModalVisible(false);
-    setWhatsappModalVisible(false);
-
-    // 延迟打开邮箱模态框，避免冲突
-    setTimeout(() => {
-      setEmailModalVisible(true);
-      isProcessingEmail.current = false;
-    }, 100);
-  };
-
-  // 显示手机登录
-  const showPhoneModal = () => {
-    if (isProcessingPhone.current) return;
-
-    isProcessingPhone.current = true;
-    // 确保其他模态框已关闭
-    setEmailModalVisible(false);
-    setWhatsappModalVisible(false);
-
-    // 延迟打开手机模态框，避免冲突
-    setTimeout(() => {
-      setPhoneModalVisible(true);
-      isProcessingPhone.current = false;
-    }, 100);
-  };
-
-  // 显示WhatsApp登录
-  const showWhatsappModal = () => {
-    console.log("🚀 WhatsApp登录按钮被点击");
-    if (isProcessingWhatsapp.current) {
-      console.log("⏳ WhatsApp登录正在处理中，跳过");
-      return;
-    }
-
-    isProcessingWhatsapp.current = true;
-    console.log("🔄 关闭其他登录模态框");
-    // 确保其他模态框已关闭
-    setEmailModalVisible(false);
-    setPhoneModalVisible(false);
-
-    // 延迟打开WhatsApp模态框，避免冲突
-    setTimeout(() => {
-      console.log("📱 显示WhatsApp登录模态框");
-      setWhatsappModalVisible(true);
-      isProcessingWhatsapp.current = false;
-    }, 100);
-  };
-
-  // 关闭邮箱登录
-  const hideEmailModal = () => {
-    console.log("Hiding email modal");
-    setEmailModalVisible(false);
-  };
-
-  // 关闭手机登录
-  const hidePhoneModal = () => {
-    console.log("Hiding phone modal");
-    setPhoneModalVisible(false);
-  };
-
-  // 关闭WhatsApp登录
-  const hideWhatsappModal = () => {
-    console.log("❌ 关闭WhatsApp登录模态框");
-    setWhatsappModalVisible(false);
-  };
-
-  // 验证手机号 (8-11位)
-  const validatePhoneNumber = (phoneNum: string) => {
-    const length = phoneNum.length;
-    return length >= 8 && length <= 11;
-  };
-
-  // 处理手机号输入
-  const handlePhoneNumberChange = (text: string) => {
-    setPhoneNumber(text);
-    if (text.length > 0) {
-      setPhoneNumberError(!validatePhoneNumber(text));
-    } else {
-      setPhoneNumberError(false);
-    }
-    setWhatsappError(null);
-  };
-
-  // 选择国家
-  const handleCountrySelect = (country: CountryList) => {
-    console.log("🌍 用户选择国家:", country);
-    setSelectedCountry(country);
-    setShowCountryModal(false);
-    AsyncStorage.setItem("@selected_country", JSON.stringify(country));
-  };
-
-  // 发送WhatsApp OTP
-  const handleSendWhatsappOtp = async () => {
-    console.log("🚀 WhatsApp发送OTP");
-    
-    if (!validatePhoneNumber(phoneNumber)) {
-      console.log("❌ 手机号验证失败");
-      setPhoneNumberError(true);
+  // 发送WhatsApp验证码
+  const handleSendWhatsAppCode = async () => {
+    if (!phoneNumber.trim()) {
+      Alert.alert(t("error"), t("phoneNumber") + " " + t("login.required"));
       return;
     }
 
     try {
-      setWhatsappLoading(true);
-      setWhatsappError(null);
+      setLoading(true);
+      const countryCode = selectedCountry?.phoneCode || "+225";
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
       
-      const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
-      console.log("📞 完整手机号:", fullPhoneNumber);
-      
+      console.log("[WhatsApp] 发送验证码 - 国家代码:", countryCode);
+      console.log("[WhatsApp] 发送验证码 - 手机号:", phoneNumber);
+      console.log("[WhatsApp] 发送验证码 - 完整号码:", fullPhoneNumber);
+      console.log("[WhatsApp] 发送验证码 - 语言:", i18n.language);
+
       const requestData = {
         phone_number: fullPhoneNumber,
-        language: i18n.language || "zh"
+        language: i18n.language || "en",
       };
-      
-      const response = await loginApi.sendWhatsappOtp(requestData);
-      console.log("✅ WhatsApp OTP发送成功:", response);
-      
-      setShowOtpInput(true);
-      setWhatsappLoading(false);
-      Alert.alert(t("whatsapp.verification_code_sent"), t("whatsapp.check_whatsapp"));
+
+      console.log("[WhatsApp] 发送请求数据:", requestData);
+
+      await loginApi.sendWhatsappOtp(requestData);
+
+      setShowVerificationInput(true);
+      setCountdown(60);
+      setLoading(false);
+
+      Alert.alert(t("success"), t("whatsapp.verification_code_sent"));
+
+      // 开始倒计时
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (error: any) {
-      console.error("❌ 发送WhatsApp OTP失败:", error);
+      console.error("[WhatsApp] 发送验证码失败:", error);
+      console.error("[WhatsApp] 错误详情:", JSON.stringify(error, null, 2));
       
-      let errorMessage = t("whatsapp.login_failed");
-      if (error.code === 'ECONNABORTED') {
-        errorMessage = t("whatsapp.login_failed");
-      } else if (error.response) {
-        if (error.response.status === 404) {
-          errorMessage = t("whatsapp.login_failed");
-        } else if (error.response.status >= 500) {
-          errorMessage = t("whatsapp.login_failed");
-        } else if (error.response.status === 422) {
-          errorMessage = t("whatsapp.phone_error");
+      if (error?.data?.detail) {
+        console.error("[WhatsApp] 服务器错误详情:", error.data.detail);
+      }
+      
+      let errorMessage = "发送验证码失败，请重试";
+      if (error?.data?.detail && Array.isArray(error.data.detail)) {
+        const firstError = error.data.detail[0];
+        if (firstError && typeof firstError === 'object' && firstError.msg) {
+          errorMessage = firstError.msg;
         }
       }
       
-      setWhatsappLoading(false);
-      setWhatsappError(errorMessage);
+      Alert.alert(t("error"), errorMessage);
+      setLoading(false);
     }
   };
 
-  // 验证WhatsApp OTP
-  const handleVerifyWhatsappOtp = async () => {
-    console.log("🔐 WhatsApp验证OTP");
-    
-    if (!otpCode.trim()) {
-      setWhatsappError(t("whatsapp.enter_code"));
+  // 验证WhatsApp验证码并登录
+  const handleVerifyWhatsAppCode = async () => {
+    if (!verificationCode || verificationCode.length !== 4) {
+      Alert.alert(t("error"), "请输入4位验证码");
       return;
     }
 
     try {
-      setOtpLoading(true);
-      setWhatsappError(null);
-      
-      const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
-      const requestData = {
+      setLoading(true);
+      const countryCode = selectedCountry?.phoneCode || "+225";
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+
+      console.log("[WhatsApp] 验证验证码 - 完整号码:", fullPhoneNumber);
+      console.log("[WhatsApp] 验证验证码 - 验证码:", verificationCode);
+
+      const res = await loginApi.verifyWhatsappOtp({
         phone_number: fullPhoneNumber,
-        code: otpCode
-      };
-      
-      const res = await loginApi.verifyWhatsappOtp(requestData);
-      console.log("✅ WhatsApp OTP验证成功:", res);
+        code: verificationCode,
+      });
 
       if (res.access_token) {
-        const token = `${res.token_type} ${res.access_token}`;
+        const token = res.token_type + " " + res.access_token;
         await AsyncStorage.setItem("token", token);
-        
+
         if (res.first_login) {
-          const countryCode = selectedCountry?.country || 225;
-          const data = await settingApi.postFirstLogin(countryCode);
-          setSettings(data);
+          const countryCodeStr = selectedCountry?.phoneCode?.replace("+", "") || "225";
+          const countryCode = parseInt(countryCodeStr);
+          await handleFirstLoginSettings(res);
         }
-        
+
         const user = await userApi.getProfile();
         if (user.language) {
           await changeLanguage(user.language);
         }
-        
+
         setUser(user);
-        setOtpLoading(false);
-        
-        // 记录登录成功
-        analyticsStore.logLogin(true, "whatsapp");
-        
+        setLoading(false);
+
         navigation.replace("MainTabs", { screen: "Home" });
-        if (onClose) onClose();
-      } else {
-        setOtpLoading(false);
-        setWhatsappError(t("whatsapp.login_failed"));
       }
-    } catch (error: any) {
-      console.error("❌ 验证WhatsApp OTP失败:", error);
-      setOtpLoading(false);
-      setWhatsappError(t("whatsapp.code_error"));
-      
-      // 记录登录失败
-      analyticsStore.logLogin(false, "whatsapp");
+    } catch (error) {
+      console.error("[WhatsApp] 验证码验证失败:", error);
+      Alert.alert(t("error"), t("whatsapp.code_error"));
+      setLoading(false);
     }
   };
 
-  // 重新发送OTP
-  const handleResendOtp = () => {
-    setOtpCode("");
-    setWhatsappError(null);
-    handleSendWhatsappOtp();
-  };
+  const handleCountrySelect = useCallback((country: Country) => {
+    setSelectedCountry(country);
+    setShowCountryModal(false);
+  }, []);
 
-  // 渲染国家列表项
-  const renderCountryItem = ({ item }: { item: CountryList }) => (
+  const renderCountryItem = ({ item }: { item: Country }) => (
     <TouchableOpacity
       style={styles.countryItem}
       onPress={() => handleCountrySelect(item)}
-      activeOpacity={0.7}
     >
+      <Text style={styles.countryItemFlag}>{item.flag}</Text>
       <View style={styles.countryItemContent}>
-        <Text style={styles.countryCode}>+{item.country}</Text>
-        <Text style={styles.countryItemName}>
-          {getCountryTransLanguage(item)}
-        </Text>
+        <Text style={styles.countryItemName}>{item.name}</Text>
+        <Text style={styles.countryItemCode}>{item.phoneCode}</Text>
       </View>
-      {selectedCountry && selectedCountry.country === item.country && (
-        <Text style={styles.checkmark}>✓</Text>
-      )}
     </TouchableOpacity>
   );
 
-  // 处理忘记密码
-  const handleForgotPassword = () => {
-    // 处理忘记密码
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#E5E5E5" />
-      <View style={styles.container}>
-        {/* 背景 */}
-        <View style={styles.background} />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      {/* 头部导航 */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleClose}>
+          <Text style={styles.backButtonText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Login</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* 登录内容区域 */}
+      <View style={styles.loginContent}>
         
-        {/* 登录卡片 */}
-        <View style={styles.loginCard}>
-          {/* 关闭按钮 */}
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Text style={styles.closeButtonText}>←</Text>
+        {/* WhatsApp登录表单 */}
+        <View style={styles.whatsappFormSection}>
+          {!showVerificationInput ? (
+            <>
+              {/* WhatsApp图标和主标题 */}
+              <View style={styles.whatsappHeader}>
+                <Image
+                  source={require("../../../assets/login/whatsapp.png")}
+                  style={styles.whatsappIcon}
+                />
+                <Text style={styles.whatsappTitle}>WhatsApp Login</Text>
+              </View>
+
+              {/* 提示文本 */}
+              <Text style={styles.whatsappHint}>
+                We'll send a verification code to your WhatsApp
+              </Text>
+
+              {/* 手机号输入 */}
+              <View style={styles.phoneInputContainer}>
+                <TouchableOpacity
+                  style={styles.countrySelector}
+                  onPress={() => setShowCountryModal(true)}
+                >
+                  <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
+                  <Text style={styles.countryCode}>
+                    {selectedCountry.phoneCode}
+                  </Text>
+                  <Text style={styles.downArrow}>▼</Text>
+                </TouchableOpacity>
+
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="WhatsApp number"
+                  placeholderTextColor="#9CA3AF"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                  autoFocus={true}
+                />
+                {phoneNumber.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={() => setPhoneNumber("")}
+                  >
+                    <Text style={styles.clearButtonText}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.whatsappButton,
+                  (!phoneNumber.trim() || loading) && styles.disabledButton,
+                ]}
+                onPress={handleSendWhatsAppCode}
+                disabled={loading || !phoneNumber.trim()}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.whatsappButtonText}>Send Code</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* 验证码输入 */}
+              <View style={styles.whatsappHeader}>
+                <Image
+                  source={require("../../../assets/login/whatsapp.png")}
+                  style={styles.whatsappIcon}
+                />
+                <Text style={styles.whatsappTitle}>
+                  Enter Verification Code
+                </Text>
+              </View>
+
+              <Text style={styles.verificationDescription}>
+                We sent a code to {selectedCountry.phoneCode || "+225"}
+                {phoneNumber}
+              </Text>
+
+              <TextInput
+                style={styles.codeInput}
+                placeholder="Enter 4-digit code"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                keyboardType="number-pad"
+                maxLength={4}
+                autoFocus
+              />
+
+              <TouchableOpacity
+                style={[
+                  styles.whatsappButton,
+                  (!verificationCode ||
+                    verificationCode.length !== 4 ||
+                    loading) &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleVerifyWhatsAppCode}
+                disabled={
+                  loading || !verificationCode || verificationCode.length !== 4
+                }
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.whatsappButtonText}>
+                    Verify & Continue
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              {/* 重发验证码 */}
+              <View style={styles.resendContainer}>
+                <Text style={styles.resendText}>Didn't receive the code? </Text>
+                <TouchableOpacity
+                  onPress={handleSendWhatsAppCode}
+                  disabled={countdown > 0 || loading}
+                >
+                  <Text
+                    style={[
+                      styles.resendLink,
+                      (countdown > 0 || loading) && styles.disabledText,
+                    ]}
+                  >
+                    {countdown > 0 ? `Resend in ${countdown}s` : "Resend"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* 分隔线 */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* 其他登录选项 */}
+        <View style={styles.otherLoginSection}>
+          {/* Google登录 */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleGoogleLogin}
+          >
+            <Image
+              source={require("../../../assets/login/google.png")}
+              style={styles.loginIcon}
+            />
+            <Text style={styles.loginButtonText}>Continue with Google</Text>
           </TouchableOpacity>
 
-          {/* 标题 */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.welcomeTitle}>Log in</Text>
-            <Text style={styles.subtitle}>By logging in, you agree to our Terms of Use.</Text>
-          </View>
-
-          {/* WhatsApp登录区域 */}
-          <View style={styles.whatsappSection}>
-            <Text style={styles.inputLabel}>{t("whatsapp.title")}</Text>
-            
-            {!showOtpInput ? (
-              // 手机号输入阶段
-              <>
-                <View style={styles.whatsappInputField}>
-                  <TouchableOpacity
-                    style={styles.countryCodeButton}
-                    onPress={() => setShowCountryModal(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.countryPrefix}>+{selectedCountry?.country || "225"}</Text>
-                    <Text style={styles.countryCodeArrow}>▼</Text>
-                  </TouchableOpacity>
-                  <View style={styles.inputDivider} />
-                  <TextInput
-                    style={styles.phoneInput}
-                    placeholder={t("whatsapp.phone_placeholder")}
-                    value={phoneNumber}
-                    onChangeText={handlePhoneNumberChange}
-                    keyboardType="phone-pad"
-                    maxLength={11}
-                  />
-                </View>
-                
-                {phoneNumberError && (
-                  <Text style={styles.errorText}>{t("whatsapp.phone_error")}</Text>
-                )}
-                
-                {whatsappError && (
-                  <Text style={styles.errorText}>{whatsappError}</Text>
-                )}
-                
-                <Text style={styles.whatsappInfoText}>{t("whatsapp.info_text")}</Text>
-                
-                <TouchableOpacity 
-                  style={[
-                    styles.connectButton,
-                    (phoneNumberError || !phoneNumber.trim()) && styles.disabledButton
-                  ]} 
-                  onPress={handleSendWhatsappOtp}
-                  disabled={phoneNumberError || !phoneNumber.trim() || whatsappLoading}
-                >
-                  {whatsappLoading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.connectButtonText}>{t("whatsapp.send_code")}</Text>
-                  )}
-                </TouchableOpacity>
-              </>
-            ) : (
-              // OTP验证阶段
-              <>
-                <TextInput
-                  style={styles.otpInput}
-                  placeholder={t("whatsapp.code_placeholder")}
-                  value={otpCode}
-                  onChangeText={setOtpCode}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  autoFocus
-                />
-                
-                <Text style={styles.otpInfoText}>
-                  {t("whatsapp.code_sent_info", {
-                    countryCode: selectedCountry?.country,
-                    phoneNumber: phoneNumber
-                  })}
-                </Text>
-                
-                {whatsappError && (
-                  <Text style={styles.errorText}>{whatsappError}</Text>
-                )}
-                
-                <TouchableOpacity
-                  style={[
-                    styles.connectButton,
-                    !otpCode.trim() && styles.disabledButton
-                  ]}
-                  onPress={handleVerifyWhatsappOtp}
-                  disabled={!otpCode.trim() || otpLoading}
-                >
-                  {otpLoading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.connectButtonText}>{t("whatsapp.connect")}</Text>
-                  )}
-                </TouchableOpacity>
-                
-                <View style={styles.resendContainer}>
-                  <Text style={styles.resendText}>{t("whatsapp.resend_text")} </Text>
-                  <TouchableOpacity onPress={handleResendOtp}>
-                    <Text style={styles.resendLink}>{t("whatsapp.resend_link")}</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-
-          {/* 分隔线 */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* 其他登录选项 */}
-          <View style={styles.otherOptionsContainer}>
-            <TouchableOpacity style={styles.optionButton} onPress={handleGoogleLogin}>
+          {/* Apple登录 - 只在iOS显示 */}
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleAppleLogin}
+            >
               <Image
-                source={require("../../../assets/img/google.png")}
-                style={styles.optionIcon}
+                source={require("../../../assets/login/apple.png")}
+                style={styles.loginIcon}
               />
-              <Text style={styles.optionButtonText}>Sign in with Google</Text>
+              <Text style={styles.loginButtonText}>Continue with Apple</Text>
             </TouchableOpacity>
+          )}
 
-            <TouchableOpacity style={styles.optionButton} onPress={showPhoneModal}>
-              <Text style={styles.optionButtonText}>Phone number</Text>
-            </TouchableOpacity>
+          {/* 手机号登录 */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => navigation.navigate("PhoneLoginScreen")}
+          >
+            <Image
+              source={require("../../../assets/login/phone.png")}
+              style={styles.loginIcon}
+            />
+            <Text style={styles.loginButtonText}>Continue with Phone</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity style={styles.optionButton} onPress={showEmailModal}>
-              <Text style={styles.optionButtonText}>Email</Text>
-            </TouchableOpacity>
-          </View>
+          {/* 邮箱登录 */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => navigation.navigate("EmailLogin")}
+          >
+            <Image
+              source={require("../../../assets/login/email.png")}
+              style={styles.loginIcon}
+            />
+            <Text style={styles.loginButtonText}>Continue with Email</Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* 隐私政策 */}
-          <View style={styles.privacyContainer}>
-            <Text style={styles.privacyText}>For more information, please see our Privacy policy.</Text>
-          </View>
+        {/* 条款和隐私政策 */}
+        <View style={styles.privacyContainer}>
+          <Text style={styles.privacyText}>
+            By continuing, you agree to our{" "}
+            <Text
+              style={styles.linkText}
+              onPress={() => navigation.navigate("TermsOfUseScreen")}
+            >
+              Terms of Use
+            </Text>{" "}
+            and{" "}
+            <Text
+              style={styles.linkText}
+              onPress={() => navigation.navigate("PrivacyPolicyScreen")}
+            >
+              Privacy Policy
+            </Text>
+            .
+          </Text>
         </View>
       </View>
 
-      {/* 邮箱登录模态框 - 直接渲染 */}
-      <EmailLoginModal visible={emailModalVisible} onClose={hideEmailModal} />
-
-      {/* 手机登录模态框 - 直接渲染 */}
-      <PhoneLoginModal visible={phoneModalVisible} onClose={hidePhoneModal} />
-
-      {/* WhatsApp登录模态框 - 直接渲染 */}
-      <WhatsAppLoginModal visible={whatsappModalVisible} onClose={hideWhatsappModal} />
-      
-      {/* 国家选择模态框 */}
+      {/* 国家选择Modal */}
       <Modal
         visible={showCountryModal}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setShowCountryModal(false)}
-        statusBarTranslucent={true}
       >
-        <View style={styles.countryModalContainer}>
-          <TouchableOpacity
-            style={styles.countryModalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowCountryModal(false)}
-          />
-          <View style={styles.countryModalContent}>
-            <View style={styles.modalHandleContainer}>
-              <View style={styles.modalHandle} />
-            </View>
-            <View style={styles.countryModalHeader}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
               <TouchableOpacity
-                style={styles.countryModalCloseButton}
+                style={styles.modalCloseButton}
                 onPress={() => setShowCountryModal(false)}
-                activeOpacity={0.7}
               >
-                <Text style={styles.countryModalCloseButtonText}>✕</Text>
+                <Text style={styles.modalCloseButtonText}>✕</Text>
               </TouchableOpacity>
-              <Text style={styles.countryModalTitle}>{t("selectCountry")}</Text>
+              <Text style={styles.modalTitle}>{t("selectCountry")}</Text>
             </View>
             <FlatList
-              data={countryList}
+              data={countries}
               renderItem={renderCountryItem}
-              keyExtractor={(item) => item.country.toString()}
+              keyExtractor={(item) => item.code}
               style={styles.countryList}
               showsVerticalScrollIndicator={false}
             />
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  safeAreaContent: {
-    flex: 1,
-    paddingTop: 0,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 15,
-    left: 15,
+  backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
   },
-  closeButtonText: {
+  backButtonText: {
+    fontSize: fontSize(28),
     color: "#374151",
-    fontSize: fontSize(20),
     fontWeight: "300",
   },
-  blueHeader: {
-    backgroundColor: "#FF6B35", // 橙色品牌色
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: Platform.OS === "ios" ? 80 : 60,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    elevation: 8,
-    shadowColor: "#FF6B35",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  logo: {
-    fontSize: fontSize(34),
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 8,
+  headerTitle: {
+    flex: 1,
+    fontSize: fontSize(20),
+    fontWeight: "600",
+    color: "#1F2937",
     textAlign: "center",
   },
-  features: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginTop: 16,
+  headerSpacer: {
+    width: 40,
   },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  featureIconContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    borderRadius: 12,
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  featureIcon: {
-    fontSize: fontSize(16),
-  },
-  featureText: {
-    fontSize: fontSize(15),
-    color: "#fff",
-    fontWeight: "500",
-  },
-  loginContainer: {
+  loginContent: {
     flex: 1,
+    backgroundColor: "#fff",
     paddingHorizontal: 24,
-    paddingTop: 48,
-    backgroundColor: "#fafafa",
+    paddingTop: 24,
   },
   titleContainer: {
     alignItems: "center",
-    marginBottom: 40,
-    paddingTop: 20,
-    position: "relative",
+    marginBottom: 32,
+  },
+  welcomeTitle: {
+    fontSize: fontSize(28),
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: fontSize(16),
@@ -1163,21 +778,98 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     lineHeight: 22,
   },
+  primaryLoginSection: {
+    marginBottom: 24,
+  },
+  primaryLoginButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF5100",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    shadowColor: "#FF5100",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  primaryLoginText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    textAlign: "center",
+    marginLeft: -24,
+  },
   loginButton: {
     flexDirection: "row",
-    height: 56,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: "#E8E8E8",
     alignItems: "center",
-    marginBottom: 16,
-    paddingHorizontal: 20,
     backgroundColor: "#fff",
-    elevation: 2,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 2,
+  },
+  loginButtonText: {
+    flex: 1,
+    color: "#374151",
+    fontSize: fontSize(16),
+    fontWeight: "500",
+    textAlign: "center",
+    marginLeft: -24,
+  },
+  loginIcon: {
+    width: 24,
+    height: 24,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e5e7eb",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: fontSize(14),
+    color: "#9ca3af",
+    fontWeight: "400",
+  },
+  secondaryLoginSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 32,
+  },
+  secondaryLoginButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f9fafb",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  secondaryLoginText: {
+    color: "#374151",
+    fontSize: fontSize(14),
+    fontWeight: "500",
+    marginLeft: 8,
   },
   loginButtonIcon: {
     width: 28,
@@ -1245,7 +937,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
@@ -1257,27 +949,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: "#999",
     fontWeight: "400",
-  },
-  background: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#f0f0f0",
-  },
-  loginCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginHorizontal: 20,
-    marginTop: 80,
-    marginBottom: 40,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
   },
   welcomeTitle: {
     fontSize: fontSize(32),
@@ -1374,6 +1045,21 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     textAlign: "center",
     lineHeight: 20,
+  },
+  linkText: {
+    color: "#FF5100",
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  privacyContainer: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  privacyText: {
+    fontSize: fontSize(13),
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 18,
   },
   countryCodeButton: {
     flexDirection: "row",
@@ -1521,16 +1207,217 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   countryCode: {
-    fontSize: fontSize(15),
-    color: "#6b7280",
-    marginRight: 12,
-    width: 50,
-    textAlign: "center",
+    fontSize: fontSize(16),
+    color: "#374151",
+    fontWeight: "600",
   },
   checkmark: {
     fontSize: fontSize(20),
     color: "#FF6B35",
     fontWeight: "bold",
+  },
+  // WhatsApp相关样式
+  whatsappFormSection: {
+    marginBottom: 20,
+  },
+  whatsappHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  whatsappIcon: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
+  },
+  whatsappTitle: {
+    fontSize: fontSize(28),
+    fontWeight: "700",
+    color: "#25D366",
+  },
+  whatsappHint: {
+    fontSize: fontSize(14),
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  phoneInputContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    overflow: "hidden",
+    height: 56,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  countrySelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    borderRightWidth: 1,
+    borderRightColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    height: "100%",
+    minWidth: 100,
+    justifyContent: "center",
+  },
+  countryFlag: {
+    fontSize: 20,
+    marginRight: 6,
+  },
+  downArrow: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    marginLeft: 4,
+  },
+  phoneInput: {
+    flex: 1,
+    height: "100%",
+    paddingHorizontal: 16,
+    fontSize: fontSize(12),
+    paddingRight: 40,
+    color: "#111827",
+    letterSpacing: 0,
+  },
+  clearButton: {
+    position: "absolute",
+    right: 16,
+    top: "50%",
+    transform: [{ translateY: -12 }],
+    height: 24,
+    width: 24,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  clearButtonText: {
+    fontSize: fontSize(14),
+    color: "#6B7280",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  whatsappButton: {
+    height: 56,
+    backgroundColor: "#25D366",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: "#25D366",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  disabledButton: {
+    backgroundColor: "#D1D5DB",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+  },
+  whatsappButtonText: {
+    color: "#fff",
+    fontSize: fontSize(17),
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  verificationDescription: {
+    fontSize: fontSize(14),
+    color: "#666",
+    marginBottom: 16,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  codeInput: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#E1E1E1",
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    fontSize: fontSize(18),
+    marginBottom: 16,
+    textAlign: "center",
+    letterSpacing: 4,
+  },
+  resendContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  resendText: {
+    fontSize: fontSize(14),
+    color: "#666",
+  },
+  resendLink: {
+    fontSize: fontSize(14),
+    color: "#25D366",
+    fontWeight: "500",
+  },
+  disabledText: {
+    color: "#CCCCCC",
+  },
+  otherLoginSection: {
+    marginBottom: 20,
+  },
+  // Modal样式
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalCloseButtonText: {
+    fontSize: fontSize(18),
+    color: "#999",
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: fontSize(18),
+    fontWeight: "600",
+    textAlign: "center",
+    marginRight: 24,
+  },
+  countryList: {
+    padding: 8,
+  },
+  countryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  countryItemFlag: {
+    fontSize: fontSize(24),
+    marginRight: 16,
+  },
+  countryItemContent: {
+    flex: 1,
   },
 });
 

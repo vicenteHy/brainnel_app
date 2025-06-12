@@ -20,6 +20,20 @@ export interface CountryList {
 
 export const countries: Country[] = [
   {
+    code: 'CI',
+    name: 'Ivory Coast',
+    flag: '🇨🇮',
+    userCount: 1100000, // 设置最高用户数确保排第一
+    phoneCode: '+225'
+  },
+  {
+    code: 'CN',
+    name: 'China',
+    flag: '🇨🇳',
+    userCount: 1050000,
+    phoneCode: '+86'
+  },
+  {
     code: 'CD',
     name: 'Democratic Republic of the Congo',
     flag: '🇨🇩',
@@ -88,13 +102,6 @@ export const countries: Country[] = [
     flag: '🇨🇲',
     userCount: 150000,
     phoneCode: '+237'
-  },
-  {
-    code: 'CI',
-    name: 'Ivory Coast',
-    flag: '🇨🇮',
-    userCount: 100000,
-    phoneCode: '+225'
   },
   {
     code: 'FR',

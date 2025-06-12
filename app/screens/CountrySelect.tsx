@@ -18,11 +18,134 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import { settingApi } from '../services/api/setting';
 import flagMap from '../utils/flagMap';
 import { getCountryTransLanguage } from '../utils/languageUtils';
 
 const SELECTED_COUNTRY_KEY = '@selected_country';
+
+// 静态国家数据
+const staticCountryList: CountryList[] = [
+  {
+    name: "Côte d'Ivoire",
+    name_en: "Ivory Coast",
+    country: 225,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 13,
+    valid_digits: []
+  },
+  {
+    name: "Sénégal",
+    name_en: "Senegal",
+    country: 221,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 6,
+    valid_digits: []
+  },
+  {
+    name: "France",
+    name_en: "France",
+    country: 33,
+    currency: "EUR",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 1,
+    valid_digits: []
+  },
+  {
+    name: "Bénin",
+    name_en: "Benin",
+    country: 229,
+    currency: "FCFA",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 1,
+    valid_digits: []
+  },
+  {
+    name: "Gabon",
+    name_en: "Gabon",
+    country: 241,
+    currency: "CFA",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 1,
+    valid_digits: []
+  },
+  {
+    name: "République démocratique du Congo",
+    name_en: "Democratic Republic of the Congo",
+    country: 243,
+    currency: "FCFA",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 1,
+    valid_digits: []
+  },
+  {
+    name: "Cameroun",
+    name_en: "Cameroon",
+    country: 237,
+    currency: "CFA",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  },
+  {
+    name: "République du Congo",
+    name_en: "Republic of Congo",
+    country: 242,
+    currency: "CFA",
+    timezone: "UTC+1",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  },
+  {
+    name: "Guinée",
+    name_en: "Guinea",
+    country: 224,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  },
+  {
+    name: "Burkina Faso",
+    name_en: "Burkina Faso",
+    country: 226,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  },
+  {
+    name: "Mali",
+    name_en: "Mali",
+    country: 223,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  },
+  {
+    name: "Togo",
+    name_en: "Togo",
+    country: 228,
+    currency: "FCFA",
+    timezone: "UTC+0",
+    language: "fr",
+    user_count: 0,
+    valid_digits: []
+  }
+];
 
 export const CountrySelect = () => {
   const { t } = useTranslation();
@@ -38,7 +161,6 @@ export const CountrySelect = () => {
   const checkSelectedCountry = async () => {
     setLoading(true);
     try {
-    
       const savedCountry = await AsyncStorage.getItem(SELECTED_COUNTRY_KEY);
       if (savedCountry) {
         // 如果已经选择过国家，直接导航到主页面
@@ -46,12 +168,10 @@ export const CountrySelect = () => {
         const isCleared = await AsyncStorage.getItem('languageCleared');
         if (!isCleared) {
           navigation.replace('MainTabs');
-          
         }
-      }else{
-        const res = await settingApi.getCountryList();
-        setCountryList(res);
-        
+      } else {
+        // 使用静态数据而不是API调用
+        setCountryList(staticCountryList);
       }
     } catch (error) {
       console.error('Error checking selected country:', error);
@@ -136,58 +256,74 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#000',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
-    marginBottom: 20,
-    lineHeight: 20,
+    marginBottom: 24,
+    lineHeight: 24,
+    letterSpacing: 0.2,
   },
   list: {
     flex: 1,
+    paddingHorizontal: 4,
   },
   countryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    marginHorizontal: 12,
+    marginVertical: 2,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e8e8e8',
   },
   selectedItem: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
   },
   flag: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     marginRight: 16,
+    borderRadius: 4,
   },
   countryName: {
     flex: 1,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 17,
+    color: '#1a1a1a',
+    fontWeight: '500',
+    letterSpacing: 0.1,
   },
   countryCode: {
     fontSize: 16,
-    color: '#333',
+    color: '#666',
     marginRight: 16,
-    width: 40,
+    minWidth: 48,
     textAlign: 'center',
+    fontWeight: '600',
   },
   selectedText: {
     color: '#007AFF',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   checkmark: {
-    fontSize: 20,
+    fontSize: 22,
     color: '#007AFF',
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,

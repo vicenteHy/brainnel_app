@@ -902,5 +902,9 @@
     "login_failed": "Login failed, please try again",
     "verification_code_sent": "Verification code sent",
     "check_whatsapp": "Please check your WhatsApp messages"
+  },
+  "phoneLogin": {
+    "smsVerificationLogin": "SMS Verification Login",
+    "passwordLogin": "Password Login"
   }
 }

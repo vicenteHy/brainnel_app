@@ -36,6 +36,8 @@ import { PaymentMethod } from "../screens/previewOrder/PaymentMethod";
 import { ShippingFee } from "../screens/previewOrder/ShippingFee";
 import { PreviewOrder } from "../screens/previewOrder/perviewOrder";
 import { ForgotPhonePassword } from "../screens/loginList/ForgotPhonePassword";
+import { PhoneLoginScreen } from "../screens/login/PhoneLoginScreen";
+import { WhatsAppLoginScreen } from "../screens/login/WhatsAppLoginScreen";
 import { PayError } from '../screens/pay/PayError';
 import { ChatScreen } from '../screens/ChatScreen';
 import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
@@ -88,6 +90,8 @@ export {
   ShippingFee,
   PreviewOrder,
   ForgotPhonePassword,
+  PhoneLoginScreen,
+  WhatsAppLoginScreen,
   PayError,
   Info,
   ChangePassword,

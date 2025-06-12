@@ -131,10 +131,9 @@ export const AppNavigator = () => {
           name="Login"
           component={Screens.LoginScreen}
           options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
+            animation: "slide_from_right",
             gestureEnabled: true,
-            gestureDirection: "vertical",
+            gestureDirection: "horizontal",
           }}
         />
         <Stack.Screen
@@ -481,6 +480,24 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="ForgotPhonePassword"
           component={Screens.ForgotPhonePassword}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+        <Stack.Screen
+          name="PhoneLoginScreen"
+          component={Screens.PhoneLoginScreen}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+        <Stack.Screen
+          name="WhatsAppLoginScreen"
+          component={Screens.WhatsAppLoginScreen}
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,

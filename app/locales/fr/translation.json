@@ -1004,6 +1004,10 @@
       "loading_more": "Chargement en cours...",
       "no_more_data": "Plus de données"
   },
+  "phoneLogin": {
+    "smsVerificationLogin": "Connexion par code SMS",
+    "passwordLogin": "Connexion par mot de passe"
+  },
   "whatsapp": {
     "title": "Connexion WhatsApp",
     "verification_title": "Vérifier le code WhatsApp",

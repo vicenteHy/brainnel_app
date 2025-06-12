@@ -693,33 +693,34 @@ export const styles = StyleSheet.create({
     gap: 16,
   },
   balanceButton: {
-    width: '47%', // 固定宽度，确保两个按钮完全一致
+    flex: 1,
     backgroundColor: '#FF5100',
-    minHeight: 40,
-    borderRadius: 25,
+    minHeight: 44,
+    borderRadius: 22,
     elevation: 0,
     shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    overflow: 'hidden',
   },
   balanceButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8, // 进一步减少内边距
-    gap: 6, // 减少图标和文本间距
-    flex: 1, // 占满按钮空间
-    width: '100%', // 确保内容宽度一致
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
   },
   balanceButtonText: {
     color: '#fff',
-    fontSize: fontSize(14), // 稍微减小字体以适应更小空间
+    fontSize: fontSize(13),
     fontWeight: '600',
-    letterSpacing: 0.3,
-    flexShrink: 1, // 允许文本在需要时收缩
-    textAlign: 'center', // 确保文本居中
+    letterSpacing: 0.2,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 
   // Section Cards (Orders, Services)
