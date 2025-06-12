@@ -20,7 +20,8 @@
       "icon": "./assets/logo/logo.png",
       "bundleIdentifier": "uni.UNIC87CC93",
       "associatedDomains": [
-        "applinks:api.brainnel.com"
+        "applinks:api.brainnel.com",
+        "applinks:brainnel.com"
       ],
       "buildNumber": "3.1.2",
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -81,6 +82,11 @@
             {
               "scheme": "https",
               "host": "api.brainnel.com",
+              "pathPattern": ".*"
+            },
+            {
+              "scheme": "https",
+              "host": "brainnel.com",
               "pathPattern": ".*"
             }
           ],

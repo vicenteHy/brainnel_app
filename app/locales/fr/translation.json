@@ -1025,5 +1025,22 @@
     "login_failed": "Échec de la connexion, veuillez réessayer",
     "verification_code_sent": "Code de vérification envoyé",
     "check_whatsapp": "Veuillez vérifier vos messages WhatsApp"
+  },
+  "loginPrompt": {
+    "chat": {
+      "title": "Veuillez vous connecter d'abord",
+      "message": "Connectez-vous pour utiliser les fonctionnalités de chat",
+      "button": "Se connecter maintenant"
+    },
+    "cart": {
+      "title": "Veuillez vous connecter d'abord", 
+      "message": "Connectez-vous pour utiliser les fonctionnalités du panier",
+      "button": "Se connecter maintenant"
+    },
+    "profile": {
+      "title": "Veuillez vous connecter d'abord",
+      "message": "Connectez-vous pour voir les informations personnelles",
+      "button": "Se connecter maintenant"
+    }
   }
 } 

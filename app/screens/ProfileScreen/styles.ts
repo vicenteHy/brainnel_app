@@ -585,15 +585,20 @@ export const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   loginButton: {
-    backgroundColor: "#FF5100",
-    paddingHorizontal: 30,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 20,
+    backgroundColor: "#fff", // 改为白色背景
+    paddingHorizontal: 24, // 减小水平内边距
+    paddingVertical: 8, // 减小垂直内边距
+    borderRadius: 18, // 调整圆角
+    marginTop: 0, // 移除顶部外边距
+    elevation: 2, // 添加阴影
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   loginButtonText: {
-    color: "#fff",
-    fontSize: fontSize(16),
+    color: "#FF5100", // 改为橙色文字
+    fontSize: fontSize(14), // 减小字体大小
     fontWeight: "600",
   },
   fixedLoginButton: {
@@ -757,7 +762,8 @@ export const styles = StyleSheet.create({
   },
   sectionItem: {
     alignItems: 'center',
-    width: '20%', // 5 items per row
+    width: '25%', // 4 items per row
+    paddingHorizontal: 4, // 增加一些内边距防止文字被截断
   },
   sectionItemIcon: {
     fontSize: 28,
@@ -767,6 +773,9 @@ export const styles = StyleSheet.create({
   sectionItemText: {
     fontSize: fontSize(12),
     color: '#666',
+    textAlign: 'center', // 确保文字居中
+    lineHeight: fontSize(14), // 增加行高
+    flexWrap: 'wrap', // 允许文字换行
   },
   badgeContainer: {
     position: 'absolute',
@@ -968,5 +977,48 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#000',
     fontWeight: 'bold',
+  },
+
+  // Logged Out View Styles
+  loggedOutContainer: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 20,
+    minHeight: 180, // 减少最小高度
+  },
+  loggedOutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 10, // 减少底部间距
+  },
+  loggedOutHeaderSpacer: {
+    flex: 1,
+  },
+  loggedOutContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 20, // 减少底部间距
+    paddingTop: 10, // 减少顶部间距
+  },
+  loggedOutAvatarContainer: {
+    width: 70, // 减小头像尺寸
+    height: 70, // 减小头像尺寸
+    borderWidth: 0,
+    backgroundColor: "#fff",
+    borderRadius: 35,
+    padding: 8, // 减小内边距
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginBottom: 12, // 添加与按钮的间距
+  },
+  loggedOutAvatar: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
   },
 }); 

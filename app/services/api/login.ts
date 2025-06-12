@@ -24,6 +24,12 @@ export const loginApi = {
   // WhatsApp验证OTP
   verifyWhatsappOtp: (data: { phone_number: string; code: string }) =>
     apiService.post<LoginResponse>("/api/users/verify-whatsapp-otp/", data),
+  // 邮箱发送OTP
+  sendEmailOtp: (data: { email: string; language: string }) =>
+    apiService.post("/api/users/send-email-otp/", data),
+  // 邮箱验证OTP
+  verifyEmailOtp: (data: { email: string; code: string }) =>
+    apiService.post<LoginResponse>("/api/users/verify-email-otp/", data),
 };
 
 

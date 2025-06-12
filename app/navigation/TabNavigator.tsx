@@ -17,6 +17,7 @@ import { CategoryScreen } from '../screens/CategoryScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { LoginPromptScreen } from '../screens/LoginPromptScreen';
 type IconProps = {
   name: string;
   size: number;
@@ -28,7 +29,7 @@ const IconComponent = ({ name, size, color }: IconProps) => {
   return <Icon name={name} size={size} color={color} />;
 };
 
-// 购物车图标组件，带有数量标识
+// Cart icon component with badge count
 const CartIconWithBadge = ({ color, size }: TabBarIconProps) => {
   const { cartItemCount } = useCartStore();
   
@@ -67,6 +68,36 @@ type TabBarIconProps = {
   size: number;
 };
 
+// Wrapper for pages that require authentication
+const RequireAuthWrapper = ({ 
+  component: Component, 
+  type,
+  title, 
+  message, 
+  icon 
+}: { 
+  component: React.ComponentType; 
+  type: 'chat' | 'cart' | 'profile';
+  title?: string; 
+  message?: string; 
+  icon?: string; 
+}) => {
+  const { user } = useUserStore();
+  
+  if (user?.user_id) {
+    return <Component />;
+  }
+  
+  return (
+    <LoginPromptScreen 
+      type={type}
+      title={title}
+      message={message}
+      icon={icon}
+    />
+  );
+};
+
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
@@ -82,12 +113,12 @@ export const TabNavigator = () => {
   const [currentTab, setCurrentTab] = useState<string>('');
   const isFocused = useIsFocused();
   
-  // 动画值
+  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
   const insets = useSafeAreaInsets();
 
-  // 监听键盘事件
+  // Listen to keyboard events
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
@@ -108,7 +139,7 @@ export const TabNavigator = () => {
     };
   }, []);
 
-  // 检查是否已经显示过弹窗
+  // Check if login prompt was already shown
   useEffect(() => {
     const checkPromptShown = async () => {
       try {
@@ -122,7 +153,7 @@ export const TabNavigator = () => {
     checkPromptShown();
   }, []);
 
-  // 监听当前tab页面变化及用户登录状态，决定是否显示登录提示
+  // Monitor current tab changes and user login status to decide whether to show login prompt
   useEffect(() => {
     if (isFocused && (currentTab === 'Home' || currentTab === 'Cart')) {
       if (!user?.user_id && !promptShownBefore) {
@@ -131,7 +162,7 @@ export const TabNavigator = () => {
     }
   }, [currentTab, user?.user_id, isFocused, promptShownBefore]);
 
-  // 监听用户登录状态，更新购物车数量
+  // Monitor user login status and update cart item count
   useEffect(() => {
     if (user?.user_id) {
       updateCartItemCount();
@@ -140,7 +171,7 @@ export const TabNavigator = () => {
 
   const showLoginModal = () => {
     setShowLoginPrompt(true);
-    // 重置动画值到初始状态
+    // Reset animation values to initial state
     fadeAnim.setValue(0);
     slideAnim.setValue(300);
     
@@ -174,7 +205,7 @@ export const TabNavigator = () => {
       setShowLoginPrompt(false);
     });
     
-    // 记录已经显示过登录提示
+    // Record that login prompt has been shown
     try {
       await AsyncStorage.setItem('loginPromptShown', 'true');
       setPromptShownBefore(true);
@@ -241,34 +272,55 @@ export const TabNavigator = () => {
         />
         <Tab.Screen
           name="Chat"
-          component={ChatScreen}
           options={{
             tabBarLabel: t('chat.tab_label'),
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
               <IconComponent name="chatbubble-outline" size={size} color={color} />
             ),
           }}
-        />
+        >
+          {() => (
+            <RequireAuthWrapper
+              component={ChatScreen}
+              type="chat"
+              icon="💬"
+            />
+          )}
+        </Tab.Screen>
         <Tab.Screen
           name="Cart"
-          component={CartScreen}
           options={{
             tabBarLabel: t('cart.cart'),
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
               <CartIconWithBadge color={color} size={size} />
             ),
           }}
-        />
+        >
+          {() => (
+            <RequireAuthWrapper
+              component={CartScreen}
+              type="cart"
+              icon="🛒"
+            />
+          )}
+        </Tab.Screen>
         <Tab.Screen
           name="Profile"
-          component={ProfileScreen}
           options={{
             tabBarLabel: t('my'),
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
               <IconComponent name="person-outline" size={size} color={color} />
             ),
           }}
-        />
+        >
+          {() => (
+            <RequireAuthWrapper
+              component={ProfileScreen}
+              type="profile"
+              icon="👤"
+            />
+          )}
+        </Tab.Screen>
       </Tab.Navigator>
 
       {/* {showLoginPrompt && (

@@ -9,12 +9,17 @@ import {
   Platform,
   FlatList,
   SafeAreaView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-// 常见邮箱后缀列表
+import { loginApi } from '../services/api/login';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// Common email domain list
 const EMAIL_DOMAINS = [
   'gmail.com',
   'yahoo.com',
@@ -34,43 +39,44 @@ export const EmailLoginScreen = () => {
   const [email, setEmail] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 处理邮箱输入变化，生成邮箱建议
+  // Handle email input changes and generate email suggestions
   const handleEmailChange = (text: string) => {
     setEmail(text);
     
-    // 检查是否包含@符号
+    // Check if contains @ symbol
     if (text.includes('@')) {
       const [username, domain] = text.split('@');
       
       if (domain) {
-        // 如果已经输入了部分域名，过滤匹配的域名
+        // If partial domain is entered, filter matching domains
         const filteredDomains = EMAIL_DOMAINS.filter(item => 
           item.toLowerCase().startsWith(domain.toLowerCase())
         );
         
-        // 生成完整的邮箱建议列表
+        // Generate complete email suggestion list
         const emailSuggestions = filteredDomains.map(d => `${username}@${d}`);
         setSuggestions(emailSuggestions);
         setShowSuggestions(emailSuggestions.length > 0);
       } else {
-        // 如果只输入了@，显示所有域名建议
+        // If only @ is entered, show all domain suggestions
         const emailSuggestions = EMAIL_DOMAINS.map(d => `${username}@${d}`);
         setSuggestions(emailSuggestions);
         setShowSuggestions(true);
       }
     } else if (text.length > 0) {
-      // 没有@符号但有输入内容，显示常见邮箱后缀建议
+      // No @ symbol but has input content, show common email suffix suggestions
       const emailSuggestions = EMAIL_DOMAINS.map(d => `${text}@${d}`);
       setSuggestions(emailSuggestions);
       setShowSuggestions(true);
     } else {
-      // 输入为空，不显示建议
+      // Input is empty, don't show suggestions
       setShowSuggestions(false);
     }
   };
 
-  // 选择一个邮箱建议
+  // Select an email suggestion
   const handleSelectSuggestion = (suggestion: string) => {
     setEmail(suggestion);
     setShowSuggestions(false);
@@ -80,23 +86,40 @@ export const EmailLoginScreen = () => {
     navigation.goBack();
   };
 
-  const handleContinue = () => {
-    // 验证邮箱格式
-    if (isValidEmail(email)) {
-      // 这里可以添加发送验证码或其他逻辑
-      console.log('Continue with email:', email);
-      // 导航到下一个页面
-      // navigation.navigate('EmailVerification', { email });
+  const handleContinue = async () => {
+    if (!isValidEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Save email address to local storage for verification use
+      await AsyncStorage.setItem('email_for_signin', email);
+      
+      // Send email verification code
+      await loginApi.sendEmailOtp({ 
+        email: email, 
+        language: 'en' 
+      });
+      
+      // Navigate to verification page
+      navigation.navigate('EmailOtp' as any, { email });
+    } catch (error: any) {
+      console.error('Failed to send verification code:', error);
+      Alert.alert('Send Failed', error.response?.data?.message || 'Failed to send verification code, please check email address and try again');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // 简单的邮箱格式验证
+  // Simple email format validation
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // 渲染单个邮箱建议项
+  // Render single email suggestion item
   const renderSuggestionItem = ({ item }: { item: string }) => (
     <TouchableOpacity 
       style={styles.suggestionItem}
@@ -107,10 +130,11 @@ export const EmailLoginScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={styles.safeAreaContent}>
-        {/* 头部 */}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <View style={styles.safeAreaContent}>
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -121,7 +145,7 @@ export const EmailLoginScreen = () => {
           <Text style={styles.title}>{t('logInOrSignUp')}</Text>
         </View>
 
-        {/* 表单 */}
+        {/* Form */}
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <TextInput
@@ -132,6 +156,7 @@ export const EmailLoginScreen = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="done"
               autoFocus
             />
             {email.length > 0 && (
@@ -147,7 +172,7 @@ export const EmailLoginScreen = () => {
             )}
           </View>
 
-          {/* 邮箱后缀建议列表 */}
+          {/* Email domain suggestion list */}
           {showSuggestions && (
             <View style={styles.suggestionsContainer}>
               <FlatList
@@ -163,16 +188,19 @@ export const EmailLoginScreen = () => {
           <TouchableOpacity 
             style={[
               styles.continueButton, 
-              !isValidEmail(email) && styles.disabledButton
+              (!isValidEmail(email) || isLoading) && styles.disabledButton
             ]}
             onPress={handleContinue}
-            disabled={!isValidEmail(email)}
+            disabled={!isValidEmail(email) || isLoading}
           >
-            <Text style={styles.continueButtonText}>{t('continue')}</Text>
+            <Text style={styles.continueButtonText}>
+              {isLoading ? 'Sending...' : 'Send Verification Code'}
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </SafeAreaView>
+        </View>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -240,7 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     flex: 1,
-    paddingRight: 36, // 为清除按钮留出空间
+    paddingRight: 36, // Leave space for clear button
   },
   clearButton: {
     padding: 8,
@@ -248,7 +276,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 8,
     top: '50%',
-    transform: [{ translateY: -12 }], // 居中调整
+    transform: [{ translateY: -12 }], // Center adjustment
     height: 24,
     width: 24,
     justifyContent: 'center',

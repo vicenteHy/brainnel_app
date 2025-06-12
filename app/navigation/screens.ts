@@ -48,6 +48,8 @@ import { TermsOfUseScreen } from '../screens/setting/TermsOfUseScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
+import { LoginPromptScreen } from '../screens/LoginPromptScreen';
+import { EmailOtpScreen } from '../screens/EmailOtpScreen';
 
 export {
   CountrySelect,
@@ -100,4 +102,6 @@ export {
   HomeScreen as Home,
   ProfileScreen,
   CategoryScreen,
+  LoginPromptScreen,
+  EmailOtpScreen,
 }; 

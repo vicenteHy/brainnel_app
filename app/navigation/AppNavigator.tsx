@@ -154,6 +154,15 @@ export const AppNavigator = () => {
           }}
         />
         <Stack.Screen
+          name="EmailOtp"
+          component={Screens.EmailOtpScreen}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+        <Stack.Screen
           name="Search"
           component={Screens.SearchScreen}
           options={{
@@ -534,6 +543,15 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="TermsOfUseScreen"
           component={Screens.TermsOfUseScreen}
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+        <Stack.Screen
+          name="LoginPromptScreen"
+          component={Screens.LoginPromptScreen}
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,

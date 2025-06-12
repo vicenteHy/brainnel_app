@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
@@ -453,8 +455,9 @@ export const LoginScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
       {/* 头部导航 */}
       <View style={styles.header}>
@@ -505,8 +508,8 @@ export const LoginScreen = () => {
                   placeholderTextColor="#9CA3AF"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                  autoFocus={true}
+                  keyboardType="numeric"
+                  returnKeyType="done"
                 />
                 {phoneNumber.length > 0 && (
                   <TouchableOpacity
@@ -556,7 +559,8 @@ export const LoginScreen = () => {
                 placeholder="Enter 4-digit code"
                 value={verificationCode}
                 onChangeText={setVerificationCode}
-                keyboardType="number-pad"
+                keyboardType="numeric"
+                returnKeyType="done"
                 maxLength={4}
                 autoFocus
               />
@@ -714,7 +718,8 @@ export const LoginScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 

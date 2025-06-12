@@ -11,6 +11,8 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -169,8 +171,9 @@ export const PhoneLoginScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
       {/* 头部 */}
       <View style={styles.header}>
@@ -200,7 +203,8 @@ export const PhoneLoginScreen = () => {
             placeholder={t('phoneNumber')}
             value={phoneNumber}
             onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
+            keyboardType="numeric"
+            returnKeyType="done"
             autoFocus
           />
           {phoneNumber.length > 0 && (
@@ -224,6 +228,7 @@ export const PhoneLoginScreen = () => {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              returnKeyType="done"
             />
           </View>
         )}
@@ -311,7 +316,8 @@ export const PhoneLoginScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 

@@ -2,12 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EventEmitter } from 'events';
 
-// 声明全局事件发射器类型
+// Declare global event emitter type
 declare global {
   var EventEmitter: EventEmitter;
 }
 
-// 添加自定义事件
+// Add custom events
 export const AUTH_EVENTS = {
   LOGIN_SUCCESS: 'LOGIN_SUCCESS'
 };
@@ -53,7 +53,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // 清除本地存储
       await AsyncStorage.setItem('isLoggedIn', 'false');
+      await AsyncStorage.removeItem('email_for_signin');
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('refresh_token');
+      
       setIsLoggedIn(false);
     } catch (error) {
       console.error('Error logging out:', error);

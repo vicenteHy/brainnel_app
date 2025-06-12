@@ -5,17 +5,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import enTranslation from '../locales/en/translation.json';
 import frTranslation from '../locales/fr/translation.json';
 
-// 本地存储的语言键
+// Local storage language keys
 const LANGUAGE_KEY = '@app_language';
 const LANGUAGE_SELECTED_KEY = '@language_selected';
 
-// 获取设备语言
+// Get device language
 const deviceLanguage = Localization.locale ? Localization.locale.split('-')[0] : 'fr';
 
-// 默认语言设置为法语，等待用户选择
+// Default language set to French, waiting for user selection
 const initialLanguage = 'fr';
 
-// 初始化 i18n
+// Initialize i18n
 i18n
   .use(initReactI18next)
   .init({
@@ -27,15 +27,15 @@ i18n
         translation: frTranslation
       }
     },
-    lng: initialLanguage, // 默认使用法语
-    fallbackLng: 'fr', // 如果找不到翻译，使用法语
+    lng: initialLanguage, // Default to French
+    fallbackLng: 'fr', // Use French if translation not found
     interpolation: {
-      escapeValue: false // 不需要转义 HTML
+      escapeValue: false // No need to escape HTML
     },
-    compatibilityJSON: 'v4' // 兼容 React Native
+    compatibilityJSON: 'v4' // React Native compatibility
   });
 
-// 从本地存储加载语言设置
+// Load language settings from local storage
 const loadLanguage = async () => {
   try {
     // 首先检查用户是否已经选择过语言

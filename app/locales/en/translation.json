@@ -823,7 +823,7 @@
         "item": {
           "collection": "Collection",
           "history": "History",
-          "address": "My Address",
+          "address": "Address",
           "share": "Share"
         }
       },
@@ -906,5 +906,22 @@
   "phoneLogin": {
     "smsVerificationLogin": "SMS Verification Login",
     "passwordLogin": "Password Login"
+  },
+  "loginPrompt": {
+    "chat": {
+      "title": "Please Login First",
+      "message": "Login to use chat features",
+      "button": "Login Now"
+    },
+    "cart": {
+      "title": "Please Login First", 
+      "message": "Login to use cart features",
+      "button": "Login Now"
+    },
+    "profile": {
+      "title": "Please Login First",
+      "message": "Login to view personal information",
+      "button": "Login Now"
+    }
   }
 }

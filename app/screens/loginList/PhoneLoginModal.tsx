@@ -29,6 +29,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import fontSize from "../../utils/fontsizeUtils";
 import { changeLanguage } from "../../i18n";
 import { getCountryTransLanguage } from "../../utils/languageUtils";
+import VerificationLimiter from "../../utils/verificationLimiter";
 
 type RootStackParamList = {
   Login: undefined;
@@ -247,14 +248,30 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
       return;
     }
 
+    const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+    
+    // 检查发送限制
+    console.log('[PhoneLogin] 🔒 检查发送限制...');
+    const limitCheck = await VerificationLimiter.canSendVerification(fullPhoneNumber);
+    if (!limitCheck.allowed) {
+      console.log('[PhoneLogin] ❌ 发送被限制:', limitCheck.reason);
+      setError(limitCheck.reason || "发送频率过快，请稍后再试");
+      setPhoneNumberError(true);
+      return;
+    }
+    console.log('[PhoneLogin] ✅ 发送限制检查通过');
+
     try {
       setLoading(true);
-      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
       console.log('[PhoneLogin] 完整手机号:', fullPhoneNumber);
       console.log('[PhoneLogin] 开始调用发送验证码API');
       
       const response = await userApi.sendOtp(fullPhoneNumber);
       console.log('[PhoneLogin] 发送验证码API响应:', response);
+      
+      // 记录发送
+      await VerificationLimiter.recordAttempt(fullPhoneNumber);
+      console.log('[PhoneLogin] 📝 记录发送');
       
       setOtpSent(true);
       setShowOtpInput(true);
@@ -275,6 +292,11 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
       }, 1000);
     } catch (error) {
       console.error('[PhoneLogin] 发送验证码失败:', error);
+      
+      // 记录发送尝试
+      await VerificationLimiter.recordAttempt(fullPhoneNumber);
+      console.log('[PhoneLogin] 📝 记录发送尝试');
+      
       setError("发送验证码失败，请重试");
       setLoading(false);
       setPhoneNumberError(true);
@@ -583,7 +605,26 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                 {countdown === 0 ? (
                   <TouchableOpacity
                     style={styles.forgotPasswordLink}
-                    onPress={handleSendOtp}
+                    onPress={async () => {
+                      console.log('[PhoneLogin] 🔄 用户点击重新发送验证码');
+                      
+                      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+                      
+                      // 检查重发限制
+                      console.log('[PhoneLogin] 🔒 检查重发限制...');
+                      const limitCheck = await VerificationLimiter.canSendVerification(fullPhoneNumber);
+                      if (!limitCheck.allowed) {
+                        console.log('[PhoneLogin] ❌ 重发被限制:', limitCheck.reason);
+                        setError(limitCheck.reason || "重发频率过快，请稍后再试");
+                        return;
+                      }
+                      console.log('[PhoneLogin] ✅ 重发限制检查通过');
+                      
+                      setOtpCode("");
+                      setOtpError(false);
+                      setError(null);
+                      handleSendOtp();
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.forgotPasswordLinkText}>

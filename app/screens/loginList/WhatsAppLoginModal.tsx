@@ -27,6 +27,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import fontSize from "../../utils/fontsizeUtils";
 import { changeLanguage } from "../../i18n";
 import { getCountryTransLanguage } from "../../utils/languageUtils";
+import VerificationLimiter from "../../utils/verificationLimiter";
 
 type RootStackParamList = {
   Login: undefined;
@@ -213,6 +214,18 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
     
     console.log("✅ 手机号验证通过");
     
+    const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
+    
+    // 检查发送限制
+    console.log("🔒 检查发送限制...");
+    const limitCheck = await VerificationLimiter.canSendVerification(fullPhoneNumber);
+    if (!limitCheck.allowed) {
+      console.log("❌ 发送被限制:", limitCheck.reason);
+      setError(limitCheck.reason || "发送频率过快，请稍后再试");
+      return;
+    }
+    console.log("✅ 发送限制检查通过");
+    
     // 检查API配置
     console.log("🔧 API配置检查:");
     console.log("  - 基础URL: https://api.brainnel.com/backend");
@@ -224,7 +237,6 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
       setLoading(true);
       setError(null);
       
-      const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
       console.log("📞 完整手机号:", fullPhoneNumber);
       
       const requestData = {
@@ -244,6 +256,10 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
       console.log("⏱️ 请求耗时:", requestDuration + "ms");
       console.log("✅ WhatsApp OTP发送成功:", JSON.stringify(response, null, 2));
       
+      // 记录发送
+      await VerificationLimiter.recordAttempt(fullPhoneNumber);
+      console.log("📝 记录发送");
+      
       setShowOtpInput(true);
       setLoading(false);
       console.log("🎉 切换到OTP输入界面");
@@ -251,6 +267,10 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
     } catch (error: any) {
       console.error("❌ 发送WhatsApp OTP失败:", error);
       console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
+      
+      // 记录发送尝试
+      await VerificationLimiter.recordAttempt(fullPhoneNumber);
+      console.log("📝 记录发送尝试");
       
       let errorMessage = t("whatsapp.login_failed");
       
@@ -383,8 +403,21 @@ const WhatsAppLoginModal = ({ visible, onClose }: WhatsAppLoginModalProps) => {
   };
 
   // Resend OTP
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     console.log("🔄 用户点击重新发送验证码");
+    
+    const fullPhoneNumber = `+${selectedCountry?.country}${phoneNumber}`;
+    
+    // 检查重发限制
+    console.log("🔒 检查重发限制...");
+    const limitCheck = await VerificationLimiter.canSendVerification(fullPhoneNumber);
+    if (!limitCheck.allowed) {
+      console.log("❌ 重发被限制:", limitCheck.reason);
+      setError(limitCheck.reason || "重发频率过快，请稍后再试");
+      return;
+    }
+    console.log("✅ 重发限制检查通过");
+    
     setOtpCode("");
     setError(null);
     handleSendOtp();

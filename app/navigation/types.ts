@@ -59,4 +59,6 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   PrivacyPolicyScreen: undefined;
   TermsOfUseScreen: undefined;
+  LoginPromptScreen: { title?: string; message?: string; icon?: string };
+  EmailOtp: { email: string };
 };

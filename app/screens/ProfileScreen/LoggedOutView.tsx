@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, ImageBackground, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { styles } from './styles';
 import SettingsIcon from '../../components/SettingsIcon';
 import fontSize from '../../utils/fontsizeUtils';
@@ -12,24 +12,18 @@ interface LoggedOutViewProps {
 
 export const LoggedOutView: React.FC<LoggedOutViewProps> = ({ t, navigation, handleLogin }) => {
   return (
-    <ImageBackground
-      source={require("../../../assets/img/image_b64646d0.png")}
-      style={styles.timecardWidget}
-      resizeMode="stretch"
-    >
-      <View style={styles.flexRowWithContent}>
-        <View style={styles.financialInfoContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("SettingList")}
-          >
-            <View style={styles.svgContainer1}>
-              <SettingsIcon size={fontSize(24)} color="white" />
-            </View>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.loggedOutContainer}>
+      <View style={styles.loggedOutHeader}>
+        <View style={styles.loggedOutHeaderSpacer} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("SettingList")}
+          style={styles.settingsButton}
+        >
+          <SettingsIcon size={fontSize(24)} color="#666" />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.notLoggedInContainer}>
+      <View style={styles.loggedOutContent}>
         <TouchableOpacity 
           onPress={() => {
             Alert.alert(
@@ -43,10 +37,10 @@ export const LoggedOutView: React.FC<LoggedOutViewProps> = ({ t, navigation, han
           }}
           style={styles.avatarTouchable}
         >
-          <View style={styles.profileImageCircle}>
+          <View style={styles.loggedOutAvatarContainer}>
             <Image
               source={require("../../../assets/img/brainnel-0000.jpg")}
-              style={styles.profileImage}
+              style={styles.loggedOutAvatar}
             />
           </View>
         </TouchableOpacity>
@@ -57,6 +51,6 @@ export const LoggedOutView: React.FC<LoggedOutViewProps> = ({ t, navigation, han
           <Text style={styles.loginButtonText}>{t("login.now")}</Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 }; 
