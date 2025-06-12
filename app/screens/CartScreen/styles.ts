@@ -248,7 +248,7 @@ export const styles = StyleSheet.create({
     alignSelf: "flex-end",
     marginRight: 10,
     justifyContent: "flex-end",
-    minWidth: 100,
+    minWidth: Platform.OS === "android" ? 80 : 100,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#f3f4f8",

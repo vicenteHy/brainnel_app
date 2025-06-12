@@ -30,7 +30,7 @@ export const FeatureNavigationBar = React.memo(() => {
       >
         <View style={styles.featureNavIcon}>
           <Image
-            source={require("../../../../assets/home/Frame (4).png")}
+            source={require("../../../../assets/home/Frame_4.png")}
             style={{ width: 24, height: 24 }}
           />
         </View>
@@ -46,7 +46,7 @@ export const FeatureNavigationBar = React.memo(() => {
       >
         <View style={styles.featureNavIcon}>
           <Image
-            source={require("../../../../assets/home/Frame (5).png")}
+            source={require("../../../../assets/home/Frame_5.png")}
             style={{ width: 24, height: 24 }}
           />
         </View>
@@ -62,7 +62,7 @@ export const FeatureNavigationBar = React.memo(() => {
       >
         <View style={styles.featureNavIcon}>
           <Image
-            source={require("../../../../assets/home/Frame (6).png")}
+            source={require("../../../../assets/home/Frame_6.png")}
             style={{ width: 24, height: 24 }}
           />
         </View>

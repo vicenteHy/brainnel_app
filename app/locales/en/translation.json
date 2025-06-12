@@ -220,7 +220,11 @@
           "camera_error": "Error occurred while taking photo",
           "submit_success": "Inquiry submitted successfully",
           "submit_failed": "Failed to submit inquiry, please try again",
-          "submit_error": "Error occurred during submission"
+          "submit_error": "Error occurred during submission",
+          "permission_denied": "Permission Denied",
+          "camera_permission_required": "Camera permission is required to take photos",
+          "storage_permission_required": "Storage permission is required to select images",
+          "image_process_error": "Failed to process image"
       },
       "tiktok": {
           "store": "Store TikTok",

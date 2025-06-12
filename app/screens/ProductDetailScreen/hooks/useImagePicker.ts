@@ -1,10 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Platform, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/types';
 import { useTranslation } from 'react-i18next';
 
 export const useImagePicker = () => {
@@ -16,19 +14,7 @@ export const useImagePicker = () => {
 
   const cleanupImagePickerCache = async () => {
     try {
-      if (Platform.OS === "web") {
-        console.log("Cache cleanup skipped on web platform");
-        setGalleryUsed(false);
-        return;
-      }
-      const cacheDir = `${FileSystem.cacheDirectory}ImagePicker`;
-      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-      if (dirInfo.exists && dirInfo.isDirectory) {
-        await FileSystem.deleteAsync(cacheDir, { idempotent: true });
-        console.log("已清理ImagePicker缓存:", cacheDir);
-      } else {
-        console.log("ImagePicker缓存目录不存在或不是目录，无需清理:", cacheDir);
-      }
+      console.log("react-native-image-picker 自动管理缓存");
       setGalleryUsed(false);
     } catch (error) {
       console.log("清理缓存错误", error);
@@ -40,22 +26,35 @@ export const useImagePicker = () => {
     setShowImagePickerModal(false);
     setTimeout(async () => {
       try {
-        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissionResult.status !== "granted") {
-          console.log("相册权限被拒绝");
-          return;
-        }
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: false,
+          maxHeight: 2000,
+          maxWidth: 2000,
           quality: 1,
+        };
+        
+        launchImageLibrary(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了图片选择');
+            return;
+          }
+          
+          if (response.errorMessage) {
+            console.log('相册错误:', response.errorMessage);
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+              navigation.navigate("ImageSearchResultScreen", {
+                image: asset.uri,
+                type: 1,
+              });
+            }
+          }
         });
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          navigation.navigate("ImageSearchResultScreen", {
-            image: result.assets[0].uri,
-            type: 1,
-          });
-        }
       } catch (error) {
         console.error("相册错误:", error);
         await cleanupImagePickerCache();
@@ -67,22 +66,35 @@ export const useImagePicker = () => {
     setShowImagePickerModal(false);
     setTimeout(async () => {
       try {
-        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-        if (permissionResult.status !== "granted") {
-          console.log("相机权限被拒绝");
-          return;
-        }
-        const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
+        const options: CameraOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: false,
+          maxHeight: 2000,
+          maxWidth: 2000,
           quality: 1,
+        };
+        
+        launchCamera(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了拍照');
+            return;
+          }
+          
+          if (response.errorMessage) {
+            console.log('相机错误:', response.errorMessage);
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+              navigation.navigate("ImageSearchResultScreen", {
+                image: asset.uri,
+                type: 1,
+              });
+            }
+          }
         });
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          navigation.navigate("ImageSearchResultScreen", {
-            image: result.assets[0].uri,
-            type: 1,
-          });
-        }
       } catch (error) {
         console.error("相机错误:", error);
         await cleanupImagePickerCache();

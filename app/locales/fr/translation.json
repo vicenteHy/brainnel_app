@@ -681,12 +681,15 @@
           "in_progress": "En cours",
           "completed": "Terminé",
           "network_error": "Erreur de connexion réseau, veuillez vérifier vos paramètres réseau",
-          "image_process_error": "Impossible de traiter le fichier image, veuillez essayer une autre image ou vérifier la source de l'image",
           "gallery_error": "Erreur lors de la sélection d'image",
           "camera_error": "Erreur lors de la prise de photo",
           "submit_success": "Demande soumise avec succès",
           "submit_failed": "Échec de soumission de la demande, veuillez réessayer",
-          "submit_error": "Erreur survenue lors de la soumission"
+          "submit_error": "Erreur survenue lors de la soumission",
+          "permission_denied": "Permission refusée",
+          "camera_permission_required": "La permission d'accès à la caméra est requise pour prendre des photos",
+          "storage_permission_required": "La permission d'accès au stockage est requise pour sélectionner des images",
+          "image_process_error": "Impossible de traiter le fichier image, veuillez essayer une autre image ou vérifier la source de l'image"
       },
       "tiktok": {
           "store": "Boutique TikTok",

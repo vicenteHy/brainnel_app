@@ -18,15 +18,15 @@ export const CarouselBanner = React.memo(
     const data = useMemo(
       () => [
         {
-          imgUrl: require("../../../../assets/img/Group 1993.png"),
+          imgUrl: require("../../../../assets/img/Group_1993.png"),
           add: "TikTokScreen",
         },
         {
-          imgUrl: require("../../../../assets/img/Group 1994.png"),
+          imgUrl: require("../../../../assets/img/Group_1994.png"),
           add: "MemberIntroduction",
         },
         {
-          imgUrl: require("../../../../assets/img/Group 1995.png"),
+          imgUrl: require("../../../../assets/img/Group_1995.png"),
           add: "CompanyScreen",
         },
       ],

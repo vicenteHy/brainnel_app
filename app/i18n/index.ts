@@ -10,10 +10,10 @@ const LANGUAGE_KEY = '@app_language';
 const LANGUAGE_SELECTED_KEY = '@language_selected';
 
 // 获取设备语言
-const deviceLanguage = Localization.locale.split('-')[0];
+const deviceLanguage = Localization.locale ? Localization.locale.split('-')[0] : 'fr';
 
-// 默认语言设置为英语，等待用户选择
-const initialLanguage = 'en';
+// 默认语言设置为法语，等待用户选择
+const initialLanguage = 'fr';
 
 // 初始化 i18n
 i18n
@@ -27,8 +27,8 @@ i18n
         translation: frTranslation
       }
     },
-    lng: initialLanguage, // 默认使用英语
-    fallbackLng: 'en', // 如果找不到翻译，使用英语
+    lng: initialLanguage, // 默认使用法语
+    fallbackLng: 'fr', // 如果找不到翻译，使用法语
     interpolation: {
       escapeValue: false // 不需要转义 HTML
     },
@@ -47,7 +47,7 @@ const loadLanguage = async () => {
       if (savedLanguage) {
         // 支持英语和法语
         const validLanguages = ['en', 'fr'];
-        const validLanguage = validLanguages.includes(savedLanguage) ? savedLanguage : 'en';
+        const validLanguage = validLanguages.includes(savedLanguage) ? savedLanguage : 'fr';
         i18n.changeLanguage(validLanguage);
         console.log('已加载保存的语言:', validLanguage);
       }
@@ -72,7 +72,7 @@ const saveLanguage = async (language: string) => {
 export const changeLanguage = async (language: string) => {
   // 支持英语和法语
   const validLanguages = ['en', 'fr'];
-  const validLanguage = validLanguages.includes(language) ? language : 'en';
+  const validLanguage = validLanguages.includes(language) ? language : 'fr';
   
   await saveLanguage(validLanguage);
   i18n.changeLanguage(validLanguage);

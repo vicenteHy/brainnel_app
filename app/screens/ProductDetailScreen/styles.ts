@@ -368,7 +368,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     zIndex: 100,
-    height: widthUtils(60, 60).height,
+    paddingVertical: 15,
   },
   storeIconButton: {
     width: widthUtils(35, 35).width,

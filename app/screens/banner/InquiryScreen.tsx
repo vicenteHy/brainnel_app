@@ -20,8 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import widthUtils from "../../utils/widthUtils";
 import TrapezoidIcon from "../../components/TrapezoidIcon";
 import { useNavigation } from "@react-navigation/native";
-import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
+import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { inquiriesApi, InquiryFormData, InquiryBase64Data } from "../../services/api/inquiries";
 import DownArrowIcon from "../../components/DownArrowIcon";
 import { useTranslation } from "react-i18next";
@@ -64,12 +63,10 @@ export const InquiryScreen = () => {
     }));
   };
 
-  // 清理expo-image-picker临时文件
+  // react-native-image-picker 自动管理缓存
   const cleanupImagePickerCache = async () => {
     try {
-      const cacheDir = `${FileSystem.cacheDirectory}ImagePicker`;
-      await FileSystem.deleteAsync(cacheDir, { idempotent: true });
-      console.log("已清理ImagePicker缓存");
+      console.log("react-native-image-picker 自动管理缓存");
       setGalleryUsed(false);
     } catch (error) {
       console.log("清理缓存错误", error);
@@ -83,29 +80,37 @@ export const InquiryScreen = () => {
 
     setTimeout(async () => {
       try {
-        const permissionResult =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissionResult.status !== "granted") {
-          console.log("相册权限被拒绝");
-          return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [4, 3],
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: true,
+          maxHeight: 2000,
+          maxWidth: 2000,
           quality: 1,
-          base64: true,
-        });
+        };
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          console.log("相册选择成功:", result.assets[0].uri);
-          const selectedAsset = result.assets[0];
-          setSearchImg(selectedAsset.uri);
-          if (selectedAsset.base64) {
-            setBase64Data(selectedAsset.base64);
+        launchImageLibrary(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了图片选择');
+            return;
           }
-        }
+          
+          if (response.errorMessage) {
+            console.error("相册错误:", response.errorMessage);
+            Alert.alert(t("common.error"), t("banner.inquiry.gallery_error"));
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            console.log("相册选择成功:", response.assets[0].uri);
+            const selectedAsset = response.assets[0];
+            if (selectedAsset.uri) {
+              setSearchImg(selectedAsset.uri);
+              if (selectedAsset.base64) {
+                setBase64Data(selectedAsset.base64);
+              }
+            }
+          }
+        });
       } catch (error: any) {
         console.error("相册错误:", error);
         Alert.alert(t("common.error"), t("banner.inquiry.gallery_error"));
@@ -122,29 +127,37 @@ export const InquiryScreen = () => {
 
     setTimeout(async () => {
       try {
-        const permissionResult =
-          await ImagePicker.requestCameraPermissionsAsync();
-        if (permissionResult.status !== "granted") {
-          console.log("相机权限被拒绝");
-          return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [4, 3],
+        const options: CameraOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: true,
+          maxHeight: 2000,
+          maxWidth: 2000,
           quality: 1,
-          base64: true,
-        });
+        };
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          console.log("拍照成功:", result.assets[0].uri);
-          const selectedAsset = result.assets[0];
-          setSearchImg(selectedAsset.uri);
-          if (selectedAsset.base64) {
-            setBase64Data(selectedAsset.base64);
+        launchCamera(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了拍照');
+            return;
           }
-        }
+          
+          if (response.errorMessage) {
+            console.error("相机错误:", response.errorMessage);
+            Alert.alert(t("common.error"), t("banner.inquiry.camera_error"));
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            console.log("拍照成功:", response.assets[0].uri);
+            const selectedAsset = response.assets[0];
+            if (selectedAsset.uri) {
+              setSearchImg(selectedAsset.uri);
+              if (selectedAsset.base64) {
+                setBase64Data(selectedAsset.base64);
+              }
+            }
+          }
+        });
       } catch (error: any) {
         console.error("相机错误:", error);
         Alert.alert(t("common.error"), t("banner.inquiry.camera_error"));
@@ -165,23 +178,6 @@ export const InquiryScreen = () => {
     setShowImagePickerModal(true);
   };
 
-  // 将图片转换为base64格式
-  const uriToBase64 = async (uri: string): Promise<string> => {
-    try {
-      console.log("开始转换图片为Base64", uri);
-      
-      // 使用 FileSystem.readAsStringAsync 替代 FormData
-      const base64String = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
-      console.log("图片转换为Base64完成，纯Base64字符串长度:", base64String.length);
-      return base64String;
-    } catch (error) {
-      console.error("图片转换Base64出错:", error);
-      throw error;
-    }
-  };
 
   const handleSubmit = async () => {
     if (!searchImg) {
@@ -199,16 +195,9 @@ export const InquiryScreen = () => {
 
       let imageBase64 = base64Data;
       if (!imageBase64) {
-        try {
-          imageBase64 = await FileSystem.readAsStringAsync(searchImg, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-        } catch (error) {
-          console.error("读取图片文件失败:", error);
-          Alert.alert(t("common.error"), t("banner.inquiry.image_process_error"));
-          setIsSubmitting(false);
-          return;
-        }
+        Alert.alert(t("common.error"), t("banner.inquiry.image_process_error"));
+        setIsSubmitting(false);
+        return;
       }
 
       // 创建提交数据对象

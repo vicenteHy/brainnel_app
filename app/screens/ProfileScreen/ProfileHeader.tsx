@@ -10,15 +10,11 @@ import { flagMap } from '../../utils/flagMap';
 interface ProfileHeaderProps {
   user: any;
   navigation: any;
-  selectAvatar: () => void;
-  uploadingAvatar: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
   navigation,
-  selectAvatar,
-  uploadingAvatar,
 }) => {
   const avatarText = user?.username?.charAt(0);
   const { avatarUri, isLoading: isLoadingAvatar } = useAvatarCache(user?.user_id, user?.avatar_url);
@@ -38,17 +34,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   return (
     <View style={styles.profileHeaderContainer}>
         <View style={styles.headerContent}>
-            <TouchableOpacity 
-              onPress={selectAvatar}
-              disabled={uploadingAvatar}
-              style={styles.avatarContainer}
-            >
+            <View style={styles.avatarContainer}>
               {avatarUri ? (
                 <Image
                   source={{ uri: avatarUri }}
                   style={[
                     styles.avatarImage,
-                    (uploadingAvatar || isLoadingAvatar) && { opacity: 0.7 }
+                    isLoadingAvatar && { opacity: 0.7 }
                   ]}
                 />
               ) : (
@@ -56,10 +48,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <Text style={styles.avatarPlaceholderText}>{avatarText}</Text>
                 </View>
               )}
-              {(uploadingAvatar || isLoadingAvatar) && (
+              {isLoadingAvatar && (
                 <View style={styles.uploadingOverlay} />
               )}
-            </TouchableOpacity>
+            </View>
             
             <View style={styles.userInfo}>
                 <Text style={styles.userName}>

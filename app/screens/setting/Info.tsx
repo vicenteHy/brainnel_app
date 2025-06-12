@@ -8,19 +8,164 @@ import {
   Alert,
   SafeAreaView,
   Platform,
+  StatusBar,
 } from "react-native";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useUserStore from "../../store/user";
 import { t } from "../../i18n";
 import BackIcon from "../../components/BackIcon";
 import { useNavigation } from "@react-navigation/native";
-import userApi from "../../services/api/userApi";
+import { userApi } from "../../services/api/userApi";
 import { useAvatarCache } from "../../hooks/useAvatarCache";
+import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
+import Toast from "react-native-toast-message";
+import { avatarCacheService } from "../../services/avatarCacheService";
 
 export const Info = () => {
-  const { user } = useUserStore();
+  const { user, setUser } = useUserStore();
   const navigation = useNavigation();
   const { avatarUri } = useAvatarCache(user?.user_id, user?.avatar_url);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [layoutKey, setLayoutKey] = useState(0);
+
+  // 选择头像
+  const selectAvatar = () => {
+    console.log('selectAvatar 被调用');
+    
+    Alert.alert(
+      '选择头像',
+      '请选择头像来源',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '相册',
+          onPress: pickImageFromLibrary,
+        },
+        {
+          text: '拍照',
+          onPress: pickImageFromCamera,
+        },
+      ]
+    );
+  };
+
+  // 从相册选择
+  const pickImageFromLibrary = async () => {
+    try {
+      console.log('从相册选择图片');
+      
+      const options: ImageLibraryOptions = {
+        mediaType: 'photo' as MediaType,
+        includeBase64: false,
+        maxHeight: 2000,
+        maxWidth: 2000,
+        quality: 0.8,
+      };
+      
+      launchImageLibrary(options, (response: ImagePickerResponse) => {
+        console.log('相册选择结果:', response);
+        
+        if (response.didCancel) {
+          console.log('用户取消了图片选择');
+          return;
+        }
+        
+        if (response.errorMessage) {
+          console.error('从相册选择失败:', response.errorMessage);
+          Alert.alert('错误', '选择图片失败');
+          return;
+        }
+        
+        if (response.assets && response.assets[0] && response.assets[0].uri) {
+          uploadAvatar(response.assets[0].uri);
+        }
+      });
+    } catch (error) {
+      console.error('从相册选择失败:', error);
+      Alert.alert('错误', '选择图片失败');
+    }
+  };
+
+  // 拍照
+  const pickImageFromCamera = async () => {
+    try {
+      console.log('使用相机拍照');
+      
+      const options: CameraOptions = {
+        mediaType: 'photo' as MediaType,
+        includeBase64: false,
+        maxHeight: 2000,
+        maxWidth: 2000,
+        quality: 0.8,
+      };
+      
+      launchCamera(options, (response: ImagePickerResponse) => {
+        console.log('拍照结果:', response);
+        
+        if (response.didCancel) {
+          console.log('用户取消了拍照');
+          return;
+        }
+        
+        if (response.errorMessage) {
+          console.error('拍照失败:', response.errorMessage);
+          Alert.alert('错误', '拍照失败');
+          return;
+        }
+        
+        if (response.assets && response.assets[0] && response.assets[0].uri) {
+          uploadAvatar(response.assets[0].uri);
+        }
+      });
+    } catch (error) {
+      console.error('拍照失败:', error);
+      Alert.alert('错误', '拍照失败');
+    }
+  };
+
+  // 上传头像
+  const uploadAvatar = async (imageUri: string) => {
+    try {
+      setUploadingAvatar(true);
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const base64data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const base64String = base64data.split(',')[1];
+      const filename = imageUri.split('/').pop() || 'avatar.jpg';
+
+      const updatedProfile = await userApi.updateAvatar({
+        image_base64: base64String,
+        image_filename: filename,
+      });
+      
+      // 清理旧的头像缓存
+      if (user.user_id) {
+        await avatarCacheService.deleteCachedAvatar(user.user_id.toString());
+        console.log('[Info] 已清理旧的头像缓存');
+      }
+      
+      setUser(updatedProfile);
+      Toast.show({
+        text1: t('profile.avatar_updated_successfully'),
+        type: 'success',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('处理头像失败:', error);
+      Alert.alert(t('common.error'), t('profile.avatar_upload_failed'));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   // 删除账号确认对话框
   const handleDeleteAccount = () => {
@@ -121,7 +266,7 @@ export const Info = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} key={layoutKey}>
         {/* 头部导航栏 */}
         <View style={styles.headerContainer}>
           <TouchableOpacity
@@ -139,17 +284,36 @@ export const Info = () => {
       >
         {/* 头像和基本信息 */}
         <View style={styles.header}>
-          <View style={styles.avatarContainer}>
+          <TouchableOpacity 
+            style={styles.avatarContainer}
+            onPress={selectAvatar}
+            disabled={uploadingAvatar}
+            activeOpacity={0.7}
+          >
             {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatar} />
+              <Image 
+                source={{ uri: avatarUri }} 
+                style={[
+                  styles.avatar,
+                  uploadingAvatar && { opacity: 0.7 }
+                ]} 
+              />
             ) : (
-              <View style={styles.avatarPlaceholder}>
+              <View style={[
+                styles.avatarPlaceholder,
+                uploadingAvatar && { opacity: 0.7 }
+              ]}>
                 <Text style={styles.avatarPlaceholderText}>
                   {user.username?.charAt(0).toUpperCase() || "U"}
                 </Text>
               </View>
             )}
-          </View>
+            {uploadingAvatar && (
+              <View style={styles.uploadingOverlay}>
+                <Text style={styles.uploadingText}>上传中...</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <Text style={styles.username}>
             {user.username || t("profile.not_set")}
           </Text>
@@ -348,6 +512,10 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 15,
+    position: 'relative',
+    padding: 10, // 增加点击区域
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: {
     width: 80,
@@ -448,5 +616,21 @@ const styles = StyleSheet.create({
   balanceLabel: {
     fontSize: 14,
     color: "#666",
+  },
+  uploadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadingText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
