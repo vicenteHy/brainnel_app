@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import customRF from "../../../utils/customRF";
 import { TabType } from "../types";
 import { t } from "../../../i18n";
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   tabText: {
-    fontSize: customRF(11),
+    fontSize: Platform.OS === 'android' ? customRF(11 * 1.2) : customRF(11),
     color: "#666666",
     fontWeight: "400",
     textAlign: "center",

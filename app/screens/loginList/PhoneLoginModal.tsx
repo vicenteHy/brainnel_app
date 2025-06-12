@@ -248,7 +248,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
       return;
     }
 
-    const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+    const fullPhoneNumber = `+${selectedCountry?.country || ''}${phoneNumber}`;
     
     // 检查发送限制
     console.log('[PhoneLogin] 🔒 检查发送限制...');
@@ -318,7 +318,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
 
     try {
       setLoading(true);
-      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+      const fullPhoneNumber = `+${selectedCountry?.country || ''}${phoneNumber}`;
       console.log('[PhoneLogin] 验证的完整手机号:', fullPhoneNumber);
       console.log('[PhoneLogin] 开始调用验证OTP API');
       
@@ -396,7 +396,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
 
     try {
       setLoading(true);
-      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+      const fullPhoneNumber = `+${selectedCountry?.country || ''}${phoneNumber}`;
       console.log('[PhoneLogin] 密码登录完整手机号:', fullPhoneNumber);
 
       const params = {
@@ -608,7 +608,7 @@ const PhoneLoginModal = ({ visible, onClose }: PhoneLoginModalProps) => {
                     onPress={async () => {
                       console.log('[PhoneLogin] 🔄 用户点击重新发送验证码');
                       
-                      const fullPhoneNumber = `${selectedCountry?.country || ''}${phoneNumber}`;
+                      const fullPhoneNumber = `+${selectedCountry?.country || ''}${phoneNumber}`;
                       
                       // 检查重发限制
                       console.log('[PhoneLogin] 🔒 检查重发限制...');
