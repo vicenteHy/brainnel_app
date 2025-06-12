@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Linking } from "react-native";
 import customRF from "../../../utils/customRF";
 import { Message } from "../types";
 import { formatTime } from "../utils/formatters";
@@ -9,6 +9,30 @@ interface MessageItemProps {
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
+  // 将文本中的 URL 转成可点击链接
+  const renderMessageText = (text: string) => {
+    const parts = text.split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((part, idx) => {
+      const isUrl = /^https?:\/\//.test(part);
+      if (isUrl) {
+        return (
+          <Text
+            key={idx}
+            style={[styles.messageText, styles.linkText]}
+            onPress={() => Linking.openURL(part)}
+          >
+            {part}
+          </Text>
+        );
+      }
+      return (
+        <Text key={idx} style={styles.messageText}>
+          {part}
+        </Text>
+      );
+    });
+  };
+
   return (
     <View
       style={[
@@ -16,7 +40,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
         item.isMe ? styles.myMessage : styles.theirMessage,
       ]}
     >
-      <Text style={styles.messageText}>{item.text}</Text>
+      <Text style={styles.messageText}>{renderMessageText(item.text)}</Text>
       <Text style={styles.timestamp}>{formatTime(item.timestamp)}</Text>
     </View>
   );
@@ -45,5 +69,9 @@ const styles = StyleSheet.create({
     color: "#666",
     alignSelf: "flex-end",
     marginTop: 5,
+  },
+  linkText: {
+    color: "#007AFF",
+    textDecorationLine: "underline",
   },
 });
