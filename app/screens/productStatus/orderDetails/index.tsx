@@ -541,7 +541,7 @@ export const OrderDetails = () => {
                     <View style={styles.orderInfoItem}>
                       <Text style={styles.orderInfoLabel}>{t("order.id")}</Text>
                       <Text style={styles.orderInfoValue}>
-                        {orderDetails.order_id}
+                        {orderDetails.order_no}
                       </Text>
                     </View>
                     <View style={styles.orderInfoItem}>
