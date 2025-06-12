@@ -467,6 +467,8 @@
       "converting": "Converting...",
       "submit_order": "Submit Order",
       "select_payment": "Please select payment method",
+      "insufficient_balance": "Insufficient Balance",
+      "insufficient_balance_message": "Your balance is insufficient for this payment. Please recharge your account or choose another payment method.",
       "notice": "Notice",
       "cash_on_delivery": "Cash on Delivery",
       "success": {

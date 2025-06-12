@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   StatusBar,
   SafeAreaView,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { payApi, PaymentMethodsResponse } from "../../services/api/payApi";
 import fontSize from "../../utils/fontsizeUtils";
@@ -355,6 +357,13 @@ export const PaymentMethod = () => {
   const [countryList, setCountryList] = useState<any[]>([]);
   const [userLocalCurrency, setUserLocalCurrency] = useState<string>("");
   const [hasInitializedCurrency, setHasInitializedCurrency] = useState(false);
+
+  // 自定义弹窗状态
+  const [alertModal, setAlertModal] = useState({
+    visible: false,
+    title: '',
+    message: ''
+  });
 
   // Get isCOD parameter from route
   const isCOD = route.params?.isCOD || false;
@@ -828,6 +837,44 @@ export const PaymentMethod = () => {
     if (!selectedPayment) {
       Alert.alert(t("payment.select_payment"));
       return;
+    }
+    
+    // 检查余额支付时余额是否充足
+    console.log("Selected payment method:", selectedPayment);
+    console.log("Checking if balance payment:", selectedPayment === "balance");
+    
+    if (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) {
+      console.log("进入余额检查逻辑");
+      
+      const totalAmount = getTotalForCalculation();
+      console.log("计算的总金额:", totalAmount);
+      console.log("用户余额原始值:", user.balance);
+      console.log("用户货币:", user.currency);
+      
+      // 直接使用数字比较，因为从日志看user.balance已经是数字
+      const userBalance = typeof user.balance === 'number' ? user.balance : parseFloat(String(user.balance));
+      console.log("解析后的用户余额:", userBalance);
+      
+      console.log("余额比较:", userBalance, "<", totalAmount, "=", userBalance < totalAmount);
+      
+      if (isNaN(userBalance) || isNaN(totalAmount)) {
+        console.log("余额或总金额解析失败:", { userBalance, totalAmount });
+        return;
+      }
+      
+      if (userBalance < totalAmount) {
+        console.log("余额不足，显示提示");
+        setAlertModal({
+          visible: true,
+          title: t("payment.insufficient_balance") || "余额不足",
+          message: t("payment.insufficient_balance_message") || `当前余额: ${userBalance}${user.currency}\n需要支付: ${totalAmount.toFixed(2)}${user.currency}\n请选择其他支付方式或先充值。`
+        });
+        return;
+      } else {
+        console.log("余额充足，继续处理");
+      }
+    } else {
+      console.log("不是余额支付，跳过余额检查");
     }
     const items =
       previewOrder?.items.map((item) => ({
@@ -1382,6 +1429,33 @@ export const PaymentMethod = () => {
             </TouchableOpacity>
           </View>
         </View>
+        
+        {/* 自定义Alert弹窗 */}
+        <Modal
+          visible={alertModal.visible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setAlertModal({ ...alertModal, visible: false })}
+        >
+          <View style={styles.alertOverlay}>
+            <View style={styles.alertContainer}>
+              <View style={styles.alertContent}>
+                <Text style={styles.alertTitle}>{alertModal.title}</Text>
+                <Text style={styles.alertMessage}>{alertModal.message}</Text>
+                
+                <TouchableOpacity
+                  style={styles.alertButton}
+                  onPress={() => setAlertModal({ ...alertModal, visible: false })}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.alertButtonText}>
+                    {t("common.ok") || "OK"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -2060,5 +2134,61 @@ const styles = StyleSheet.create({
     color: "#333",
     textAlign: "right",
     marginBottom: 2,
+  },
+  // 自定义Alert弹窗样式
+  alertOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  alertContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: Dimensions.get('window').width - 80,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  alertContent: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  alertTitle: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  alertMessage: {
+    fontSize: fontSize(14),
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  alertButton: {
+    backgroundColor: '#FF5100',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  alertButtonText: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#fff',
   },
 });

@@ -433,6 +433,8 @@
       "converting": "Conversion en cours...",
       "submit_order": "Soumettre la commande",
       "select_payment": "Moyens de paiement",
+      "insufficient_balance": "Solde insuffisant",
+      "insufficient_balance_message": "Votre solde est insuffisant pour ce paiement. Veuillez recharger votre compte ou choisir un autre mode de paiement.",
       "success": {
           "title": "Paiement Réussi",
           "subtitle": "Votre commande a été traitée avec succès",
