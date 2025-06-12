@@ -74,6 +74,7 @@ type RootStackParamList = {
   OrderDetails: { orderId?: number };
   PaymentSuccessScreen: any;
   MainTabs: { screen: string } | undefined;
+  PayError: { msg?: string };
 };
 
 export const PreviewOrder = () => {

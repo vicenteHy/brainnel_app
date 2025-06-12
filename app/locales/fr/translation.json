@@ -439,13 +439,13 @@
           "title": "Paiement Réussi",
           "subtitle": "Votre commande a été traitée avec succès",
           "shipping_info": "Informations d'Expédition",
-          "contact_message": "Notre équipe du service client vous contactera bientôt avec les détails d'expédition",
+          "contact_message": "Nous expédierons votre commande dès que possible. Merci pour votre achat.",
           "back_to_home": "Retour à l'Accueil",
           "view_orders": "Voir Mes Commandes",
           "tips_title": "Conseils Importants",
-          "tip_1": "Conservez votre reçu et votre numéro de commande pour le suivi",
-          "tip_2": "Notre équipe vous contactera dans les 24 à 48 heures avec les mises à jour d'expédition",
-          "tip_3": "Vous pouvez consulter l'état de votre commande dans la section 'Mes Commandes'"
+          "tip_1": "Vous pouvez demander des informations sur votre commande via le Chat.",
+          "tip_2": "Les mises à jour du statut de votre commande vous seront envoyées immédiatement dans l'application.",
+          "tip_3": "Vous pouvez consulter les détails de votre commande dans 'Mes Commandes'."
       }
   },
   "login": {

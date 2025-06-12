@@ -17,6 +17,7 @@ import { userApi } from "../../services/api/userApi";
 import useUserStore from "../../store/user";
 import { saveCurrency, saveLanguage } from "../../utils/storage";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type CountryList = {
   country: number;
@@ -94,6 +95,21 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     setLoading(true);
     const data = { country: selectedCountry };
     setGlobalCountry({ country: selectedCountry.toString() });
+    
+    // 将选择的国家信息保存到本地缓存，供其他页面离线读取
+    try {
+      const selectedCountryObj = countryList.find(
+        (item) => item.country === selectedCountry
+      );
+      if (selectedCountryObj) {
+        await AsyncStorage.setItem(
+          "@selected_country",
+          JSON.stringify(selectedCountryObj)
+        );
+      }
+    } catch (cacheError) {
+      console.warn("缓存国家信息失败:", cacheError);
+    }
     
     try {
       if (user?.user_id) {

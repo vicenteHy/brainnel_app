@@ -475,13 +475,13 @@
           "title": "Payment Successful",
           "subtitle": "Your order has been processed successfully",
           "shipping_info": "Shipping Information",
-          "contact_message": "Our customer service team will contact you soon with shipping details",
+          "contact_message": "We will ship your order as soon as possible. Thank you for your purchase.",
           "back_to_home": "Back to Home",
           "view_orders": "View My Orders",
           "tips_title": "Important Tips",
-          "tip_1": "Keep your receipt and order number for tracking purposes",
-          "tip_2": "Our team will contact you within 24-48 hours with shipping updates",
-          "tip_3": "You can view your order status in the 'My Orders' section"
+          "tip_1": "You can ask about your order via Chat.",
+          "tip_2": "Order status updates will be sent to you in the app immediately.",
+          "tip_3": "You can view the order details in 'My Orders'."
       }
   },
   "homePage":{
