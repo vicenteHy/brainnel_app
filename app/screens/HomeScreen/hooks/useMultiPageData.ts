@@ -151,8 +151,15 @@ export const useMultiPageData = (categories: any[]) => {
         // 推荐页面 - 优先使用预加载数据，然后调用API获取更多产品
         // console.log(`[useMultiPageData] 调用推荐API - categoryId: ${categoryId}`);
         
-        // 如果是第一次加载且没有现有产品，尝试使用预加载数据
-        if (!isLoadMore && currentData.products.length === 0) {
+        // 如果是刷新操作，直接调用API获取新数据
+        if (isRefresh) {
+          console.log(`[useMultiPageData] 刷新操作，调用API - categoryId: ${categoryId}`);
+          apiResponse = await productApi.getPersonalRecommendations({
+            count: 20,
+            ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
+          });
+        } else if (!isLoadMore && currentData.products.length === 0) {
+          // 如果是第一次加载且没有现有产品，尝试使用预加载数据
           console.log(`[useMultiPageData] 尝试使用预加载数据 - categoryId: ${categoryId}`);
           const preloadedProducts = await preloadService.getPreloadedRecommendations(
             userStore.user?.user_id?.toString()
@@ -185,9 +192,11 @@ export const useMultiPageData = (categories: any[]) => {
         // });
       } else if (categoryId > 0) {
         // 分类页面 - 调用分类随机产品API
+        // 注意：分类页面使用随机API，每次调用都会返回不同的产品，所以不需要特殊处理刷新
         // console.log(`[useMultiPageData] 调用分类API - categoryId: ${categoryId}`, {
         //   count: 20,
-        //   user_id: userStore.user?.user_id
+        //   user_id: userStore.user?.user_id,
+        //   isRefresh: isRefresh
         // });
         
         apiResponse = await productApi.getCategoryRandomProducts({
@@ -197,7 +206,8 @@ export const useMultiPageData = (categories: any[]) => {
         });
         
         // console.log(`[useMultiPageData] 分类API响应 - categoryId: ${categoryId}`, {
-        //   responseLength: apiResponse.length
+        //   responseLength: apiResponse.length,
+        //   isRefresh: isRefresh
         // });
       } else {
         // console.log(`[useMultiPageData] 未支持的categoryId: ${categoryId}`);
@@ -373,12 +383,25 @@ export const useMultiPageData = (categories: any[]) => {
 
   // 刷新页面数据
   const refreshPageData = useCallback((categoryId: number) => {
+    console.log(`[useMultiPageData] refreshPageData called - categoryId: ${categoryId}`);
     // 清除该页面的去重记录
     seenProductIds.current.set(categoryId, new Set());
     // 重置页面数据，确保从第一页开始
-    const resetPageData = initializePageData(categoryId);
-    setPageDataMap(prev => new Map(prev.set(categoryId, resetPageData)));
-    loadPageData(categoryId, true);
+    const resetPageData = {
+      ...initializePageData(categoryId),
+      loading: true, // 立即设置loading状态，避免UI闪烁
+    };
+    setPageDataMap(prev => {
+      const newMap = new Map(prev);
+      newMap.set(categoryId, resetPageData);
+      return newMap;
+    });
+    // 同步更新ref，确保loadPageData能获取到最新状态
+    pageDataMapRef.current.set(categoryId, resetPageData);
+    // 使用setTimeout确保状态更新完成后再调用loadPageData
+    setTimeout(() => {
+      loadPageData(categoryId, true);
+    }, 0);
   }, [loadPageData, initializePageData]);
 
   // 加载更多数据
