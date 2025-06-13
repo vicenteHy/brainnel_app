@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import useUserStore from '../store/user';
 import useCartStore from '../store/cartStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { eventBus } from '../utils/eventBus';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
@@ -258,6 +259,16 @@ export const TabNavigator = () => {
             tabBarIcon: ({ color, size }: TabBarIconProps) => (
               <IconComponent name="home-outline" size={size} color={color} />
             ),
+          }}
+          listeners={{
+            tabPress: (e) => {
+              // 如果当前已经在首页，则跳转到推荐页
+              if (currentTab === 'Home') {
+                e.preventDefault(); // 阻止默认的导航行为
+                // 触发跳转到推荐页的事件
+                eventBus.emit('navigateToRecommend');
+              }
+            },
           }}
         />
         <Tab.Screen

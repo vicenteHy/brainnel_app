@@ -138,6 +138,20 @@ export const HomeScreen = () => {
     });
   }, [selectedCategoryId]);
 
+  // 监听导航到推荐页的事件
+  useEffect(() => {
+    const handleNavigateToRecommend = () => {
+      console.log('[HomeScreen] Navigating to recommend page');
+      setSelectedCategoryId(-1); // -1 表示推荐页
+    };
+
+    eventBus.on('navigateToRecommend', handleNavigateToRecommend);
+
+    return () => {
+      eventBus.off('navigateToRecommend', handleNavigateToRecommend);
+    };
+  }, []);
+
   // 分类相关状态
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Category[]>([]);

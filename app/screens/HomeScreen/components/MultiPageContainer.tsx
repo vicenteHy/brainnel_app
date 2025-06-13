@@ -1,15 +1,8 @@
 import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
-  Dimensions,
 } from 'react-native';
-import { PanGestureHandler, State } from "react-native-gesture-handler";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
+import PagerView from 'react-native-pager-view';
 import { CategoryPage } from './CategoryPage';
 import { Product } from '../../../services/api/productApi';
 
@@ -55,11 +48,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
   onSubcategoryPress,
   onViewAllSubcategories,
 }) => {
-  const screenWidth = Dimensions.get('window').width;
-  const translateX = useSharedValue(0);
-  const containerTranslateX = useSharedValue(0);
-  const isGestureActive = useRef(false);
-  const gestureStartX = useSharedValue(0); // 记录手势开始时的容器位置
+  const pagerRef = useRef<PagerView>(null);
 
   // 计算当前页面索引
   const currentIndex = useMemo(() => {
@@ -69,152 +58,67 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
     return index !== -1 ? index : -999;
   }, [allCategories, selectedCategoryId]);
 
-  // 更新容器位置
+  // 更新页面位置
   useEffect(() => {
-    if (!isGestureActive.current && currentIndex !== -999) {
-      const targetX = -currentIndex * screenWidth;
-      containerTranslateX.value = withTiming(targetX, { 
-        duration: 300,
-      });
-      // 同步更新手势起始位置
-      gestureStartX.value = targetX;
+    if (currentIndex !== -999 && pagerRef.current) {
+      // 使用 setPageWithoutAnimation 避免动画冲突
+      pagerRef.current.setPageWithoutAnimation(currentIndex);
     }
-  }, [currentIndex, screenWidth]);
+  }, [currentIndex]);
 
-  // 手势处理
-  const handleGestureEvent = useCallback((event: any) => {
-    const { translationX } = event.nativeEvent;
-    // 基于手势开始位置计算新位置，无回弹
-    containerTranslateX.value = gestureStartX.value + translationX;
-  }, []);
+  // 处理页面切换
+  const handlePageSelected = useCallback((e: any) => {
+    const position = e.nativeEvent.position;
+    if (allCategories[position]) {
+      onCategoryChange(allCategories[position].category_id);
+    }
+  }, [allCategories, onCategoryChange]);
 
-  const handleHandlerStateChange = useCallback((event: any) => {
-    const { state, translationX, velocityX } = event.nativeEvent;
+  // 渲染特殊页面（当前选中的分类不在allCategories中）
+  const renderSpecialPage = useCallback(() => {
+    const pageData = getPageData(selectedCategoryId);
     
-    if (state === State.BEGAN) {
-      isGestureActive.current = true;
-      // 记录手势开始时的容器位置
-      gestureStartX.value = containerTranslateX.value;
-    } else if (state === State.END || state === State.CANCELLED) {
-      isGestureActive.current = false;
-      
-      // 更敏感的滑动检测
-      const swipeThreshold = screenWidth * 0.15; // 只需滑动10%屏幕宽度
-      const velocityThreshold = 200; // 降低速度阈值，更容易触发
-      
-      let targetIndex = currentIndex;
-      
-      // 优先基于滑动距离和速度判断
-      if (Math.abs(translationX) > swipeThreshold || Math.abs(velocityX) > velocityThreshold) {
-        if (translationX > 0 && currentIndex > 0) {
-          // 向右滑动，切换到上一个类目
-          targetIndex = currentIndex - 1;
-        } else if (translationX < 0 && currentIndex < allCategories.length - 1) {
-          // 向左滑动，切换到下一个类目
-          targetIndex = currentIndex + 1;
-        }
-      } else {
-        // 如果滑动距离和速度都不够，基于当前位置决定
-        const currentX = containerTranslateX.value;
-        targetIndex = Math.round(-currentX / screenWidth);
-        targetIndex = Math.max(0, Math.min(targetIndex, allCategories.length - 1));
-      }
-      
-      // 触发页面切换或对齐
-      if (targetIndex !== currentIndex && allCategories[targetIndex]) {
-        runOnJS(onCategoryChange)(allCategories[targetIndex].category_id);
-      } else {
-        // 对齐到当前页面
-        const targetX = -targetIndex * screenWidth;
-        containerTranslateX.value = withTiming(targetX, { duration: 250 });
-        gestureStartX.value = targetX;
-      }
-    }
-  }, [allCategories, currentIndex, onCategoryChange, screenWidth]);
+    return (
+      <CategoryPage
+        key={selectedCategoryId}
+        categoryId={selectedCategoryId}
+        pageData={pageData}
+        onLoadMore={onLoadMore}
+        onRefresh={onRefresh}
+        onProductPress={onProductPress}
+        onCameraPress={onCameraPress}
+        userStore={userStore}
+        t={t}
+        isActive={true}
+        subcategories={subcategories}
+        subcategoriesLoading={subcategoriesLoading}
+        onSubcategoryPress={onSubcategoryPress}
+        onViewAllSubcategories={onViewAllSubcategories}
+      />
+    );
+  }, [
+    selectedCategoryId,
+    getPageData,
+    onLoadMore,
+    onRefresh,
+    onProductPress,
+    onCameraPress,
+    userStore,
+    t,
+    subcategories,
+    subcategoriesLoading,
+    onSubcategoryPress,
+    onViewAllSubcategories,
+  ]);
 
-  // 容器动画样式
-  const containerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { 
-          translateX: containerTranslateX.value
-        }
-      ],
-    };
-  });
+  // 渲染页面
+  const renderPage = useCallback((category: any) => {
+    const isActive = category.category_id === selectedCategoryId;
+    const pageData = getPageData(category.category_id);
 
-  // 获取页面数据，为推荐页面和分类页面获取真实数据
-  const getPageDataSafe = useCallback((categoryId: number) => {
-    // 为推荐页面(-1)和分类页面(>0)获取真实数据
-    // 移除selectedCategoryId条件，允许所有有效页面获取数据
-    if (categoryId === -1 || categoryId > 0) {
-      return getPageData(categoryId);
-    }
-    
-    // 其他情况返回默认空数据
-    return {
-      categoryId,
-      products: [],
-      loading: false,
-      hasMore: true,
-      page: 1,
-      initialized: false,
-    };
-  }, [getPageData]);
-
-  // 渲染所有页面
-  const renderPages = useMemo(() => {
-    // 如果当前选中的分类不在allCategories中，为其创建一个特殊页面
-    if (currentIndex === -999) {
-      const pageData = getPageDataSafe(selectedCategoryId);
-      
-      return (
+    return (
+      <View key={category.category_id} style={{ flex: 1 }}>
         <CategoryPage
-          key={selectedCategoryId}
-          categoryId={selectedCategoryId}
-          pageData={pageData}
-          onLoadMore={onLoadMore}
-          onRefresh={onRefresh}
-          onProductPress={onProductPress}
-          onCameraPress={onCameraPress}
-          userStore={userStore}
-          t={t}
-          isActive={true}
-          subcategories={subcategories}
-          subcategoriesLoading={subcategoriesLoading}
-          onSubcategoryPress={onSubcategoryPress}
-          onViewAllSubcategories={onViewAllSubcategories}
-        />
-      );
-    }
-
-    return allCategories.map((category, index) => {
-      const isActive = category.category_id === selectedCategoryId;
-      const isAdjacent = Math.abs(index - currentIndex) <= 1;
-      
-      // 只渲染当前页面和相邻页面
-      if (!isActive && !isAdjacent) {
-        return (
-          <View 
-            key={category.category_id} 
-            style={{ width: screenWidth, backgroundColor: "#f5f5f5", height: '100%' }} 
-          />
-        );
-      }
-
-      // 只有当前激活页面才立即获取数据，相邻页面延迟获取
-      const pageData = isActive ? getPageDataSafe(category.category_id) : {
-        categoryId: category.category_id,
-        products: [],
-        loading: false,
-        hasMore: true,
-        page: 1,
-        initialized: false,
-      };
-
-      return (
-        <CategoryPage
-          key={category.category_id}
           categoryId={category.category_id}
           pageData={pageData}
           onLoadMore={onLoadMore}
@@ -229,14 +133,11 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
           onSubcategoryPress={onSubcategoryPress}
           onViewAllSubcategories={onViewAllSubcategories}
         />
-      );
-    });
+      </View>
+    );
   }, [
-    allCategories,
     selectedCategoryId,
-    currentIndex,
-    screenWidth,
-    getPageDataSafe,
+    getPageData,
     onLoadMore,
     onRefresh,
     onProductPress,
@@ -249,29 +150,25 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
     onViewAllSubcategories,
   ]);
 
+  // 如果是特殊情况（选中的分类不在allCategories中），直接渲染单个页面
+  if (currentIndex === -999) {
+    return (
+      <View style={{ flex: 1 }}>
+        {renderSpecialPage()}
+      </View>
+    );
+  }
+
   return (
-    <PanGestureHandler
-      onGestureEvent={handleGestureEvent}
-      onHandlerStateChange={handleHandlerStateChange}
-      activeOffsetX={[-5, 5]}
-      failOffsetY={[-40, 40]}
-      simultaneousHandlers={undefined}
-      minPointers={1}
-      maxPointers={1}
-      enabled={currentIndex !== -999} // 禁用手势当显示特殊页面时
+    <PagerView
+      ref={pagerRef}
+      style={{ flex: 1 }}
+      initialPage={Math.max(0, currentIndex)}
+      onPageSelected={handlePageSelected}
+      scrollEnabled={true}
+      orientation="horizontal"
     >
-      <Animated.View 
-        style={[
-          {
-            flexDirection: 'row',
-            width: currentIndex === -999 ? screenWidth : allCategories.length * screenWidth,
-            height: '100%', // 确保高度占满
-          },
-          containerAnimatedStyle
-        ]}
-      >
-        {renderPages}
-      </Animated.View>
-    </PanGestureHandler>
+      {allCategories.map(renderPage)}
+    </PagerView>
   );
 };
