@@ -582,5 +582,3 @@ export const CartScreen = () => {
     </SafeAreaView>
   );
 };
-
-export { CartScreen };
