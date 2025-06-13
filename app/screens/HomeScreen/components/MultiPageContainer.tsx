@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import {
   View,
 } from 'react-native';
@@ -49,6 +49,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
   onViewAllSubcategories,
 }) => {
   const pagerRef = useRef<PagerView>(null);
+  const [pagesData, setPagesData] = useState<Record<number, PageData>>({});
 
   // 计算当前页面索引
   const currentIndex = useMemo(() => {
@@ -74,52 +75,44 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
     }
   }, [allCategories, onCategoryChange]);
 
-  // 渲染特殊页面（当前选中的分类不在allCategories中）
-  const renderSpecialPage = useCallback(() => {
-    const pageData = getPageData(selectedCategoryId);
+  // 在useEffect中更新页面数据，避免在渲染期间更新状态
+  useEffect(() => {
+    const newPagesData: Record<number, PageData> = {};
     
-    return (
-      <CategoryPage
-        key={selectedCategoryId}
-        categoryId={selectedCategoryId}
-        pageData={pageData}
-        onLoadMore={onLoadMore}
-        onRefresh={onRefresh}
-        onProductPress={onProductPress}
-        onCameraPress={onCameraPress}
-        userStore={userStore}
-        t={t}
-        isActive={true}
-        subcategories={subcategories}
-        subcategoriesLoading={subcategoriesLoading}
-        onSubcategoryPress={onSubcategoryPress}
-        onViewAllSubcategories={onViewAllSubcategories}
-      />
-    );
-  }, [
-    selectedCategoryId,
-    getPageData,
-    onLoadMore,
-    onRefresh,
-    onProductPress,
-    onCameraPress,
-    userStore,
-    t,
-    subcategories,
-    subcategoriesLoading,
-    onSubcategoryPress,
-    onViewAllSubcategories,
-  ]);
+    // 获取所有分类的数据
+    allCategories.forEach(category => {
+      newPagesData[category.category_id] = getPageData(category.category_id);
+    });
+    
+    // 如果是特殊页面，也获取其数据
+    if (currentIndex === -999) {
+      newPagesData[selectedCategoryId] = getPageData(selectedCategoryId);
+    }
+    
+    setPagesData(newPagesData);
+  }, [allCategories, selectedCategoryId, currentIndex, getPageData]);
 
-  // 渲染页面
-  const renderPage = useCallback((category: any) => {
-    const isActive = category.category_id === selectedCategoryId;
-    const pageData = getPageData(category.category_id);
+  // 获取默认页面数据
+  const getDefaultPageData = useCallback((categoryId: number): PageData => {
+    return {
+      categoryId,
+      products: [],
+      loading: false,
+      hasMore: true,
+      page: 1,
+      initialized: false,
+    };
+  }, []);
 
+
+  // 如果是特殊情况（选中的分类不在allCategories中），直接渲染单个页面
+  if (currentIndex === -999) {
+    const pageData = pagesData[selectedCategoryId] || getDefaultPageData(selectedCategoryId);
     return (
-      <View key={category.category_id} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <CategoryPage
-          categoryId={category.category_id}
+          key={selectedCategoryId}
+          categoryId={selectedCategoryId}
           pageData={pageData}
           onLoadMore={onLoadMore}
           onRefresh={onRefresh}
@@ -127,34 +120,12 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
           onCameraPress={onCameraPress}
           userStore={userStore}
           t={t}
-          isActive={isActive}
-          subcategories={isActive ? subcategories : []}
-          subcategoriesLoading={isActive ? subcategoriesLoading : false}
+          isActive={true}
+          subcategories={subcategories}
+          subcategoriesLoading={subcategoriesLoading}
           onSubcategoryPress={onSubcategoryPress}
           onViewAllSubcategories={onViewAllSubcategories}
         />
-      </View>
-    );
-  }, [
-    selectedCategoryId,
-    getPageData,
-    onLoadMore,
-    onRefresh,
-    onProductPress,
-    onCameraPress,
-    userStore,
-    t,
-    subcategories,
-    subcategoriesLoading,
-    onSubcategoryPress,
-    onViewAllSubcategories,
-  ]);
-
-  // 如果是特殊情况（选中的分类不在allCategories中），直接渲染单个页面
-  if (currentIndex === -999) {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderSpecialPage()}
       </View>
     );
   }
@@ -168,7 +139,30 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
       scrollEnabled={true}
       orientation="horizontal"
     >
-      {allCategories.map(renderPage)}
+      {allCategories.map((category) => {
+        const isActive = category.category_id === selectedCategoryId;
+        const pageData = pagesData[category.category_id] || getDefaultPageData(category.category_id);
+
+        return (
+          <View key={category.category_id} style={{ flex: 1 }}>
+            <CategoryPage
+              categoryId={category.category_id}
+              pageData={pageData}
+              onLoadMore={onLoadMore}
+              onRefresh={onRefresh}
+              onProductPress={onProductPress}
+              onCameraPress={onCameraPress}
+              userStore={userStore}
+              t={t}
+              isActive={isActive}
+              subcategories={isActive ? subcategories : []}
+              subcategoriesLoading={isActive ? subcategoriesLoading : false}
+              onSubcategoryPress={onSubcategoryPress}
+              onViewAllSubcategories={onViewAllSubcategories}
+            />
+          </View>
+        );
+      })}
     </PagerView>
   );
 };

@@ -64,7 +64,11 @@ export const ProfileScreen = () => {
     >
       <StatusBar barStyle="light-content" backgroundColor="#FF5100" translucent={false} />
       <SafeAreaView style={componentStyles.safeArea}>
-        <View style={componentStyles.container}>
+        <ScrollView 
+          style={componentStyles.container}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={componentStyles.scrollContent}
+        >
           <View style={componentStyles.headerSection}>
             {user.user_id ? (
               <>
@@ -83,14 +87,11 @@ export const ProfileScreen = () => {
               <LoggedOutView t={t} navigation={navigation} handleLogin={handleLogin} />
             )}
           </View>
-          <ScrollView 
-            style={componentStyles.contentSection}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={componentStyles.contentSection}>
             <OrderSection t={t} navigation={navigation} />
             <ToolSection t={t} navigation={navigation} />
-          </ScrollView>
-        </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
 
       {/* Recharge Modal */}
@@ -116,12 +117,15 @@ const componentStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   headerSection: {
     backgroundColor: 'transparent',
     minHeight: 'auto',
   },
   contentSection: {
-    flex: 1,
     backgroundColor: '#f5f5f5',
+    flex: 1,
   },
 });
