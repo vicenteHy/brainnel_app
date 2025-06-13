@@ -118,7 +118,7 @@ export function BrowseHistoryScreen() {
   const renderItem = ({ item }: { item: BrowseHistoryItem }) => (
     <TouchableOpacity 
       style={styles.item}
-      onPress={() => navigation.navigate('ProductDetail', { productId: item.product_id })}
+      onPress={() => navigation.navigate('ProductDetail', { offer_id: item.product_id, price: item.price })}
     >
       <Image source={{ uri: item.product_image }} style={styles.image} />
       <View style={styles.info}>

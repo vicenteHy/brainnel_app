@@ -64,7 +64,8 @@ export const ProductChatScreen = () => {
   const navigateToProductDetail = () => {
     if (productInfo?.offer_id) {
       navigation.navigate("ProductDetail", {
-        productId: productInfo.offer_id.toString()
+        offer_id: productInfo.offer_id.toString(),
+        price: productInfo.min_price
       });
     }
   };

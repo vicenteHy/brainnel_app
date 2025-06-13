@@ -8,7 +8,7 @@ export type RootStackParamList = {
   Search: undefined;
   SearchResult: { keyword?: string, category_id?: number, formData?: FormData };
   ImageSearchResultScreen: { image?: string, type?: number };
-  ProductDetail: { productId: string; searchKeyword?: string };
+  ProductDetail: { offer_id: string; price?: number; searchKeyword?: string };
   RelatedProductsScreen: { product_id: string; product_name: string };
   ChatScreen: {
     product_id?: string;
