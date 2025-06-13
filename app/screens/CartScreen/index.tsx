@@ -69,6 +69,7 @@ export const CartScreen = () => {
     currentQuantity: number;
   } | null>(null);
   const [quantityInput, setQuantityInput] = useState("");
+  const [quantityInputModalVisible, setQuantityInputModalVisible] = useState(false);
   const [minQuantityModalVisible, setMinQuantityModalVisible] = useState(false);
   const [minQuantityMessage, setMinQuantityMessage] = useState("");
 
@@ -342,7 +343,15 @@ export const CartScreen = () => {
       updateQuantity(cartId, cartItemId, newQuantity);
       setEditingItem(null);
       setQuantityInput("");
+      setQuantityInputModalVisible(false);
     }
+  };
+
+  // 处理数量输入弹窗取消
+  const handleQuantityInputCancel = () => {
+    setQuantityInputModalVisible(false);
+    setEditingItem(null);
+    setQuantityInput("");
   };
 
   // 处理点击数量显示
@@ -356,17 +365,9 @@ export const CartScreen = () => {
     }
     setEditingItem({ cartId, cartItemId, currentQuantity });
     setQuantityInput(currentQuantity.toString());
+    setQuantityInputModalVisible(true);
   };
 
-  // 处理数量输入失焦
-  const handleQuantityInputBlur = () => {
-    if (quantityInput.trim() === "") {
-      setEditingItem(null);
-      setQuantityInput("");
-    } else {
-      handleQuantityInputConfirm();
-    }
-  };
 
   // 导航到商品详情页
   const handleNavigateToProduct = (offerId: string, subject: string, price: number) => {
@@ -536,7 +537,7 @@ export const CartScreen = () => {
                   onQuantityPress={handleQuantityPress}
                   onQuantityInputChange={setQuantityInput}
                   onQuantityInputConfirm={handleQuantityInputConfirm}
-                  onQuantityInputBlur={handleQuantityInputBlur}
+                  onQuantityInputBlur={() => {}}
                   calculateProductGroupTotalQuantity={calculateProductGroupTotalQuantity}
                 />
                 {/* 商品组分隔线 */}
@@ -568,9 +569,14 @@ export const CartScreen = () => {
         deleteModalVisible={deleteModalVisible}
         minQuantityModalVisible={minQuantityModalVisible}
         minQuantityMessage={minQuantityMessage}
+        quantityInputModalVisible={quantityInputModalVisible}
+        quantityInput={quantityInput}
         onConfirmDelete={confirmDelete}
         onCancelDelete={cancelDelete}
         onCloseMinQuantityModal={() => setMinQuantityModalVisible(false)}
+        onQuantityInputChange={setQuantityInput}
+        onQuantityInputConfirm={handleQuantityInputConfirm}
+        onQuantityInputCancel={handleQuantityInputCancel}
         user_id={user_id?.toString() || null}
       />
     </SafeAreaView>

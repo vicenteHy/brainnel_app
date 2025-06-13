@@ -4,6 +4,7 @@ import {
   Text,
   TouchableOpacity,
   Modal,
+  TextInput,
 } from "react-native";
 import IconComponent from "../../../components/IconComponent";
 import { modalStyles } from "../styles";
@@ -13,9 +14,14 @@ interface CartModalsProps {
   deleteModalVisible: boolean;
   minQuantityModalVisible: boolean;
   minQuantityMessage: string;
+  quantityInputModalVisible: boolean;
+  quantityInput: string;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
   onCloseMinQuantityModal: () => void;
+  onQuantityInputChange: (text: string) => void;
+  onQuantityInputConfirm: () => void;
+  onQuantityInputCancel: () => void;
   user_id: string | null;
 }
 
@@ -23,9 +29,14 @@ export const CartModals: React.FC<CartModalsProps> = ({
   deleteModalVisible,
   minQuantityModalVisible,
   minQuantityMessage,
+  quantityInputModalVisible,
+  quantityInput,
   onConfirmDelete,
   onCancelDelete,
   onCloseMinQuantityModal,
+  onQuantityInputChange,
+  onQuantityInputConfirm,
+  onQuantityInputCancel,
   user_id,
 }) => {
   return (
@@ -84,6 +95,49 @@ export const CartModals: React.FC<CartModalsProps> = ({
                 {t("cart.confirm")}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Quantity input modal */}
+      <Modal
+        visible={quantityInputModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={onQuantityInputCancel}
+      >
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.quantityInputPopup}>
+            <Text style={modalStyles.quantityInputTitle}>
+              {t("cart.modify_quantity")}
+            </Text>
+            <TextInput
+              style={modalStyles.quantityInputField}
+              value={quantityInput}
+              onChangeText={onQuantityInputChange}
+              keyboardType="number-pad"
+              autoFocus
+            />
+            <View style={modalStyles.quantityInputButtonContainer}>
+              <TouchableOpacity
+                style={modalStyles.quantityInputCancelButton}
+                onPress={onQuantityInputCancel}
+                activeOpacity={1}
+              >
+                <Text style={modalStyles.quantityInputCancelText}>
+                  {t("cart.cancel")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={modalStyles.quantityInputConfirmButton}
+                onPress={onQuantityInputConfirm}
+                activeOpacity={1}
+              >
+                <Text style={modalStyles.quantityInputConfirmText}>
+                  {t("cart.confirm")}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

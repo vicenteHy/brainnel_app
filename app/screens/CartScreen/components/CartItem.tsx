@@ -262,41 +262,23 @@ export const CartItem: React.FC<CartItemProps> = ({
                           -
                         </Text>
                       </TouchableOpacity>
-                      {editingItem &&
-                      editingItem.cartId === item.cart_id &&
-                      editingItem.cartItemId === sku.cart_item_id ? (
-                        <TextInput
-                          style={[
-                            styles.quantityLabelContainer,
-                            styles.quantityInputInline,
-                          ]}
-                          value={quantityInput}
-                          onChangeText={onQuantityInputChange}
-                          keyboardType="number-pad"
-                          maxLength={3}
-                          autoFocus
-                          onBlur={onQuantityInputBlur}
-                          onSubmitEditing={onQuantityInputConfirm}
-                        />
-                      ) : (
-                        <TouchableOpacity
-                          style={styles.quantityLabelContainer}
-                          onPress={() =>
-                            user_id &&
-                            onQuantityPress(
-                              item.cart_id,
-                              sku.cart_item_id,
-                              sku.quantity
-                            )
-                          }
-                          disabled={!user_id}
-                          activeOpacity={1}
-                        >
-                          <Text style={styles.quantityDisplayText}>
-                            {sku.quantity}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
+                      <TouchableOpacity
+                        style={styles.quantityLabelContainer}
+                        onPress={() =>
+                          user_id &&
+                          onQuantityPress(
+                            item.cart_id,
+                            sku.cart_item_id,
+                            sku.quantity
+                          )
+                        }
+                        disabled={!user_id}
+                        activeOpacity={1}
+                      >
+                        <Text style={styles.quantityDisplayText}>
+                          {sku.quantity}
+                        </Text>
+                      </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.quantityButton, styles.quantityButtonEnabled]}
                         onPress={() =>
