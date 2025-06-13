@@ -147,10 +147,9 @@ export const AppNavigator = () => {
           name="EmailLogin"
           component={Screens.EmailLoginScreen}
           options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
+            animation: "slide_from_right",
             gestureEnabled: true,
-            gestureDirection: "vertical",
+            gestureDirection: "horizontal",
           }}
         />
         <Stack.Screen

@@ -1022,6 +1022,20 @@
       "codeIncorrect": "Le code de vérification est incorrect, veuillez réessayer"
     }
   },
+  "emailLogin": {
+    "info_text": "Nous vous enverrons un code de vérification par e-mail",
+    "send_code": "Envoyer le code",
+    "verify_and_login": "Vérifier et se connecter",
+    "verificationCode": {
+      "title": "Vérifier l'e-mail",
+      "placeholder": "Entrez le code à 4 chiffres"
+    },
+    "resend_code": "Renvoyer le code de vérification",
+    "code_error": "Le code de vérification est incorrect, veuillez réessayer",
+    "login_failed": "Échec de la connexion, veuillez réessayer",
+    "verification_code_sent": "Code de vérification envoyé à votre e-mail",
+    "code_sent_info": "Nous avons envoyé un code de vérification à {{email}}"
+  },
   "whatsapp": {
     "title": "Connexion WhatsApp",
     "verification_title": "Vérifier le code WhatsApp",

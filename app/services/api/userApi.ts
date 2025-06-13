@@ -142,6 +142,20 @@ export const userApi = {
     };
     console.log('[UserAPI] 验证OTP请求数据:', requestData);
     return apiService.post<AuthResponse>('/api/users/verify-otp/', requestData);
+  },
+
+  // 发送邮箱OTP验证码
+  sendEmailOtp: (email: string, language: string) => {
+    console.log('[UserAPI] 发送Email OTP请求, 邮箱:', email, '语言:', language);
+    const requestData = { email, language };
+    return apiService.post('/api/users/send-email-otp/', requestData);
+  },
+
+  // 验证邮箱OTP验证码
+  verifyEmailOtp: (email: string, code: string) => {
+    console.log('[UserAPI] 验证Email OTP请求, 邮箱:', email, '验证码:', code);
+    const requestData = { email, code };
+    return apiService.post<AuthResponse>('/api/users/verify-email-otp/', requestData);
   }
 
 };

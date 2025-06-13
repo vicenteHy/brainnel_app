@@ -18,7 +18,6 @@ import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CountryList } from "../../constants/countries";
 import { settingApi } from "../../services/api/setting";
-import { VerificationCodeInput } from "./VerificationCodeInput";
 import fontSize from "../../utils/fontsizeUtils";
 import { getCountryTransLanguage } from "../../utils/languageUtils";
 
@@ -470,15 +469,6 @@ export const ForgotPhonePassword = ({
           </View>
         </Modal>
         
-        {/* Verification Code Modal */}
-        <VerificationCodeInput 
-          visible={showVerificationModal}
-          onClose={() => setShowVerificationModal(false)}
-          phoneNumber={phoneNum}
-          onVerify={handleVerifyCode}
-          onResend={handleResendCode}
-          onResetPassword={handleResetPassword}
-        />
       </View>
     </Modal>
   );

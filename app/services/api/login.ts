@@ -25,11 +25,27 @@ export const loginApi = {
   verifyWhatsappOtp: (data: { phone_number: string; code: string }) =>
     apiService.post<LoginResponse>("/api/users/verify-whatsapp-otp/", data),
   // 邮箱发送OTP
-  sendEmailOtp: (data: { email: string; language: string }) =>
-    apiService.post("/api/users/send-email-otp/", data),
+  sendEmailOtp: (data: { email: string; language: string }) => {
+    console.log('[LoginAPI] 发送邮箱OTP 请求数据:', data);
+    return apiService.post("/api/users/send-email-otp/", data).then((res) => {
+      console.log('[LoginAPI] 发送邮箱OTP 响应:', res);
+      return res;
+    }).catch((err) => {
+      console.error('[LoginAPI] 发送邮箱OTP 失败:', err);
+      throw err;
+    });
+  },
   // 邮箱验证OTP
-  verifyEmailOtp: (data: { email: string; code: string }) =>
-    apiService.post<LoginResponse>("/api/users/verify-email-otp/", data),
+  verifyEmailOtp: (data: { email: string; code: string }) => {
+    console.log('[LoginAPI] 验证邮箱OTP 请求数据:', data);
+    return apiService.post<LoginResponse>("/api/users/verify-email-otp/", data).then((res)=>{
+      console.log('[LoginAPI] 验证邮箱OTP 响应:', res);
+      return res;
+    }).catch((err)=>{
+      console.error('[LoginAPI] 验证邮箱OTP 失败:', err);
+      throw err;
+    });
+  },
 };
 
 

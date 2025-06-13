@@ -1,6 +1,6 @@
 import { CountrySelect } from "../screens/CountrySelect";
 import { LoginScreen } from "../screens/loginList/index";
-import { EmailLoginScreen } from "../screens/EmailLoginScreen";
+import { EmailLoginScreen } from "../screens/loginList/EmailLoginScreen";
 import { TabNavigator } from "./TabNavigator";
 import { SearchScreen } from "../screens/SearchScreen";
 import { SearchResultScreen } from "../screens/SearchResultScreen";
@@ -49,7 +49,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { LoginPromptScreen } from '../screens/LoginPromptScreen';
-import { EmailOtpScreen } from '../screens/EmailOtpScreen';
+import { EmailOtpScreen } from '../screens/loginList/EmailOtpScreen';
 
 export {
   CountrySelect,

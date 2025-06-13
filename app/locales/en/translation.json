@@ -921,6 +921,20 @@
       "codeIncorrect": "Verification code is incorrect, please try again"
     }
   },
+  "emailLogin": {
+    "info_text": "We will send you a verification code via email",
+    "send_code": "Send Code",
+    "verify_and_login": "Verify and Login",
+    "verificationCode": {
+      "title": "Verify Email",
+      "placeholder": "Enter 4-digit code"
+    },
+    "resend_code": "Resend verification code",
+    "code_error": "Verification code is incorrect, please try again",
+    "login_failed": "Login failed, please try again",
+    "verification_code_sent": "Verification code sent to your email",
+    "code_sent_info": "We sent a verification code to {{email}}"
+  },
   "loginPrompt": {
     "chat": {
       "title": "Please Login First",

@@ -402,6 +402,7 @@ export const PhoneLoginScreen = () => {
               <TextInput
                 style={styles.verificationInput}
                 placeholder={t('phoneLogin.verificationCode.placeholder')}
+                placeholderTextColor="#999"
                 value={verificationCode}
                 onChangeText={(text) => {
                   // 只允许输入数字，最多4位
@@ -716,9 +717,9 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     borderRadius: 16,
     padding: 20,
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 8,
     textAlign: 'center',
     backgroundColor: '#ffffff',
     color: '#1f2937',

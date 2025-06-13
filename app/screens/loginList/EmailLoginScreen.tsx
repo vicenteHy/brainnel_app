@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,16 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { loginApi } from '../services/api/login';
+import { RootStackParamList } from '../../navigation/types';
+import { userApi } from '../../services/api/userApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import VerificationLimiter from '../../utils/verificationLimiter';
+import fontSize from '../../utils/fontsizeUtils';
 // Common email domain list
 const EMAIL_DOMAINS = [
   'gmail.com',
@@ -34,12 +37,14 @@ const EMAIL_DOMAINS = [
 ];
 
 export const EmailLoginScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const emailInputRef = useRef<TextInput>(null);
 
   // Handle email input changes and generate email suggestions
   const handleEmailChange = (text: string) => {
@@ -88,26 +93,37 @@ export const EmailLoginScreen = () => {
 
   const handleContinue = async () => {
     if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      setError(t('pleaseEnterEmail'));
+      return;
+    }
+
+    // 检查发送限制
+    const limitCheck = await VerificationLimiter.canSendVerification(email);
+    if (!limitCheck.allowed) {
+      setError(limitCheck.reason || t('error'));
       return;
     }
 
     setIsLoading(true);
+    setError(null);
     try {
-      // Save email address to local storage for verification use
-      await AsyncStorage.setItem('email_for_signin', email);
+      // 发送邮箱验证码
+      await userApi.sendEmailOtp(email, i18n.language || 'en');
+      await VerificationLimiter.recordAttempt(email);
       
-      // Send email verification code
-      await loginApi.sendEmailOtp({ 
-        email: email, 
-        language: 'en' 
-      });
+      // 成功提示
+      Alert.alert(
+        t('success'),
+        t('emailLogin.verification_code_sent') || '验证码已发送到您的邮箱',
+        [{ text: t('ok') || 'OK' }]
+      );
       
-      // Navigate to verification page
+      // 导航到验证页面
       navigation.navigate('EmailOtp' as any, { email });
     } catch (error: any) {
+      await VerificationLimiter.recordAttempt(email);
       console.error('Failed to send verification code:', error);
-      Alert.alert('Send Failed', error.response?.data?.message || 'Failed to send verification code, please check email address and try again');
+      setError(t('emailLogin.login_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -147,10 +163,24 @@ export const EmailLoginScreen = () => {
 
         {/* Form */}
         <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
+          {/* Email Label */}
+          <Text style={styles.inputLabel}>{t('emailLabel')}</Text>
+          
+          <TouchableOpacity 
+            style={[styles.inputContainer, error && styles.inputContainerError]}
+            activeOpacity={1}
+            onPress={() => {
+              // 确保输入框获得焦点
+              if (emailInputRef.current) {
+                emailInputRef.current.focus();
+              }
+            }}
+          >
             <TextInput
+              ref={emailInputRef}
               style={styles.emailInput}
-              placeholder={t('pleaseEnterEmail')}
+              placeholder={t('emailPlaceholder')}
+              placeholderTextColor="#999"
               value={email}
               onChangeText={handleEmailChange}
               keyboardType="email-address"
@@ -165,12 +195,18 @@ export const EmailLoginScreen = () => {
                 onPress={() => {
                   setEmail('');
                   setShowSuggestions(false);
+                  setError(null);
+                  // 清除后重新聚焦
+                  if (emailInputRef.current) {
+                    emailInputRef.current.focus();
+                  }
                 }}
+                activeOpacity={0.7}
               >
-                <Text style={styles.clearButtonText}>✕</Text>
+                <Text style={styles.clearButtonText}>×</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </TouchableOpacity>
 
           {/* Email domain suggestion list */}
           {showSuggestions && (
@@ -185,6 +221,14 @@ export const EmailLoginScreen = () => {
             </View>
           )}
 
+          {/* 错误提示 */}
+          {error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
+
+          {/* 提示文本 */}
+          <Text style={styles.infoText}>{t('emailLogin.info_text')}</Text>
+
           <TouchableOpacity 
             style={[
               styles.continueButton, 
@@ -193,9 +237,13 @@ export const EmailLoginScreen = () => {
             onPress={handleContinue}
             disabled={!isValidEmail(email) || isLoading}
           >
-            <Text style={styles.continueButtonText}>
-              {isLoading ? 'Sending...' : 'Send Verification Code'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.continueButtonText}>
+                {t('emailLogin.send_code')}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
         </View>
@@ -227,108 +275,140 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? 20 : 15,
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    borderBottomWidth: 0,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     padding: 8,
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
   },
   backButtonText: {
-    fontSize: 18,
-    color: '#000',
+    fontSize: fontSize(20),
+    color: '#333',
+    fontWeight: '400',
   },
   title: {
-    fontSize: 18,
+    fontSize: fontSize(20),
     fontWeight: '600',
-    color: '#000',
+    color: '#1A1A1A',
     flex: 1,
     textAlign: 'center',
-    marginRight: 40, // To center properly considering the back button
+    marginRight: 48,
   },
   formContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+  },
+  inputLabel: {
+    fontSize: fontSize(14),
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+    marginLeft: 4,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#E1E1E1',
-    borderRadius: 25,
-    height: 50,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+  },
+
+  inputContainerError: {
+    borderColor: '#FF3B30',
+    backgroundColor: '#FFF8F8',
   },
   emailInput: {
     height: '100%',
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: fontSize(15),
     flex: 1,
-    paddingRight: 36, // Leave space for clear button
+    paddingRight: 44,
+    color: '#333',
+    letterSpacing: 0.3,
   },
+
   clearButton: {
-    padding: 8,
-    marginRight: 8,
     position: 'absolute',
-    right: 8,
+    right: 12,
     top: '50%',
-    transform: [{ translateY: -12 }], // Center adjustment
-    height: 24,
-    width: 24,
+    transform: [{ translateY: -16 }],
+    height: 32,
+    width: 32,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#E5E5E5',
+    borderRadius: 16,
   },
   clearButtonText: {
-    fontSize: 16,
-    color: '#999',
-    fontWeight: '500',
-    textAlign: 'center',
+    fontSize: fontSize(18),
+    color: '#666',
+    fontWeight: '400',
+    lineHeight: 20,
   },
   suggestionsContainer: {
     borderWidth: 1,
-    borderColor: '#E1E1E1',
-    borderRadius: 10,
-    marginTop: -10,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    marginTop: -12,
     marginBottom: 20,
-    maxHeight: 200,
+    maxHeight: 220,
     backgroundColor: '#fff',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
   },
   suggestionsList: {
     padding: 8,
   },
   suggestionItem: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   suggestionText: {
-    fontSize: 16,
+    fontSize: fontSize(15),
     color: '#333',
   },
   continueButton: {
-    height: 50,
-    backgroundColor: '#0039CB',
-    borderRadius: 25,
+    height: 56,
+    backgroundColor: '#FF5100',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 32,
+
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
   },
   continueButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: fontSize(14),
+    marginBottom: 16,
+    textAlign: 'left',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  infoText: {
+    color: '#666',
+    fontSize: fontSize(14),
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 }); 
