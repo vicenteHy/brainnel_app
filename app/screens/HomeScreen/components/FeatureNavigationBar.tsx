@@ -18,7 +18,7 @@ export const FeatureNavigationBar = React.memo(() => {
   }, [navigation]);
 
   const handleGetQuote = useCallback(() => {
-    navigation.navigate("GetQuote");
+    navigation.navigate("InquiryScreen");
   }, [navigation]);
 
   return (

@@ -405,9 +405,7 @@ export const InquiryScreen = () => {
                       <View style={styles.productCardContainer}>
                         <View style={styles.productCardContainer1}>
                           <Image
-                            source={
-                              { uri: Platform.OS === 'android' ? `file://${searchImg}` : searchImg }
-                            }
+                            source={{ uri: searchImg }}
                             style={[styles.articleThumbnailContainer, { backgroundColor: '#f5f5f5' }]}
                           />
                           <View style={styles.articleTitleContainer}>
@@ -608,7 +606,8 @@ export const InquiryScreen = () => {
                       <Image
                         source={
                           inquiry.image_url
-                          
+                            ? { uri: inquiry.image_url }
+                            : require("../../../assets/img/image_fac2b0a9.png")
                         }
                         style={{
                           width: 80,
@@ -780,8 +779,9 @@ export const InquiryScreen = () => {
                     >
                       <Image
                         source={
-                         
-                             { uri: inquiry.image_url }
+                          inquiry.image_url
+                            ? { uri: inquiry.image_url }
+                            : require("../../../assets/img/image_fac2b0a9.png")
                         }
                         style={{
                           width: 80,
@@ -882,7 +882,7 @@ export const InquiryScreen = () => {
                   </View>
                 )}
                 {!hasMore && completedInquiries.length > 0 && (
-                  <Text style={styles.noMoreText}>{t('banner.inquiry.no_completed')}</Text>
+                  <Text style={styles.noMoreText}>{t('banner.inquiry.no_more_data')}</Text>
                 )}
               </>
             ) : loading ? (
