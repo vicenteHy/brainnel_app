@@ -421,23 +421,20 @@ export const ShippingFee = () => {
                           <>
                             <View style={styles.shippingInfoRow}>
                               <Text style={styles.shippingInfoLabel}>
-                                {t("order.shipping.domestic_fee_china") || "运费 (在中国)"}:
+                                {t("order.shipping.domestic_fee_china") || "运费 (在中国)"}
                               </Text>
                               <Text style={styles.shippingInfoPrice}>
-                                {domesticShippingFeeData?.total_shipping_fee.toFixed(2) ||
-                                  0}{" "}
-                                {userStore.user?.currency}
+                                {(domesticShippingFeeData?.total_shipping_fee || 0).toFixed(2)} {userStore.user?.currency}
                               </Text>
                             </View>
                             <View style={styles.shippingInfoRow}>
                               <Text style={styles.shippingInfoLabel}>
-                                {t("order.shipping.international_delivery_fee") || "国际运输费"}:
+                                {t("order.shipping.international_delivery_fee") || "国际运输费"}
                               </Text>
                               <Text style={styles.shippingInfoPrice}>
-                                {shippingMethod === "sea"
-                                  ? shippingFeeData?.total_shipping_fee_sea.toFixed(2)
-                                  : shippingFeeData?.total_shipping_fee_air.toFixed(2)}{" "}
-                                {userStore.user?.currency}
+                                {(shippingMethod === "sea"
+                                  ? shippingFeeData?.total_shipping_fee_sea || 0
+                                  : shippingFeeData?.total_shipping_fee_air || 0).toFixed(2)} {userStore.user?.currency}
                               </Text>
                             </View>
                             {userStore.user.country_code !== 225 ? (
@@ -909,6 +906,7 @@ const styles = StyleSheet.create({
   },
   shippingInfo: {
     marginTop: 16,
+    marginBottom: 16,
     padding: 16,
     backgroundColor: "#f8f8f8",
     borderRadius: 12,
@@ -916,26 +914,31 @@ const styles = StyleSheet.create({
     borderColor: "#e8e8e8",
   },
   shippingInfoRow: {
-    fontSize: fontSize(14),
-    marginBottom: 8,
+    fontSize: fontSize(12),
+    marginBottom: 12,
     color: "#1a1a1a",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 4,
   },
   shippingInfoLabel: {
     color: "#666666",
     fontWeight: "500",
     fontSize: fontSize(14),
-    fontFamily: 'System',
     flex: 1,
+    lineHeight: 20,
+    marginRight: 8,
+    flexShrink: 1,
   },
   shippingInfoPrice: {
     color: "#FF5100",
     fontWeight: "600",
     fontSize: fontSize(14),
-    fontFamily: 'System',
     textAlign: "right",
+    lineHeight: 20,
+    flexShrink: 1,
+    maxWidth: '30%',
   },
   loadingContainer: {
     flex: 1,
