@@ -951,5 +951,12 @@
       "message": "Login to view personal information",
       "button": "Login Now"
     }
+  },
+  "auth": {
+    "multipleDeviceLogin": {
+      "title": "Account Login Notification",
+      "message": "Your account has been logged in on another device. For security reasons, you have been logged out of this device.",
+      "button": "OK"
+    }
   }
 }

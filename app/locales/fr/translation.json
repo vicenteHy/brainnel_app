@@ -1070,5 +1070,12 @@
       "message": "Connectez-vous pour voir les informations personnelles",
       "button": "Se connecter maintenant"
     }
+  },
+  "auth": {
+    "multipleDeviceLogin": {
+      "title": "Notification de Connexion de Compte",
+      "message": "Votre compte a été connecté sur un autre appareil. Pour des raisons de sécurité, vous avez été déconnecté de cet appareil.",
+      "button": "OK"
+    }
   }
 } 

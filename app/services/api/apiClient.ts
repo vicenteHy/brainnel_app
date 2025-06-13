@@ -14,6 +14,7 @@ import {
   STORAGE_KEYS,
 } from "../../constants/config";
 import i18n from "../../i18n";
+import { handleMultipleDeviceLogin, isMultipleDeviceLoginError } from "../../utils/authUtils";
 // import { Platform } from "react-native";
 
 // 定义响应类型接口
@@ -136,6 +137,14 @@ apiClient.interceptors.response.use(
     if (response && response.status === 401) {
       console.log("未授权错误，清除token");
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      
+      // 检查是否为多设备登录冲突
+      if (isMultipleDeviceLoginError(error)) {
+        // 延迟显示弹窗，确保当前操作完成
+        setTimeout(() => {
+          handleMultipleDeviceLogin();
+        }, 100);
+      }
     }
 
     // 构建标准化的错误对象
