@@ -460,6 +460,21 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     });
   }, [navigation]);
 
+  // 处理警告确认
+  const handleAlertConfirm = useCallback(() => {
+    setAlertModalVisible(false);
+    if (alertConfirmCallback) {
+      alertConfirmCallback();
+      setAlertConfirmCallback(null);
+    }
+  }, [alertConfirmCallback]);
+
+  // 处理警告取消
+  const handleAlertCancel = useCallback(() => {
+    setAlertModalVisible(false);
+    setAlertConfirmCallback(null);
+  }, []);
+
   return {
     // 状态
     deleteModalVisible,
@@ -486,6 +501,8 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
     handleAddToCart,
     handleCancelDelete,
     handleNavigateToCart,
+    handleAlertConfirm,
+    handleAlertCancel,
     setMainProductQuantity,
     setQuantityInput,
     setQuantityInputVisible,

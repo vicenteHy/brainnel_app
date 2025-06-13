@@ -50,6 +50,8 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
     handleAddToCart,
     handleCancelDelete,
     handleNavigateToCart,
+    handleAlertConfirm,
+    handleAlertCancel,
     setMainProductQuantity,
     setQuantityInput,
     setQuantityInputVisible,
@@ -110,8 +112,8 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
         quantityInput={quantityInput}
         onCancelDelete={handleCancelDelete}
         onNavigateToCart={handleNavigateToCart}
-        onAlertConfirm={() => setAlertModalVisible(false)}
-        onAlertCancel={() => setAlertModalVisible(false)}
+        onAlertConfirm={handleAlertConfirm}
+        onAlertCancel={handleAlertCancel}
         onQuantityInputConfirm={handleQuantityInputConfirm}
         onQuantityInputCancel={() => {
           setQuantityInputVisible(false);
