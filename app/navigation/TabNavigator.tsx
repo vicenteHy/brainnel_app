@@ -70,7 +70,7 @@ type TabBarIconProps = {
 };
 
 // Wrapper for pages that require authentication
-const RequireAuthWrapper = ({ 
+const RequireAuthWrapper = React.memo(({ 
   component: Component, 
   type,
   title, 
@@ -97,7 +97,7 @@ const RequireAuthWrapper = ({
       icon={icon}
     />
   );
-};
+});
 
 const Tab = createBottomTabNavigator();
 
@@ -244,6 +244,8 @@ export const TabNavigator = () => {
             marginTop: 4,
           },
           headerShown: false,
+          animation: 'none',
+          animationEnabled: false,
         }}
         screenListeners={({ route }) => ({
           focus: () => {

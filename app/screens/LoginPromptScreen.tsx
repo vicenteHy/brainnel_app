@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StatusBar,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import BackIcon from '../components/BackIcon';
 import fontSize from '../utils/fontsizeUtils';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type RouteParams = {
   title?: string;
@@ -27,17 +29,18 @@ type LoginPromptScreenProps = {
   type?: 'chat' | 'cart' | 'profile';
 };
 
-export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = (props) => {
+export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = React.memo((props) => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   
   // Support both props and route.params
   const routeParams = route.params as RouteParams || {};
   const type = props?.type || routeParams.type || 'profile';
   
   // Get translated content based on type
-  const getTranslatedContent = () => {
+  const getTranslatedContent = React.useCallback(() => {
     switch (type) {
       case 'chat':
         return {
@@ -59,7 +62,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = (props) => {
           button: t('loginPrompt.profile.button')
         };
     }
-  };
+  }, [type, t]);
 
   const translatedContent = getTranslatedContent();
   
@@ -69,20 +72,20 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = (props) => {
     icon = props?.icon || routeParams.icon || '🔒'
   } = { ...routeParams, ...props };
 
-  const handleBack = () => {
+  const handleBack = React.useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
 
-  const handleLogin = () => {
+  const handleLogin = React.useCallback(() => {
     navigation.navigate('Login');
-  };
+  }, [navigation]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.container, { backgroundColor: '#fff' }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      {/* Header Navigation */}
-      <View style={styles.header}>
+      {/* Header Navigation with manual safe area */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <BackIcon size={20} />
         </TouchableOpacity>
@@ -91,7 +94,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = (props) => {
       </View>
 
       {/* Main Content */}
-      <View style={styles.container}>
+      <View style={styles.content}>
         <View style={styles.contentContainer}>
           {/* Icon */}
           <View style={styles.iconContainer}>
@@ -115,12 +118,15 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = (props) => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+      
+      {/* Bottom safe area */}
+      <View style={{ height: insets.bottom }} />
+    </View>
   );
-};
+});
 
 const styles = {
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#fff',
   },
@@ -148,7 +154,7 @@ const styles = {
   headerSpacer: {
     width: 40,
   },
-  container: {
+  content: {
     flex: 1,
     backgroundColor: '#fff',
   },
