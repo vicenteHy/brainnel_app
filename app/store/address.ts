@@ -77,13 +77,12 @@ export const useAddressStore = create<AddressStore>((set) => ({
       
       // 如果新地址设置为默认地址，需要先将现有的默认地址取消
       if (address.is_default === 1) {
-        const currentState = useAddressStore.getState();
-        const currentDefaultAddress = currentState.addresses.find(addr => addr.is_default === 1);
+        const currentAddresses = useAddressStore.getState().addresses;
+        const currentDefaultAddress = currentAddresses.find(addr => addr.is_default === 1);
         
         if (currentDefaultAddress) {
           // 先更新现有的默认地址，将其is_default设置为0
           await addressApi.updateAddress({
-            address_id: currentDefaultAddress.address_id,
             ...currentDefaultAddress,
             is_default: 0,
           });
@@ -93,10 +92,11 @@ export const useAddressStore = create<AddressStore>((set) => ({
       const response = await addressApi.postAddress(address);
       const newAddress = response as Address;
       
-      // 重新获取所有地址以确保状态同步
-      await useAddressStore.getState().fetchAddresses();
-      
-      set({ loading: false });
+      // 直接更新状态而不是重新获取
+      set((state) => ({
+        addresses: [...state.addresses, newAddress],
+        loading: false,
+      }));
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : i18n.t("address.errors.add_failed"),
@@ -128,13 +128,12 @@ export const useAddressStore = create<AddressStore>((set) => ({
       
       // 如果更新的地址设置为默认地址，需要先将其他默认地址取消
       if (updatedAddress.is_default === 1) {
-        const currentState = useAddressStore.getState();
-        const currentDefaultAddress = currentState.addresses.find(addr => addr.is_default === 1 && addr.address_id !== addressId);
+        const currentAddresses = useAddressStore.getState().addresses;
+        const currentDefaultAddress = currentAddresses.find(addr => addr.is_default === 1 && addr.address_id !== addressId);
         
         if (currentDefaultAddress) {
           // 先更新现有的默认地址，将其is_default设置为0
           await addressApi.updateAddress({
-            address_id: currentDefaultAddress.address_id,
             ...currentDefaultAddress,
             is_default: 0,
           });
@@ -146,10 +145,15 @@ export const useAddressStore = create<AddressStore>((set) => ({
         ...updatedAddress,
       });
       
-      // 重新获取所有地址以确保状态同步
-      await useAddressStore.getState().fetchAddresses();
-      
-      set({ loading: false });
+      // 直接更新状态而不是重新获取
+      set((state) => ({
+        addresses: state.addresses.map(addr => 
+          addr.address_id === addressId 
+            ? { ...addr, ...updatedAddress }
+            : addr
+        ),
+        loading: false,
+      }));
     } catch (error) {
       set({
         error:
