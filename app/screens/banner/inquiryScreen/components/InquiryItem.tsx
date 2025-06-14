@@ -38,15 +38,7 @@ export const InquiryItem: React.FC<InquiryItemProps> = ({
         }]
       };
       
-      console.log("=== 询盘产品加购请求数据 ===");
-      console.log("原始询盘数据:", inquiry);
-      console.log("构建的加购数据:", productData);
-      console.log("数据字段检查:");
-      console.log("offer_id:", productData.offer_id, typeof productData.offer_id);
-      console.log("quantity:", productData.quantity, typeof productData.quantity);
-      console.log("sku_id:", productData.sku_id, typeof productData.sku_id);
-      console.log("is_inquiry_item:", productData.is_inquiry_item, typeof productData.is_inquiry_item);
-      console.log("============================");
+
       
       await cartApi(productData);
       // 更新全局购物车数量

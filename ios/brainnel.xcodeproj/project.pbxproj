@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0E4509D83C199BEBEF598EB8 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE444CB13A2539F833B22741 /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		AE03E5877A31105BC84B5000 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3020A5FAA5D85359B32D44BF /* PrivacyInfo.xcprivacy */; };
+		52F338CCC894151F524A2E79 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FA8ECA8BFA0E0C5D1C49B47B /* PrivacyInfo.xcprivacy */; };
+		53D824C3D8664AF7BA740160 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DC2CB8ABEE034FB2B2E341EB /* GoogleService-Info.plist */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C2D26FECAB3343A889F75339 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C67A3DF93413441AA10C5B9A /* GoogleService-Info.plist */; };
-		D5D6BD85AB03924BFB0EB65C /* libPods-brainnel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C6602D18AEBFCC3F301194 /* libPods-brainnel.a */; };
+		D12096F5C182399C2D4A50F0 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40268F7AC2FBB36510868D0D /* ExpoModulesProvider.swift */; };
+		E84A9DB64D0B8A5F4F878087 /* libPods-brainnel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 769A247AA6890052E9D580DE /* libPods-brainnel.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -21,17 +21,17 @@
 		13B07F961A680F5B00A75B9A /* brainnel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = brainnel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = brainnel/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = brainnel/Info.plist; sourceTree = "<group>"; };
-		13C6602D18AEBFCC3F301194 /* libPods-brainnel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-brainnel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3020A5FAA5D85359B32D44BF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = brainnel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		70522828E0C0163DD82ED314 /* Pods-brainnel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.debug.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.debug.xcconfig"; sourceTree = "<group>"; };
-		727F10F7805148EEC25FD46B /* Pods-brainnel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.release.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.release.xcconfig"; sourceTree = "<group>"; };
+		40268F7AC2FBB36510868D0D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-brainnel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		769A247AA6890052E9D580DE /* libPods-brainnel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-brainnel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A2A288DD8155E8294DBD8D4 /* Pods-brainnel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.release.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.release.xcconfig"; sourceTree = "<group>"; };
+		85A0D133CAE28C29A5A38E6A /* Pods-brainnel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-brainnel.debug.xcconfig"; path = "Target Support Files/Pods-brainnel/Pods-brainnel.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = brainnel/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C67A3DF93413441AA10C5B9A /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "brainnel/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		CE444CB13A2539F833B22741 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-brainnel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		DC2CB8ABEE034FB2B2E341EB /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "brainnel/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = brainnel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* brainnel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "brainnel-Bridging-Header.h"; path = "brainnel/brainnel-Bridging-Header.h"; sourceTree = "<group>"; };
+		FA8ECA8BFA0E0C5D1C49B47B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = brainnel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,21 +39,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D5D6BD85AB03924BFB0EB65C /* libPods-brainnel.a in Frameworks */,
+				E84A9DB64D0B8A5F4F878087 /* libPods-brainnel.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		09D0C09385785E5F792A8956 /* brainnel */ = {
-			isa = PBXGroup;
-			children = (
-				CE444CB13A2539F833B22741 /* ExpoModulesProvider.swift */,
-			);
-			name = brainnel;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* brainnel */ = {
 			isa = PBXGroup;
 			children = (
@@ -63,37 +55,35 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				C67A3DF93413441AA10C5B9A /* GoogleService-Info.plist */,
-				3020A5FAA5D85359B32D44BF /* PrivacyInfo.xcprivacy */,
+				DC2CB8ABEE034FB2B2E341EB /* GoogleService-Info.plist */,
+				FA8ECA8BFA0E0C5D1C49B47B /* PrivacyInfo.xcprivacy */,
 			);
 			name = brainnel;
+			sourceTree = "<group>";
+		};
+		16FF62A32AC7199171A9FB9A /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				7A6F455F3740F57776C18F1E /* brainnel */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				13C6602D18AEBFCC3F301194 /* libPods-brainnel.a */,
+				769A247AA6890052E9D580DE /* libPods-brainnel.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		64E5F0D6DC8E1B589AEFA347 /* Pods */ = {
+		7A6F455F3740F57776C18F1E /* brainnel */ = {
 			isa = PBXGroup;
 			children = (
-				70522828E0C0163DD82ED314 /* Pods-brainnel.debug.xcconfig */,
-				727F10F7805148EEC25FD46B /* Pods-brainnel.release.xcconfig */,
+				40268F7AC2FBB36510868D0D /* ExpoModulesProvider.swift */,
 			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		8175809B5B01F53D8BE66A32 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				09D0C09385785E5F792A8956 /* brainnel */,
-			);
-			name = ExpoModulesProviders;
+			name = brainnel;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -110,8 +100,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				64E5F0D6DC8E1B589AEFA347 /* Pods */,
-				8175809B5B01F53D8BE66A32 /* ExpoModulesProviders */,
+				9511D70782E38330C6E073F4 /* Pods */,
+				16FF62A32AC7199171A9FB9A /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -124,6 +114,15 @@
 				13B07F961A680F5B00A75B9A /* brainnel.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9511D70782E38330C6E073F4 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				85A0D133CAE28C29A5A38E6A /* Pods-brainnel.debug.xcconfig */,
+				7A2A288DD8155E8294DBD8D4 /* Pods-brainnel.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -143,13 +142,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "brainnel" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				54C0B7D4598F410F7996D33D /* [Expo] Configure project */,
+				348E6AD31E52047B30FF3117 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				118DDD9FAD7129E4EAB4329C /* [CP] Embed Pods Frameworks */,
+				1278E52EFC86D9028C86CD76 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -169,9 +168,7 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = LM9LMW3HL3;
 						LastSwiftMigration = 1250;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -201,8 +198,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				C2D26FECAB3343A889F75339 /* GoogleService-Info.plist in Resources */,
-				AE03E5877A31105BC84B5000 /* PrivacyInfo.xcprivacy in Resources */,
+				53D824C3D8664AF7BA740160 /* GoogleService-Info.plist in Resources */,
+				52F338CCC894151F524A2E79 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,7 +243,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		118DDD9FAD7129E4EAB4329C /* [CP] Embed Pods Frameworks */ = {
+		1278E52EFC86D9028C86CD76 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -276,7 +273,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-brainnel/Pods-brainnel-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		54C0B7D4598F410F7996D33D /* [Expo] Configure project */ = {
+		348E6AD31E52047B30FF3117 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -393,7 +390,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				0E4509D83C199BEBEF598EB8 /* ExpoModulesProvider.swift in Sources */,
+				D12096F5C182399C2D4A50F0 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -402,13 +399,11 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 70522828E0C0163DD82ED314 /* Pods-brainnel.debug.xcconfig */;
+			baseConfigurationReference = 85A0D133CAE28C29A5A38E6A /* Pods-brainnel.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = brainnel/brainnel.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LM9LMW3HL3;
 				ENABLE_BITCODE = NO;
@@ -441,13 +436,11 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 727F10F7805148EEC25FD46B /* Pods-brainnel.release.xcconfig */;
+			baseConfigurationReference = 7A2A288DD8155E8294DBD8D4 /* Pods-brainnel.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = brainnel/brainnel.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LM9LMW3HL3;
 				INFOPLIST_FILE = brainnel/Info.plist;
@@ -527,10 +520,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -585,10 +575,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

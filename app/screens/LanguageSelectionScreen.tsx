@@ -159,6 +159,7 @@ export default function LanguageSelectionScreen({ onLanguageSelected }: Language
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0066FF',
   },
   gradient: {
     flex: 1,

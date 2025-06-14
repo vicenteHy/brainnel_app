@@ -9,6 +9,7 @@
     <key>com.apple.developer.associated-domains</key>
     <array>
       <string>applinks:api.brainnel.com</string>
+      <string>applinks:brainnel.com</string>
     </array>
   </dict>
 </plist>
