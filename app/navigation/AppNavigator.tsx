@@ -228,10 +228,6 @@ export const AppNavigator = () => {
           component={Screens.MyAccount}
         />
         <Stack.Screen
-          name="Google"
-          component={Screens.GoogleScreen}
-        />
-        <Stack.Screen
           name="ConfirmOrder"
           component={Screens.ConfirmOrder}
         />

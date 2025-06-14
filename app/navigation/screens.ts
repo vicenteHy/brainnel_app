@@ -18,7 +18,6 @@ import { MyAddress } from "../screens/setting/MyAddress";
 import { CartScreen } from "../screens/CartScreen";
 import { PaymentSuccessScreen } from "../screens/pay/PaySuccess";
 import { MyAccount } from "../screens/MyAccount/myAccount";
-import { GoogleScreen } from "../screens/login/Google";
 import { ConfirmOrder } from "../screens/Recipient/ConfirmOrder";
 import { Pay } from "../screens/pay/Pay";
 import { Status } from "../screens/productStatus/Status";
@@ -74,7 +73,6 @@ export {
   CartScreen,
   PaymentSuccessScreen,
   MyAccount,
-  GoogleScreen,
   ConfirmOrder,
   Pay,
   Status,

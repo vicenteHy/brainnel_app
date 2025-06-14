@@ -27,6 +27,8 @@ import useUserStore from "../../store/user";
 import { settingApi } from "../../services/api/setting";
 import { changeLanguage } from "../../i18n";
 import { Country, countries } from "../../constants/countries";
+import { AppleLoginButton } from '../login/AppleLogin';
+import { GoogleLoginButton } from '../login/GoogleLogin';
 
 // 使用标准的ES6模块导入
 let GoogleSignin: any = null;
@@ -42,7 +44,6 @@ let statusCodes: any = null;
 // }
 
 // import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next"; // 注释掉原生模块
-// import * as AppleAuthentication from 'expo-apple-authentication'; // 注释掉原生模块
 
 const isDevelopment = __DEV__; // 开发模式检测
 const isSimulator =
@@ -82,6 +83,9 @@ const countryCodeToCountry: { [key: number]: Country } = {
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
+  PhoneLoginScreen: undefined;
+  TermsOfUseScreen: undefined;
+  PrivacyPolicyScreen: undefined;
   MainTabs: { screen: string };
   Google: undefined;
   Home: { screen: string };
@@ -180,187 +184,6 @@ export const LoginScreen = () => {
     } catch (error) {
       console.error("❌ 处理首次登录设置失败:", error);
       // 不阻断登录流程，只记录错误
-    }
-  };
-
-  // 处理谷歌登录 (已禁用)
-  const handleGoogleLogin = async () => {
-    Alert.alert("功能暂时不可用", "Google登录功能在开发模式下暂时禁用");
-    return;
-    /*
-    console.log("🚀 Google登录按钮被点击");
-    console.log("🔧 GoogleSignin模块:", GoogleSignin);
-    console.log("🔧 statusCodes:", statusCodes);
-
-    try {
-      console.log("✅ 开始Google登录流程");
-
-      if (!GoogleSignin || typeof GoogleSignin.signIn !== "function") {
-        console.error("❌ Google Sign-in模块未正确初始化或配置失败");
-        Alert.alert("登录失败", "Google登录服务未正确配置");
-        return;
-      }
-
-      console.log("✅ Google Sign-in模块验证通过");
-
-      // 检查Play Services是否可用（仅Android需要）
-      console.log("🔍 检查Play Services...");
-      await GoogleSignin.hasPlayServices();
-      console.log("✅ Play Services检查通过");
-
-      // 执行登录
-      console.log("🔐 开始执行Google登录...");
-      const userInfo = await GoogleSignin.signIn();
-      console.log("🎉 Google 登录成功:", JSON.stringify(userInfo, null, 2));
-
-      try {
-        // 调用后端API进行登录
-        console.log("📡 调用后端API进行登录验证...");
-        const res = await loginApi.googleLogin(userInfo);
-        console.log("✅ 后端登录验证成功:", res);
-
-        // 保存access_token到AsyncStorage
-        if (res.access_token) {
-          const token = `${res.token_type} ${res.access_token}`;
-          await AsyncStorage.setItem("token", token);
-          console.log("✅ Token已保存:", token);
-        }
-
-        // 处理首次登录设置同步
-        console.log("⚙️ 检查是否需要同步本地设置...");
-        await handleFirstLoginSettings(res);
-
-        console.log("👤 获取用户信息...");
-        const user = await userApi.getProfile();
-        console.log("✅ 用户信息获取成功:", user);
-
-        // 同步语言设置
-        if (user.language) {
-          console.log("🌐 同步用户语言设置:", user.language);
-          await changeLanguage(user.language);
-        }
-
-        setUser(user);
-
-        // 导航到主页
-        console.log("🏠 导航到主页...");
-        navigation.navigate("MainTabs", { screen: "Home" });
-        console.log("✅ 登录流程完成");
-
-      } catch (err) {
-        console.error("❌ 后端登录验证失败:", err);
-        Alert.alert("登录失败", "服务器处理Google登录时出错，请稍后重试");
-      }
-
-    } catch (error: any) {
-      console.error("❌ Google 登录错误:", error);
-      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
-
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log("⏹️ 用户取消登录");
-        // 用户取消，不显示错误
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log("⏳ 登录正在进行中");
-        Alert.alert("请稍候", "登录正在进行中，请不要重复操作");
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log("❌ Play Services 不可用");
-        Alert.alert("登录失败", "Google Play服务不可用，请更新Google Play服务后重试");
-      } else {
-        console.error("❌ 其他错误:", error.message);
-        Alert.alert("登录失败", `Google登录出现错误: ${error.message || '未知错误'}`);
-      }
-    }
-    */ // 注释结束
-  };
-
-  // 处理Apple登录
-  const handleAppleLogin = async () => {
-    console.log("🚀 Apple登录按钮被点击");
-
-    try {
-      console.log("✅ 开始Apple登录流程");
-
-      // 检查Apple登录是否可用
-      const isAvailable = await AppleAuthentication.isAvailableAsync();
-      if (!isAvailable) {
-        console.error("❌ Apple登录不可用");
-        Alert.alert("登录失败", "Apple登录在此设备上不可用");
-        return;
-      }
-
-      console.log("✅ Apple登录可用，开始认证...");
-
-      // 执行Apple登录
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      console.log("🎉 Apple登录成功:", JSON.stringify(credential, null, 2));
-
-      // 构造用户信息
-      const appleUserData = {
-        user: credential.user,
-        email: credential.email,
-        fullName: credential.fullName,
-        identityToken: credential.identityToken,
-        authorizationCode: credential.authorizationCode,
-        state: credential.state,
-      };
-
-      try {
-        // 调用后端API进行Apple登录
-        console.log("📡 调用后端API进行Apple登录验证...");
-        const res = await loginApi.appleLogin(appleUserData);
-        console.log("✅ 后端Apple登录验证成功:", res);
-
-        // 保存access_token到AsyncStorage
-        if (res.access_token) {
-          const token = `${res.token_type} ${res.access_token}`;
-          await AsyncStorage.setItem("token", token);
-          console.log("✅ Token已保存:", token);
-        }
-
-        // 处理首次登录设置同步
-        console.log("⚙️ 检查是否需要同步本地设置...");
-        await handleFirstLoginSettings(res);
-
-        console.log("👤 获取用户信息...");
-        const user = await userApi.getProfile();
-        console.log("✅ 用户信息获取成功:", user);
-
-        // 同步语言设置
-        if (user.language) {
-          console.log("🌐 同步用户语言设置:", user.language);
-          await changeLanguage(user.language);
-        }
-
-        setUser(user);
-
-        // 导航到主页
-        console.log("🏠 导航到主页...");
-        navigation.navigate("MainTabs", { screen: "Home" });
-        console.log("✅ Apple登录流程完成");
-      } catch (err) {
-        console.error("❌ 后端Apple登录验证失败:", err);
-        Alert.alert("登录失败", "服务器处理Apple登录时出错，请稍后重试");
-      }
-    } catch (error: any) {
-      console.error("❌ Apple登录错误:", error);
-      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
-
-      if (error.code === "ERR_CANCELED") {
-        console.log("⏹️ 用户取消Apple登录");
-        // 用户取消，不显示错误
-      } else {
-        console.error("❌ 其他错误:", error.message);
-        Alert.alert(
-          "登录失败",
-          `Apple登录出现错误: ${error.message || "未知错误"}`,
-        );
-      }
     }
   };
 
@@ -657,30 +480,14 @@ export const LoginScreen = () => {
         {/* 其他登录选项 */}
         <View style={styles.otherLoginSection}>
           {/* Google登录 */}
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleGoogleLogin}
-          >
-            <Image
-              source={require("../../../assets/login/google.png")}
-              style={styles.loginIcon}
-            />
-            <Text style={styles.loginButtonText}>Continue with Google</Text>
-          </TouchableOpacity>
+          <GoogleLoginButton 
+            handleFirstLoginSettings={handleFirstLoginSettings}
+          />
 
           {/* Apple登录 - 只在iOS显示 */}
-          {Platform.OS === "ios" && (
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={handleAppleLogin}
-            >
-              <Image
-                source={require("../../../assets/login/apple.png")}
-                style={styles.loginIcon}
-              />
-              <Text style={styles.loginButtonText}>Continue with Apple</Text>
-            </TouchableOpacity>
-          )}
+          <AppleLoginButton 
+            handleFirstLoginSettings={handleFirstLoginSettings}
+          />
 
           {/* 手机号登录 */}
           <TouchableOpacity
@@ -942,16 +749,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E8E8E8",
   },
-  whatsappIcon: {
+  whatsappIconBg: {
     backgroundColor: "#25D366",
-  },
-  loginButtonText: {
-    flex: 1,
-    fontSize: fontSize(16),
-    color: "#333",
-    textAlign: "center",
-    marginRight: 16,
-    fontWeight: "500",
   },
   primaryButton: {
     backgroundColor: "#FF6B35",
@@ -985,29 +784,6 @@ const styles = StyleSheet.create({
   link: {
     color: "#FF6B35",
     fontWeight: "500",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E8E8E8",
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: fontSize(14),
-    color: "#999",
-    fontWeight: "400",
-  },
-  welcomeTitle: {
-    fontSize: fontSize(32),
-    fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 8,
-    textAlign: "left",
   },
   whatsappSection: {
     marginTop: 24,
@@ -1103,16 +879,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
-  privacyContainer: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  privacyText: {
-    fontSize: fontSize(13),
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 18,
-  },
   countryCodeButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1130,21 +896,11 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     marginLeft: 4,
   },
-  phoneInput: {
-    flex: 1,
-    fontSize: fontSize(16),
-    color: "#374151",
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-  },
   errorText: {
     color: "#ef4444",
     fontSize: fontSize(14),
     marginTop: 8,
     marginBottom: 8,
-  },
-  disabledButton: {
-    backgroundColor: "#d1d5db",
   },
   otpContainer: {
     alignItems: "center",
@@ -1167,22 +923,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
-  },
-  resendContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-  },
-  resendText: {
-    fontSize: fontSize(14),
-    color: "#6b7280",
-    marginRight: 4,
-  },
-  resendLink: {
-    fontSize: fontSize(14),
-    color: "#FF6B35",
-    fontWeight: "600",
   },
   // 国家选择模态框样式
   countryModalContainer: {
@@ -1232,16 +972,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize(18),
     color: "#6b7280",
   },
-  countryModalTitle: {
-    flex: 1,
-    fontSize: fontSize(18),
-    fontWeight: "600",
-    textAlign: "center",
-    marginRight: 24,
-  },
-  countryList: {
-    padding: 8,
-  },
   countryItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -1249,19 +979,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f3f4f6",
   },
+  countryItemFlag: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   countryItemContent: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   countryItemName: {
     fontSize: fontSize(16),
     color: "#374151",
   },
+  countryItemCode: {
+    fontSize: fontSize(16),
+    color: "#374151",
+    fontWeight: "600",
+  },
   countryCode: {
     fontSize: fontSize(16),
     color: "#374151",
     fontWeight: "600",
+  },
+  countryList: {
+    maxHeight: 400,
   },
   checkmark: {
     fontSize: fontSize(20),
@@ -1453,23 +1196,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginRight: 24,
-  },
-  countryList: {
-    padding: 8,
-  },
-  countryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  countryItemFlag: {
-    fontSize: fontSize(24),
-    marginRight: 16,
-  },
-  countryItemContent: {
-    flex: 1,
   },
 });
 

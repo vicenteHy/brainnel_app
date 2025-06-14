@@ -5,8 +5,13 @@ const GOOGLE_CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET || '';
 const GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI || 'https://api.brainnel.com/backend/api/users/auth/callback/google';
 
 export const loginApi = {
-    google:() => {
-        return apiService.get<{url:string}>(`/api/users/auth/google`)
+    google: (userInfo: any) => {
+        return apiService.post<{
+            access_token: string;
+            token_type: string;
+            user?: any;
+            first_login?: boolean;
+        }>('/api/users/auth/callback/google', userInfo);
     },
     appleLogin: (appleUserData: {
         user: string;

@@ -123,12 +123,6 @@
           "isLimitedEventDataUsageEnabled": true
         }
       ],
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec"
-        }
-      ],
       "expo-web-browser"
     ],
     "extra": {

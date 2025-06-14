@@ -64,6 +64,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     category_id: null,
     language: getCurrentLanguage(),
     user_id: userStore.user.user_id,
+    sort_by: "relevance",
   });
 
   const {
