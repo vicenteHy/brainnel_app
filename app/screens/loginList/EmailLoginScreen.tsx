@@ -8,7 +8,6 @@ import {
   TextInput,
   Platform,
   FlatList,
-  SafeAreaView,
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
@@ -147,16 +146,15 @@ export const EmailLoginScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <View style={styles.safeAreaContent}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBack}
           >
-            <Text style={styles.backButtonText}>✕</Text>
+            <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{t('logInOrSignUp')}</Text>
         </View>
@@ -246,53 +244,32 @@ export const EmailLoginScreen = () => {
             )}
           </TouchableOpacity>
         </View>
-        </View>
-      </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeAreaContent: {
-    flex: 1,
-    paddingTop: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 20 : 15,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#f0f0f0',
   },
   backButton: {
     padding: 8,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 20,
   },
   backButtonText: {
-    fontSize: fontSize(20),
-    color: '#333',
-    fontWeight: '400',
+    fontSize: 24,
+    color: '#000',
   },
   title: {
     fontSize: fontSize(20),

@@ -128,17 +128,13 @@ export const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          animation: "none",
         }}
       >
         <Stack.Screen name="CountrySelect" component={Screens.CountrySelect} />
         <Stack.Screen
           name="Login"
           component={Screens.LoginScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="MainTabs"
@@ -150,416 +146,186 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="EmailLogin"
           component={Screens.EmailLoginScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="EmailOtp"
           component={Screens.EmailOtpScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Search"
           component={Screens.SearchScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="SearchResult"
           component={Screens.SearchResultScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ImageSearchResultScreen"
           component={Screens.ImageSearchResultScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ProductDetail"
           component={Screens.ProductDetailScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="RelatedProductsScreen"
           component={Screens.RelatedProductsScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ChatScreen"
           component={Screens.ChatScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ProductChatScreen"
           component={Screens.ProductChatScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Balance"
           component={Screens.BalanceScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ShippingDetailsSection"
           component={Screens.ShippingDetailsSection}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="InquiryScreen"
           component={Screens.InquiryScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Recipient"
           component={Screens.Recipient}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="AddRess"
           component={Screens.AddRess}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="SettingList"
           component={Screens.SettingList}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="CountrySetting"
           component={Screens.CountrySetting}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="MyAddress"
           component={Screens.MyAddress}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="CartScreen"
           component={Screens.CartScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PaymentSuccessScreen"
           component={Screens.PaymentSuccessScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PayError"
           component={Screens.PayError}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="MyAccount"
           component={Screens.MyAccount}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Google"
           component={Screens.GoogleScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ConfirmOrder"
           component={Screens.ConfirmOrder}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Pay"
           component={Screens.Pay}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Status"
           component={Screens.Status}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="OrderDetails"
           component={Screens.OrderDetails}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="TikTokScreen"
           component={Screens.TikTokScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="BrowseHistoryScreen"
           component={Screens.BrowseHistoryScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Collection"
           component={Screens.Collection}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="MemberIntroduction"
           component={Screens.MemberIntroduction}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="CompanyScreen"
           component={Screens.CompanyScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PreviewAddress"
           component={Screens.PreviewAddress}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="AddressList"
           component={Screens.AddressList}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="AddAddress"
           component={Screens.AddAddress}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="EditAddress"
           component={Screens.EditAddress}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PaymentMethod"
           component={Screens.PaymentMethod}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ShippingFee"
           component={Screens.ShippingFee}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PreviewOrder"
           component={Screens.PreviewOrder}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ForgotPhonePassword"
           component={Screens.ForgotPhonePassword}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PhoneLoginScreen"
           component={Screens.PhoneLoginScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="WhatsAppLoginScreen"
           component={Screens.WhatsAppLoginScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="Info"
           component={Screens.Info}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="ChangePassword"
           component={Screens.ChangePassword}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="PrivacyPolicyScreen"
           component={Screens.PrivacyPolicyScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="TermsOfUseScreen"
           component={Screens.TermsOfUseScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
         <Stack.Screen
           name="LoginPromptScreen"
           component={Screens.LoginPromptScreen}
-          options={{
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
-          }}
         />
       </Stack.Navigator>
       <Toast 

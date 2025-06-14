@@ -487,9 +487,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   backButton: {
     padding: 8,

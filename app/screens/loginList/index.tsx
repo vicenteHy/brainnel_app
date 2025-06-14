@@ -15,6 +15,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
@@ -243,9 +244,6 @@ export const LoginScreen = () => {
 
         // 导航到主页
         console.log("🏠 导航到主页...");
-        if (isModal && onClose) {
-          onClose();
-        }
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ 登录流程完成");
 
@@ -496,13 +494,14 @@ export const LoginScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <View style={styles.safeAreaContent}>
       
       {/* 头部导航 */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleClose}>
-          <Text style={styles.backButtonText}>‹</Text>
+          <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Login</Text>
         <View style={styles.headerSpacer} />
@@ -758,12 +757,24 @@ export const LoginScreen = () => {
           </View>
         </View>
       </Modal>
-      </View>
+        </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  safeAreaContent: {
+    flex: 1,
+    paddingTop: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -771,23 +782,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === "ios" ? 20 : 15,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
   backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: 8,
   },
   backButtonText: {
-    fontSize: fontSize(28),
-    color: "#374151",
-    fontWeight: "300",
+    fontSize: 24,
+    color: "#000",
   },
   headerTitle: {
     flex: 1,
