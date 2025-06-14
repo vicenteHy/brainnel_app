@@ -1,51 +1,36 @@
 import apiService from "./apiClient";
+// 这些值应该从环境变量中获取，不应该在代码中硬编码
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI || 'https://api.brainnel.com/backend/api/users/auth/callback/google';
 
-export interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_token: string;
-  first_login: boolean;
-  scope: string;
-}
 export const loginApi = {
-  // 谷歌登录
-  googleLogin: (data: any) =>
-    apiService.post<LoginResponse>("/api/users/auth/callback/google", data),
-  // 苹果登录
-  appleLogin: (data: any) =>
-    apiService.post("/api/users/auth/callback/apple", data),
-  // 脸书登录
-  facebookLogin: (data: any) =>
-    apiService.post<LoginResponse>("/api/users/auth/callback/facebook", data),
-  // WhatsApp发送OTP
-  sendWhatsappOtp: (data: { phone_number: string; language: string }) =>
-    apiService.post("/api/users/send-whatsapp-otp/", data),
-  // WhatsApp验证OTP
-  verifyWhatsappOtp: (data: { phone_number: string; code: string }) =>
-    apiService.post<LoginResponse>("/api/users/verify-whatsapp-otp/", data),
-  // 邮箱发送OTP
-  sendEmailOtp: (data: { email: string; language: string }) => {
-    console.log('[LoginAPI] 发送邮箱OTP 请求数据:', data);
-    return apiService.post("/api/users/send-email-otp/", data).then((res) => {
-      console.log('[LoginAPI] 发送邮箱OTP 响应:', res);
-      return res;
-    }).catch((err) => {
-      console.error('[LoginAPI] 发送邮箱OTP 失败:', err);
-      throw err;
-    });
-  },
-  // 邮箱验证OTP
-  verifyEmailOtp: (data: { email: string; code: string }) => {
-    console.log('[LoginAPI] 验证邮箱OTP 请求数据:', data);
-    return apiService.post<LoginResponse>("/api/users/verify-email-otp/", data).then((res)=>{
-      console.log('[LoginAPI] 验证邮箱OTP 响应:', res);
-      return res;
-    }).catch((err)=>{
-      console.error('[LoginAPI] 验证邮箱OTP 失败:', err);
-      throw err;
-    });
-  },
+    google:() => {
+        return apiService.get<{url:string}>(`/api/users/auth/google`)
+    },
+    appleLogin: (appleUserData: {
+        user: string;
+        email: string | null;
+        fullName: any;
+        identityToken: string | null;
+        authorizationCode: string | null;
+        state: string | null;
+    }) => {
+        return apiService.post<{
+            access_token: string;
+            token_type: string;
+            user?: any;
+            first_login?: boolean;
+        }>('/api/users/auth/callback/apple', appleUserData);
+    },
+    sendWhatsappOtp: (data: { phone_number: string; language: string }) => {
+        return apiService.post('/api/users/whatsapp/send-otp', data);
+    },
+    verifyWhatsappOtp: (data: { phone_number: string; code: string }) => {
+        return apiService.post<{
+            access_token: string;
+            token_type: string;
+            first_login?: boolean;
+        }>('/api/users/whatsapp/verify-otp', data);
+    }
 };
-
-
