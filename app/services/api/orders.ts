@@ -333,6 +333,8 @@ export interface OrderDetailsType {
   shipping_time: string | null; // or Date | null
   complete_time: string | null; // or Date | null
   update_time: string; // or Date
+  verification_code?: string; // 取件码
+  location_code?: string; // 货架号
 }
 export interface UpdateOrderShippingInfo {
   shipping_status: number;

@@ -278,6 +278,7 @@
   "order.pay": "Payer",
   "order.payment.online": "Paiement en ligne",
   "order.payment.offline": "Paiement hors ligne",
+  "order.payment.offline_bank_transfer": "Virement bancaire",
   "order.payment.bank_card": "Paiement par carte bancaire",
   "order.contact_shipping": "Contacter le centre d'expédition",
   "order.check_logistics": "Vérifier la logistique",
@@ -1105,5 +1106,30 @@
       "message": "Votre compte a été connecté sur un autre appareil. Pour des raisons de sécurité, vous avez été déconnecté de cet appareil.",
       "button": "OK"
     }
+  },
+  "offline_payment": {
+    "title": "Paiement Hors Ligne",
+    "sepa_title": "Système de Paiement SEPA",
+    "sepa_subtitle": "Le système de paiement SEPA (pays EU) est disponible :",
+    "global_title": "Système de Paiement Global",
+    "global_subtitle": "Le système de paiement Global est disponible :",
+    "beneficiary_name": "Nom du bénéficiaire",
+    "account_number": "Numéro de compte",
+    "swift_code": "Code Swift (BIC)",
+    "bank_name": "Nom de banque",
+    "address": "Adresse",
+    "country": "Pays",
+    "accepted_currency": "Devise acceptée",
+    "currencies": "Monnaie",
+    "bank_code": "Code bancaire",
+    "branch_code": "Code de succursale bancaire",
+    "bank_address": "Adresse de la banque",
+    "processing_fee": "Frais de traitement supplémentaires",
+    "need_help": "Besoin d'aide ?",
+    "contact_message": "Si vous avez des questions sur le paiement hors ligne, veuillez nous contacter via WhatsApp.",
+    "contact_whatsapp": "Contacter via WhatsApp",
+    "copy_info": "Informations à Copier",
+    "manual_copy": "Veuillez copier ces informations manuellement",
+    "ok": "OK"
   }
 } 

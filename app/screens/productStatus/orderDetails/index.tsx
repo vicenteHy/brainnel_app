@@ -569,6 +569,39 @@ export const OrderDetails = () => {
                         </Text>
                       </View>
                     </View>
+                    
+                    {/* 调试信息 - 临时添加 */}
+                    {__DEV__ && (
+                      <View style={styles.orderInfoItem}>
+                        <Text style={styles.orderInfoLabel}>
+                          调试: 状态={route.params.status}, 取件码={orderDetails.verification_code || '无'}, 货架号={orderDetails.location_code || '无'}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {/* 取件码 - 仅在已付款订单且有取件码时显示 */}
+                    {route.params.status >= 1 && orderDetails.verification_code && (
+                      <View style={styles.orderInfoItem}>
+                        <Text style={styles.orderInfoLabel}>
+                          {t("order.verification_code")}
+                        </Text>
+                        <Text style={styles.orderInfoValue}>
+                          {orderDetails.verification_code}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {/* 货架号 - 仅在已付款订单且有货架号时显示 */}
+                    {route.params.status >= 1 && orderDetails.location_code && (
+                      <View style={styles.orderInfoItem}>
+                        <Text style={styles.orderInfoLabel}>
+                          {t("order.location_code")}
+                        </Text>
+                        <Text style={styles.orderInfoValue}>
+                          {orderDetails.location_code}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>

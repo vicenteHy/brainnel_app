@@ -460,7 +460,7 @@ export const PaymentMethod = () => {
           key: method.key,
         }));
 
-      // For now, use an empty array for offline methods as they're not in the API response
+      // Offline methods are empty since clicking offline tab navigates directly
       const offlineMethods: PaymentOption[] = [];
 
       // Update tabs with fetched payment methods
@@ -878,7 +878,13 @@ export const PaymentMethod = () => {
                           styles.tabBottom,
                           currentTab === tab.id && styles.activeTab,
                         ]}
-                        onPress={() => setCurrentTab(tab.id)}
+                        onPress={() => {
+                          if (tab.id === "offline") {
+                            navigation.navigate("OfflinePayment");
+                          } else {
+                            setCurrentTab(tab.id);
+                          }
+                        }}
                       >
                         <Text
                           style={[

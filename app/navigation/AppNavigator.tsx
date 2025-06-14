@@ -224,6 +224,10 @@ export const AppNavigator = () => {
           component={Screens.PayError}
         />
         <Stack.Screen
+          name="OfflinePayment"
+          component={Screens.OfflinePayment}
+        />
+        <Stack.Screen
           name="MyAccount"
           component={Screens.MyAccount}
         />

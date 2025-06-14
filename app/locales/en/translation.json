@@ -354,6 +354,7 @@
   "order.pay": "Pay",
   "order.payment.online": "Online Payment",
   "order.payment.offline": "Offline Payment",
+  "order.payment.offline_bank_transfer": "Bank Transfer",
   "order.payment.bank_card": "Bank Card Payment",
   "order.contact_shipping": "Contact Shipping Center",
   "order.check_logistics": "Check Logistics",
@@ -666,6 +667,8 @@
           "sea": "Sea Freight",
           "air": "Air Freight"
       },
+      "verification_code": "Pickup Code",
+      "location_code": "Shelf Number",
       "delivery_info": "Delivery Information",
       "warehouse": "Warehouse Address",
       "contact_after_payment": "Contact info visible after payment",
@@ -986,5 +989,30 @@
       "message": "Your account has been logged in on another device. For security reasons, you have been logged out of this device.",
       "button": "OK"
     }
+  },
+  "offline_payment": {
+    "title": "Offline Payment",
+    "sepa_title": "SEPA Payment System",
+    "sepa_subtitle": "The SEPA payment system (EU countries) is available:",
+    "global_title": "Global Payment System",
+    "global_subtitle": "The Global payment system is available:",
+    "beneficiary_name": "Beneficiary Name",
+    "account_number": "Account Number",
+    "swift_code": "Swift Code (BIC)",
+    "bank_name": "Bank Name",
+    "address": "Address",
+    "country": "Country",
+    "accepted_currency": "Accepted Currency",
+    "currencies": "Currencies",
+    "bank_code": "Bank Code",
+    "branch_code": "Branch Code", 
+    "bank_address": "Bank Address",
+    "processing_fee": "Additional Processing Fee",
+    "need_help": "Need Help?",
+    "contact_message": "If you have any questions about offline payment, please contact us via WhatsApp.",
+    "contact_whatsapp": "Contact via WhatsApp",
+    "copy_info": "Copy Information",
+    "manual_copy": "Please copy this information manually",
+    "ok": "OK"
   }
 }

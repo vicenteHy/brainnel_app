@@ -38,6 +38,7 @@ import { ForgotPhonePassword } from "../screens/loginList/ForgotPhonePassword";
 import { PhoneLoginScreen } from "../screens/login/PhoneLoginScreen";
 import { WhatsAppLoginScreen } from "../screens/login/WhatsAppLoginScreen";
 import { PayError } from '../screens/pay/PayError';
+import { OfflinePayment } from '../screens/pay/OfflinePayment';
 import { ChatScreen } from '../screens/ChatScreen';
 import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
@@ -93,6 +94,7 @@ export {
   PhoneLoginScreen,
   WhatsAppLoginScreen,
   PayError,
+  OfflinePayment,
   Info,
   ChangePassword,
   PrivacyPolicyScreen,
