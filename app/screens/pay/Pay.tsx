@@ -1,4 +1,4 @@
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Text } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
 import { payApi, PaymentInfoResponse } from "../../services/api/payApi";
@@ -60,7 +60,7 @@ export const Pay = () => {
       timeoutRef.current = setTimeout(() => {
         // 超时处理：停止轮询并导航到错误页面
         stopPolling();
-        safeNavigate("PayError", {});
+        safeNavigate("PayError", { order_id: route.params.order_id });
       }, 50000); // 50秒
     }
   };
@@ -134,15 +134,67 @@ export const Pay = () => {
     }
   };
 
+  const handleGoBack = () => {
+    // 停止轮询
+    stopPolling();
+    
+    // 导航到支付失败页面，提示用户支付未完成
+    safeNavigate("PayError", {
+      msg: "支付未完成，您可以稍后重试",
+      order_id: route.params.order_id
+    });
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      {payUrl ? (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* 返回按钮 */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <Text style={styles.backButtonText}>← 返回</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {route.params.method === 'paypal' ? 'PayPal支付' : 
+           route.params.method === 'wave' ? 'Wave支付' : '支付'}
+        </Text>
+      </View>
+      
+      <View style={{ flex: 1 }}>
+        {payUrl ? (
         <WebView
           source={{ uri: payUrl }}
           style={styles.webview}
           onNavigationStateChange={handleNavigationStateChange}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView error:', nativeEvent);
+            
+            // 网络连接错误或其他加载错误，导航到支付失败页面
+            if (nativeEvent.code === -1004 || nativeEvent.code === -1009) {
+              // -1004: 无法连接服务器, -1009: 网络连接中断
+              safeNavigate("PayError", {
+                msg: "网络连接失败，请检查您的网络设置",
+                order_id: route.params.order_id
+              });
+            } else {
+              // 其他错误
+              safeNavigate("PayError", {
+                msg: nativeEvent.description || "支付页面加载失败",
+                order_id: route.params.order_id
+              });
+            }
+          }}
+          onHttpError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView HTTP error:', nativeEvent);
+            
+            // HTTP错误（如404, 500等），导航到支付失败页面
+            safeNavigate("PayError", {
+              msg: `支付页面加载失败 (${nativeEvent.statusCode})`,
+              order_id: route.params.order_id
+            });
+          }}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           startInLoadingState={true}
@@ -182,7 +234,10 @@ export const Pay = () => {
                       })
                       .catch((error) => {
                         console.error("PayPal callback error:", error);
-                        safeNavigate("PayError", { msg: "Payment callback failed" });
+                        safeNavigate("PayError", { 
+                          msg: "Payment callback failed",
+                          order_id: route.params.order_id 
+                        });
                       });
                   }
 
@@ -208,7 +263,10 @@ export const Pay = () => {
                   return false;
                 } else if (url.includes("payment_success=false") || url.includes("cancel") || url.includes("error") || url.includes("failed")) {
                   // 支付失败或取消
-                  safeNavigate("PayError", { msg: "Bank card payment failed" });
+                  safeNavigate("PayError", { 
+                    msg: "Bank card payment failed",
+                    order_id: route.params.order_id 
+                  });
                   return false;
                 }
               }
@@ -218,15 +276,43 @@ export const Pay = () => {
             return true;
           }}
         />
-      ) : (
-        <View>{/* Add fallback content here */}</View>
-      )}
-    </View>
+        ) : (
+          <View>{/* Add fallback content here */}</View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   webview: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007efa',
+    fontWeight: '500',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1e293b',
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 50, // 平衡左侧返回按钮的宽度
   },
 });

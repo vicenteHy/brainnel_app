@@ -481,6 +481,31 @@
           "tip_1": "You can ask about your order via Chat.",
           "tip_2": "Order status updates will be sent to you in the app immediately.",
           "tip_3": "You can view the order details in 'My Orders'."
+      },
+      "error": {
+          "title": "Payment Failed",
+          "subtitle": "Your payment could not be completed",
+          "message": "Your payment was unsuccessful. Please check your payment method or network connection and try again.",
+          "order_number": "Order Number",
+          "amount": "Amount",
+          "failure_reason": "Failure Reason",
+          "payment_interrupted": "Payment process interrupted",
+          "network_error": "Network connection error",
+          "insufficient_funds": "Insufficient funds",
+          "invalid_payment_method": "Invalid payment method",
+          "timeout_error": "Payment timeout",
+          "support_info": "Need help? Contact our support team:",
+          "support_email": "support@brainnel.com",
+          "retry_payment": "Retry Payment",
+          "view_order_details": "Order Details",
+          "back_to_home": "Home",
+          "contact_support": "Support",
+          "what_happened_title": "What happened?",
+          "what_happened_message": "Don't worry, your order is still saved. You can retry the payment or contact our support team for assistance.",
+          "next_steps_title": "Next Steps",
+          "next_step_1": "Check your payment method and network connection",
+          "next_step_2": "Try a different payment method if available",
+          "next_step_3": "Contact support if the problem persists"
       }
   },
   "homePage":{

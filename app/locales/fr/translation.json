@@ -444,6 +444,31 @@
           "tip_1": "Vous pouvez demander des informations sur votre commande via le Chat.",
           "tip_2": "Les mises à jour du statut de votre commande vous seront envoyées immédiatement dans l'application.",
           "tip_3": "Vous pouvez consulter les détails de votre commande dans 'Mes Commandes'."
+      },
+      "error": {
+          "title": "Paiement Échoué",
+          "subtitle": "Votre paiement n'a pas pu être complété",
+          "message": "Votre paiement a échoué. Veuillez vérifier votre méthode de paiement ou votre connexion réseau et réessayer.",
+          "order_number": "Numéro de Commande",
+          "amount": "Montant",
+          "failure_reason": "Raison de l'Échec",
+          "payment_interrupted": "Processus de paiement interrompu",
+          "network_error": "Erreur de connexion réseau",
+          "insufficient_funds": "Fonds insuffisants",
+          "invalid_payment_method": "Méthode de paiement invalide",
+          "timeout_error": "Timeout du paiement",
+          "support_info": "Besoin d'aide ? Contactez notre équipe de support :",
+          "support_email": "support@brainnel.com",
+          "retry_payment": "Réessayer",
+          "view_order_details": "Détails",
+          "back_to_home": "Accueil",
+          "contact_support": "Support",
+          "what_happened_title": "Que s'est-il passé ?",
+          "what_happened_message": "Ne vous inquiétez pas, votre commande est toujours sauvegardée. Vous pouvez réessayer le paiement ou contacter notre équipe de support pour assistance.",
+          "next_steps_title": "Prochaines Étapes",
+          "next_step_1": "Vérifiez votre méthode de paiement et votre connexion réseau",
+          "next_step_2": "Essayez une méthode de paiement différente si disponible",
+          "next_step_3": "Contactez le support si le problème persiste"
       }
   },
   "login": {

@@ -435,15 +435,30 @@ export const PaymentMethod = () => {
         paymentMethodsToUse = response.current_country_methods;
       }
       
-      const onlineMethods = paymentMethodsToUse.map(
-        (method: any) => ({
+      // 为法国添加默认支付方式
+      if (user.country_code === 33 && paymentMethodsToUse.length === 0) {
+        paymentMethodsToUse = [
+          { key: "paypal", name: "PayPal", value: "" },
+          { key: "bank_card", name: "Bank Card Payment", value: "" },
+          { key: "balance", name: "Balance", value: "" }
+        ];
+      }
+
+      const onlineMethods = paymentMethodsToUse
+        .filter((method: any) => {
+          // wave只在科特迪瓦（country_code为225）显示
+          if (method.key === "wave") {
+            return user.country_code === 225;
+          }
+          return true;
+        })
+        .map((method: any) => ({
           id: method.key,
           label: method.name || method.key,
           icon: getPaymentIcon(method.key),
           value: method.value,
           key: method.key,
-        })
-      );
+        }));
 
       // For now, use an empty array for offline methods as they're not in the API response
       const offlineMethods: PaymentOption[] = [];
@@ -548,6 +563,33 @@ export const PaymentMethod = () => {
       setHasInitializedCurrency(true);
     }
   }, [selectedPayment, previewOrder, createOrderData, userLocalCurrency, hasInitializedCurrency]);
+
+  // 当用户本地货币设置后，如果当前选择的是mobile money，重新进行货币转换
+  useEffect(() => {
+    if (userLocalCurrency && selectedPayment && (selectedPayment === "mobile_money" || selectedPayment.includes("mobile_money") || selectedPayment.includes("Brainnel Pay")) && previewOrder && createOrderData) {
+      setIsConverting(true);
+      const data = {
+        from_currency: previewOrder.currency || "USD",
+        to_currency: userLocalCurrency,
+        amounts: {
+          total_amount: previewOrder.total_amount || 0,
+          domestic_shipping_fee: createOrderData.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData.shipping_fee || 0,
+        },
+      };
+
+      payApi
+        .convertCurrency(data)
+        .then((res) => {
+          setConvertedAmount(res.converted_amounts_list);
+          setIsConverting(false);
+        })
+        .catch((error) => {
+          console.error("Currency conversion failed:", error);
+          setIsConverting(false);
+        });
+    }
+  }, [userLocalCurrency]);
 
   // Set original total price when both previewOrder and orderData are available
   useEffect(() => {

@@ -74,7 +74,7 @@ type RootStackParamList = {
   OrderDetails: { orderId?: number };
   PaymentSuccessScreen: any;
   MainTabs: { screen: string } | undefined;
-  PayError: { msg?: string };
+  PayError: { msg?: string; order_id?: string; order_no?: string; amount?: string; currency?: string };
 };
 
 export const PreviewOrder = () => {
@@ -440,7 +440,12 @@ export const PreviewOrder = () => {
                 t("order.error.wave_app_open") || "Failed to open Wave app"
               );
               // 打开失败时跳转到支付失败页面
-              navigation.navigate("PayError", {});
+              navigation.navigate("PayError", {
+                order_id: route.params.data.order_id?.toString(),
+                order_no: route.params.data.order_no,
+                amount: route.params.data.actual_amount?.toString(),
+                currency: route.params.data.currency
+              });
             }
 
             return;
@@ -468,7 +473,13 @@ export const PreviewOrder = () => {
 
               setLoading(false);
               // 手机钱包支付失败，跳转到支付失败页面
-              navigation.navigate("PayError", { msg: res.msg });
+              navigation.navigate("PayError", { 
+                msg: res.msg,
+                order_id: route.params.data.order_id?.toString(),
+                order_no: route.params.data.order_no,
+                amount: route.params.data.actual_amount?.toString(),
+                currency: route.params.data.currency
+              });
             }
           }
 
@@ -487,7 +498,12 @@ export const PreviewOrder = () => {
                 t("order.error.paypal_open") || "Failed to open PayPal payment"
               );
               // 打开失败时跳转到支付失败页面
-              navigation.navigate("PayError", {});
+              navigation.navigate("PayError", {
+                order_id: route.params.data.order_id?.toString(),
+                order_no: route.params.data.order_no,
+                amount: route.params.data.actual_amount?.toString(),
+                currency: route.params.data.currency
+              });
             }
             return;
           }
@@ -507,7 +523,12 @@ export const PreviewOrder = () => {
                 t("order.error.bank_card_open") || "Failed to open bank card payment"
               );
               // 打开失败时跳转到支付失败页面
-              navigation.navigate("PayError", {});
+              navigation.navigate("PayError", {
+                order_id: route.params.data.order_id?.toString(),
+                order_no: route.params.data.order_no,
+                amount: route.params.data.actual_amount?.toString(),
+                currency: route.params.data.currency
+              });
             }
             return;
           }
@@ -521,7 +542,13 @@ export const PreviewOrder = () => {
 
           setLoading(false);
           // API返回失败时，跳转到支付失败页面
-          navigation.navigate("PayError", { msg: res.msg });
+          navigation.navigate("PayError", { 
+            msg: res.msg,
+            order_id: route.params.data.order_id?.toString(),
+            order_no: route.params.data.order_no,
+            amount: route.params.data.actual_amount?.toString(),
+            currency: route.params.data.currency
+          });
         }
       })
       .catch((err) => {
@@ -535,7 +562,13 @@ export const PreviewOrder = () => {
         console.log("支付结账错误埋点数据:", checkoutErrorData);
 
         // 网络请求失败时，跳转到支付失败页面
-        navigation.navigate("PayError", { msg: t("order.preview.payment_failed") });
+        navigation.navigate("PayError", { 
+          msg: t("order.preview.payment_failed"),
+          order_id: route.params.data.order_id?.toString(),
+          order_no: route.params.data.order_no,
+          amount: route.params.data.actual_amount?.toString(),
+          currency: route.params.data.currency
+        });
       })
       .finally(() => {
         setLoading(false);
