@@ -18,6 +18,8 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
+  Animated,
+  Easing,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -156,6 +158,69 @@ const ProductSkeleton = React.memo(() => (
   </View>
 ));
 
+// 图片搜索加载动画组件
+const ImageSearchLoading = React.memo(({ t }: { t: any }) => {
+  const fadeAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    const fadeAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0.5,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    fadeAnimation.start();
+
+    return () => {
+      fadeAnimation.stop();
+    };
+  }, [fadeAnim]);
+
+  return (
+    <View style={styles.imageSearchLoadingContainer}>
+      <View style={styles.imageSearchLoadingContent}>
+        {/* 图片图标 */}
+        <View style={styles.imageIconContainer}>
+          <IconComponent name="image" size={48} color="#666" />
+        </View>
+
+        {/* 加载文本 */}
+        <View style={styles.loadingTextContainer}>
+          <Text style={styles.loadingTitle}>{t("imageSearchLoading")}</Text>
+          <Text style={styles.loadingSubtitle}>{t("imageSearchProgress")}</Text>
+          <Text style={styles.loadingHint}>{t("imageSearchWait")}</Text>
+        </View>
+
+        {/* 进度指示点 */}
+        <View style={styles.progressDots}>
+          {[0, 1, 2].map((index) => (
+            <Animated.View
+              key={index}
+              style={[
+                styles.progressDot,
+                {
+                  opacity: fadeAnim,
+                },
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+});
+
 // 产品项组件 - 使用React.memo优化渲染
 const ProductItem = React.memo(
   ({
@@ -243,14 +308,11 @@ export const ImageSearchResultScreen = ({
   const imageProcessed = useRef(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
-  const [sortField, setSortField] = useState<"price" | "time">("price");
-  const [activeTab, setActiveTab] = useState<"default" | "volume" | "price">("default");
   const [currentPage, setCurrentPage] = useState(1);
   const searchInProgress = useRef(false);
   const [isImageSearch, setIsImageSearch] = useState(false);
   const searchImageInProgress = useRef(false);
+  const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
 
   // 获取初始图片URI
   const imageUri = useMemo(() => {
@@ -300,6 +362,7 @@ export const ImageSearchResultScreen = ({
       if (!isLoadMore) {
         setLoading(true);
         setShowSkeleton(true);
+        setIsImageSearchLoading(true);
       } else {
         setLoadingMore(true);
       }
@@ -358,6 +421,7 @@ export const ImageSearchResultScreen = ({
       setLoading(false);
       setLoadingMore(false);
       setShowSkeleton(false);
+      setIsImageSearchLoading(false);
       searchImageInProgress.current = false;
     }
   };
@@ -383,8 +447,6 @@ export const ImageSearchResultScreen = ({
           keyword: keyword,
           page: page,
           page_size: 20,
-          sort_order: "desc",
-          sort_by: "default",
           language: "en",
           user_id: userStore.user?.user_id,
         };
@@ -422,11 +484,6 @@ export const ImageSearchResultScreen = ({
   // 处理搜索提交
   const handleSearch = useCallback(() => {
     if (searchText.trim()) {
-      // 重置排序状态
-      setSortField("price");
-      setSortOrder(null);
-      // 重置到默认标签
-      setActiveTab("default");
       // 重置页码
       setCurrentPage(1);
       // Show skeleton for new search
@@ -447,10 +504,6 @@ export const ImageSearchResultScreen = ({
     }
   }, [loadingMore, hasMore, loading, searchText, currentPage, isImageSearch, imageUri]);
 
-  // 切换筛选器显示状态
-  const toggleFilter = useCallback(() => {
-    setIsFilterVisible(!isFilterVisible);
-  }, [isFilterVisible]);
 
   // 处理点击产品
   const handleProductPress = useCallback(
@@ -537,69 +590,7 @@ export const ImageSearchResultScreen = ({
     );
   }, []);
 
-  // 处理排序
-  const handleSort = useCallback(
-    (field: "price" | "time", order: "asc" | "desc") => {
-      setSortField(field);
-      setSortOrder(order);
-      // 本地排序，不发送API请求
-      setProducts((prevProducts) => {
-        const sortedProducts = [...prevProducts];
-        if (field === "price") {
-          sortedProducts.sort((a, b) => {
-            const priceA = a.min_price || 0;
-            const priceB = b.min_price || 0;
-            return order === "asc" ? priceA - priceB : priceB - priceA;
-          });
-        } else if (field === "time") {
-          sortedProducts.sort((a, b) => {
-            // 假设产品有create_time字段，如果没有可以使用其他时间相关字段
-            const timeA = new Date(a.create_date || 0).getTime();
-            const timeB = new Date(b.create_date || 0).getTime();
-            return order === "asc" ? timeA - timeB : timeB - timeA;
-          });
-        }
-        return sortedProducts;
-      });
-    },
-    []
-  );
 
-  // 处理标签切换
-  const handleTabChange = useCallback(
-    (tab: "default" | "volume" | "price") => {
-      // 如果点击的是已经激活的价格标签，则切换排序顺序
-      if (tab === "price" && activeTab === "price") {
-        // 如果当前是价格升序，则切换为降序；如果是降序或未设置，则切换为升序
-        const newOrder = sortOrder === "asc" ? "desc" : "asc";
-        handleSort("price", newOrder);
-        scrollToTop();
-      } else {
-        setActiveTab(tab);
-        // 根据标签类型设置排序规则
-        if (tab === "price") {
-          // 默认价格从低到高
-          handleSort("price", "asc");
-          scrollToTop();
-        } else if (tab === "volume") {
-          // 按销量排序
-          const sortedProducts = [...originalProducts];
-          sortedProducts.sort((a, b) => {
-            const volumeA = a.sold_out || 0;
-            const volumeB = b.sold_out || 0;
-            return volumeB - volumeA; // 从高到低排序
-          });
-          setProducts(sortedProducts);
-          scrollToTop();
-        } else {
-          // 默认排序 - 恢复到原始数据顺序
-          setProducts([...originalProducts]);
-          scrollToTop();
-        }
-      }
-    },
-    [handleSort, activeTab, sortOrder, originalProducts, scrollToTop]
-  );
 
   // 渲染列表底部加载更多
   const renderFooter = useCallback(() => {
@@ -687,206 +678,14 @@ export const ImageSearchResultScreen = ({
             </View>
           </View>
 
-          {/* 标签筛选 */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "default" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("default")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "default" && styles.activeTabText,
-                ]}
-              >
-                {t("default")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "volume" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("volume")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "volume" && styles.activeTabText,
-                ]}
-              >
-                {t("volume")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "price" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("price")}
-            >
-              <View style={styles.tabButtonContent}>
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "price" && styles.activeTabText,
-                  ]}
-                >
-                  {t("price")}
-                </Text>
-                {activeTab === "price" && (
-                  <View style={styles.tabIcon}>
-                    <IconComponent
-                      name={
-                        sortOrder === "desc" ? "chevron-down" : "chevron-up"
-                      }
-                      size={16}
-                      color="#000"
-                    />
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
 
           {/* 搜索结果 */}
           <View style={styles.resultsContainer}>
-            {/* 搜索结果标题栏和排序选项 */}
-            {isFilterVisible && (
-              <View style={styles.resultsHeader}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.sortScrollView}
-                >
-                  <View style={styles.sortGroup}>
-                    <Text style={styles.sortLabel}>{t("price")}:</Text>
-                    <View style={styles.sortButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "price" && sortOrder === "asc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("price", "asc")}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "price" && sortOrder === "asc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("lowToHigh")}
-                        </Text>
-                        {sortField === "price" && sortOrder === "asc" && (
-                          <IconComponent
-                            name="chevron-up"
-                            size={16}
-                            color="#FF5100"
-                          />
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "price" && sortOrder === "desc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("price", "desc")}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "price" && sortOrder === "desc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("highToLow")}
-                        </Text>
-                        {sortField === "price" && sortOrder === "desc" && (
-                          <IconComponent
-                            name="chevron-down"
-                            size={16}
-                            color="#FF5100"
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <View style={styles.sortDivider} />
-                  <View style={styles.sortGroup}>
-                    <Text style={styles.sortLabel}>{t("time")}:</Text>
-                    <View style={styles.sortButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "time" && sortOrder === "asc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("time", "asc")}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "time" && sortOrder === "asc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("oldest")}
-                        </Text>
-                        {sortField === "time" && sortOrder === "asc" && (
-                          <IconComponent
-                            name="chevron-up"
-                            size={16}
-                            color="#FF5100"
-                          />
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.sortButton,
-                          sortField === "time" && sortOrder === "desc"
-                            ? styles.sortButtonActive
-                            : {},
-                        ]}
-                        onPress={() => handleSort("time", "desc")}
-                      >
-                        <Text
-                          style={[
-                            styles.sortButtonText,
-                            sortField === "time" && sortOrder === "desc"
-                              ? styles.sortButtonTextActive
-                              : {},
-                          ]}
-                        >
-                          {t("newest")}
-                        </Text>
-                        {sortField === "time" && sortOrder === "desc" && (
-                          <IconComponent
-                            name="chevron-down"
-                            size={16}
-                            color="#FF5100"
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </ScrollView>
-              </View>
-            )}
 
             {/* 加载指示器或产品列表 */}
-            {loading && showSkeleton ? (
+            {isImageSearchLoading ? (
+              <ImageSearchLoading t={t} />
+            ) : loading && showSkeleton ? (
               renderSkeletonGrid()
             ) : (
               <>
@@ -992,46 +791,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    position: "relative",
-  },
-  tabButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabIcon: {
-    marginLeft: 4,
-  },
-  tabText: {
-    fontSize: fontSize(16),
-    color: "#000",
-  },
-  activeTabText: {
-    color: "#0933a1",
-    fontWeight: "bold",
-  },
-  activeTabButton: {
-    // borderBottomColor: "#0933a1",
-  },
   resultsContainer: {
     flex: 1,
-  },
-  resultsHeader: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    paddingVertical: 8,
   },
   productGrid: {
     padding: 8,
@@ -1097,51 +858,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "PingFang SC",
     color: "#7c7c7c",
-  },
-  sortScrollView: {
-    flexGrow: 0,
-  },
-  sortGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  sortLabel: {
-    fontSize: fontSize(16),
-    color: "#666",
-    marginRight: 8,
-  },
-  sortButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sortButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginLeft: 4,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  sortButtonActive: {
-    borderColor: "#FF5100",
-    backgroundColor: "#fff8f5",
-  },
-  sortButtonText: {
-    fontSize: fontSize(14),
-    color: "#666",
-  },
-  sortButtonTextActive: {
-    color: "#FF5100",
-    fontWeight: "bold",
-  },
-  sortDivider: {
-    width: 1,
-    height: widthUtils(20, 20).height,
-    backgroundColor: "#e0e0e0",
-    marginHorizontal: 16,
   },
   footerContainer: {
     padding: 16,
@@ -1228,5 +944,56 @@ const styles = StyleSheet.create({
   skeletonText: {
     backgroundColor: "#EAEAEA",
     borderRadius: 4,
+  },
+  imageSearchLoadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingHorizontal: 32,
+    paddingVertical: 48,
+  },
+  imageSearchLoadingContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  imageIconContainer: {
+    marginBottom: 32,
+  },
+  loadingTextContainer: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  loadingTitle: {
+    fontSize: fontSize(20),
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  loadingSubtitle: {
+    fontSize: fontSize(16),
+    color: "#666",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  loadingHint: {
+    fontSize: fontSize(14),
+    color: "#999",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  progressDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#0066FF",
+    marginHorizontal: 4,
   },
 });

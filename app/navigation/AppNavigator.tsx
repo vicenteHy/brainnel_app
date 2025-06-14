@@ -6,6 +6,7 @@ import * as Screens from './screens';
 import Toast from "react-native-toast-message";
 import { View, Text, Dimensions } from 'react-native';
 import { createNavigationContainerRef } from '@react-navigation/native';
+import { setNavigationRef } from '../utils/navigationUtils';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,6 +54,9 @@ export const AppNavigator = () => {
     <NavigationContainer
       ref={navigationRef}
       onReady={() => {
+        // 设置导航引用供其他模块使用
+        setNavigationRef(navigationRef);
+        
         // [DEBUG-ROUTER-LOGGER] 初始路由日志 - 生产环境可删除 - 开始
         routeNameRef.current = getActiveRouteName(navigationRef.current?.getRootState());
         console.log('[DEBUG-ROUTER] 初始路由:', routeNameRef.current);

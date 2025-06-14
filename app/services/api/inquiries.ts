@@ -7,11 +7,12 @@ export interface InquiryFormData extends FormData {
 // 新增：base64格式的询盘数据接口
 export interface InquiryBase64Data {
   image_base64: string;
-  name: string;
-  quantity: string;
-  material: string | null;
-  link: string | null;
-  remark: string | null;
+  image_filename?: string;
+  quantity: string | number;
+  name?: string;
+  material?: string;
+  link?: string;
+  remark?: string;
 }
 
 export interface InquiryResponse {
@@ -29,18 +30,23 @@ export interface InquiryResponse {
 }
 
 export interface InquiryResponseData {
-    create_time:string
-    image_url:string
-    inquiry_id:number
-    link:string
-    material:string
-    name:string
-    quantity:number
-    remark:string
-    status:number
-    update_time:string
-    user_id:number
-    
+    create_time?:string
+    image_url?:string
+    inquiry_id?:number
+    link?:string
+    material?:string
+    name?:string
+    quantity?:number
+    remark?:string
+    status?:number
+    update_time?:string
+    user_id?:number
+    success?: boolean
+    message?: string
+    sku_id?: number
+    quoted_price_cny?: number
+    display_price?: number
+    display_currency?: string
 }
 
 export interface InquiryResponseDataList {
@@ -56,6 +62,10 @@ export interface InquiryResponseDataList {
         status:number
         update_time:string
         user_id:number
+        sku_id?: number
+        quoted_price_cny?: number
+        display_price?: number
+        display_currency?: string
     }[]
 
 }

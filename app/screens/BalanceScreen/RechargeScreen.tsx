@@ -36,7 +36,7 @@ import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CountryList } from "../../constants/countries";
 import Toast from "react-native-toast-message";
-import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "../../../App";
+import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "../../constants/events";
 
 // 定义本地存储的国家数据类型
 interface LocalCountryData {

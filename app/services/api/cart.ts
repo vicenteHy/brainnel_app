@@ -3,7 +3,11 @@ import apiService from './apiClient';
 
 export interface AddToCartParams {
   offer_id: number | string;
-  skus: {sku_id:number | string,quantity:number}[]
+  skus?: {sku_id:number | string,quantity:number}[];
+  quantity?: number;
+  sku_id?: number | string | null;
+  is_inquiry_item?: boolean;
+  is_live_item?: boolean;
 }
 
 export interface GetCartListResponse {

@@ -13,7 +13,10 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Product } from '../../../services/api/productApi';
-import { ProductItem, ProductSkeleton, FeatureNavigationBar, CarouselBanner } from './';
+import { ProductItem } from './ProductItem';
+import { ProductSkeleton } from './ProductSkeleton';
+import { FeatureNavigationBar } from './FeatureNavigationBar';
+import { CarouselBanner } from './CarouselBanner';
 import { styles } from '../styles';
 import { getCategoryImageSource } from '../../../utils/categoryImageUtils';
 import i18n from '../../../i18n';

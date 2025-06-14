@@ -6,6 +6,7 @@ import { styles } from '../styles';
 
 interface ProductDetailsProps {
   product: any;
+  isLiveItem?: boolean;
 }
 
 const DetailImage: React.FC<{ src: string; width: number }> = ({ src, width }) => {
@@ -41,6 +42,7 @@ const DetailImage: React.FC<{ src: string; width: number }> = ({ src, width }) =
 
 export const ProductDetails: React.FC<ProductDetailsProps> = ({
   product,
+  isLiveItem = false,
 }) => {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -48,16 +50,26 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   // 从产品描述中提取图片URLs
   const imageUrls: string[] = [];
   if (product?.description) {
+    // 解码HTML实体
+    let decodedDescription = product.description
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&');
+    
     const regex = /<img[^>]+src="([^"]+)"/g;
     let match;
-    while ((match = regex.exec(product.description)) !== null) {
+    while ((match = regex.exec(decodedDescription)) !== null) {
       imageUrls.push(match[1]);
     }
   }
   
 
   return (
-    <View style={styles.productDetailsSection}>
+    <View style={[
+      styles.productDetailsSection, 
+      isLiveItem && { marginTop: 0 }
+    ]}>
       <Text style={styles.productDetailsSectionTitle}>
         {t('productDetails')}
       </Text>

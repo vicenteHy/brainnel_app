@@ -242,6 +242,11 @@ export const HomeScreen = () => {
 
   // 切换类目的函数
   const handleCategoryChange = useCallback((categoryId: number) => {
+    // 如果categoryId相同，避免重复执行
+    if (categoryId === selectedCategoryId) {
+      return;
+    }
+    
     console.log(`[HomeScreen] handleCategoryChange called - categoryId: ${categoryId}`);
     setSelectedCategoryId(categoryId);
     
@@ -253,11 +258,6 @@ export const HomeScreen = () => {
     // 为推荐页面和分类页面自动加载数据
     if (categoryId === -1 || categoryId > 0) {
       const pageData = getPageData(categoryId);
-      console.log(`[HomeScreen] 检查页面数据 - categoryId: ${categoryId}`, {
-        initialized: pageData.initialized,
-        loading: pageData.loading,
-        productsLength: pageData.products.length
-      });
       
       // 如果页面没有初始化或者没有产品数据，则加载数据
       if (!pageData.initialized || pageData.products.length === 0) {
@@ -270,7 +270,7 @@ export const HomeScreen = () => {
     setTimeout(() => {
       cleanupPageData(categoryId);
     }, 100);
-  }, [scrollCategoryToCenter, getPageData, loadPageData, cleanupPageData]);
+  }, [selectedCategoryId, scrollCategoryToCenter, getPageData, loadPageData, cleanupPageData]);
 
   // 处理产品点击
   const handleProductPress = useCallback(
@@ -456,7 +456,7 @@ export const HomeScreen = () => {
       setTimeout(() => {
         scrollCategoryToCenter(selectedCategoryId, true); // 使用immediate模式
         
-        // 自动加载推荐页面数据
+        // 只在初始化时自动加载推荐页面数据
         if (selectedCategoryId === -1) {
           const pageData = getPageData(-1);
           if (!pageData.initialized || pageData.products.length === 0) {
@@ -466,7 +466,7 @@ export const HomeScreen = () => {
         }
       }, 150); // 稍微增加延迟确保DOM完全更新
     }
-  }, [categories.length, selectedCategoryId]); // 移除函数依赖，只保留数据依赖
+  }, [categories.length]); // 只依赖categories.length，避免selectedCategoryId变化时重复触发
 
   // 获取二级类目
   useEffect(() => {

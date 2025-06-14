@@ -44,6 +44,7 @@ export const CartScreen = () => {
     currency,
     vip_discount,
     country_code,
+    is_leader,
     convertCurrency,
     toggleSelection,
     getCart,
@@ -434,33 +435,38 @@ export const CartScreen = () => {
       const minAmountInUserCurrency = await convertCurrency();
       let isCOD = true;
       
-      if (country_code !== 225) {
-        // 非科特迪瓦用户：需要达到50000FCFA等值金额
-        if (totalAmount < minAmountInUserCurrency) {
-          Toast.show({
-            text1: `${t('cart.minimum')}${minAmountInUserCurrency?.toFixed(2)}${currency}`,
-          });
-          return;
-        }
+      // 如果是leader（is_leader = 1），无论金额多少都可以购买
+      if (is_leader === 1) {
+        isCOD = true;
       } else {
-        // 科特迪瓦(225)用户：根据金额判断基础COD资格
-        if (currency === "FCFA") {
-          // FCFA用户：直接比较50000FCFA
-          if (totalAmount < 50000) {
-            isCOD = false; // 低于50000FCFA，基础上不能COD
-          } else {
-            isCOD = true; // 达到50000FCFA，基础上可以COD
+        if (country_code !== 225) {
+          // 非科特迪瓦用户：需要达到50000FCFA等值金额
+          if (totalAmount < minAmountInUserCurrency) {
+            Toast.show({
+              text1: `${t('cart.minimum')}${minAmountInUserCurrency?.toFixed(2)}${currency}`,
+            });
+            return;
           }
         } else {
-          // USD/EUR等其他货币用户：比较等值金额
-          if (totalAmount < minAmountInUserCurrency) {
-            isCOD = false; // 低于50000FCFA等值，基础上不能COD
+          // 科特迪瓦(225)用户：根据金额判断基础COD资格
+          if (currency === "FCFA") {
+            // FCFA用户：直接比较50000FCFA
+            if (totalAmount < 50000) {
+              isCOD = false; // 低于50000FCFA，基础上不能COD
+            } else {
+              isCOD = true; // 达到50000FCFA，基础上可以COD
+            }
           } else {
-            isCOD = true; // 达到50000FCFA等值，基础上可以COD
+            // USD/EUR等其他货币用户：比较等值金额
+            if (totalAmount < minAmountInUserCurrency) {
+              isCOD = false; // 低于50000FCFA等值，基础上不能COD
+            } else {
+              isCOD = true; // 达到50000FCFA等值，基础上可以COD
+            }
           }
+          // 注意：最终的COD判断还需要在ShippingFee页面结合运输方式确定
+          // 如果选择空运，则强制为预付（isCOD = false）
         }
-        // 注意：最终的COD判断还需要在ShippingFee页面结合运输方式确定
-        // 如果选择空运，则强制为预付（isCOD = false）
       }
 
       setItems(items);

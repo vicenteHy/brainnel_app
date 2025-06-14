@@ -9,7 +9,7 @@ import { ProductDetailScreen } from "../screens/ProductDetailScreen";
 import { RelatedProductsScreen } from "../screens/RelatedProductsScreen";
 import { BalanceScreen } from "../screens/BalanceScreen/BalanceScreen";
 import { ShippingDetailsSection } from "../screens/banner/ShippingDetailsSection";
-import { InquiryScreen } from "../screens/banner/InquiryScreen";
+import { InquiryScreen } from "../screens/banner/inquiryScreen";
 import { Recipient } from "../screens/Recipient/Recipient";
 import { AddRess } from "../screens/Recipient/Address";
 import { SettingList } from "../screens/setting/SettingList";

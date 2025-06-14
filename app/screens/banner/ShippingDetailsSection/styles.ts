@@ -1,0 +1,108 @@
+import { StyleSheet, Platform } from "react-native";
+import fontSize from "../../../utils/fontsizeUtils";
+import widthUtils from "../../../utils/widthUtils";
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#005EE4",
+  },
+  safeAreaContent: {
+    flex: 1,
+    paddingTop: 0,
+  },
+  container: {
+    width: "100%",
+    flex: 1,
+  },
+  backgroundContainer: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#005EE4",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 15,
+  },
+  timeShippingSection: {
+    flexDirection: "column",
+  },
+  timeAndImageContainer: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingLeft: 36,
+  },
+  timeDisplay: {
+    width: widthUtils(42, 42).width,
+    fontSize: fontSize(17),
+    fontFamily: "SF Pro",
+    fontWeight: "600",
+    color: "white",
+    textAlign: "center",
+  },
+  timeImageContainer: {
+    width: widthUtils(54, 154).width,
+    height: widthUtils(54, 154).height,
+  },
+  shippingCostContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+    justifyContent: "center",
+  },
+  svgContainer: {
+    width: widthUtils(18, 18).width,
+    height: widthUtils(18, 18).height,
+    position: "absolute",
+    left: 0,
+  },
+  shippingCostLabelTextStyle: {
+    fontSize: fontSize(20),
+    lineHeight: 22,
+    fontFamily: "Microsoft YaHei UI",
+    fontWeight: "700",
+    color: "white",
+    textAlign: "center",
+    textTransform: "capitalize",
+    width: "100%",
+  },
+  shippingCalculatorContainer: {
+    marginTop: widthUtils(100, 100).height,
+    paddingTop: 18,
+    paddingRight: 20,
+    paddingBottom: 28,
+    paddingLeft: 20,
+    backgroundColor: "white",
+    borderRadius: 5,
+    justifyContent: "center",
+  },
+  flexColumnCenteredWithSelect: {
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  primaryButton: {
+    width: "100%",
+    height: widthUtils(50, 50).height,
+    marginTop: 34,
+    backgroundColor: "#002fa7",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButton: {
+    padding: 10,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f2f6ff",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+});

@@ -21,7 +21,8 @@ export interface User {
   language:string,
   vip_level:number,
   points:number,
-  next_level_points_threshold:number
+  next_level_points_threshold:number,
+  is_leader:number
 }
 
 export interface UserSettings {

@@ -30,15 +30,28 @@ import { useProductDetail } from "./hooks/useProductDetail";
 import { useSimilarProducts } from "./hooks/useSimilarProducts";
 import { useImagePicker } from "./hooks/useImagePicker";
 import { useBrowseHistoryStore } from "../../store/browseHistory";
+import { useRoute } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { styles } from "./styles";
 import widthUtils from "../../utils/widthUtils";
 
+type ProductDetailRouteParams = {
+  offer_id: string;
+  searchKeyword?: string;
+  price: number;
+  is_live_item?: boolean;
+};
+
 export default function ProductDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const route = useRoute<RouteProp<Record<string, ProductDetailRouteParams>, string>>();
   const { t } = useTranslation();
   const { updateCartItemCount } = useCartStore();
   const { user } = useUserStore();
   const { addBrowseItem } = useBrowseHistoryStore();
+
+  // 检查是否为直播商品
+  const isLiveItem = route.params?.is_live_item || false;
 
   // 页面加载时更新购物车数量
   useEffect(() => {
@@ -160,6 +173,18 @@ export default function ProductDetailScreen() {
     );
   }
 
+
+  // 如果没有产品数据，显示错误信息
+  if (!product) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>商品信息加载失败</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -194,15 +219,18 @@ export default function ProductDetailScreen() {
                   handleColorSelect={handleColorSelect}
                 />
                 
-                <SimilarProducts
-                  similars={similars}
-                  isSimilarsFlag={isSimilarsFlag}
-                  onProductPress={handleProductPress}
-                  onViewAllPress={handleViewAllPress}
-                  renderSkeletonItems={renderSkeletonItems}
-                />
+                {/* 只有非直播商品才显示相关产品 */}
+                {!isLiveItem && (
+                  <SimilarProducts
+                    similars={similars}
+                    isSimilarsFlag={isSimilarsFlag}
+                    onProductPress={handleProductPress}
+                    onViewAllPress={handleViewAllPress}
+                    renderSkeletonItems={renderSkeletonItems}
+                  />
+                )}
                 
-                <ProductDetails product={product} />
+                <ProductDetails product={product} isLiveItem={isLiveItem} />
               </View>
             </View>
           </ScrollView>

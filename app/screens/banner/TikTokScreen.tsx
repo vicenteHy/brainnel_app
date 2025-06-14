@@ -2,72 +2,114 @@ import {
   View,
   Text,
   StyleSheet,
-  ImageBackground,
-  Dimensions,
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Platform,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import BackIcon from "../../components/BackIcon";
 import fontSize from "../../utils/fontsizeUtils";
-import TiktokIcon from "../../components/TiktokIcon";
 import widthUtils from "../../utils/widthUtils";
-import Carousel from "react-native-reanimated-carousel";
-import { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useState, useEffect } from "react";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { RootStackParamList } from "../../navigation/types";
 import { useTranslation } from "react-i18next";
+import { getLiveProducts, LiveProductListItem } from "../../services/api/liveProductApi";
+import { formatPrice } from "../../utils/priceUtils";
 
 export const TikTokScreen = () => {
-  const { width: screenWidth } = Dimensions.get("window");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const navigation = useNavigation();
-  const { t } = useTranslation();
-  
-  const carouselItems = [
-    {
-      id: 1,
-      image: require("../../../assets/img/Mask group.png"),
-      liveText: t('banner.tiktok.live'),
-      subTitle: t('banner.tiktok.live'),
-    },
-    {
-      id: 2,
-      image: require("../../../assets/img/Mask group (1).png"),
-      liveText: t('banner.tiktok.video'),
-      subTitle: t('banner.tiktok.shorts'),
-    },
-  ];
+  const [liveProducts, setLiveProducts] = useState<LiveProductListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { t, i18n } = useTranslation();
 
-  const renderItem = ({ item }: { item: (typeof carouselItems)[0] }) => {
-    return (
-      <View style={styles.maskGroup}>
-        <ImageBackground
-          source={item.image}
-          style={styles.maskGroupImage}
-          resizeMode="contain"
-        >
-          <View style={styles.content}>
-            <View style={styles.titleContainer}>
-              <View style={styles.titleLogo}>
-                <TiktokIcon color="#fff" size={22} />
-                <Text style={styles.tikTokText}>TikTok</Text>
-                <Text style={styles.LiveText}>{item.liveText}</Text>
-              </View>
-              <View style={styles.titleText}>
-                <Text style={styles.titleTextTitle}>{t('banner.tiktok.category')}</Text>
-                <Text style={styles.titleTextSubTitle}>{item.subTitle}</Text>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </View>
-    );
+  const fetchLiveProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await getLiveProducts({ page: 1, page_size: 20 });
+      setLiveProducts(response.items);
+    } catch (error) {
+      console.error('获取直播产品失败:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onSnapToItem = (index: number) => {
-    setCurrentIndex(index);
+  useEffect(() => {
+    fetchLiveProducts();
+  }, []);
+
+  const handleProductPress = (product: LiveProductListItem) => {
+    navigation.navigate("ProductDetail", {
+      offer_id: product.product_id.toString(),
+      price: product.price,
+      is_live_item: true, // 标识这是直播商品
+    });
+  };
+
+  const getLiveProductName = (product: LiveProductListItem) => {
+    const currentLang = i18n.language;
+    switch (currentLang) {
+      case 'en':
+        return product.name_en || product.name;
+      case 'fr':
+        return product.name_fr || product.name;
+      case 'zh':
+      case 'cn':
+        return product.name;
+      default:
+        return product.name_fr || product.name;
+    }
+  };
+
+  const renderLiveProduct = (product: LiveProductListItem) => {
+    const productName = getLiveProductName(product);
+    const priceText = formatPrice(product.price, product.currency);
+    const originalPriceText = formatPrice(product.original_price, product.currency);
+    const currency = product.currency || "FCFA";
+    
+    return (
+      <TouchableOpacity
+        key={product.id}
+        style={styles.liveProductItem}
+        onPress={() => handleProductPress(product)}
+      >
+        <View style={styles.liveProductImage}>
+          <Image
+            source={{ uri: product.image_url }}
+            style={styles.liveProductImg}
+            resizeMode="cover"
+          />
+          {product.is_live && (
+            <View style={styles.liveTag}>
+              <Text style={styles.liveTagText}>LIVE</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.liveProductInfo}>
+          <Text
+            style={styles.liveProductTitle}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {productName}
+          </Text>
+          <View style={styles.liveProductPriceContainer}>
+            <View style={styles.currentPriceContainer}>
+              <Text style={styles.liveProductPrice}>{priceText}</Text>
+              <Text style={styles.liveProductCurrency}>{currency}</Text>
+            </View>
+            {product.original_price > product.price && (
+              <Text style={styles.liveProductOriginalPrice}>
+                {originalPriceText} {currency}
+              </Text>
+            )}
+          </View>
+          <Text style={styles.liveProductSold}>已售 {product.sold_out}</Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -85,54 +127,19 @@ export const TikTokScreen = () => {
           <View style={styles.placeholder} />
         </View>
 
-        <View style={styles.maskGroup}>
-          <Carousel
-            data={carouselItems}
-            renderItem={renderItem}
-            width={screenWidth}
-            loop={true}
-            autoPlayInterval={3000}
-            onSnapToItem={onSnapToItem}
-          />
-
-          <View
-            style={[styles.Instruction, { top: widthUtils(210, 210).height }]}
-          >
-            <View
-              style={[
-                styles.instructionLine1,
-                currentIndex === 0 && styles.instructionLine3,
-              ]}
-            />
-            <View
-              style={[
-                styles.instructionLine2,
-                currentIndex === 1 && styles.instructionLine3,
-              ]}
-            />
-          </View>
-        </View>
-
         <ScrollView
           style={styles.productContainer}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.productContainerContent}
         >
           <View style={styles.productList}>
-            <View style={styles.productItem}>
-              <View style={styles.productItemImage}></View>
-              <View style={styles.productItemInfo}>
-                <View style={styles.priceInfo}></View>
-                <View style={styles.priceTitle}>
-                  <Text 
-                    style={styles.priceTitleText}
-                    numberOfLines={2}
-                    ellipsizeMode="tail"
-                  >1231231131231231221323123123123123123123123121231231212311232</Text>
-                </View>
-                <View style={styles.ventes}></View>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>加载中...</Text>
               </View>
-            </View>
-            
+            ) : (
+              liveProducts.map(renderLiveProduct)
+            )}
           </View>
         </ScrollView>
       </View>
@@ -149,19 +156,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
-  container: {
-    flex: 1,
-  },
   header: {
     width: "100%",
     padding: 19,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    position: "absolute",
-    top: 0,
-    left: 0,
-    zIndex: 1,
+    backgroundColor: "#000",
   },
   backButton: {
     width: widthUtils(24, 24).width,
@@ -176,112 +177,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
-  maskGroup: {
-    width: "100%",
-    height: widthUtils(321, 321).height,
-    backgroundColor: "#000",
-    position: "relative",
-    top: 0,
-    left: 0,
-  },
-  maskGroupImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
-  },
-  content: {
-    width: "100%",
-    flex: 1,
-    justifyContent: "center",
-  },
-  titleContainer: {
-    width: "100%",
-    alignItems: "center",
-  },
-  titleLogo: {
-    width: "100%",
-    paddingLeft: 22,
-    paddingRight: 22,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  tikTokText: {
-    color: "#fff",
-    fontSize: fontSize(26),
-    fontWeight: "600",
-  },
-  LiveText: {
-    marginLeft: 5,
-    backgroundColor: "#ff188a",
-    paddingLeft: 5,
-    paddingRight: 5,
-    fontSize: fontSize(16),
-    fontWeight: "600",
-    color: "#fff",
-  },
-  titleText: {
-    width: "100%",
-    paddingTop: widthUtils(19, 19).height,
-    paddingBottom: widthUtils(19, 19).height,
-    paddingLeft: widthUtils(22, 22).height,
-    paddingRight: widthUtils(22, 22).height,
-  },
-  Instruction: {
-    width: "100%",
-    paddingTop: widthUtils(19, 19).height,
-    paddingBottom: widthUtils(19, 19).height,
-    paddingLeft: widthUtils(22, 22).height,
-    paddingRight: widthUtils(22, 22).height,
-    flexDirection: "row",
-    gap: 6,
-    position: "absolute",
-    bottom: widthUtils(50, 50).height,
-    left: 0,
-    zIndex: 2,
-  },
-  instructionLine1: {
-    width: 10,
-    height: 6,
-    backgroundColor: "#52595f",
-    borderRadius: 10,
-  },
-  instructionLine2: {
-    width: 10,
-    height: 6,
-    backgroundColor: "#52595f",
-    borderRadius: 10,
-  },
-  instructionLine3: {
-    width: 20,
-    height: 6,
-    backgroundColor: "#ffff",
-    borderRadius: 10,
-  },
-  titleTextTitle: {
-    color: "#fff",
-    fontSize: fontSize(26),
-    fontWeight: "900",
-    fontFamily: "Montserrat-Bold",
-  },
-  titleTextSubTitle: {
-    color: "#fff",
-    fontSize: fontSize(30),
-    fontWeight: "900",
-    fontFamily: "Montserrat-Bold",
-  },
   productContainer: {
     flex: 1,
-    width: "100%",
-    position: "absolute",
-    top: widthUtils(321, 321).height,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
     backgroundColor: "#000",
-    marginTop: -10,
-    paddingLeft: 19,
-    paddingRight: 19,
+  },
+  productContainerContent: {
+    paddingHorizontal: 19,
+    paddingTop: 20,
   },
   productList: {
     width: "100%",
@@ -289,35 +191,84 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
   },
-  productItem: {
+  loadingContainer: {
+    width: "100%",
+    height: widthUtils(200, 200).height,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: fontSize(16),
+  },
+  liveProductItem: {
     width: "48%",
-    height: widthUtils(298, 298).height,
+    marginBottom: 15,
     borderRadius: 10,
+    overflow: "hidden",
   },
-  productItemImage:{
+  liveProductImage: {
     width: "100%",
-    height:widthUtils(190, 190).height,
+    height: widthUtils(190, 190).height,
+    position: "relative",
     borderRadius: 10,
+    overflow: "hidden",
   },
-  productItemInfo:{
+  liveProductImg: {
     width: "100%",
-    flex: 1,
+    height: "100%",
   },
-  priceInfo:{
-    width: "100%",
-    padding: 10,
+  liveTag: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#ff188a",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  priceTitle: {
-    width: "100%",
-    padding: 10,
+  liveTagText: {
+    color: "#fff",
+    fontSize: fontSize(10),
+    fontWeight: "600",
   },
-  priceTitleText: {
+  liveProductInfo: {
+    padding: 8,
+  },
+  liveProductTitle: {
     color: "#fff",
     fontSize: fontSize(14),
     lineHeight: fontSize(20),
+    marginBottom: 6,
   },
-  ventes:{
-    width: "100%",
-    padding: 10,
+  liveProductPriceContainer: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: 4,
+  },
+  currentPriceContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 2,
+  },
+  liveProductPrice: {
+    color: "#ff188a",
+    fontSize: fontSize(16),
+    fontWeight: "600",
+    marginRight: 2,
+  },
+  liveProductCurrency: {
+    color: "#ff188a",
+    fontSize: fontSize(12),
+    fontWeight: "600",
+  },
+  liveProductOriginalPrice: {
+    color: "#999",
+    fontSize: fontSize(12),
+    textDecorationLine: "line-through",
+  },
+  liveProductSold: {
+    color: "#999",
+    fontSize: fontSize(12),
   }
 });

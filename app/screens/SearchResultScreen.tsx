@@ -61,9 +61,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     keyword: route.params?.keyword || "",
     page: 1,
     page_size: 20,
-    sort_order: "desc",
     category_id: null,
-    sort_by: "default",
     language: getCurrentLanguage(),
     user_id: userStore.user.user_id,
   });

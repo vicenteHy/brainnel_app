@@ -13,13 +13,13 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
-import BackIcon from "../../components/BackIcon";
-import fontSize from "../../utils/fontsizeUtils";
-import widthUtils from "../../utils/widthUtils";
+import BackIcon from "../../../components/BackIcon";
+import fontSize from "../../../utils/fontsizeUtils";
+import widthUtils from "../../../utils/widthUtils";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { settingApi } from "../../services/api/setting";
-import { CountryList } from "../../constants/countries";
+import { settingApi } from "../../../services/api/setting";
+import { CountryList } from "../../../constants/countries";
 import { useTranslation } from "react-i18next";
 
 // Pre-require images to avoid dynamic require issues

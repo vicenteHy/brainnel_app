@@ -11,6 +11,7 @@ interface ProductInfoProps {
 export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
   const userStore = useUserStore();
 
+
   return (
     <View style={styles.productInfoCard}>
       <Text style={styles.productTitle}>

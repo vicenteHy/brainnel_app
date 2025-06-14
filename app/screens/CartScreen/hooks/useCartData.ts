@@ -16,7 +16,7 @@ import Toast from "react-native-toast-message";
 export const useCartData = () => {
   const [cartList, setCartList] = useState<GetCartList[]>([]);
   const {
-    user: { user_id, currency, vip_discount, country_code },
+    user: { user_id, currency, vip_discount, country_code, is_leader },
   } = useUserStore();
   const { updateCartItemCount, setCartItemCount } = useCartStore();
   const [selectedItems, setSelectedItems] = useState<{
@@ -133,10 +133,14 @@ export const useCartData = () => {
           }
           return item;
         });
-        calculateTotalAmount(newList);
-        changeAllSelected(newList);
-        // 立即更新购物车图标数字
-        updateCartIconCount(newList);
+        
+        // 使用setTimeout避免在setState回调中执行其他setState
+        setTimeout(() => {
+          calculateTotalAmount(newList);
+          changeAllSelected(newList);
+          updateCartIconCount(newList);
+        }, 0);
+        
         return newList;
       });
 
@@ -170,8 +174,12 @@ export const useCartData = () => {
             }
             return item;
           });
-          calculateTotalAmount(newList);
-          changeAllSelected(newList);
+          
+          setTimeout(() => {
+            calculateTotalAmount(newList);
+            changeAllSelected(newList);
+          }, 0);
+          
           return newList;
         });
       });
@@ -194,10 +202,13 @@ export const useCartData = () => {
           }
           return item;
         });
-        calculateTotalAmount(newList);
-        changeAllSelected(newList);
-        // 立即更新购物车图标数字
-        updateCartIconCount(newList);
+        
+        setTimeout(() => {
+          calculateTotalAmount(newList);
+          changeAllSelected(newList);
+          updateCartIconCount(newList);
+        }, 0);
+        
         return newList;
       });
 
@@ -226,8 +237,12 @@ export const useCartData = () => {
             }
             return item;
           });
-          calculateTotalAmount(newList);
-          changeAllSelected(newList);
+          
+          setTimeout(() => {
+            calculateTotalAmount(newList);
+            changeAllSelected(newList);
+          }, 0);
+          
           return newList;
         });
       });
@@ -278,17 +293,20 @@ export const useCartData = () => {
       });
 
       setCartList(correctedItems);
-      calculateTotalAmount(correctedItems);
-
-      if (correctedItems.length === 0) {
-        console.log('📭 [Cart] 购物车为空，取消全选状态');
-        setAllSelected(false);
-      } else {
-        changeAllSelected(correctedItems);
-      }
-
-      // 立即更新购物车图标数字（本地计算）
-      updateCartIconCount(correctedItems);
+      
+      setTimeout(() => {
+        calculateTotalAmount(correctedItems);
+        
+        if (correctedItems.length === 0) {
+          console.log('📭 [Cart] 购物车为空，取消全选状态');
+          setAllSelected(false);
+        } else {
+          changeAllSelected(correctedItems);
+        }
+        
+        // 立即更新购物车图标数字（本地计算）
+        updateCartIconCount(correctedItems);
+      }, 0);
       
       console.log('✅ [Cart] 购物车数据处理完成', {
         totalProducts: correctedItems.length,
@@ -333,8 +351,12 @@ export const useCartData = () => {
                 })),
               };
             });
-            calculateTotalAmount(newList);
-            setAllSelected(!newAllSelected);
+            
+            setTimeout(() => {
+              calculateTotalAmount(newList);
+              setAllSelected(!newAllSelected);
+            }, 0);
+            
             return newList;
           });
         });
@@ -347,9 +369,12 @@ export const useCartData = () => {
           }),
         };
       });
-      calculateTotalAmount(newList);
-      // 立即更新购物车图标数字
-      updateCartIconCount(newList);
+      
+      setTimeout(() => {
+        calculateTotalAmount(newList);
+        updateCartIconCount(newList);
+      }, 0);
+      
       return newList;
     });
   };
@@ -388,13 +413,15 @@ export const useCartData = () => {
           }
           return item;
         });
-        calculateTotalAmount(newList);
         updatedList = newList;
+        
+        setTimeout(() => {
+          calculateTotalAmount(newList);
+          updateCartIconCount(newList);
+        }, 0);
+        
         return newList;
       });
-
-      // 立即更新购物车图标数字（基于当前本地状态）
-      updateCartIconCount(updatedList);
 
       // 调用API更新数量
       await updateCartItem(cartId, {
@@ -425,7 +452,10 @@ export const useCartData = () => {
       totalCount,
       timestamp: new Date().toISOString()
     });
-    setCartItemCount(totalCount);
+    // 使用setTimeout避免在渲染过程中更新状态
+    setTimeout(() => {
+      setCartItemCount(totalCount);
+    }, 0);
   };
 
   // 计算同一商品组的总数量
@@ -497,6 +527,7 @@ export const useCartData = () => {
     currency,
     vip_discount,
     country_code,
+    is_leader,
     convertCurrency,
     updateCartList,
     toggleSelection,

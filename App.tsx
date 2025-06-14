@@ -34,8 +34,7 @@ if (!global.EventEmitter) {
 }
 
 // 定义全局事件处理支付成功
-export const PAYMENT_SUCCESS_EVENT = "PAYMENT_SUCCESS_EVENT";
-export const PAYMENT_FAILURE_EVENT = "PAYMENT_FAILURE_EVENT";
+import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "./app/constants/events";
 
 function AppContent() {
   const analyticsData = useAnalyticsStore();

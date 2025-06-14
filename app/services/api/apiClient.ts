@@ -14,7 +14,8 @@ import {
   STORAGE_KEYS,
 } from "../../constants/config";
 import i18n from "../../i18n";
-import { handleMultipleDeviceLogin, isMultipleDeviceLoginError } from "../../utils/authUtils";
+import { isMultipleDeviceLoginError } from "../../utils/authUtils";
+import { handleMultipleDeviceLogin } from "../../utils/navigationUtils";
 // import { Platform } from "react-native";
 
 // 定义响应类型接口
@@ -62,12 +63,17 @@ apiClient.interceptors.request.use(
       config.method = config.method.toLowerCase();
     }
 
-    // console.log("环境:", __DEV__ ? "开发环境" : "生产环境");
-    // console.log("请求方法:", config.method);
-    // console.log("完整URL:", fullUrl);
-    // console.log("请求头:", config.headers);
-    // console.log("请求参数:", config.params);
-    // console.log("请求数据:", config.data);
+    // 为询盘请求添加详细日志
+    if (config.url?.includes('/api/inquiries/')) {
+      console.log("=== 询盘请求详细日志 ===");
+      console.log("环境:", __DEV__ ? "开发环境" : "生产环境");
+      console.log("请求方法:", config.method);
+      console.log("完整URL:", fullUrl);
+      console.log("请求头:", config.headers);
+      console.log("请求参数:", config.params);
+      console.log("请求数据:", config.data);
+      console.log("=======================");
+    }
 
     // 从AsyncStorage获取token
     const token = await AsyncStorage.getItem("token");
@@ -105,6 +111,19 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<any>) => {
     // 错误响应处理
     const { response, config } = error;
+    // 为询盘请求错误添加更详细的日志
+    if (config?.url?.includes('/api/inquiries/') || config?.url?.includes('/api/cart/')) {
+      console.error("=== 询盘请求错误详细日志 ===");
+      console.error("请求URL:", config?.url || 'unknown');
+      console.error("请求方法:", config?.method || 'unknown');
+      console.error("错误信息:", error.message || 'unknown error');
+      console.error("错误代码:", error.code || 'unknown code');
+      console.error("响应状态:", response?.status || 'no response');
+      console.error("响应数据:", response?.data || 'no response data');
+      console.error("原始配置:", config);
+      console.error("=============================");
+    }
+    
     console.error("响应错误:", {
       url: config?.url || 'unknown',
       method: config?.method || 'unknown',
