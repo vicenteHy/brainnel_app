@@ -72,16 +72,32 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
     const position = e.nativeEvent.position;
     if (allCategories[position]) {
       onCategoryChange(allCategories[position].category_id);
+      
+      // 当用户滑动到新页面时，立即为该页面加载数据（如果还没有数据）
+      const categoryId = allCategories[position].category_id;
+      if (!pagesData[categoryId]) {
+        setTimeout(() => {
+          setPagesData(prev => ({
+            ...prev,
+            [categoryId]: getPageData(categoryId)
+          }));
+        }, 0);
+      }
     }
-  }, [allCategories, onCategoryChange]);
+  }, [allCategories, onCategoryChange, pagesData, getPageData]);
 
-  // 在useEffect中更新页面数据，避免在渲染期间更新状态
+  // 在useEffect中更新页面数据，只获取当前页面和相邻页面的数据
   useEffect(() => {
     const newPagesData: Record<number, PageData> = {};
     
-    // 获取所有分类的数据
-    allCategories.forEach(category => {
-      newPagesData[category.category_id] = getPageData(category.category_id);
+    // 只获取当前页面和相邻页面的数据，减少不必要的数据获取
+    allCategories.forEach((category, index) => {
+      const isActive = category.category_id === selectedCategoryId;
+      const isAdjacent = Math.abs(index - currentIndex) <= 1;
+      
+      if (isActive || isAdjacent) {
+        newPagesData[category.category_id] = getPageData(category.category_id);
+      }
     });
     
     // 如果是特殊页面，也获取其数据
@@ -138,9 +154,19 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
       onPageSelected={handlePageSelected}
       scrollEnabled={true}
       orientation="horizontal"
+      offscreenPageLimit={1}
     >
-      {allCategories.map((category) => {
+      {allCategories.map((category, index) => {
         const isActive = category.category_id === selectedCategoryId;
+        const isAdjacent = Math.abs(index - currentIndex) <= 1;
+        
+        // 只渲染当前页面和相邻页面，其他页面显示轻量级占位符
+        if (!isActive && !isAdjacent) {
+          return (
+            <View key={category.category_id} style={{ flex: 1, backgroundColor: '#f5f5f5' }} />
+          );
+        }
+        
         const pageData = pagesData[category.category_id] || getDefaultPageData(category.category_id);
 
         return (
