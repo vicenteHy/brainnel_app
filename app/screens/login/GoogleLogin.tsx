@@ -5,28 +5,20 @@ import {
   Image,
   Alert,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 
 import { RootStackParamList } from '../../types/navigation';
 import { loginApi, userApi } from '../../services/api';
 import useUserStore from '../../store/user';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
-import { firebaseApp } from '../../services/firebase/config'; // 假设Firebase app实例在此导出
+import { auth } from '../../services/firebase/config';
 
-// 确保Web浏览器会话在完成后可以关闭
-WebBrowser.maybeCompleteAuthSession();
-
-const IOS_CLIENT_ID = "449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec.apps.googleusercontent.com";
-const ANDROID_CLIENT_ID = "449517618313-s1bmot9r3ic4s0g84ff13b5uasn2l0nv.apps.googleusercontent.com";
-// 注意：Web Client ID通常与iOS或Android不同，这里暂时使用您之前代码中的Web ID
 const WEB_CLIENT_ID = "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com";
 
 interface GoogleLoginButtonProps {
@@ -39,62 +31,63 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: WEB_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-  });
-
   useEffect(() => {
-    const handleSignIn = async () => {
-      if (response?.type === 'success') {
-        const { id_token } = response.params;
-        const auth = getAuth(firebaseApp);
-        const credential = GoogleAuthProvider.credential(id_token);
+    GoogleSignin.configure({
+      webClientId: WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
+  }, []);
+
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      if (userInfo.data?.idToken) {
+        const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
+        const firebaseUserCredential = await signInWithCredential(auth, credential);
+        const firebaseIdToken = await firebaseUserCredential.user.getIdToken();
         
-        try {
-          // 使用凭据登录Firebase
-          const firebaseUserCredential = await signInWithCredential(auth, credential);
-          
-          // 从Firebase获取最新的idToken，发送到您的后端
-          const firebaseIdToken = await firebaseUserCredential.user.getIdToken();
-          const backendResponse = await loginApi.google({ idToken: firebaseIdToken });
+        const backendResponse = await loginApi.google({ idToken: firebaseIdToken });
 
-          if (backendResponse.access_token) {
-            const token = `${backendResponse.token_type} ${backendResponse.access_token}`;
-            await AsyncStorage.setItem("token", token);
-          }
-
-          if (handleFirstLoginSettings) {
-            await handleFirstLoginSettings(backendResponse);
-          }
-
-          const user = await userApi.getProfile();
-          setUser(user);
-
-          if (user.language) {
-            await changeLanguage(user.language);
-          }
-          
-          navigation.navigate("MainTabs", { screen: "Home" });
-
-        } catch (error: any) {
-          console.error("Firebase/Backend Sign-In Error: ", error);
-          Alert.alert("Login Failed", "An error occurred during login verification.");
+        if (backendResponse.access_token) {
+          const token = `${backendResponse.token_type} ${backendResponse.access_token}`;
+          await AsyncStorage.setItem("token", token);
         }
-      } else if (response?.type === 'error') {
-        Alert.alert("Login Failed", response.params.error_description || "An unknown error occurred.");
-      }
-    };
 
-    handleSignIn();
-  }, [response]);
+        if (handleFirstLoginSettings) {
+          await handleFirstLoginSettings(backendResponse);
+        }
+
+        const user = await userApi.getProfile();
+        setUser(user);
+
+        if (user.language) {
+          await changeLanguage(user.language);
+        }
+        
+        navigation.navigate("MainTabs", { screen: "Home" });
+      }
+    } catch (error: any) {
+      console.error("Google Sign-In Error: ", error);
+      
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // 用户取消登录
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert("Sign-In in Progress", "Please wait for the current sign-in to complete.");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Play Services Not Available", "Google Play Services is not available or outdated.");
+      } else {
+        Alert.alert("Login Failed", "An error occurred during Google sign-in.");
+      }
+    }
+  };
 
   return (
     <TouchableOpacity
       style={styles.loginButton}
-      onPress={() => promptAsync()}
-      disabled={!request}
+      onPress={signInWithGoogle}
     >
       <Image
         source={require("../../../assets/login/google.png")}

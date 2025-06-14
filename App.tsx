@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import LanguageSelectionScreen, { checkLanguageSelected } from "./app/screens/LanguageSelectionScreen";
 import  useAnalyticsStore  from "./app/store/analytics";
 import { preloadService } from "./app/services/preloadService";
+import "./app/services/firebase/config";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
