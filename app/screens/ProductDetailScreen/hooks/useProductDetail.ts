@@ -205,48 +205,35 @@ export const useProductDetail = () => {
       // 检查是否为直播商品
       if (route.params.is_live_item) {
         res = await getLiveProductDetails(parseInt(route.params.offer_id));
-        
-        // 将直播商品数据转换为普通商品数据格式
-        res = {
-          ...res,
-          offer_id: res.product_id,
-          subject: res.name,
-          subject_trans: res.name_en || res.name,
-          subject_trans_en: res.name_en || res.name,
-          subject_trans_ar: res.name_fr || res.name,
-          product_image_urls: res.image_url ? [res.image_url] : [],
-          category_id: 0, // 直播商品可能没有分类
-          description: res.description || res.content || '',
-          sale_info: {
-            price_range_list: [{
-              price: res.price,
-              original_price: res.original_price
-            }]
-          },
-          // 转换SKU数据格式以匹配普通商品结构
-          skus: res.skus ? res.skus.map((sku: any) => ({
-            sku_id: sku.sku_id,
-            offer_price: sku.price,
-            original_price: sku.original_price,
-            stock: sku.stock,
-            attributes: [], // 直播商品可能没有属性选择
-            currency: sku.currency,
-            sku_image_url: sku.image_url,
-            name: sku.name
-          })) : []
-        };
+        // 直播商品保持原始数据结构，只做最小必要的字段映射
+        res.offer_id = res.product_id;
+        res.subject = res.name;
+        res.subject_trans = res.name_en || res.name;
+        res.product_image_urls = res.image_url ? [res.image_url] : [];
+        res.is_live_item = true; // 标记为直播商品
       } else {
         res = await productApi.getProductDetail(route.params.offer_id, userStore.user?.user_id);
       }
       
       if (res.skus != null) {
-        const priceSelectedSku = res.skus.find((item) => item.offer_price === route.params.price);
-        if (priceSelectedSku) {
-          res.price = priceSelectedSku.offer_price;
-          res.original_price = priceSelectedSku.original_price;
+        let priceSelectedSku;
+        if (route.params.is_live_item) {
+          // 直播商品：根据价格匹配SKU
+          priceSelectedSku = res.skus.find((item: any) => item.price === route.params.price);
+          if (priceSelectedSku) {
+            res.price = priceSelectedSku.price;
+            res.original_price = priceSelectedSku.original_price;
+          }
         } else {
-          res.price = res?.sale_info?.price_range_list[res?.sale_info?.price_range_list?.length - 1]?.price;
-          res.original_price = res?.sale_info?.price_range_list[res?.sale_info?.price_range_list?.length - 1]?.original_price;
+          // 普通商品：使用offer_price匹配
+          priceSelectedSku = res.skus.find((item: any) => item.offer_price === route.params.price);
+          if (priceSelectedSku) {
+            res.price = priceSelectedSku.offer_price;
+            res.original_price = priceSelectedSku.original_price;
+          } else {
+            res.price = res?.sale_info?.price_range_list[res?.sale_info?.price_range_list?.length - 1]?.price;
+            res.original_price = res?.sale_info?.price_range_list[res?.sale_info?.price_range_list?.length - 1]?.original_price;
+          }
         }
         setPriceSelectedSku(priceSelectedSku);
       } else {
@@ -259,8 +246,6 @@ export const useProductDetail = () => {
       if (res.skus != null && !route.params.is_live_item) {
         // 只有普通商品才处理属性分组，直播商品不需要
         list = groupData(res, priceSelectedSku?.attributes as SkuAttribute[]);
-      } else {
-        list = [];
       }
 
       const imageUrls = [];

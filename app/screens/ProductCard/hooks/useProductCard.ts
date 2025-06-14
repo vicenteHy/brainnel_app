@@ -265,13 +265,24 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         );
         return;
       }
-      const data = {
+      // 获取正确的SKU ID - 兼容直播商品和普通商品
+      const getSkuId = () => {
+        if (isSingleSku && localProduct.skus[0]) {
+          // 直播商品和普通商品都使用sku_id字段
+          return localProduct.skus[0].sku_id || localProduct.offer_id;
+        }
+        return localProduct.offer_id;
+      };
+
+      const data: any = {
         offer_id: localProduct.offer_id,
         skus: [
           { 
-            sku_id: isSingleSku ? localProduct.skus[0].sku_id : localProduct.offer_id, 
+            sku_id: getSkuId(), 
             quantity: mainProductQuantity,
-            is_inquiry_item: false
+            is_inquiry_item: false,
+            // 如果是直播商品，在SKU对象中添加标识
+            ...(localProduct.is_live_item && { is_live_item: true })
           },
         ],
       };
@@ -327,10 +338,12 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
       const skus = selectedSkus.map(sku => ({
         sku_id: sku.sku_id,
         quantity: sku.selected_quantity,
-        is_inquiry_item: false
+        is_inquiry_item: false,
+        // 如果是直播商品，在每个SKU对象中添加标识
+        ...(localProduct.is_live_item && { is_live_item: true })
       }));
 
-      const data = {
+      const data: any = {
         offer_id: localProduct.offer_id,
         skus,
       };
@@ -383,12 +396,14 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
             skus.push({
               sku_id: item.sku_id,
               quantity: item.size as number,
-              is_inquiry_item: false
+              is_inquiry_item: false,
+              // 如果是直播商品，在SKU对象中添加标识
+              ...(localProduct.is_live_item && { is_live_item: true })
             });
           }
         });
       });
-      const data = {
+      const data: any = {
         offer_id: product.offer_id,
         skus,
       };
@@ -419,13 +434,16 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         skus.push({
           sku_id: item.sku_id,
           quantity: item.size as number,
-          is_inquiry_item: false
+          is_inquiry_item: false,
+          // 如果是直播商品，在SKU对象中添加标识
+          ...(localProduct.is_live_item && { is_live_item: true })
         });
       });
-      const data = {
+      const data: any = {
         offer_id: product.offer_id,
         skus,
       };
+      
       // 立即显示弹窗，提供即时反馈
       setDeleteModalVisible(true);
       

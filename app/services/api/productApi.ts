@@ -88,6 +88,7 @@ export type Products = Product[]
     "offer_id": 0,
     currency:string
     is_favorited:boolean
+    is_live_item?: boolean,
     "category_id": 0,
     "price": number | string,
     "subject": "string",
