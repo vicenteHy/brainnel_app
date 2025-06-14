@@ -265,13 +265,8 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
-  const [sortField, setSortField] = useState<"price" | "time">("price");
   const [showBackToTop, setShowBackToTop] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const [activeTab, setActiveTab] = useState<"default" | "volume" | "price">(
-    "default"
-  );
   const userStore = useUserStore();
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [searchParams, setSearchParams] = useState<ProductParams>({
@@ -483,33 +478,6 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
     return `${item.offer_id || 'item'}-${index}`;
   }, []);
 
-  // 处理排序
-  const handleSort = useCallback(
-    (field: "price" | "time", order: "asc" | "desc") => {
-      setSortField(field);
-      setSortOrder(order);
-      // 本地排序，不发送API请求
-      setProducts((prevProducts) => {
-        const sortedProducts = [...prevProducts];
-        if (field === "price") {
-          sortedProducts.sort((a, b) => {
-            const priceA = a.min_price || 0;
-            const priceB = b.min_price || 0;
-            return order === "asc" ? priceA - priceB : priceB - priceA;
-          });
-        } else if (field === "time") {
-          // 假设产品有create_time字段，如果没有可以使用其他时间相关字段
-          sortedProducts.sort((a, b) => {
-            const timeA = new Date(a.create_date || 0).getTime();
-            const timeB = new Date(b.create_date || 0).getTime();
-            return order === "asc" ? timeA - timeB : timeB - timeA;
-          });
-        }
-        return sortedProducts;
-      });
-    },
-    []
-  );
 
   // 处理加载更多
   const handleLoadMore = useCallback(() => {
@@ -616,41 +584,6 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
-  // 处理标签切换
-  const handleTabChange = useCallback(
-    (tab: "default" | "volume" | "price") => {
-      // 如果点击的是已经激活的价格标签，则切换排序顺序
-      if (tab === "price" && activeTab === "price") {
-        // 如果当前是价格升序，则切换为降序；如果是降序或未设置，则切换为升序
-        const newOrder = sortOrder === "asc" ? "desc" : "asc";
-        handleSort("price", newOrder);
-        scrollToTop();
-      } else {
-        setActiveTab(tab);
-        // 根据标签类型设置排序规则
-        if (tab === "price") {
-          // 默认价格从低到高
-          handleSort("price", "asc");
-          scrollToTop();
-        } else if (tab === "volume") {
-          // 按销量排序
-          const sortedProducts = [...originalProducts];
-          sortedProducts.sort((a, b) => {
-            const volumeA = a.sold_out || 0;
-            const volumeB = b.sold_out || 0;
-            return volumeB - volumeA; // 从高到低排序
-          });
-          setProducts(sortedProducts);
-          scrollToTop();
-        } else {
-          // 默认排序 - 恢复到原始数据顺序
-          setProducts([...originalProducts]);
-          scrollToTop();
-        }
-      }
-    },
-    [handleSort, activeTab, sortOrder, originalProducts, scrollToTop]
-  );
 
   // 渲染骨架屏网格
   const renderSkeletonGrid = useCallback(() => {
@@ -708,68 +641,6 @@ export const RelatedProductsScreen = ({ route, navigation }: RelatedProductsScre
             </View>
           </View>
 
-          {/* 标签筛选 */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "default" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("default")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "default" && styles.activeTabText,
-                ]}
-              >
-                {t('default')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "volume" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("volume")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "volume" && styles.activeTabText,
-                ]}
-              >
-                {t('volume')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "price" && styles.activeTabButton,
-              ]}
-              onPress={() => handleTabChange("price")}
-            >
-              <View style={styles.tabButtonContent}>
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "price" && styles.activeTabText,
-                  ]}
-                >
-                  {t('price')}
-                </Text>
-                {activeTab === "price" && (
-                  <View style={styles.tabIcon}>
-                    <IconComponent
-                      name={sortOrder === "desc" ? "chevron-down" : "chevron-up"}
-                      size={16}
-                      color="#000"
-                    />
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
 
           {/* 商品列表 */}
           <View style={styles.resultsContainer}>
@@ -854,38 +725,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize(18),
     fontWeight: "600",
     color: "#333",
-  },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    position: "relative",
-  },
-  tabButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabIcon: {
-    marginLeft: 4,
-  },
-  tabText: {
-    fontSize: fontSize(16),
-    color: "#000",
-  },
-  activeTabText: {
-    color: "#0933a1",
-    fontWeight: "bold",
-  },
-  activeTabButton: {
-    // borderBottomColor: "#0933a1",
   },
   resultsContainer: {
     flex: 1,
