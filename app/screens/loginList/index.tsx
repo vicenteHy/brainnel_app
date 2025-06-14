@@ -30,39 +30,6 @@ import { Country, countries } from "../../constants/countries";
 import { AppleLoginButton } from '../login/AppleLogin';
 import { GoogleLoginButton } from '../login/GoogleLogin';
 
-// 使用标准的ES6模块导入
-let GoogleSignin: any = null;
-let statusCodes: any = null;
-
-// 注释掉原生模块导入
-// try {
-//   const googleSigninModule = require("@react-native-google-signin/google-signin");
-//   GoogleSignin = googleSigninModule.GoogleSignin;
-//   statusCodes = googleSigninModule.statusCodes;
-// } catch (error) {
-//   console.log("Google Sign-in模块导入错误:", error);
-// }
-
-// import { LoginManager, AccessToken, Settings } from "react-native-fbsdk-next"; // 注释掉原生模块
-
-const isDevelopment = __DEV__; // 开发模式检测
-const isSimulator =
-  Platform.OS === "ios" && Platform.isPad === false && __DEV__;
-
-// 配置 Google 登录 - 自动从 GoogleService-Info.plist 读取配置 (已注释)
-// if (GoogleSignin && !isSimulator) {
-//   try {
-//     GoogleSignin.configure({
-//       // 不指定 iosClientId，让 SDK 自动从 GoogleService-Info.plist 读取
-//       webClientId: "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com", // Web Client ID
-//       scopes: ["profile", "email"],
-//       offlineAccess: false,
-//       forceCodeForRefreshToken: false,
-//     });
-//   } catch (error) {
-//     console.log("Google Sign-in模块配置错误:", error);
-//   }
-// }
 
 // 国家代码到Country对象的映射
 const countryCodeToCountry: { [key: number]: Country } = {
@@ -186,6 +153,7 @@ export const LoginScreen = () => {
       // 不阻断登录流程，只记录错误
     }
   };
+
 
   // 发送WhatsApp验证码
   const handleSendWhatsAppCode = async () => {

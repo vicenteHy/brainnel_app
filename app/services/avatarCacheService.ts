@@ -103,16 +103,25 @@ class AvatarCacheService {
     try {
       console.log('[AvatarCache] 从服务器下载头像:', serverUrl);
       
-      // 确保缓存目录存在
-      const directoryReady = await this.ensureDirectoryExists();
-      if (!directoryReady) {
-        console.warn('[AvatarCache] 目录创建失败，返回原始URL');
-        return serverUrl;
-      }
-      
       // 验证URL格式
       if (!this.isValidUrl(serverUrl)) {
         console.warn('[AvatarCache] 无效的URL格式:', serverUrl);
+        return serverUrl;
+      }
+      
+      // 多次尝试确保缓存目录存在
+      let directoryReady = false;
+      for (let i = 0; i < 3; i++) {
+        directoryReady = await this.ensureDirectoryExists();
+        if (directoryReady) break;
+        
+        // 如果失败，等待100ms后重试
+        console.warn(`[AvatarCache] 目录创建失败，重试第 ${i + 1} 次`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      if (!directoryReady) {
+        console.warn('[AvatarCache] 多次尝试创建目录失败，返回原始URL');
         return serverUrl;
       }
       
@@ -120,6 +129,13 @@ class AvatarCacheService {
       const fileExtension = this.getFileExtension(serverUrl);
       const fileName = `avatar_${userId}_${Date.now()}${fileExtension}`;
       const localUri = AVATAR_CACHE_DIRECTORY + fileName;
+
+      // 再次确认目录存在（防止下载过程中目录被删除）
+      const finalCheck = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
+      if (!finalCheck.exists) {
+        console.error('[AvatarCache] 下载前目录检查失败，目录不存在');
+        return serverUrl;
+      }
 
       // 下载文件（设置10秒超时）
       const downloadPromise = FileSystem.downloadAsync(serverUrl, localUri);
@@ -130,6 +146,13 @@ class AvatarCacheService {
       const downloadResult = await Promise.race([downloadPromise, timeoutPromise]);
       
       if (downloadResult.status === 200) {
+        // 验证下载的文件是否真的存在
+        const fileInfo = await FileSystem.getInfoAsync(downloadResult.uri);
+        if (!fileInfo.exists) {
+          console.error('[AvatarCache] 下载完成但文件不存在:', downloadResult.uri);
+          return serverUrl;
+        }
+        
         // 保存缓存记录
         const cacheData: CachedAvatar = {
           localUri: downloadResult.uri,
@@ -205,14 +228,46 @@ class AvatarCacheService {
   // 确保目录存在
   private async ensureDirectoryExists(): Promise<boolean> {
     try {
+      // 检查文档目录是否存在
+      const docDirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory!);
+      if (!docDirInfo.exists) {
+        console.error('[AvatarCache] 文档目录不存在:', FileSystem.documentDirectory);
+        return false;
+      }
+      
+      // 检查头像缓存目录
       const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
       if (!dirInfo.exists) {
+        console.log('[AvatarCache] 创建头像缓存目录:', AVATAR_CACHE_DIRECTORY);
         await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
-        console.log('[AvatarCache] 重新创建头像缓存目录');
+        
+        // 验证目录是否真的创建成功
+        const verifyInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
+        if (!verifyInfo.exists) {
+          console.error('[AvatarCache] 目录创建失败，验证不存在');
+          return false;
+        }
+        
+        console.log('[AvatarCache] 头像缓存目录创建成功');
       }
+      
       return true;
     } catch (error) {
       console.error('[AvatarCache] 确保目录存在失败:', error);
+      
+      // 尝试清理可能存在的损坏文件
+      try {
+        const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
+        if (dirInfo.exists && !dirInfo.isDirectory) {
+          console.log('[AvatarCache] 发现同名文件，尝试删除');
+          await FileSystem.deleteAsync(AVATAR_CACHE_DIRECTORY);
+          await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
+          return true;
+        }
+      } catch (cleanupError) {
+        console.error('[AvatarCache] 清理失败:', cleanupError);
+      }
+      
       return false;
     }
   }

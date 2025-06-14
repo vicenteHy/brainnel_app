@@ -5,21 +5,27 @@ import {
   Image,
   Alert,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 
 import { RootStackParamList } from '../../types/navigation';
 import { loginApi, userApi } from '../../services/api';
 import useUserStore from '../../store/user';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
-import { auth } from '../../services/firebase/config';
+import { settingApi } from '../../services/api/setting';
+
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 const WEB_CLIENT_ID = "449517618313-av37nffa7rqkefu0ajh5auou3pb0mt51.apps.googleusercontent.com";
+const isDevelopment = __DEV__;
+const isSimulator = Platform.OS === 'ios' && Platform.isPad === false && __DEV__;
+
+// 全局配置标记，避免重复配置
+let isGoogleSigninConfigured = false;
 
 interface GoogleLoginButtonProps {
   handleFirstLoginSettings?: (response: any) => Promise<void>;
@@ -32,54 +38,183 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const { setUser } = useUserStore();
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: WEB_CLIENT_ID,
-      offlineAccess: true,
-    });
+    // 配置 Google 登录 - 避免重复配置
+    if (!isSimulator && !isGoogleSigninConfigured) {
+      try {
+        GoogleSignin.configure({
+          // 不指定 iosClientId，让 SDK 自动从 GoogleService-Info.plist 读取
+          webClientId: WEB_CLIENT_ID, // Web Client ID
+          scopes: ["profile", "email"],
+          offlineAccess: false,
+          forceCodeForRefreshToken: false,
+        });
+        isGoogleSigninConfigured = true;
+        console.log("✅ Google Sign-in模块配置成功");
+      } catch (error) {
+        console.log("Google Sign-in模块配置错误:", error);
+      }
+    }
   }, []);
 
-  const signInWithGoogle = async () => {
+  // 处理首次登录设置同步
+  const handleFirstLoginSettingsInternal = async (loginResponse: any) => {
     try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
+      // 检查是否是首次登录
+      if (loginResponse.first_login) {
+        console.log("✅ 检测到首次登录，开始同步本地设置");
+
+        // 读取本地存储的国家设置
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        let countryCode = 221; // 默认国家
+
+        if (savedCountry) {
+          try {
+            const parsedCountry = JSON.parse(savedCountry);
+            countryCode = parsedCountry.country;
+            console.log("✅ 读取到本地国家设置:", countryCode);
+          } catch (e) {
+            console.error("❌ 解析本地国家设置失败:", e);
+          }
+        }
+
+        // 调用首次登录API创建用户设置（包含国家对应的默认货币）
+        console.log("📡 调用首次登录API，国家代码:", countryCode);
+        const firstLoginData = await settingApi.postFirstLogin(countryCode);
+        console.log("✅ 首次登录设置创建成功:", firstLoginData);
+
+        // 读取本地存储的语言设置
+        const savedLanguage = await AsyncStorage.getItem("app_language");
+        if (savedLanguage && savedLanguage !== firstLoginData.language) {
+          console.log("🌐 同步本地语言设置:", savedLanguage);
+          try {
+            await settingApi.putSetting({ language: savedLanguage });
+            console.log("✅ 语言设置同步成功");
+          } catch (error) {
+            console.error("❌ 语言设置同步失败:", error);
+          }
+        }
+      } else {
+        console.log("ℹ️ 非首次登录，跳过设置同步");
+      }
+    } catch (error) {
+      console.error("❌ 处理首次登录设置失败:", error);
+      // 不阻断登录流程，只记录错误
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    console.log("🚀 Google登录按钮被点击");
+    console.log("🔧 GoogleSignin模块:", GoogleSignin);
+    console.log("🔧 statusCodes:", statusCodes);
+    
+    try {
+      console.log("✅ 开始Google登录流程");
       
-      if (userInfo.data?.idToken) {
-        const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
-        const firebaseUserCredential = await signInWithCredential(auth, credential);
-        const firebaseIdToken = await firebaseUserCredential.user.getIdToken();
+      if (typeof GoogleSignin.signIn !== "function") {
+        console.error("❌ Google Sign-in模块未正确初始化或配置失败");
+        Alert.alert("登录失败", "Google登录服务未正确配置");
+        return;
+      }
+      
+      console.log("✅ Google Sign-in模块验证通过");
+      
+      // 检查Play Services是否可用（仅Android需要）
+      console.log("🔍 检查Play Services...");
+      await GoogleSignin.hasPlayServices();
+      console.log("✅ Play Services检查通过");
+      
+      // 执行登录
+      console.log("🔐 开始执行Google登录...");
+      const userInfo = await GoogleSignin.signIn();
+      console.log("🎉 Google 登录成功:", JSON.stringify(userInfo, null, 2));
+      
+      // 检查是否为取消状态
+      if (userInfo && typeof userInfo === 'object' && 'type' in userInfo) {
+        if ((userInfo as any).type === 'cancelled') {
+          console.log('ℹ️ 用户取消了Google登录 - 直接返回');
+          return;
+        }
+      }
+      
+      // 检查是否有有效的用户信息
+      let userData = userInfo;
+      
+      // 如果返回的是 {type: "success", data: {...}} 格式，检查data部分的用户信息
+      if (userInfo && (userInfo as any).type === 'success' && (userInfo as any).data) {
+        console.log('✅ 检测到success格式，检查data部分的用户信息');
+        if (!(userInfo as any).data.user || !(userInfo as any).data.user.email) {
+          console.warn('⚠️ Google登录返回的用户信息无效');
+          Alert.alert("登录失败", "获取Google用户信息失败，请重试");
+          return;
+        }
+        // 保持原始数据结构发送给后端
+        userData = userInfo;
+      } else {
+        // 传统格式检查
+        if (!userData || !userData.user || !userData.user.email) {
+          console.warn('⚠️ Google登录返回的用户信息无效');
+          Alert.alert("登录失败", "获取Google用户信息失败，请重试");
+          return;
+        }
+      }
+      
+      try {
+        // 调用后端API进行登录
+        console.log("📡 调用后端API进行登录验证...");
+        console.log("📤 发送的用户数据:", userData);
+        const res = await loginApi.google(userData);
+        console.log("✅ 后端登录验证成功:", res);
         
-        const backendResponse = await loginApi.google({ idToken: firebaseIdToken });
-
-        if (backendResponse.access_token) {
-          const token = `${backendResponse.token_type} ${backendResponse.access_token}`;
+        // 保存access_token到AsyncStorage
+        if (res.access_token) {
+          const token = `${res.token_type} ${res.access_token}`;
           await AsyncStorage.setItem("token", token);
+          console.log("✅ Token已保存:", token);
         }
-
+        
+        // 处理首次登录设置
         if (handleFirstLoginSettings) {
-          await handleFirstLoginSettings(backendResponse);
+          await handleFirstLoginSettings(res);
+        } else {
+          await handleFirstLoginSettingsInternal(res);
         }
-
+        
+        console.log("👤 获取用户信息...");
         const user = await userApi.getProfile();
-        setUser(user);
-
+        console.log("✅ 用户信息获取成功:", user);
+        
         if (user.language) {
           await changeLanguage(user.language);
         }
         
+        setUser(user);
+        
+        // 导航到主页
+        console.log("🏠 导航到主页...");
         navigation.navigate("MainTabs", { screen: "Home" });
+        console.log("✅ 登录流程完成");
+        
+      } catch (err) {
+        console.error("❌ 后端登录验证失败:", err);
+        Alert.alert("登录失败", "服务器处理Google登录时出错，请稍后重试");
       }
+      
     } catch (error: any) {
-      console.error("Google Sign-In Error: ", error);
+      console.error("❌ Google 登录错误:", error);
+      console.error("❌ 错误详情:", JSON.stringify(error, null, 2));
       
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // 用户取消登录
-        return;
+        console.log("⏹️ 用户取消登录");
+        // 用户取消，不显示错误
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        Alert.alert("Sign-In in Progress", "Please wait for the current sign-in to complete.");
+        console.log("⏳ 登录正在进行中");
+        Alert.alert("请稍候", "登录正在进行中，请不要重复操作");
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert("Play Services Not Available", "Google Play Services is not available or outdated.");
+        console.log("❌ Play Services 不可用");
+        Alert.alert("登录失败", "Google Play服务不可用，请更新Google Play服务后重试");
       } else {
-        Alert.alert("Login Failed", "An error occurred during Google sign-in.");
+        console.error("❌ 其他错误:", error.message);
+        Alert.alert("登录失败", `Google登录出现错误: ${error.message || '未知错误'}`);
       }
     }
   };
