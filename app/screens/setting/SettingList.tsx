@@ -181,16 +181,6 @@ export const SettingList = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.item}
-            onPress={() => navigation.navigate("ChangePassword")}
-            activeOpacity={1}
-          >
-            <Text>{t("settings.change_password")}</Text>
-            <Text>
-              <LeftArrowIcon size={fontSize(20)} color="#acacac" />
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             onPress={() => {
               if (mySetting?.language && mySetting?.currency) {
                 navigation.navigate("AddressList");
