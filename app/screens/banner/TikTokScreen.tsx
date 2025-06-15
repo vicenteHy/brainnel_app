@@ -30,7 +30,7 @@ export const TikTokScreen = () => {
       const response = await getLiveProducts({ page: 1, page_size: 20 });
       setLiveProducts(response.items);
     } catch (error) {
-      console.error('获取直播产品失败:', error);
+      console.error(t('banner.tiktok.fetch_failed'), error);
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export const TikTokScreen = () => {
     navigation.navigate("ProductDetail", {
       offer_id: product.product_id.toString(),
       price: product.price,
-      is_live_item: true, // 标识这是直播商品
+      is_live_item: true,
     });
   };
 
@@ -83,7 +83,7 @@ export const TikTokScreen = () => {
           />
           {product.is_live && (
             <View style={styles.liveTag}>
-              <Text style={styles.liveTagText}>LIVE</Text>
+              <Text style={styles.liveTagText}>{t('banner.tiktok.live')}</Text>
             </View>
           )}
         </View>
@@ -106,7 +106,7 @@ export const TikTokScreen = () => {
               </Text>
             )}
           </View>
-          <Text style={styles.liveProductSold}>已售 {product.sold_out}</Text>
+          <Text style={styles.liveProductSold}>{t('banner.tiktok.sold')} {product.sold_out}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -135,7 +135,7 @@ export const TikTokScreen = () => {
           <View style={styles.productList}>
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>加载中...</Text>
+                <Text style={styles.loadingText}>{t('loading')}</Text>
               </View>
             ) : (
               liveProducts.map(renderLiveProduct)

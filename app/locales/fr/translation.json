@@ -738,7 +738,9 @@
           "live": "En direct",
           "video": "Vidéo",
           "shorts": "Courts",
-          "category": "Catégorie"
+          "category": "Catégorie",
+          "fetch_failed": "Échec de récupération des produits en direct",
+          "sold": "Vendu"
       }
   },
   "order": {

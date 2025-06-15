@@ -230,7 +230,9 @@
           "live": "Live",
           "video": "Video",
           "shorts": "Shorts",
-          "category": "Category"
+          "category": "Category",
+          "fetch_failed": "Failed to fetch live products",
+          "sold": "Sold"
       },
       "chat": {
           "login_required_title": "Please Login First",
