@@ -250,6 +250,21 @@
           "en": "English",
           "fr": "French"
       },
+      "countries": {
+          "Ivory Coast": "Ivory Coast",
+          "China": "China",
+          "Democratic Republic of the Congo": "Democratic Republic of the Congo",
+          "Togo": "Togo",
+          "Mali": "Mali",
+          "Burkina Faso": "Burkina Faso",
+          "Guinea": "Guinea",
+          "Gabon": "Gabon",
+          "Senegal": "Senegal",
+          "Republic of Congo": "Republic of Congo",
+          "Benin": "Benin",
+          "Cameroon": "Cameroon",
+          "France": "France"
+      },
       "profile": "My Profile",
       "change_password": "Change Password",
       "change_phone": "Change Phone Number",

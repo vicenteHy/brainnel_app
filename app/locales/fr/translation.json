@@ -171,6 +171,21 @@
           "en": "Anglais",
           "fr": "Français"
       },
+      "countries": {
+          "Ivory Coast": "Côte d'Ivoire",
+          "China": "Chine",
+          "Democratic Republic of the Congo": "République démocratique du Congo",
+          "Togo": "Togo",
+          "Mali": "Mali",
+          "Burkina Faso": "Burkina Faso",
+          "Guinea": "Guinée",
+          "Gabon": "Gabon",
+          "Senegal": "Sénégal",
+          "Republic of Congo": "République du Congo",
+          "Benin": "Bénin",
+          "Cameroon": "Cameroun",
+          "France": "France"
+      },
       "profile": "Mon profil",
       "change_password": "Modifier le mot de passe",
       "change_phone": "Changer le numéro de téléphone",

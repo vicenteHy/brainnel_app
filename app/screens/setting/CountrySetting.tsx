@@ -56,6 +56,11 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     return t(`settings.languages.${languageCode}`, { defaultValue: languageCode });
   };
 
+  // Function to get country display name
+  const getCountryDisplayName = (countryNameEn: string): string => {
+    return t(`settings.countries.${countryNameEn}`, { defaultValue: countryNameEn });
+  };
+
   const getCountry = async () => {
     const res = await settingApi.getCountryList();
     setCountryList(res);    
@@ -297,7 +302,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                       source={flagMap.get(item.name_en)}
                       style={styles.countryFlag}
                     />
-                    <Text style={loading ? styles.disabledText : {}}>{item.name_en}</Text>
+                    <Text style={loading ? styles.disabledText : {}}>{getCountryDisplayName(item.name_en)}</Text>
                   </View>
                   <View>
                     {country === item.country && !loading && (
