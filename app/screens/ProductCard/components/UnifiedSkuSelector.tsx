@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Modal,
+  Dimensions,
 } from "react-native";
 import widthUtils from "../../../utils/widthUtils";
 import fontSize from "../../../utils/fontsizeUtils";
@@ -36,6 +38,14 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
   onQuantityChange,
   onQuantityPress,
 }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const handleImagePress = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setModalVisible(true);
+  };
+  
   // 获取直播商品SKU名称的辅助函数
   const getLiveSkuName = (sku: any): string => {
     const currentLang = getI18nLanguage();
@@ -132,6 +142,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
   // 单SKU选择器
   const renderSingleSkuSelector = () => {
     const sku = product.skus![0];
+    const imageUrl = sku.sku_image_url || product.product_image_urls?.[0];
 
     return (
       <View style={styles.productBox}>
@@ -157,62 +168,76 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             marginTop: 10,
           }}
         >
-          <Text
-            style={[styles.productTitleText, { flex: 1, paddingRight: 10 }]}
-          >
-            {sku.attributes && sku.attributes.length > 0
-              ? sku.attributes
-                  .map((attr) => attr.value_trans || attr.value)
-                  .join(" / ")
-              : getLiveSkuName(sku)}
-          </Text>
-          <View style={styles.quantityControls}>
+          {imageUrl && (
             <TouchableOpacity
-              style={[
-                styles.quantityButton,
-                mainProductQuantity <= 1
-                  ? styles.quantityButtonDisabled
-                  : styles.quantityButtonEnabled,
-              ]}
-              onPress={() =>
-                onQuantityChange(0, Math.max(1, mainProductQuantity - 1))
-              }
-              activeOpacity={1}
+              style={styles.skuImageContainer}
+              onPress={() => handleImagePress(imageUrl)}
+              activeOpacity={0.8}
             >
-              <Text
-                style={
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.skuImage}
+              />
+            </TouchableOpacity>
+          )}
+          <View style={styles.skuContent}>
+            <Text
+              style={[styles.productTitleText, { flex: 1, paddingRight: 10 }]}
+            >
+              {sku.attributes && sku.attributes.length > 0
+                ? sku.attributes
+                    .map((attr) => attr.value_trans || attr.value)
+                    .join(" / ")
+                : getLiveSkuName(sku)}
+            </Text>
+            <View style={styles.quantityControls}>
+              <TouchableOpacity
+                style={[
+                  styles.quantityButton,
                   mainProductQuantity <= 1
-                    ? styles.quantityButtonDisabledText
-                    : styles.quantityButtonText
+                    ? styles.quantityButtonDisabled
+                    : styles.quantityButtonEnabled,
+                ]}
+                onPress={() =>
+                  onQuantityChange(0, Math.max(1, mainProductQuantity - 1))
                 }
+                activeOpacity={1}
               >
-                -
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quantityInput}
-              onPress={() =>
-                onQuantityPress(
-                  "noImg",
-                  0,
-                  mainProductQuantity,
-                  999999,
-                  "default",
-                )
-              }
-              activeOpacity={1}
-            >
-              <Text style={styles.quantityDisplayText}>
-                {mainProductQuantity}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.quantityButton, styles.quantityButtonEnabled]}
-              onPress={() => onQuantityChange(0, mainProductQuantity + 1)}
-              activeOpacity={1}
-            >
-              <Text style={styles.quantityButtonText}>+</Text>
-            </TouchableOpacity>
+                <Text
+                  style={
+                    mainProductQuantity <= 1
+                      ? styles.quantityButtonDisabledText
+                      : styles.quantityButtonText
+                  }
+                >
+                  -
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quantityInput}
+                onPress={() =>
+                  onQuantityPress(
+                    "hasImg",
+                    0,
+                    mainProductQuantity,
+                    999999,
+                    "default",
+                  )
+                }
+                activeOpacity={1}
+              >
+                <Text style={styles.quantityDisplayText}>
+                  {mainProductQuantity}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quantityButton, styles.quantityButtonEnabled]}
+                onPress={() => onQuantityChange(0, mainProductQuantity + 1)}
+                activeOpacity={1}
+              >
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -233,15 +258,21 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.skuListContainer}>
-          {product.skus!.map((sku, index) => (
+          {product.skus!.map((sku, index) => {
+            const imageUrl = sku.sku_image_url || product.product_image_urls?.[0];
+            return (
             <View style={styles.skuItem} key={index}>
-              {sku.sku_image_url && (
-                <View style={styles.skuImageContainer}>
+              {imageUrl && (
+                <TouchableOpacity
+                  style={styles.skuImageContainer}
+                  onPress={() => handleImagePress(imageUrl)}
+                  activeOpacity={0.8}
+                >
                   <Image
-                    source={{ uri: sku.sku_image_url }}
+                    source={{ uri: imageUrl }}
                     style={styles.skuImage}
                   />
-                </View>
+                </TouchableOpacity>
               )}
 
               <View style={styles.skuContent}>
@@ -300,7 +331,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                     style={styles.quantityInput}
                     onPress={() =>
                       onQuantityPress(
-                        "noImg",
+                        "hasImg",
                         index,
                         skuQuantities[index] || 0,
                         sku.amount_on_sale ?? 0,
@@ -344,26 +375,64 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                 </View>
               </View>
             </View>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </View>
   );
 
-  // 根据SKU类型渲染对应的组件
-  switch (skuType) {
-    case "noSku":
-      return renderNoSkuSelector();
-    case "singleSku":
-      return renderSingleSkuSelector();
-    case "multiSku":
-      return renderMultiSkuSelector();
-    default:
-      return null;
-  }
+  const renderSelector = () => {
+    switch (skuType) {
+      case "noSku":
+        return renderNoSkuSelector();
+      case "singleSku":
+        return renderSingleSkuSelector();
+      case "multiSku":
+        return renderMultiSkuSelector();
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      {renderSelector()}
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalContainer}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <Image
+            source={{ uri: selectedImage || "" }}
+            style={styles.modalImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </Modal>
+    </>
+  );
 };
 
+const screenWidth = Dimensions.get("window").width;
+
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+  modalImage: {
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+  },
   productBox: {
     marginTop: 10,
     flex: 1,
