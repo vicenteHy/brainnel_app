@@ -207,26 +207,26 @@ export const OrderDetails = () => {
                     </View>
                     
                     
-                    {/* 取件码 - 仅在已付款订单且有取件码时显示 */}
-                    {route.params.status >= 1 && orderDetails.verification_code && (
+                    {/* 取件码 - 在待发货、运输中、已完成状态时显示 */}
+                    {route.params.status >= 1 && route.params.status <= 3 && (
                       <View style={styles.orderInfoItem}>
                         <Text style={styles.orderInfoLabel}>
                           {t("order.verification_code")}
                         </Text>
                         <Text style={styles.orderInfoValue}>
-                          {orderDetails.verification_code}
+                          {orderDetails.verification_code || '--'}
                         </Text>
                       </View>
                     )}
                     
-                    {/* 货架号 - 仅在已付款订单且有货架号时显示 */}
-                    {route.params.status >= 1 && orderDetails.location_code && (
+                    {/* 货架号 - 在待发货、运输中、已完成状态时显示 */}
+                    {route.params.status >= 1 && route.params.status <= 3 && (
                       <View style={styles.orderInfoItem}>
                         <Text style={styles.orderInfoLabel}>
                           {t("order.location_code")}
                         </Text>
                         <Text style={styles.orderInfoValue}>
-                          {orderDetails.location_code}
+                          {orderDetails.location_code || '--'}
                         </Text>
                       </View>
                     )}
@@ -435,59 +435,7 @@ export const OrderDetails = () => {
               </View>
             )}
 
-            {route.params.status === 1 && (
-              <View style={styles.bottomButtons}>
-                <TouchableOpacity
-                  style={styles.bottomButton1}
-                  onPress={() => {
-                    callPhone(formatPhoneNumber(orderDetails.receiver_phone));
-                  }}
-                >
-                  <Text style={styles.bottomButtonText1}>
-                    {t("order.contact_shipping")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {route.params.status === 2 && (
-              <View style={styles.bottomButtons}>
-                <TouchableOpacity
-                  style={styles.bottomButton1}
-                  onPress={() => {}}
-                >
-                  <Text style={styles.bottomButtonText1}>
-                    {t("order.check_logistics")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.bottomButton}
-                  onPress={() => {
-                    try {
-                      confirmOrder(route.params.orderId);
-                      Toast.show({
-                        type: "success",
-                        text1: t("order.confirm_receipt"),
-                      });
-                      navigation.goBack();
-                    } catch (error) {
-                      console.error("Confirm receipt failed:", error);
-                      Toast.show({
-                        type: "error",
-                        text1: t("error"),
-                      });
-                    }
-                  }}
-                >
-                  <Text style={styles.bottomButtonText}>
-                    {t("order.confirm_receipt")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {(route.params.status === 3 ||
-              route.params.status === 4 ||
+            {(route.params.status === 4 ||
               route.params.status === 5 ||
               route.params.status === 6) && (
               <View style={styles.bottomButtons}>

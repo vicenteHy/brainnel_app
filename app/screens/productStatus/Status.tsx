@@ -230,7 +230,6 @@ export function Status() {
       case 4: return t("order.status.expired");
       case 5: return t("order.status.cancelled");
       case 6: return t("order.status.refunded");
-      case 7: return t("order.status.in_transit");
       case 8: return t("order.status.waiting_quote");
       default: return t("order.status.unknown");
     }

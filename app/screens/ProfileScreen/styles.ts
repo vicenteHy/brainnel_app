@@ -780,9 +780,9 @@ export const styles = StyleSheet.create({
   badgeContainer: {
     position: 'absolute',
     top: -5,
-    right: 15,
+    right: 25,
     backgroundColor: '#FF5100',
-    borderRadius: 7.5,
+    borderRadius: 10,
     minWidth: 15,
     height: 15,
     justifyContent: 'center',
@@ -791,7 +791,7 @@ export const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#fff',
-    fontSize: fontSize(12),
+    fontSize: fontSize(10),
     fontWeight: 'bold',
     paddingHorizontal: 5,
   },

@@ -774,7 +774,8 @@
           "cancelled": "Annulé",
           "refunded": "Remboursé",
           "pay_shipping": "Remboursé",
-          "waiting_quote": "En attente de paiement",
+          "waiting_quote": "En attente de devis",
+          "expired": "Expiré",
           "check_payment_result": "Vérifier le résultat du paiement"
       },
       "information": "Informations de commande",
