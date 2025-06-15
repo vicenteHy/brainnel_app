@@ -251,7 +251,7 @@ const ProductItem = React.memo(
           <Text style={styles.placeholderText}>{t("productPicture")}</Text>
         )}
 
-        {userStore.user?.user_id && (
+        {userStore.user?.user_id && userStore.user?.vip_level > 0 && (
           <TouchableOpacity style={styles.vipIcon}>
             <Text style={styles.vipButtonText}>VIP</Text>
             <Text style={styles.vipLabelBold}>{userStore.user?.vip_level}</Text>
