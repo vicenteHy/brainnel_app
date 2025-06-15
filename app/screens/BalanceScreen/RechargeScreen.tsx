@@ -815,37 +815,15 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
       // 关闭支付模态框
       setShowPhoneModal(false);
       
-      // 显示成功提示
-      Toast.show({
-        type: "success",
-        text1: t("balance.recharge.payment_success") || "Payment successful!",
-        text2: t("balance.recharge.payment_success_desc") || "Your account has been recharged",
-        visibilityTime: 3000,
+      // 关闭充值页面
+      onClose();
+      
+      // 导航到充值成功页面
+      navigation.navigate('RechargeSuccess', {
+        amount: selectedPrice,
+        currency: paymentParams?.currency || user?.currency,
+        rechargeId: data.paymentId || data.rechargeId || "",
       });
-
-      // 延迟关闭充值页面，让用户看到成功提示
-      setTimeout(() => {
-        onClose();
-        // 导航到主页面或余额页面
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'MainTabs',
-              state: {
-                routes: [
-                  { name: 'Home' },
-                  { name: 'CategoryScreen' },
-                  { name: 'Chat' },
-                  { name: 'Cart' },
-                  { name: 'Profile' },
-                ],
-                index: 4, // Profile tab 的索引，显示余额
-              },
-            },
-          ],
-        });
-      }, 2000);
     };
 
     const handlePaymentFailure = (data: any) => {
@@ -854,12 +832,15 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
       // 关闭支付模态框
       setShowPhoneModal(false);
       
-      // 显示失败提示
-      Toast.show({
-        type: "error",
-        text1: t("balance.recharge.payment_failed") || "Payment failed",
-        text2: data.error || t("balance.recharge.payment_failed_desc") || "Please try again",
-        visibilityTime: 4000,
+      // 关闭充值页面
+      onClose();
+      
+      // 导航到充值失败页面
+      navigation.navigate('RechargeError', {
+        amount: selectedPrice,
+        currency: paymentParams?.currency || user?.currency,
+        error: data.error || t("balance.recharge.payment_failed_desc") || "Payment failed, please try again",
+        rechargeId: data.rechargeId || "",
       });
 
       // 重置提交状态

@@ -224,6 +224,14 @@ export const AppNavigator = () => {
           component={Screens.PayError}
         />
         <Stack.Screen
+          name="RechargeSuccess"
+          component={Screens.RechargeSuccess}
+        />
+        <Stack.Screen
+          name="RechargeError"
+          component={Screens.RechargeError}
+        />
+        <Stack.Screen
           name="OfflinePayment"
           component={Screens.OfflinePayment}
         />

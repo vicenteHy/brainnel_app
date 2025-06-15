@@ -34,6 +34,18 @@ export type RootStackParamList = {
   CartScreen: undefined;
   PaymentSuccessScreen: { paymentId?: string; PayerID?: string };
   PayError: undefined;
+  RechargeSuccess: {
+    amount?: string;
+    currency?: string;
+    rechargeId?: string;
+  };
+  RechargeError: {
+    amount?: string;
+    currency?: string;
+    errorReason?: string;
+    rechargeId?: string;
+    error?: string;
+  };
   OfflinePayment: undefined;
   MyAccount: undefined;
   Google: undefined;

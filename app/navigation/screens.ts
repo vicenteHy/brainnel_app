@@ -39,6 +39,8 @@ import { PhoneLoginScreen } from "../screens/login/PhoneLoginScreen";
 import { WhatsAppLoginScreen } from "../screens/login/WhatsAppLoginScreen";
 import { PayError } from '../screens/pay/PayError';
 import { OfflinePayment } from '../screens/pay/OfflinePayment';
+import { RechargeSuccess } from '../screens/BalanceScreen/RechargeSuccess';
+import { RechargeError } from '../screens/BalanceScreen/RechargeError';
 import { ChatScreen } from '../screens/ChatScreen';
 import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
@@ -95,6 +97,8 @@ export {
   WhatsAppLoginScreen,
   PayError,
   OfflinePayment,
+  RechargeSuccess,
+  RechargeError,
   Info,
   ChangePassword,
   PrivacyPolicyScreen,
