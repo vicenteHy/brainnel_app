@@ -54,6 +54,8 @@ export const PhoneLoginScreen = () => {
   const [isPasswordMode, setIsPasswordMode] = useState(true); // 默认为密码模式
   const [showVerificationInput, setShowVerificationInput] = useState(false); // 是否显示验证码输入
   const [loading, setLoading] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0); // 重新发送倒计时
+  const [canResend, setCanResend] = useState(true); // 是否可以重新发送
   const [selectedCountry, setSelectedCountry] = useState<Country>({
     name: 'Ivory Coast',
     code: 'CI',
@@ -86,6 +88,19 @@ export const PhoneLoginScreen = () => {
 
     loadSavedCountry();
   }, []);
+
+  // 倒计时效果
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setTimeout(() => {
+        setResendCountdown(resendCountdown - 1);
+      }, 1000);
+    } else if (resendCountdown === 0 && !canResend) {
+      setCanResend(true);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCountdown, canResend]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -187,6 +202,8 @@ export const PhoneLoginScreen = () => {
       
       setLoading(false);
       setShowVerificationInput(true);
+      setResendCountdown(60);
+      setCanResend(false);
       Alert.alert(t('success'), t('phoneLogin.verificationCode.codeSent'));
       
     } catch (error) {
@@ -398,33 +415,39 @@ export const PhoneLoginScreen = () => {
                 phoneNumber: `${selectedCountry?.phoneCode} ${phoneNumber}` 
               })}
             </Text>
-            <View style={styles.codeInputWrapper}>
-              <TextInput
-                style={styles.verificationInput}
-                placeholder={t('phoneLogin.verificationCode.placeholder')}
-                placeholderTextColor="#999"
-                value={verificationCode}
-                onChangeText={(text) => {
-                  // 只允许输入数字，最多4位
-                  const numericText = text.replace(/[^0-9]/g, '').slice(0, 4);
-                  setVerificationCode(numericText);
+            <View style={styles.codeInputContainer}>
+              <View style={styles.codeInputWrapper}>
+                <TextInput
+                  style={styles.verificationInput}
+                  placeholder={t('phoneLogin.verificationCode.placeholder')}
+                  placeholderTextColor="#999"
+                  value={verificationCode}
+                  onChangeText={(text) => {
+                    // 只允许输入数字，最多4位
+                    const numericText = text.replace(/[^0-9]/g, '').slice(0, 4);
+                    setVerificationCode(numericText);
+                  }}
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                  autoFocus
+                  maxLength={4}
+                  textAlign="center"
+                />
+              </View>
+              <TouchableOpacity 
+                style={styles.resendButton}
+                onPress={async () => {
+                  if (canResend) {
+                    await handleSendOtp();
+                  }
                 }}
-                keyboardType="numeric"
-                returnKeyType="done"
-                autoFocus
-                maxLength={4}
-                textAlign="center"
-              />
+                disabled={!canResend}
+              >
+                <Text style={[styles.resendButtonText, !canResend && styles.resendButtonDisabled]}>
+                  {canResend ? t('phoneLogin.verificationCode.resendCode') : `${resendCountdown}s`}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-              style={styles.resendContainer}
-              onPress={() => {
-                setShowVerificationInput(false);
-                setVerificationCode('');
-              }}
-            >
-              <Text style={styles.resendText}>{t('phoneLogin.verificationCode.resendCode')}</Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -444,6 +467,23 @@ export const PhoneLoginScreen = () => {
             </Text>
           )}
         </TouchableOpacity>
+
+        {/* 在验证码页面显示切换密码登录选项 */}
+        {showVerificationInput && (
+          <View style={styles.switchToPasswordContainer}>
+            <TouchableOpacity 
+              onPress={() => {
+                setIsPasswordMode(true);
+                setShowVerificationInput(false);
+                setVerificationCode('');
+                setResendCountdown(0);
+                setCanResend(true);
+              }}
+            >
+              <Text style={styles.switchToPasswordText}>{t('phoneLogin.passwordLogin')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* 国家选择下拉框 */}
@@ -702,6 +742,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  codeInputContainer: {
+    position: 'relative',
+    marginBottom: 24,
+  },
   codeInputWrapper: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
@@ -713,7 +757,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
-    marginBottom: 24,
   },
   verificationInput: {
     borderWidth: 2,
@@ -728,14 +771,31 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     minHeight: 64,
   },
-  resendContainer: {
-    alignItems: 'center',
-    paddingVertical: 12,
+  resendButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
   },
-  resendText: {
-    fontSize: 16,
-    color: '#FF6B35',
+  resendButtonText: {
+    fontSize: 14,
+    color: '#FF5100',
     fontWeight: '600',
+  },
+  resendButtonDisabled: {
+    color: '#999',
+  },
+  switchToPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  switchToPasswordText: {
+    fontSize: 14,
+    color: '#FF5100',
     textDecorationLine: 'underline',
+    fontWeight: '500',
   },
 }); 

@@ -29,13 +29,13 @@ export const loginApi = {
         }>('/api/users/auth/callback/apple', appleUserData);
     },
     sendWhatsappOtp: (data: { phone_number: string; language: string }) => {
-        return apiService.post('/api/users/whatsapp/send-otp', data);
+        return apiService.post('/api/users/send-whatsapp-otp/', data);
     },
     verifyWhatsappOtp: (data: { phone_number: string; code: string }) => {
         return apiService.post<{
             access_token: string;
             token_type: string;
             first_login?: boolean;
-        }>('/api/users/whatsapp/verify-otp', data);
+        }>('/api/users/verify-whatsapp-otp/', data);
     }
 };
