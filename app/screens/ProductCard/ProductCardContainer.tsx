@@ -105,7 +105,7 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
       />
 
       <ProductCardModals
-        deleteModalVisible={deleteModalVisible}
+        deleteModalVisible={false}
         alertModalVisible={alertModalVisible}
         alertMessage={alertMessage}
         quantityInputVisible={quantityInputVisible}

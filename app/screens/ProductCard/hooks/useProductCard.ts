@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Alert, InteractionManager } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Toast from "react-native-toast-message";
 import { ProductDetailParams, ProductGroupList } from "../../../services/api/productApi";
 import { cartApi } from "../../../services/api/cart";
 import useProductCartStore from "../../../store/productCart";
@@ -287,18 +288,20 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         ],
       };
       
-      // 立即显示弹窗，提供即时反馈
-      setDeleteModalVisible(true);
-      
       // 异步处理API调用
       cartApi(data)
         .then(() => {
           // 更新全局购物车数量
           updateCartItemCount();
+          // 显示成功提示
+          Toast.show({
+            type: "success",
+            text1: t("order.add_cart_success"),
+            position: "top",
+            visibilityTime: 2000,
+          });
         })
         .catch(() => {
-          // 如果API失败，隐藏弹窗并显示错误
-          setDeleteModalVisible(false);
           Alert.alert(
             t("productCard.addFailed"),
             t("productCard.addFailedTryAgain")
@@ -348,18 +351,20 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         skus,
       };
 
-      // 立即显示弹窗，提供即时反馈
-      setDeleteModalVisible(true);
-      
       // 异步处理API调用
       cartApi(data)
         .then(() => {
           // 更新全局购物车数量
           updateCartItemCount();
+          // 显示成功提示
+          Toast.show({
+            type: "success",
+            text1: t("order.add_cart_success"),
+            position: "top",
+            visibilityTime: 2000,
+          });
         })
         .catch(() => {
-          // 如果API失败，隐藏弹窗并显示错误
-          setDeleteModalVisible(false);
           Alert.alert(
             t("productCard.addFailed"),
             t("productCard.addFailedTryAgain")
@@ -408,19 +413,21 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         skus,
       };
 
-      // 立即显示弹窗，提供即时反馈
-      setDeleteModalVisible(true);
-      
       // 异步处理API调用
       cartApi(data)
         .then((res) => {
           // ... existing code ...
           // 更新全局购物车数量
           updateCartItemCount();
+          // 显示成功提示
+          Toast.show({
+            type: "success",
+            text1: t("order.add_cart_success"),
+            position: "top",
+            visibilityTime: 2000,
+          });
         })
         .catch((err) => {
-          // 如果API失败，隐藏弹窗并显示错误
-          setDeleteModalVisible(false);
           Alert.alert(
             t("productCard.addFailed"),
             t("productCard.addFailedTryAgain")
@@ -444,18 +451,20 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         skus,
       };
       
-      // 立即显示弹窗，提供即时反馈
-      setDeleteModalVisible(true);
-      
       // 异步处理API调用
       cartApi(data)
         .then((res) => {
           // 更新全局购物车数量
           updateCartItemCount();
+          // 显示成功提示
+          Toast.show({
+            type: "success",
+            text1: t("order.add_cart_success"),
+            position: "top",
+            visibilityTime: 2000,
+          });
         })
         .catch((err) => {
-          // 如果API失败，隐藏弹窗并显示错误
-          setDeleteModalVisible(false);
           Alert.alert(
             t("productCard.addFailed"),
             t("productCard.addFailedTryAgain")
