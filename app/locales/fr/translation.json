@@ -152,7 +152,9 @@
       "product_detail_button": "Détails",
       "purchase": "Acheter",
       "no_product_inquiries": "Aucune demande produit enregistrée",
-      "product_inquiry_hint": "Commencez votre première consultation produit en cliquant sur le bouton de consultation dans la page de détails du produit"
+      "product_inquiry_hint": "Commencez votre première consultation produit en cliquant sur le bouton de consultation dans la page de détails du produit",
+      "no_notifications": "Aucune notification pour le moment",
+      "no_notifications_hint": "Les nouvelles notifications apparaîtront ici lorsqu'elles seront disponibles"
   },
   "searchProducts":"Rechercher des produits",
   "recommendations":"Recommandations",

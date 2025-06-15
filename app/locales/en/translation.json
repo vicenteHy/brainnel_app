@@ -147,7 +147,9 @@
       "product_detail_button": "Details",
       "purchase": "Purchase",
       "no_product_inquiries": "No product inquiry records",
-      "product_inquiry_hint": "Start your first product inquiry by clicking the inquiry button on the product details page"
+      "product_inquiry_hint": "Start your first product inquiry by clicking the inquiry button on the product details page",
+      "no_notifications": "No notifications yet",
+      "no_notifications_hint": "New notifications will appear here when available"
   },
   "login":{
       "error":"Login failed, please try again",
