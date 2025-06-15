@@ -29,7 +29,7 @@ import { eventBus } from "../utils/eventBus";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MENU_WIDTH = widthUtils(140, 140).width; // 增加菜单宽度
 const AVAILABLE_WIDTH = SCREEN_WIDTH - MENU_WIDTH - 20; // 20 for padding
-const NUM_COLUMNS = 4;
+const NUM_COLUMNS = 3;
 const ITEM_MARGIN = "2.66%";
 const ITEM_WIDTH = AVAILABLE_WIDTH / NUM_COLUMNS - AVAILABLE_WIDTH * 0.0266;
 
