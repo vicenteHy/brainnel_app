@@ -415,39 +415,37 @@ export const PhoneLoginScreen = () => {
                 phoneNumber: `${selectedCountry?.phoneCode} ${phoneNumber}` 
               })}
             </Text>
-            <View style={styles.codeInputContainer}>
-              <View style={styles.codeInputWrapper}>
-                <TextInput
-                  style={styles.verificationInput}
-                  placeholder={t('phoneLogin.verificationCode.placeholder')}
-                  placeholderTextColor="#999"
-                  value={verificationCode}
-                  onChangeText={(text) => {
-                    // 只允许输入数字，最多4位
-                    const numericText = text.replace(/[^0-9]/g, '').slice(0, 4);
-                    setVerificationCode(numericText);
-                  }}
-                  keyboardType="numeric"
-                  returnKeyType="done"
-                  autoFocus
-                  maxLength={4}
-                  textAlign="center"
-                />
-              </View>
-              <TouchableOpacity 
-                style={styles.resendButton}
-                onPress={async () => {
-                  if (canResend) {
-                    await handleSendOtp();
-                  }
+            <View style={styles.codeInputWrapper}>
+              <TextInput
+                style={styles.verificationInput}
+                placeholder={t('phoneLogin.verificationCode.placeholder')}
+                placeholderTextColor="#999"
+                value={verificationCode}
+                onChangeText={(text) => {
+                  // 只允许输入数字，最多4位
+                  const numericText = text.replace(/[^0-9]/g, '').slice(0, 4);
+                  setVerificationCode(numericText);
                 }}
-                disabled={!canResend}
-              >
-                <Text style={[styles.resendButtonText, !canResend && styles.resendButtonDisabled]}>
-                  {canResend ? t('phoneLogin.verificationCode.resendCode') : `${resendCountdown}s`}
-                </Text>
-              </TouchableOpacity>
+                keyboardType="numeric"
+                returnKeyType="done"
+                autoFocus
+                maxLength={4}
+                textAlign="center"
+              />
             </View>
+            <TouchableOpacity 
+              style={styles.resendContainer}
+              onPress={async () => {
+                if (canResend) {
+                  await handleSendOtp();
+                }
+              }}
+              disabled={!canResend}
+            >
+              <Text style={[styles.resendText, !canResend && styles.resendTextDisabled]}>
+                {canResend ? t('phoneLogin.verificationCode.resendCode') : `${resendCountdown}s`}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -742,10 +740,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  codeInputContainer: {
-    position: 'relative',
-    marginBottom: 24,
-  },
   codeInputWrapper: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
@@ -757,6 +751,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
+    marginBottom: 24,
   },
   verificationInput: {
     borderWidth: 2,
@@ -771,22 +766,20 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     minHeight: 64,
   },
-  resendButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+  resendContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 24,
   },
-  resendButtonText: {
-    fontSize: 14,
-    color: '#FF5100',
+  resendText: {
+    fontSize: 16,
+    color: '#FF6B35',
     fontWeight: '600',
+    textDecorationLine: 'underline',
   },
-  resendButtonDisabled: {
+  resendTextDisabled: {
     color: '#999',
+    textDecorationLine: 'none',
   },
   switchToPasswordContainer: {
     alignItems: 'center',
