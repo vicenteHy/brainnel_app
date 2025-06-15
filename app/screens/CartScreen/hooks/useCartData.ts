@@ -16,7 +16,7 @@ import Toast from "react-native-toast-message";
 export const useCartData = () => {
   const [cartList, setCartList] = useState<GetCartList[]>([]);
   const {
-    user: { user_id, currency, vip_discount, country_code, is_leader },
+    user: { user_id, currency, vip_discount, country_code, is_leader, vip_level },
   } = useUserStore();
   const { updateCartItemCount, setCartItemCount } = useCartStore();
   const [selectedItems, setSelectedItems] = useState<{
@@ -526,6 +526,7 @@ export const useCartData = () => {
     user_id,
     currency,
     vip_discount,
+    vip_level,
     country_code,
     is_leader,
     convertCurrency,

@@ -43,6 +43,7 @@ export const CartScreen = () => {
     user_id,
     currency,
     vip_discount,
+    vip_level,
     country_code,
     is_leader,
     convertCurrency,
@@ -531,6 +532,7 @@ export const CartScreen = () => {
                   index1={index1}
                   user_id={user_id?.toString() || null}
                   vip_discount={vip_discount}
+                  vip_level={vip_level}
                   editingItem={editingItem}
                   quantityInput={quantityInput}
                   onToggleSelection={toggleSelection}

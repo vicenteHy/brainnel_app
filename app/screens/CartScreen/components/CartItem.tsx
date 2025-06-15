@@ -24,6 +24,7 @@ interface CartItemProps {
   index1: number;
   user_id: string | null;
   vip_discount: number;
+  vip_level: number;
   editingItem: {
     cartId: number;
     cartItemId: number;
@@ -60,6 +61,7 @@ export const CartItem: React.FC<CartItemProps> = ({
   index1,
   user_id,
   vip_discount,
+  vip_level,
   editingItem,
   quantityInput,
   onToggleSelection,
@@ -217,15 +219,17 @@ export const CartItem: React.FC<CartItemProps> = ({
                             {formatPrice(Number(sku.original_price), sku.currency)} {sku.currency}
                           </Text>
                         </View>
-                        <View style={styles.vipContainer}>
-                          <Image
-                            source={require("../../../../assets/img/zkVIP1.png")}
-                            style={styles.vipImage}
-                          />
-                          <Text style={styles.discountPercentageTextStyle}>
-                            -{((1 - vip_discount) * 100).toFixed(0)}%
-                          </Text>
-                        </View>
+                        {vip_level > 0 && (
+                          <View style={styles.vipContainer}>
+                            <Image
+                              source={require("../../../../assets/img/zkVIP1.png")}
+                              style={styles.vipImage}
+                            />
+                            <Text style={styles.discountPercentageTextStyle}>
+                              -{((1 - vip_discount) * 100).toFixed(0)}%
+                            </Text>
+                          </View>
+                        )}
                       </View>
 
                       {/* Actual price - right below discount price */}
