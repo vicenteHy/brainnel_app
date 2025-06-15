@@ -203,8 +203,6 @@ export const CategoryScreen = () => {
         <View style={styles.subCategoryInfo}>
           <Text
             style={styles.subCategoryName}
-            numberOfLines={2}
-            ellipsizeMode="tail"
           >
             {getSubCategoryTransLanguage(item)}
           </Text>
@@ -367,7 +365,6 @@ const styles = StyleSheet.create({
   },
   subCategoryInfo: {
     padding: 8,
-    minHeight: 45,
     justifyContent: "center",
     alignItems: "center",
   },
