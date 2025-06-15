@@ -523,6 +523,7 @@ export const styles = StyleSheet.create({
   iconRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
     flex: 1,
   },
   imageContainer: {
@@ -532,13 +533,17 @@ export const styles = StyleSheet.create({
   mobileMoneyTextContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
     marginTop: 5,
+    marginLeft: 0,
   },
   mobileMoneyImgContainer: {
     width: widthUtils(30, 80).width,
     height: widthUtils(30, 30).height,
     borderWidth: 0,
     marginRight: 5,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
   },
   mobileMoneyImg: {
     width: widthUtils(30, 80).width,

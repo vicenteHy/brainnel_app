@@ -424,7 +424,7 @@
       "pay_now": "Payer maintenant",
       "payment_method": "Mode de paiement",
       "enter_phone": "Veuillez saisir le numéro de téléphone",
-      "phone_placeholder": "Entrez le numéro de téléphone",
+      "phone_placeholder": "Entrez le numéro de téléphone avec un solde suffisant",
       "phone_required": "Le numéro de téléphone est requis pour Mobile Money",
       "phone_format_error": "Nombre de chiffres du numéro de téléphone incorrect",
       "requires_digits": "Chiffres requis",

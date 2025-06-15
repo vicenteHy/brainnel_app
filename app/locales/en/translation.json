@@ -735,7 +735,7 @@
           "pay_now": "Pay Now",
           "payment_method": "Payment Method",
           "enter_phone": "Please enter phone number",
-          "phone_placeholder": "Enter phone number",
+          "phone_placeholder": "Enter phone number with enough money",
           "phone_required": "Phone number is required for Mobile Money",
           "phone_format_error": "Incorrect phone number digits",
           "requires_digits": "Required digits",

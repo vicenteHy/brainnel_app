@@ -595,6 +595,11 @@ export const PreviewOrder = () => {
   const getPaymentMethodName = (payMethod: string) => {
     switch (payMethod) {
       case "mobile_money":
+        // 根据选择的国家显示运营商名称
+        const operatorName = getOperatorNameByCountry();
+        if (operatorName) {
+          return `${t("order.preview.mobile_money")}（${operatorName}）`;
+        }
         return t("order.preview.mobile_money");
       case "wave":
         return t("order.preview.wave");
@@ -607,6 +612,31 @@ export const PreviewOrder = () => {
       default:
         return payMethod;
     }
+  };
+
+  // 根据国家获取运营商名称
+  const getOperatorNameByCountry = () => {
+    const currentCountry = localSelectedCountry || selectedCountry;
+    if (!currentCountry) return null;
+    
+    // 根据国家代码返回主要运营商名称
+    const countryCode = currentCountry.country;
+    const operatorMap: { [key: number]: string } = {
+      225: "Orange/MTN", // 科特迪瓦
+      221: "Orange/Free", // 塞内加尔
+      237: "MTN/Orange", // 喀麦隆
+      229: "MTN/Moov", // 贝宁
+      228: "Moov/Togocel", // 多哥
+      224: "MTN/Orange", // 几内亚
+      226: "Orange/Moov", // 布基纳法索
+      223: "Orange/Malitel", // 马里
+      243: "Vodacom/Airtel", // 刚果民主共和国
+      242: "MTN/Airtel", // 刚果共和国
+      241: "Airtel/Moov", // 加蓬
+      33: "Orange/SFR", // 法国
+    };
+    
+    return operatorMap[countryCode] || null;
   };
 
   return (
@@ -1016,15 +1046,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: "#666666",
     fontWeight: "500",
-    fontFamily: 'System',
   },
   phoneInput: {
     flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    fontSize: fontSize(16),
+    fontSize: fontSize(14),
     color: "#333333",
-    fontFamily: 'System',
   },
   infoRow: {
     flexDirection: "row",
