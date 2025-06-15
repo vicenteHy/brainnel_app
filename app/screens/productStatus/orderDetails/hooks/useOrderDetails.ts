@@ -12,7 +12,6 @@ import {
   OrderItemDetails,
   CreateOrderRequest,
 } from "../../../../services/api/orders";
-import { payApi, PaymentMethod } from "../../../../services/api/payApi";
 import { settingApi } from "../../../../services/api/setting";
 import { cartApi } from "../../../../services/api/cart";
 import useUserStore from "../../../../store/user";
@@ -20,11 +19,9 @@ import { useOrderListStore } from "../../../../store/orderList";
 import { CountryList } from "../../../../constants/countries";
 import { 
   getOrderTransLanguage,
-  getAttributeTransLanguage,
-  getAttributeNameTransLanguage,
 } from "../../../../utils/languageUtils";
 
-import { TabType, LocalCountryData } from "../types";
+import { LocalCountryData } from "../types";
 import { formatPhoneNumber } from "../utils/phoneUtils";
 
 interface UseOrderDetailsParams {
@@ -38,58 +35,11 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
   const { user } = useUserStore();
   const {
     deleteOrder,
-    changeOrder,
-    updateOrderShippingInfo,
-    cancelOrder,
-    confirmOrder,
   } = useOrderListStore();
 
-  // 状态管理
+  // 基本状态管理
   const [orderDetails, setOrderDetails] = useState<OrderDetailsType>();
   const [isLoading, setIsLoading] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
-  const [currentTab, setCurrentTab] = useState("online");
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [tabs, setTabs] = useState<TabType[]>([
-    {
-      id: "online",
-      label: t("order.payment.online"),
-      options: [],
-    },
-    {
-      id: "offline",
-      label: t("order.payment.offline"),
-      options: [
-        { id: "cash", label: t("order.payment.cash") || "Cash", key: "cash" },
-        {
-          id: "bank",
-          label: t("order.payment.bank") || "Bank Transfer",
-          key: "bank",
-        },
-      ],
-    },
-  ]);
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
-  const [convertedAmount, setConvertedAmount] = useState<
-    {
-      converted_amount: number;
-      item_key: string;
-      original_amount: number;
-    }[]
-  >([]);
-  const [isConverting, setIsConverting] = useState(false);
-  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [isPaypalExpanded, setIsPaypalExpanded] = useState(false);
-  const [isWaveExpanded, setIsWaveExpanded] = useState(false);
-  const [paymentParams, setPaymentParams] = useState<{
-    originalAmount: number;
-    amount: number;
-    currency: string;
-    payment_method: string;
-    selectedPriceLabel: string;
-    onCloses?: () => void;
-  } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -290,57 +240,12 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
   // 初始化
   useEffect(() => {
     getOrderDetails();
-
-    // 获取支付方式
-    payApi
-      .getCountryPaymentMethods()
-      .then((res) => {
-        if (res && res.current_country_methods) {
-          setPaymentMethods(res.current_country_methods);
-
-          setTabs((prev) => {
-            const updatedTabs = [...prev];
-            const onlineTabIndex = updatedTabs.findIndex(
-              (tab) => tab.id === "online"
-            );
-
-            if (onlineTabIndex !== -1) {
-              const options = res.current_country_methods.map(
-                (method) => ({
-                  id: method.key,
-                  label: method.key.charAt(0).toUpperCase() + method.key.slice(1),
-                  key: method.key,
-                })
-              );
-
-              updatedTabs[onlineTabIndex].options = options;
-            }
-
-            return updatedTabs;
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("获取支付方式失败:", error);
-      });
   }, []);
 
   return {
-    // 状态
+    // 基本状态
     orderDetails,
     isLoading,
-    showPaymentModal,
-    selectedPayment,
-    currentTab,
-    paymentMethods,
-    tabs,
-    selectedCurrency,
-    convertedAmount,
-    isConverting,
-    isPaymentLoading,
-    isPaypalExpanded,
-    isWaveExpanded,
-    paymentParams,
     showPhoneModal,
     showCancelModal,
     isCancelling,
@@ -350,22 +255,12 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
     showCountryModal,
     loadingCountries,
 
-    // 方法
-    setShowPaymentModal,
-    setSelectedPayment,
-    setCurrentTab,
-    setSelectedCurrency,
-    setIsPaypalExpanded,
-    setIsWaveExpanded,
-    setPaymentParams,
+    // 状态设置方法
     setShowPhoneModal,
     setShowCancelModal,
     setSelectedCountry,
     setLocalSelectedCountry,
     setShowCountryModal,
-    setConvertedAmount,
-    setIsConverting,
-    setIsPaymentLoading,
 
     // 业务逻辑方法
     getOrderDetails,

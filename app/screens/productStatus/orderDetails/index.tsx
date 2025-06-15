@@ -33,10 +33,10 @@ import PowerIcon from "../../../components/PowerIcon";
 import CardIcon from "../../../components/ShoppingCartIcon";
 import WhatsAppIcon from "../../../components/WatchAppIcon";
 import IconComponent from "../../../components/IconComponent";
-import PhoneNumberInputModal from "../../BalanceScreen/PhoneNumberInputModal";
+// PhoneNumberInputModal removed - using PaymentMethod page instead
 
 // Local components
-import { PaymentModal } from "./components/PaymentModal";
+// PaymentModal removed - using direct navigation to PaymentMethod instead
 
 // Services and utils
 import {
@@ -44,7 +44,7 @@ import {
   OrderDetailsType,
   OrderItemDetails,
 } from "../../../services/api/orders";
-import { payApi } from "../../../services/api/payApi";
+// payApi removed - payment logic moved to PaymentMethod page
 import { useOrderListStore } from "../../../store/orderList";
 import { CountryList } from "../../../constants/countries";
 import {
@@ -53,6 +53,7 @@ import {
   getAttributeNameTransLanguage,
   getCountryTransLanguage,
 } from "../../../utils/languageUtils";
+import { payApi } from "../../../services/api/payApi";
 
 // Local modules
 import { useOrderDetails } from "./hooks/useOrderDetails";
@@ -78,18 +79,6 @@ export const OrderDetails = () => {
     // 状态
     orderDetails,
     isLoading,
-    showPaymentModal,
-    selectedPayment,
-    currentTab,
-    paymentMethods,
-    tabs,
-    selectedCurrency,
-    convertedAmount,
-    isConverting,
-    isPaymentLoading,
-    isPaypalExpanded,
-    isWaveExpanded,
-    paymentParams,
     showPhoneModal,
     showCancelModal,
     isCancelling,
@@ -100,21 +89,11 @@ export const OrderDetails = () => {
     loadingCountries,
 
     // 设置方法
-    setShowPaymentModal,
-    setSelectedPayment,
-    setCurrentTab,
-    setSelectedCurrency,
-    setIsPaypalExpanded,
-    setIsWaveExpanded,
-    setPaymentParams,
     setShowPhoneModal,
     setShowCancelModal,
     setSelectedCountry,
     setLocalSelectedCountry,
     setShowCountryModal,
-    setConvertedAmount,
-    setIsConverting,
-    setIsPaymentLoading,
 
     // 业务逻辑方法
     loadCountryList,
@@ -130,324 +109,6 @@ export const OrderDetails = () => {
   });
 
   const { cancelOrder, confirmOrder } = useOrderListStore();
-
-  // 支付相关逻辑
-  const onSelectPayment = (paymentId: string) => {
-    if (paymentId !== selectedPayment) {
-      setIsPaypalExpanded(false);
-      setIsWaveExpanded(false);
-    }
-
-    setSelectedPayment(paymentId);
-
-    if (paymentId === "paypal" && paymentId !== selectedPayment) {
-      setIsPaypalExpanded(true);
-      setIsConverting(true);
-      setSelectedCurrency("USD");
-
-      const data = {
-        from_currency: orderDetails?.currency || "",
-        to_currency: "USD",
-        amounts: {
-          total_amount: orderDetails?.total_amount || 0,
-          domestic_shipping_fee: orderDetails?.domestic_shipping_fee || 0,
-          shipping_fee: orderDetails?.shipping_fee || 0,
-        },
-      };
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "wave" && paymentId !== selectedPayment) {
-      setIsWaveExpanded(true);
-      setIsConverting(true);
-      setSelectedCurrency("FCFA");
-
-      const data = {
-        from_currency: orderDetails?.currency || "",
-        to_currency: "FCFA",
-        amounts: {
-          total_amount: orderDetails?.total_amount || 0,
-          domestic_shipping_fee: orderDetails?.domestic_shipping_fee || 0,
-          shipping_fee: orderDetails?.shipping_fee || 0,
-        },
-      };
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    }
-  };
-
-  const onSelectCurrency = (currency: string) => {
-    setSelectedCurrency(currency);
-    setIsConverting(true);
-    const data = {
-      from_currency: orderDetails?.currency || "",
-      to_currency: currency,
-      amounts: {
-        total_amount: orderDetails?.total_amount || 0,
-        domestic_shipping_fee: orderDetails?.domestic_shipping_fee || 0,
-        shipping_fee: orderDetails?.shipping_fee || 0,
-      },
-    };
-    payApi
-      .convertCurrency(data)
-      .then((res) => {
-        setConvertedAmount(res.converted_amounts_list);
-        setIsConverting(false);
-      })
-      .catch((error) => {
-        console.error("Currency conversion failed:", error);
-        setIsConverting(false);
-      });
-  };
-
-  // 确认支付
-  const handlePaymentConfirm = async () => {
-    if (!selectedPayment || !orderDetails?.order_id) return;
-
-    // 如果是mobile_money支付方式，显示电话号码输入模态框
-    if (selectedPayment === "mobile_money") {
-      await loadCountryList();
-
-      const params = {
-        originalAmount: orderDetails.total_amount,
-        amount: orderDetails.total_amount,
-        currency: orderDetails.currency,
-        payment_method: selectedPayment,
-        selectedPriceLabel: orderDetails.total_amount + " " + orderDetails.currency,
-        onCloses: () => setShowPaymentModal(false),
-      };
-
-      setPaymentParams(params);
-      setShowPhoneModal(true);
-      return;
-    }
-
-    setIsPaymentLoading(true);
-
-    const paymentData = {
-      order_id: orderDetails.order_id,
-      payment_method: selectedPayment,
-      currency:
-        selectedPayment === "paypal"
-          ? selectedCurrency
-          : selectedPayment === "wave"
-          ? "FCFA"
-          : orderDetails.currency,
-      total_amount:
-        selectedPayment === "paypal" || selectedPayment === "wave"
-          ? convertedAmount.reduce(
-              (acc, item) => acc + item.converted_amount,
-              0
-            )
-          : orderDetails?.total_amount || 0,
-      actual_amount:
-        selectedPayment === "paypal" || selectedPayment === "wave"
-          ? convertedAmount.reduce(
-              (acc, item) => acc + item.converted_amount,
-              0
-            )
-          : orderDetails?.actual_amount || 0,
-      shipping_fee:
-        selectedPayment === "paypal" || selectedPayment === "wave"
-          ? convertedAmount.find((item) => item.item_key === "shipping_fee")
-              ?.converted_amount || 0
-          : orderDetails?.shipping_fee || 0,
-      domestic_shipping_fee:
-        selectedPayment === "paypal" || selectedPayment === "wave"
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : orderDetails?.domestic_shipping_fee || 0,
-    };
-
-    try {
-      await ordersApi.updateOrderPaymentMethod(paymentData);
-
-      const payData = {
-        order_id: orderDetails.order_id,
-        method: selectedPayment,
-        currency:
-          selectedPayment === "paypal"
-            ? selectedCurrency
-            : selectedPayment === "wave"
-            ? "FCFA"
-            : orderDetails.currency,
-        amount:
-          selectedPayment === "paypal" || selectedPayment === "wave"
-            ? convertedAmount.reduce(
-                (acc, item) => acc + item.converted_amount,
-                0
-              )
-            : orderDetails?.total_amount || 0,
-      };
-
-      const res = await payApi.getPayInfo(payData);
-      
-      if (res.success) {
-        setIsPaymentLoading(false);
-        setShowPaymentModal(false);
-
-        if (selectedPayment === "balance") {
-          navigation.navigate("PaymentSuccessScreen", res);
-          return;
-        }
-
-        if (["wave", "paypal", "bank_card"].includes(selectedPayment)) {
-          try {
-            const canOpen = await Linking.canOpenURL(res.payment_url);
-            if (canOpen) {
-              await Linking.openURL(res.payment_url);
-            } else {
-              await Linking.openURL(res.payment_url);
-            }
-          } catch (error) {
-            console.error("Error opening payment app:", error);
-            Alert.alert(
-              t("error"),
-t("order.error.wave_app_open")
-            );
-          }
-          return;
-        }
-      } else {
-        Alert.alert(t("error"), t("pay.payment_failed"));
-      }
-    } catch (error) {
-      Alert.alert(t("error"), t("order.error.payment_update"));
-    } finally {
-      setIsPaymentLoading(false);
-    }
-  };
-
-  // 手机号码提交
-  const handlePhoneSubmit = async (phoneNumber: string) => {
-    if (!paymentParams) return;
-
-    if (paymentParams.payment_method === "mobile_money") {
-      if (!phoneNumber || phoneNumber.trim() === "") {
-        Toast.show({
-          type: "error",
-          text1: t("balance.phone_modal.phone_required"),
-        });
-        return;
-      }
-
-      const currentValidDigits = selectedCountry?.valid_digits || [8];
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, "");
-      if (!currentValidDigits.includes(cleanPhoneNumber.length)) {
-        Toast.show({
-          type: "error",
-          text1: `${t("order.error.invalid_phone")} (${
-            t("order.error.requires_digits")
-          }: ${currentValidDigits.join(", ")})`,
-        });
-        return;
-      }
-    }
-
-    setIsPaymentLoading(true);
-
-    try {
-      const formattedPhone = formatPhoneNumber(phoneNumber);
-
-      const e164Regex = /^\+[1-9]\d{1,14}$/;
-      if (!e164Regex.test(formattedPhone)) {
-        Toast.show({
-          type: "error",
-          text1: t("order.error.invalid_phone"),
-        });
-        setIsPaymentLoading(false);
-        return;
-      }
-
-      const paymentData = {
-        order_id: orderDetails?.order_id || "",
-        payment_method: paymentParams.payment_method,
-        currency: paymentParams.currency,
-        total_amount: paymentParams.amount,
-        actual_amount: paymentParams.amount,
-        shipping_fee: 0,
-        domestic_shipping_fee: 0,
-      };
-
-      await ordersApi.updateOrderPaymentMethod(paymentData);
-
-      const payData = {
-        order_id: orderDetails?.order_id || "",
-        method: paymentParams.payment_method,
-        currency: paymentParams.currency,
-        amount: paymentParams.amount,
-        extra: { phone_number: formattedPhone },
-      };
-
-      const response = await payApi.getPayInfo(payData);
-      if (response.success) {
-        setShowPhoneModal(false);
-        setShowPaymentModal(false);
-
-        Toast.show({
-          type: "success",
-          text1: response.msg,
-        });
-
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainTabs" }],
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: response.msg,
-        });
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      Alert.alert(t("error"), t("order.error.payment_update"));
-    } finally {
-      setIsPaymentLoading(false);
-    }
-  };
-
-  // 添加确定按钮禁用逻辑函数
-  const isConfirmButtonDisabled = () => {
-    if (!selectedPayment) return true;
-    if (isConverting) return true;
-    
-    if (
-      selectedPayment === "paypal" &&
-      (convertedAmount.length === 0 ||
-        !convertedAmount.find((item) => item.item_key === "total_amount"))
-    ) {
-      return true;
-    }
-
-    if (
-      selectedPayment === "wave" &&
-      (convertedAmount.length === 0 ||
-        !convertedAmount.find((item) => item.item_key === "total_amount"))
-    ) {
-      return true;
-    }
-
-    return false;
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -509,32 +170,7 @@ t("order.error.wave_app_open")
                         </Text>
                       </View>
 
-                      {route.params.status === 0 && (
-                        <TouchableOpacity
-                          style={styles.checkPaymentButton}
-                          onPress={() => {
-                            payApi
-                              .checkPaymentStatus(orderDetails.order_id)
-                              .then((res) => {
-                                if (res.status === 1) {
-                                  Toast.show({
-                                    type: "success",
-                                    text1: t("order.status.payment_success"),
-                                  });
-                                } else {
-                                  Toast.show({
-                                    type: "error",
-                                    text1: t("order.status.payment_failed"),
-                                  });
-                                }
-                              });
-                          }}
-                        >
-                          <Text style={styles.checkPaymentText}>
-                            {t("order.status.check_payment_result")}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
+
                     </View>
                   </View>
                   <View style={styles.orderStatusContentPreview}>
@@ -755,10 +391,6 @@ t("order.error.wave_app_open")
                           {orderDetails.total_amount} {orderDetails.currency}
                         </Text>
                       </View>
-                      <Text style={styles.shippingNote}>
-                        + {orderDetails.shipping_fee}{" "}
-                        {t("order.estimated_shipping")}({orderDetails.currency})
-                      </Text>
                     </View>
                   </View>
                 </View>
@@ -793,7 +425,10 @@ t("order.error.wave_app_open")
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.bottomButton}
-                  onPress={() => setShowPaymentModal(true)}
+                  onPress={() => navigation.navigate("PaymentMethod", {
+                    orderId: orderDetails.order_id,
+                    orderData: orderDetails
+                  })}
                 >
                   <Text style={styles.bottomButtonText}>{t("order.pay")}</Text>
                 </TouchableOpacity>
@@ -880,41 +515,7 @@ t("order.error.wave_app_open")
         )}
       </View>
 
-      {/* 支付模态框 */}
-      <PaymentModal
-        visible={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        tabs={tabs}
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-        selectedPayment={selectedPayment}
-        onSelectPayment={onSelectPayment}
-        paymentMethods={paymentMethods}
-        selectedCurrency={selectedCurrency}
-        onSelectCurrency={onSelectCurrency}
-        convertedAmount={convertedAmount}
-        isConverting={isConverting}
-        isPaypalExpanded={isPaypalExpanded}
-        isWaveExpanded={isWaveExpanded}
-        onConfirm={handlePaymentConfirm}
-        isPaymentLoading={isPaymentLoading}
-        isConfirmButtonDisabled={isConfirmButtonDisabled()}
-      />
-
-      {/* 手机号码输入模态框 */}
-      <PhoneNumberInputModal
-        isVisible={showPhoneModal}
-        onClose={() => setShowPhoneModal(false)}
-        paymentParams={paymentParams}
-        onSubmit={handlePhoneSubmit}
-        onCloses={() => setShowPaymentModal(false)}
-        displayCountryCode={getDisplayCountryCode(
-          loadingCountries,
-          localSelectedCountry,
-          selectedCountry
-        )}
-        onCountrySelect={() => setShowCountryModal(true)}
-      />
+      {/* 手机号码输入模态框 - 已移除，使用PaymentMethod页面代替 */}
 
       {/* 国家选择模态框 */}
       <Modal

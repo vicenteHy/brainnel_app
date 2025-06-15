@@ -4,6 +4,8 @@ import { Order } from "../../../services/api/orders";
 export type PaymentMethodRouteParams = {
   freight_forwarder_address_id?: number;
   isCOD?: boolean;
+  orderData?: any; // 从OrderDetails传递的订单数据
+  orderId?: string; // 订单ID
 };
 
 // Define the root navigation params
@@ -18,7 +20,7 @@ export type RootStackParamList = {
   OfflinePayment: undefined;
   Pay: { order_id: string };
   ShippingFee: { freight_forwarder_address_id?: number; isCOD?: boolean };
-  PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: boolean };
+  PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: boolean; orderData?: any; orderId?: string };
   // Add other routes as needed
 };
 

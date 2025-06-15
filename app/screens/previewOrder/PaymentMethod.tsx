@@ -161,18 +161,21 @@ export const PaymentMethod = () => {
       setSelectedCurrency("USD");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "USD",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("PayPal初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
         .then((res) => {
+          console.log("PayPal货币转换结果:", res);
           setConvertedAmount(res.converted_amounts_list);
           setIsConverting(false);
         })
@@ -186,18 +189,21 @@ export const PaymentMethod = () => {
       setSelectedCurrency("USD");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "USD",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("信用卡初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
         .then((res) => {
+          console.log("信用卡货币转换结果:", res);
           setConvertedAmount(res.converted_amounts_list);
           setIsConverting(false);
         })
@@ -210,14 +216,16 @@ export const PaymentMethod = () => {
       setSelectedCurrency("FCFA");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "FCFA",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("Wave初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -281,14 +289,16 @@ export const PaymentMethod = () => {
       setSelectedCurrency("USD");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "USD",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("PayPal选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -310,14 +320,16 @@ export const PaymentMethod = () => {
       setSelectedCurrency("USD");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "USD",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("信用卡选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -338,14 +350,16 @@ export const PaymentMethod = () => {
       setSelectedCurrency("FCFA");
 
       const data = {
-        from_currency: user.currency,
+        from_currency: previewOrder?.currency || user.currency,
         to_currency: "FCFA",
         amounts: {
           total_amount: previewOrder?.total_amount || 0,
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
         },
       };
+
+      console.log("Wave选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -395,17 +409,21 @@ export const PaymentMethod = () => {
     setSelectedCurrency(currency);
     setIsConverting(true);
     const data = {
-      from_currency: user.currency,
+      from_currency: previewOrder?.currency || user.currency,
       to_currency: currency,
       amounts: {
         total_amount: previewOrder?.total_amount || 0,
-        domestic_shipping_fee: createOrderData?.domestic_shipping_fee || 0,
-        shipping_fee: createOrderData?.shipping_fee || 0,
+        domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || 0,
+        shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || 0,
       },
     };
+
+    console.log("货币选择转换数据:", data);
+
     payApi
       .convertCurrency(data)
       .then((res) => {
+        console.log("货币选择转换结果:", res);
         setConvertedAmount(res.converted_amounts_list);
         setIsConverting(false);
       })
@@ -526,7 +544,78 @@ export const PaymentMethod = () => {
 
   useEffect(() => {
     setLoading(true);
-    if (route.params?.freight_forwarder_address_id) {
+    
+    // 检查是否从OrderDetails传递了订单数据
+    if (route.params?.orderData) {
+      const existingOrder = route.params.orderData;
+      console.log("使用已存在的订单数据:", existingOrder);
+      
+      // 将已存在的订单数据转换为PaymentMethod页面期望的格式
+      const previewOrderData = {
+        total_amount: existingOrder.total_amount || 0,
+        currency: existingOrder.currency || 'USD',
+        address: existingOrder.receiver_address || '',
+        shipping_fee: existingOrder.shipping_fee || 0,
+        shipping_fee_sea: existingOrder.shipping_fee || 0,
+        shipping_fee_air: existingOrder.shipping_fee || 0,
+        shipping_fee_sea_time: 0,
+        shipping_fee_air_time: 0,
+        discount_amount: 0,
+        actual_amount: existingOrder.actual_amount || existingOrder.total_amount || 0,
+        order_id: existingOrder.order_id || '',
+        domestic_shipping_fee: existingOrder.domestic_shipping_fee || 0,
+        items: existingOrder.items?.map((item: any) => ({
+          offer_id: item.offer_id,
+          cart_item_id: item.cart_item_id || 0,
+          sku_id: item.sku_id,
+          product_name: item.product_name_fr || item.product_name || '',
+          product_name_en: item.product_name_en || '',
+          product_name_ar: item.product_name_ar || '',
+          product_name_fr: item.product_name_fr || '',
+          attributes: item.sku_attributes?.map((attr: any) => ({
+            attribute_name: attr.attribute_name,
+            value: attr.attribute_value,
+          })) || [],
+          sku_image_url: item.sku_image || '',
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+        })) || []
+      };
+      
+      setPreviewOrder(previewOrderData);
+      
+      // 设置创建订单数据
+      const createOrderDataFormatted = {
+        address_id: existingOrder.address_id || 0,
+        domestic_shipping_fee: existingOrder.domestic_shipping_fee || 0,
+        shipping_fee: existingOrder.shipping_fee || 0,
+        transport_type: existingOrder.transport_type || 0,
+        currency: existingOrder.currency || 'USD',
+        total_amount: existingOrder.total_amount || 0,
+        actual_amount: existingOrder.actual_amount || existingOrder.total_amount || 0,
+        items: existingOrder.items || [],
+        receiver_address: existingOrder.receiver_address || '',
+        payment_method: '',
+        create_payment: true,
+        buyer_message: '',
+        discount_amount: 0,
+      };
+      
+      setCreateOrderData(createOrderDataFormatted);
+      
+      // 设置orderData用于页面显示
+      const orderDataFormatted = {
+        address_id: existingOrder.address_id || 0,
+        domestic_shipping_fee: existingOrder.domestic_shipping_fee || 0,
+        shipping_fee: existingOrder.shipping_fee || 0,
+        transport_type: existingOrder.transport_type || 0,
+      };
+      
+      setOrderData(orderDataFormatted);
+      setLoading(false);
+    } else if (route.params?.freight_forwarder_address_id) {
+      // 原有的新订单创建逻辑
       const data = {
         country_code: route.params.freight_forwarder_address_id,
         items: items,
@@ -541,8 +630,10 @@ export const PaymentMethod = () => {
           setLoading(false);
           Alert.alert("Error", "Failed to get preview order");
         });
+    } else {
+      setLoading(false);
     }
-  }, [route.params?.freight_forwarder_address_id]);
+  }, [route.params?.freight_forwarder_address_id, route.params?.orderData]);
 
   useEffect(() => {
     setCreateOrderData({
@@ -788,54 +879,116 @@ export const PaymentMethod = () => {
 
     setCreateLoading(true);
 
-    console.log("=== 创建订单请求数据 ===");
-    console.log("createOrderData:", JSON.stringify(createOrderData, null, 2));
-    console.log("用户信息:", { user, currency: user.currency });
-    console.log("订单数据:", { orderData, previewOrder });
-    console.log("========================");
+    // 检查是否是从OrderDetails跳转过来的（已存在订单）
+    if (route.params?.orderId && route.params?.orderData) {
+      // 更新现有订单的支付方式
+      console.log("=== 更新订单支付方式 ===");
+      console.log("订单ID:", route.params.orderId);
+      console.log("支付方式:", selectedPayment);
+      
+      const paymentData = {
+        order_id: route.params.orderId,
+        payment_method: selectedPayment,
+        currency: selectedPayment === "paypal"
+          ? selectedCurrency
+          : selectedPayment === "bank_card"
+          ? selectedCurrency
+          : selectedPayment === "wave"
+          ? "FCFA"
+          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay"))
+          ? (userLocalCurrency || user.currency)
+          : route.params.orderData.currency,
+        total_amount: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0)
+          ? getConvertedTotalForCalculation()
+          : getTotalForCalculation(),
+        actual_amount: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0)
+          ? getConvertedTotalForCalculation()
+          : getTotalForCalculation(),
+        shipping_fee: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0)
+          ? getConvertedShippingFeeForCalculation()
+          : getShippingFeeForCalculation(),
+        domestic_shipping_fee: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0)
+          ? convertedAmount.find((item) => item.item_key === "domestic_shipping_fee")?.converted_amount || 0
+          : route.params.orderData.domestic_shipping_fee || 0,
+      };
 
-    ordersApi
-      .createOrder(createOrderData as unknown as CreateOrderRequest)
-      .then((res) => {
-        setCreateLoading(false);
-        console.log("订单创建成功:", res);
-        // go to payment preview
-        navigation.navigate("PreviewOrder", {
-          data: res,
-          payMethod: selectedPayment,
-          currency: selectedPayment === "paypal" 
-        ? selectedCurrency 
-        : selectedPayment === "bank_card"
-        ? selectedCurrency
-        : selectedPayment === "wave" 
-        ? "FCFA" 
-        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) 
-        ? (userLocalCurrency || user.currency) 
-        : user.currency,
+      ordersApi
+        .updateOrderPaymentMethod(paymentData)
+        .then(() => {
+          setCreateLoading(false);
+          console.log("订单支付方式更新成功");
+          
+          // 跳转到支付预览页面
+          navigation.navigate("PreviewOrder", {
+            data: {
+              ...route.params!.orderData,
+              payment_method: selectedPayment,
+              currency: paymentData.currency,
+              total_amount: paymentData.total_amount,
+              actual_amount: paymentData.actual_amount,
+            },
+            payMethod: selectedPayment,
+            currency: paymentData.currency,
+          });
+        })
+        .catch((error) => {
+          setCreateLoading(false);
+          console.error("=== 更新订单支付方式错误 ===");
+          console.error("Error updating payment method:", error);
+          console.error("========================");
+          Alert.alert("错误", "更新支付方式失败");
         });
-      })
-      .catch((error) => {
-        setCreateLoading(false);
-        console.error("=== 订单创建错误详情 ===");
-        console.error("Error creating order:", error);
-        console.error("错误状态码:", error.status);
-        console.error("错误数据:", error.data);
-        if (error.data && error.data.detail) {
-          console.error("详细错误信息:", JSON.stringify(error.data.detail, null, 2));
-        }
-        console.error("请求的数据:", JSON.stringify(createOrderData, null, 2));
-        console.error("========================");
-        
-        let errorMessage = "创建订单失败";
-        if (error.status === 422) {
-          errorMessage = "数据验证失败，请检查订单信息";
+    } else {
+      // 原有的创建新订单逻辑
+      console.log("=== 创建订单请求数据 ===");
+      console.log("createOrderData:", JSON.stringify(createOrderData, null, 2));
+      console.log("用户信息:", { user, currency: user.currency });
+      console.log("订单数据:", { orderData, previewOrder });
+      console.log("========================");
+
+      ordersApi
+        .createOrder(createOrderData as unknown as CreateOrderRequest)
+        .then((res) => {
+          setCreateLoading(false);
+          console.log("订单创建成功:", res);
+          // go to payment preview
+          navigation.navigate("PreviewOrder", {
+            data: res,
+            payMethod: selectedPayment,
+            currency: selectedPayment === "paypal" 
+          ? selectedCurrency 
+          : selectedPayment === "bank_card"
+          ? selectedCurrency
+          : selectedPayment === "wave" 
+          ? "FCFA" 
+          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) 
+          ? (userLocalCurrency || user.currency) 
+          : user.currency,
+          });
+        })
+        .catch((error) => {
+          setCreateLoading(false);
+          console.error("=== 订单创建错误详情 ===");
+          console.error("Error creating order:", error);
+          console.error("错误状态码:", error.status);
+          console.error("错误数据:", error.data);
           if (error.data && error.data.detail) {
-            console.log("422错误详情:", error.data.detail);
+            console.error("详细错误信息:", JSON.stringify(error.data.detail, null, 2));
           }
-        }
-        
-        Alert.alert("错误", errorMessage);
-      });
+          console.error("请求的数据:", JSON.stringify(createOrderData, null, 2));
+          console.error("========================");
+          
+          let errorMessage = "创建订单失败";
+          if (error.status === 422) {
+            errorMessage = "数据验证失败，请检查订单信息";
+            if (error.data && error.data.detail) {
+              console.log("422错误详情:", error.data.detail);
+            }
+          }
+          
+          Alert.alert("错误", errorMessage);
+        });
+    }
   };
   return (
     <SafeAreaView style={styles.safeArea}>
