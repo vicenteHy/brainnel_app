@@ -798,7 +798,7 @@ export const styles = StyleSheet.create({
 
   // Profile Header
   profileHeaderContainer: {
-    paddingTop: 0,
+    paddingTop: 10,
     paddingBottom: 40,
     paddingHorizontal: 10,
   },
@@ -865,19 +865,19 @@ export const styles = StyleSheet.create({
   },
   userName: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: fontSize(14),
     fontWeight: 'bold',
     marginTop: 10,
   },
   userId: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: fontSize(10),
     marginTop: 10,
     opacity: 0.9,
   },
   userPhone: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: fontSize(14),
     marginTop: 4,
     opacity: 0.9,
   },
@@ -901,7 +901,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   vipCardTitle: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#666',
   },
   vipLevelTag: {
@@ -930,7 +930,7 @@ export const styles = StyleSheet.create({
     elevation: 0,
   },
   vipCardLink: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#999',
     marginTop: -10
   },
@@ -962,28 +962,28 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
   vipProgressLabel: {
-    fontSize: 10,
+    fontSize: fontSize(10),
     color: '#999',
   },
   vipProgressPercentage: {
-    fontSize: 10,
+    fontSize: fontSize(10),
     color: '#999',
     position: 'absolute',
     alignSelf: 'center',
     left: '48%' // Adjust to center
   },
   vipMaxLevelLabel: {
-    fontSize: 10,
+    fontSize: fontSize(10),
     color: '#FFD700',
     fontWeight: 'bold',
   },
   vipBenefits: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#999',
     marginTop: 8,
   },
   vipBenefitsHighlight: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#000',
     fontWeight: 'bold',
   },

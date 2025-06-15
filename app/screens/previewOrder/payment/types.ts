@@ -8,16 +8,17 @@ export type PaymentMethodRouteParams = {
 
 // Define the root navigation params
 export type RootStackParamList = {
-  PreviewOrder: {
-    data: Order;
-    payMethod: string;
-    currency: string;
-  };
+  Login: undefined;
+  ProductDetail: { offer_id: number, price?: number | string };
+  Home: undefined;
+  ProductList: undefined;
+  PreviewAddress: undefined;
+  AddressList: undefined;
+  PreviewOrder: { data: Order, payMethod: string, currency: string };
+  OfflinePayment: undefined;
   Pay: { order_id: string };
   ShippingFee: { freight_forwarder_address_id?: number; isCOD?: boolean };
   PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: boolean };
-  PreviewAddress: undefined;
-  AddressList: undefined;
   // Add other routes as needed
 };
 
