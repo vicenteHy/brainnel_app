@@ -44,9 +44,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   ]}
                 />
               ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarPlaceholderText}>{avatarText}</Text>
-                </View>
+                <Image
+                  source={require('../../../assets/logo/logo.png')}
+                  style={styles.avatarImage}
+                />
               )}
               {isLoadingAvatar && (
                 <View style={styles.uploadingOverlay} />
@@ -56,6 +57,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <View style={styles.userInfo}>
                 <Text style={styles.userName}>
                   {user?.username}
+                </Text>
+                <Text style={styles.userId}>
+                  ID: {user?.user_id}
                 </Text>
                 <Text style={styles.userPhone}>
                   {user?.phone}

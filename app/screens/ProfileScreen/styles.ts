@@ -860,11 +860,20 @@ export const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 16,
+    justifyContent: 'center',
+    flex: 1,
   },
   userName: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+    marginTop: 10,
+  },
+  userId: {
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 10,
+    opacity: 0.9,
   },
   userPhone: {
     color: '#fff',
