@@ -73,7 +73,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{t("order.select_payment")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButtonContainer}>
-              <Text style={styles.closeButtonText}>×</Text>
+              <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           </View>
 
@@ -124,7 +124,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                   />
                                 </View>
                                 <Text style={styles.balanceText}>
-                                  {t("order.balance_remaining") || "Balance remaining"}
+                                  {t("order.balance_remaining")}
                                   {"\n"}
                                   {user.balance}
                                   {user.currency}
@@ -208,7 +208,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           <View style={styles.paypalExpandedContainer}>
                             <View style={styles.paypalCurrencyContainer}>
                               <Text style={styles.currencyTitle}>
-                                {t("order.select_currency") || "Select Currency"}
+                                {t("order.select_currency")}
                               </Text>
                               <View style={styles.currencyButtonsContainer}>
                                 <TouchableOpacity
@@ -254,14 +254,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 <View style={styles.convertingContainer}>
                                   <ActivityIndicator size="small" color="#007efa" />
                                   <Text style={styles.convertingText}>
-                                    {t("order.converting") || "Converting..."}
+                                    {t("order.converting")}
                                   </Text>
                                 </View>
                               ) : convertedAmount.length > 0 ? (
                                 <View style={styles.convertedAmountContainer}>
                                   <Text style={styles.convertedAmountLabel}>
-                                    {t("order.equivalent_amount") ||
-                                      "Equivalent Amount:"}
+                                    {t("order.equivalent_amount")}
                                   </Text>
                                   <Text style={styles.convertedAmountValue}>
                                     {convertedAmount
@@ -282,7 +281,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           <View style={styles.paypalExpandedContainer}>
                             <View style={styles.paypalCurrencyContainer}>
                               <Text style={styles.currencyTitle}>
-                                {t("order.select_currency") || "Select Currency"}
+                                {t("order.select_currency")}
                               </Text>
                               <View style={styles.currencyButtonsContainer}>
                                 <View
@@ -307,14 +306,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 <View style={styles.convertingContainer}>
                                   <ActivityIndicator size="small" color="#007efa" />
                                   <Text style={styles.convertingText}>
-                                    {t("order.converting") || "Converting..."}
+                                    {t("order.converting")}
                                   </Text>
                                 </View>
                               ) : convertedAmount.length > 0 ? (
                                 <View style={styles.convertedAmountContainer}>
                                   <Text style={styles.convertedAmountLabel}>
-                                    {t("order.equivalent_amount") ||
-                                      "Equivalent Amount:"}
+                                    {t("order.equivalent_amount")}
                                   </Text>
                                   <Text style={styles.convertedAmountValue}>
                                     {convertedAmount

@@ -321,7 +321,7 @@ export const OrderDetails = () => {
             console.error("Error opening payment app:", error);
             Alert.alert(
               t("error"),
-              t("order.error.wave_app_open") || "Failed to open payment app"
+t("order.error.wave_app_open")
             );
           }
           return;
@@ -344,7 +344,7 @@ export const OrderDetails = () => {
       if (!phoneNumber || phoneNumber.trim() === "") {
         Toast.show({
           type: "error",
-          text1: t("balance.phone_modal.phone_required") || "Phone number is required",
+          text1: t("balance.phone_modal.phone_required"),
         });
         return;
       }
@@ -354,8 +354,8 @@ export const OrderDetails = () => {
       if (!currentValidDigits.includes(cleanPhoneNumber.length)) {
         Toast.show({
           type: "error",
-          text1: `${t("order.error.invalid_phone") || "Invalid phone number"} (${
-            t("order.error.requires_digits") || "Required digits"
+          text1: `${t("order.error.invalid_phone")} (${
+            t("order.error.requires_digits")
           }: ${currentValidDigits.join(", ")})`,
         });
         return;
@@ -570,14 +570,6 @@ export const OrderDetails = () => {
                       </View>
                     </View>
                     
-                    {/* 调试信息 - 临时添加 */}
-                    {__DEV__ && (
-                      <View style={styles.orderInfoItem}>
-                        <Text style={styles.orderInfoLabel}>
-                          调试: 状态={route.params.status}, 取件码={orderDetails.verification_code || '无'}, 货架号={orderDetails.location_code || '无'}
-                        </Text>
-                      </View>
-                    )}
                     
                     {/* 取件码 - 仅在已付款订单且有取件码时显示 */}
                     {route.params.status >= 1 && orderDetails.verification_code && (
@@ -787,7 +779,7 @@ export const OrderDetails = () => {
                       });
                       navigation.goBack();
                     } catch (error) {
-                      console.error("取消订单失败:", error);
+                      console.error("Cancel order failed:", error);
                       Toast.show({
                         type: "error",
                         text1: t("order.cancel_failed"),
@@ -844,7 +836,7 @@ export const OrderDetails = () => {
                       });
                       navigation.goBack();
                     } catch (error) {
-                      console.error("确认收货失败:", error);
+                      console.error("Confirm receipt failed:", error);
                       Toast.show({
                         type: "error",
                         text1: t("error"),
