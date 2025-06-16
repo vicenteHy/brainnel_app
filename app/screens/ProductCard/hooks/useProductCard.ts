@@ -13,9 +13,10 @@ import { t } from "../../../i18n";
 interface UseProductCardProps {
   localProduct: ProductDetailParams;
   localGroupList: ProductGroupList[];
+  onClose?: () => void;
 }
 
-export const useProductCard = ({ localProduct, localGroupList }: UseProductCardProps) => {
+export const useProductCard = ({ localProduct, localGroupList, onClose }: UseProductCardProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   
   // 模态框状态
@@ -300,6 +301,10 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
             position: "top",
             visibilityTime: 2000,
           });
+          // 加购成功后关闭弹窗
+          if (onClose) {
+            onClose();
+          }
         })
         .catch(() => {
           Alert.alert(
@@ -363,6 +368,10 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
             position: "top",
             visibilityTime: 2000,
           });
+          // 加购成功后关闭弹窗
+          if (onClose) {
+            onClose();
+          }
         })
         .catch(() => {
           Alert.alert(
@@ -426,6 +435,10 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
             position: "top",
             visibilityTime: 2000,
           });
+          // 加购成功后关闭弹窗
+          if (onClose) {
+            onClose();
+          }
         })
         .catch((err) => {
           Alert.alert(
@@ -463,6 +476,10 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
             position: "top",
             visibilityTime: 2000,
           });
+          // 加购成功后关闭弹窗
+          if (onClose) {
+            onClose();
+          }
         })
         .catch((err) => {
           Alert.alert(
@@ -472,7 +489,7 @@ export const useProductCard = ({ localProduct, localGroupList }: UseProductCardP
         });
     }
     // 不再需要这行，因为我们在每个分支中都立即显示弹窗了
-  }, [user_id, localProduct, mainProductQuantity, skuQuantities, totalPrice, selectedSize, product, groupList, hasImg, noImgList, showCustomAlert, navigation]);
+  }, [user_id, localProduct, mainProductQuantity, skuQuantities, totalPrice, selectedSize, product, groupList, hasImg, noImgList, showCustomAlert, navigation, onClose]);
 
   const handleCancelDelete = useCallback(() => {
     setDeleteModalVisible(false);

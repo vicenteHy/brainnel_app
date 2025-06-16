@@ -57,7 +57,7 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
     setQuantityInputVisible,
     setEditingItem,
     setAlertModalVisible,
-  } = useProductCard({ localProduct, localGroupList });
+  } = useProductCard({ localProduct, localGroupList, onClose });
 
   // 渲染SKU选择器
   const renderSkuSelector = () => {
