@@ -61,9 +61,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <Text style={styles.userId}>
                   ID: {user?.user_id}
                 </Text>
-                <Text style={styles.userPhone}>
-                  {user?.phone}
-                </Text>
             </View>
 
             <View style={{ flex: 1 }} />

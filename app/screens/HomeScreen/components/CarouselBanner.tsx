@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View, TouchableOpacity, Image, Dimensions } from "react-native";
-import Carousel from "react-native-reanimated-carousel";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { styles } from "../styles";
@@ -13,23 +12,12 @@ export const CarouselBanner = React.memo(
   ({ onCameraPress }: CarouselBannerProps) => {
     const screenWidth = Dimensions.get("window").width;
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
-    const [currentIndex, setCurrentIndex] = useState(0);
     
-    const data = useMemo(
-      () => [
-        {
-          imgUrl: require("../../../../assets/img/Group_1993.png"),
-          add: "TikTokScreen",
-        },
-        {
-          imgUrl: require("../../../../assets/img/Group_1994.png"),
-          add: "MemberIntroduction",
-        },
-        {
-          imgUrl: require("../../../../assets/img/Group_1995.png"),
-          add: "CompanyScreen",
-        },
-      ],
+    const bannerData = useMemo(
+      () => ({
+        imgUrl: require("../../../../assets/img/Group_1994.png"),
+        add: "TikTokScreen",
+      }),
       [],
     );
 
@@ -40,59 +28,28 @@ export const CarouselBanner = React.memo(
       [navigation],
     );
     
-    const onSnapToItem = useCallback((index: number) => {
-      setCurrentIndex(index);
-    }, []);
-    
     return (
       <View style={styles.swiperContainer}>
-        <Carousel
-          loop
-          width={screenWidth}
-          data={data}
-          height={200}
-          modeConfig={{
-            parallaxScrollingScale: 0.9,
-            parallaxScrollingOffset: 50,
+        <TouchableOpacity
+          onPress={() => handleBannerPress(bannerData.add)}
+          activeOpacity={1}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#f2f2f2",
+            borderRadius: 0,
+            overflow: "hidden",
+            height: 200,
           }}
-          onSnapToItem={onSnapToItem}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => handleBannerPress(item.add)}
-              key={item.imgUrl}
-              activeOpacity={1}
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "#f2f2f2",
-                borderRadius: 0,
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                source={item.imgUrl}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-                defaultSource={require("../../../../assets/img/banner en (3).png")}
-              />
-            </TouchableOpacity>
-          )}
-        />
-        {/* 轮播图指示灯 */}
-        <View style={styles.indicatorContainer}>
-          {data.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.indicator,
-                index === currentIndex
-                  ? styles.activeIndicator
-                  : styles.inactiveIndicator,
-              ]}
-            />
-          ))}
-        </View>
+        >
+          <Image
+            source={bannerData.imgUrl}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+            defaultSource={require("../../../../assets/img/banner en (3).png")}
+          />
+        </TouchableOpacity>
       </View>
     );
   },

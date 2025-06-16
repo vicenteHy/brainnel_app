@@ -6,8 +6,7 @@ import {
   ImageBackground,
   ScrollView,
   Image,
-  TouchableOpacity,
-  Linking
+  TouchableOpacity
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import widthUtils from "../../utils/widthUtils";
@@ -24,9 +23,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   Balance: undefined;
+  ChatScreen: {
+    product_id?: string;
+    product_image_urls?: string[];
+    subject_trans?: string;
+    min_price?: number;
+    offer_id?: string;
+  };
 };
 export const MemberIntroduction = () => {
-  const phoneNumber = '+8618066249131'; // 客服电话
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const userStore = useUserStore();
@@ -81,9 +86,7 @@ export const MemberIntroduction = () => {
               <View style={styles.VipContainerTopPhone}>
                 <View style={styles.VipContainerTopPhoneBox}>
                   <TouchableOpacity style={styles.VipContainerTopPhoneBoxTop} onPress={() => {
-                    if (userStore.user?.vip_level > 0) {
-                      Linking.openURL(`whatsapp://send?phone=${phoneNumber}`);
-                    }
+                    navigation.navigate("ChatScreen", {});
                   }}>
                     <WatchAppIcon size={20} color="#fff" />
                     <Text style={styles.VipContainerTopPhoneBoxTopText}>
@@ -520,15 +523,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    position: "absolute",
     left: 0,
     right: 0,
     top: 10,
     height: 48,
     zIndex: 10,
-    paddingLeft: 19,
-    paddingRight: 19,
-    paddingTop: 10,
     paddingBottom: 10,
   },
   backIconContainer: {
@@ -540,8 +539,7 @@ const styles = StyleSheet.create({
   titleHeading: {
     fontWeight: "600",
     fontSize: fontSize(20),
-    lineHeight: 16,
-    fontFamily: "PingFang SC",
+    lineHeight: 40,
     color: "#fff",
   },
   VipContainer: {
@@ -549,7 +547,7 @@ const styles = StyleSheet.create({
     height: widthUtils(200, 200).height,
     position: "absolute",
     left: "50%",
-    top: widthUtils(300, 300).height / 2,
+    top: 100,
     transform: [{ translateX: -widthUtils(400, 400).width / 2 }],
     borderRadius: 10,
   },

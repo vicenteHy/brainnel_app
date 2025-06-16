@@ -10,7 +10,7 @@ export const FeatureNavigationBar = React.memo(() => {
   const { t } = useTranslation();
 
   const handleInternationalShipping = useCallback(() => {
-    navigation.navigate("InternationalShipping");
+    navigation.navigate("ShippingDetailsSection");
   }, [navigation]);
 
   const handleTikTokSection = useCallback(() => {
