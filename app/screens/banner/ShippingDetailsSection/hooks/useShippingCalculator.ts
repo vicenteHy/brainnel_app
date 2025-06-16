@@ -69,12 +69,22 @@ export const useShippingCalculator = () => {
       };
 
       const response = await settingApi.getShippingFee(shippingData);
+      console.log("运费计算API响应:", response);
+      console.log("运输方式:", shippingMethod);
+      
       const fee =
         shippingMethod === "maritime"
           ? response.estimated_shipping_fee_sea
           : response.estimated_shipping_fee_air;
-      setShippingFee(fee);
-      setShippingCurrency(response.currency);
+      
+      console.log("计算出的运费:", fee);
+      console.log("货币:", response.currency);
+      
+      // 确保运费是数字类型
+      const numericFee = typeof fee === 'number' ? fee : parseFloat(fee) || 0;
+      
+      setShippingFee(numericFee);
+      setShippingCurrency(response.currency || '');
       setShowResultModal(true);
     } catch (error) {
       console.error("Error calculating shipping fee:", error);

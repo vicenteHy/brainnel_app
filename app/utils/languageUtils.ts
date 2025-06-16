@@ -6,11 +6,6 @@ export const getSubjectTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 
-  // 特殊处理中文
-  if (currentLang === "zh" && "subject" in data) {
-    return data.subject as string;
-  }
-
   // 获取所有subject_trans开头的字段
   const translationFields = Object.keys(data).filter((key) =>
     key.startsWith("subject_trans")
@@ -45,12 +40,10 @@ export const getAttributeTransLanguage = <T extends Record<string, any>>(
   const currentLang = getCurrentLanguage();
   
   if (currentLang === "fr") {
-    return data.subject_trans as string;
+    return data.value_trans || data.attribute_value || "";
   } else {
-    return data.subject_trans_en as string;
+    return data.value_trans_en || data.attribute_value_en || data.value_trans || data.attribute_value || "";
   }
-  // 特殊处理中文
- 
 };
 
 export const getAttributeNameTransLanguage = <T extends Record<string, any>>(
@@ -59,11 +52,10 @@ export const getAttributeNameTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 
-  // 特殊处理中文
-  if(currentLang === "zh" && "attribute_name" in data){
-    return data.attribute_name as string;
-  }else{
-    return data.attribute_name_en as string;
+  if (currentLang === "fr") {
+    return data.attribute_name_trans || data.attribute_name || "";
+  } else {
+    return data.attribute_name_en || data.attribute_name_trans || data.attribute_name || "";
   }
 };
 
@@ -73,15 +65,12 @@ export const getSkuNameTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 
-  // 特殊处理中文
-  if(currentLang === "zh" && "value_trans" in data){
-    return data.value_trans as string;
-  }else{
-    return data.value_trans_en as string;
+  if (currentLang === "fr") {
+    return data.value_trans || data.value || "";
+  } else {
+    return data.value_trans_en || data.value_trans || data.value || "";
   }
 };
-
-
 
 export const getSkuTransLanguage = <T extends Record<string, any>>(
   data: T
@@ -89,12 +78,7 @@ export const getSkuTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 
-  // 特殊处理中文
-  if (currentLang === "zh" && "value" in data) {
-    return data.value as string;
-  }
-
-  // 获取所有subject_trans开头的字段
+  // 获取所有value_trans开头的字段
   const translationFields = Object.keys(data).filter((key) =>
     key.startsWith("value_trans")
   );
@@ -117,12 +101,7 @@ export const getOrderTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
 
-  // 特殊处理中文
-  if (currentLang === "zh" && "value" in data) {
-    return data.value as string;
-  }
-
-  // 获取所有subject_trans开头的字段
+  // 获取所有product_name开头的字段
   const translationFields = Object.keys(data).filter((key) =>
     key.startsWith("product_name")
   );
@@ -151,7 +130,6 @@ export const getCountryTransLanguage = <T extends Record<string, any>>(
     return data.name_en as string;
   }
 };
-
 
 // 二级分类
 export const getSubCategoryTransLanguage = <T extends Record<string, any>>(

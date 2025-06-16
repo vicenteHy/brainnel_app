@@ -273,7 +273,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             >
               {sku.attributes && sku.attributes.length > 0
                 ? sku.attributes
-                    .map((attr) => attr.value_trans || attr.value)
+                    .map((attr) => getSkuNameTransLanguage(attr))
                     .join(" / ")
                 : getLiveSkuName(sku)}
             </Text>
@@ -458,12 +458,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                   >
                     {sku.attributes && sku.attributes.length > 0
                       ? sku.attributes
-                          .map(
-                            (attr) =>
-                              getSkuNameTransLanguage(attr) ||
-                              attr.value_trans ||
-                              attr.value,
-                          )
+                          .map((attr) => getSkuNameTransLanguage(attr))
                           .join(" / ")
                       : getLiveSkuName(sku) || `SKU ${index + 1}`}
                   </Text>

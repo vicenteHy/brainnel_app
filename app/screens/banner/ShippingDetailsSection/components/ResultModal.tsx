@@ -37,7 +37,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             {t("banner.shipping.calculation_result")}
           </Text>
           <Text style={styles.resultText}>
-            {t("banner.shipping.estimated_fee")}: {shippingFee?.toFixed(2)}{" "}
+            {t("banner.shipping.estimated_fee")}: {shippingFee !== null ? shippingFee.toFixed(2) : "0.00"}{" "}
             {shippingCurrency}
           </Text>
           <TouchableOpacity
