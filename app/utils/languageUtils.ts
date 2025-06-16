@@ -24,8 +24,18 @@ export const getSubjectTransLanguage = <T extends Record<string, any>>(
     return langCode === "" ? currentLang === "fr" : langCode === currentLang;
   });
 
-  // 返回匹配的翻译值，如果没有匹配则返回法语
-  return (data[matchedField || "subject_trans"] as string) || "";
+  // 先尝试获取目标语言的翻译
+  let result = "";
+  if (matchedField && data[matchedField]) {
+    result = data[matchedField] as string;
+  }
+  
+  // 如果目标语言为空，fallback到法语版本
+  if (!result && data.subject_trans) {
+    result = data.subject_trans as string;
+  }
+  
+  return result || "";
 };
 
 export const getAttributeTransLanguage = <T extends Record<string, any>>(

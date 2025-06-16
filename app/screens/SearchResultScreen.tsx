@@ -78,7 +78,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     handleRefresh,
   } = useSearchProducts();
 
-
   useEffect(() => {
     if (route.params?.keyword) {
       setSearchText(route.params.keyword);
@@ -87,6 +86,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         ...searchParams,
         keyword: route.params.keyword,
         page: 1,
+        language: getCurrentLanguage(),
       };
       setSearchParams(newParams);
       
@@ -112,6 +112,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         keyword: "", // 清空关键词，因为这是分类搜索
         category_id: route.params.category_id,
         page: 1,
+        language: getCurrentLanguage(),
       };
       setSearchParams(newParams);
       
@@ -146,6 +147,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
             ...searchParams,
             keyword: searchText.trim(),
             page: 1,
+            language: getCurrentLanguage(),
           };
           setSearchParams(newParams);
           searchProducts(newParams);
@@ -157,6 +159,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
             keyword: "",
             category_id: route.params.category_id,
             page: 1,
+            language: getCurrentLanguage(),
           };
           setSearchParams(newParams);
           searchProducts(newParams);
@@ -185,6 +188,7 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         ...searchParams,
         keyword: searchText.trim(),
         page: 1,
+        language: getCurrentLanguage(),
       };
       setSearchParams(newParams);
       searchProducts(newParams);
@@ -276,16 +280,15 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const handleLoadMoreProducts = useCallback(() => {
     // 只有当产品数量大于等于10个时才允许加载更多，避免刚进入页面就触发
     if (products.length < 10) {
-      console.log('产品数量不足，跳过加载更多:', products.length);
       return;
     }
     
-    console.log('触发加载更多, 当前产品数量:', products.length);
     const { page, ...baseParams } = searchParams;
     // 确保空关键词不会影响分类搜索
     const cleanParams = {
       ...baseParams,
-      keyword: baseParams.keyword?.trim() || undefined
+      keyword: baseParams.keyword?.trim() || undefined,
+      language: getCurrentLanguage(), // 确保使用最新的语言设置
     };
     handleLoadMore(cleanParams);
   }, [handleLoadMore, searchParams, products.length]);
@@ -295,7 +298,8 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     // 确保空关键词不会影响分类搜索
     const cleanParams = {
       ...baseParams,
-      keyword: baseParams.keyword?.trim() || undefined
+      keyword: baseParams.keyword?.trim() || undefined,
+      language: getCurrentLanguage(),
     };
     handleRefresh(cleanParams);
   }, [handleRefresh, searchParams]);

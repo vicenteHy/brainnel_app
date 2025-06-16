@@ -21,8 +21,6 @@ export const useSearchProducts = () => {
         return;
       }
       
-      console.log('发起请求:', isLoadMore ? '加载更多' : '初始加载', params);
-      
       if (!isLoadMore) {
         setLoading(true);
       } else {
@@ -37,7 +35,6 @@ export const useSearchProducts = () => {
         }
         
         const res = await productApi.getSearchProducts(cleanParams);
-        console.log('请求成功, 获取商品数:', res.products.length);
         
         if (isLoadMore) {
           setProducts(prev => {
