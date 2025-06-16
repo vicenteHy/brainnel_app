@@ -85,7 +85,23 @@ export const ShippingFee = () => {
 
   const getFreightForwarderAddress = async () => {
     const transportMode = shippingMethod === "sea" ? 0 : 1;
-    await fetchFreightForwarderAddress(transportMode);
+    
+    // 调试信息
+    console.log("用户国家代码:", userStore.user?.country_code);
+    console.log("是否COD:", route.params.isCOD);
+    console.log("是否科特迪瓦用户:", userStore.user?.country_code === 225);
+    
+    // 判断is_toc：科特迪瓦用户且isCOD为true时为1
+    let isToc = 0;
+    if (userStore.user?.country_code === 225 && route.params.isCOD === true) {
+      isToc = 1;
+      console.log("满足条件，设置is_toc为1");
+    } else {
+      console.log("不满足条件，is_toc保持为0");
+    }
+    
+    console.log("获取货代地址，运输方式:", transportMode, "is_toc:", isToc);
+    await fetchFreightForwarderAddress(transportMode, isToc);
   };
 
   useEffect(() => {
@@ -94,13 +110,26 @@ export const ShippingFee = () => {
 
   useEffect(() => {
     if (state.freightForwarderAddress) {
+      console.log("货代地址返回数据:", JSON.stringify(state.freightForwarderAddress, null, 2));
       setFreightForwarderAddress(state.freightForwarderAddress);
-      // Set the first item as default
+      
+      // 优先选择当前国家地址，如果没有则选择其他地址的第一个
+      let firstItem = null;
       if (
+        state.freightForwarderAddress.current_country_addresses &&
+        state.freightForwarderAddress.current_country_addresses.length > 0
+      ) {
+        firstItem = state.freightForwarderAddress.current_country_addresses[0];
+        console.log("优先选择当前国家地址:", JSON.stringify(firstItem, null, 2));
+      } else if (
         state.freightForwarderAddress.other_addresses &&
         state.freightForwarderAddress.other_addresses.length > 0
       ) {
-        const firstItem = state.freightForwarderAddress.other_addresses[0];
+        firstItem = state.freightForwarderAddress.other_addresses[0];
+        console.log("选择其他地址的第一个:", JSON.stringify(firstItem, null, 2));
+      }
+      
+      if (firstItem) {
         const label =
           (getCurrentLanguage() === "fr"
             ? firstItem.country_name
@@ -145,20 +174,40 @@ export const ShippingFee = () => {
     }
   }, [warehouse, freightForwarderAddress]);
 
-  // 当运输方式改变时，如果已有体积重量数据，直接重新计算运费，无需重新获取货代中心
+  // 当运输方式改变时，重新获取对应的货代地址
   useEffect(() => {
-    if (shippingFeeData && selectedWarehouse) {
-      // 如果已经有运费数据和选中的仓库，直接切换显示即可，无需重新调用API
+    console.log("运输方式改变为:", shippingMethod);
+    const transportMode = shippingMethod === "sea" ? 0 : 1;
+    
+    // 调试信息
+    console.log("运输方式变化时 - 用户国家代码:", userStore.user?.country_code);
+    console.log("运输方式变化时 - 是否COD:", route.params.isCOD);
+    console.log("运输方式变化时 - 是否科特迪瓦用户:", userStore.user?.country_code === 225);
+    
+    // 判断is_toc：科特迪瓦用户且isCOD为true时为1
+    let isToc = 0;
+    if (userStore.user?.country_code === 225 && route.params.isCOD === true) {
+      isToc = 1;
+      console.log("运输方式变化时 - 满足条件，设置is_toc为1");
     } else {
-      // 只有在没有数据时才重新获取货代中心
-      const transportMode = shippingMethod === "sea" ? 0 : 1;
-      fetchFreightForwarderAddress(transportMode);
+      console.log("运输方式变化时 - 不满足条件，is_toc保持为0");
     }
+    
+    console.log("重新获取货代地址，运输方式:", transportMode, "is_toc:", isToc);
+    fetchFreightForwarderAddress(transportMode, isToc);
   }, [shippingMethod]);
 
   const changeCountryHandel = async (value: string) => {
-    if (value && freightForwarderAddress?.other_addresses) {
-      const selectedWarehouse = freightForwarderAddress.other_addresses.find(
+    if (value && freightForwarderAddress) {
+      console.log("选择的仓库标签:", value);
+      
+      // 在当前国家地址和其他地址中查找
+      const allAddresses = [
+        ...(freightForwarderAddress.current_country_addresses || []),
+        ...(freightForwarderAddress.other_addresses || [])
+      ];
+      
+      const selectedWarehouse = allAddresses.find(
         (item) =>
           ((getCurrentLanguage() === "fr"
             ? item.country_name
@@ -168,6 +217,7 @@ export const ShippingFee = () => {
             (item.detail_address ? (" | " + item.detail_address) : "")) === value
       );
 
+      console.log("找到的仓库信息:", JSON.stringify(selectedWarehouse, null, 2));
       setSelectedWarehouse(selectedWarehouse);
 
       if (selectedWarehouse && items) {
@@ -175,6 +225,8 @@ export const ShippingFee = () => {
           items: items,
           freight_forwarder_address_id: selectedWarehouse.address_id,
         };
+
+        console.log("计算运费的参数:", JSON.stringify(data, null, 2));
 
         // Only calculate if we have the necessary data
         if (data.items && data.freight_forwarder_address_id) {
@@ -514,9 +566,10 @@ export const ShippingFee = () => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={
-                    freightForwarderAddress?.other_addresses || []
-                  }
+                  data={[
+                    ...(freightForwarderAddress?.current_country_addresses || []),
+                    ...(freightForwarderAddress?.other_addresses || [])
+                  ]}
                   keyExtractor={(item, index) => index.toString()}
                   contentContainerStyle={styles.flatListContent}
                   showsVerticalScrollIndicator={false}

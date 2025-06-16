@@ -438,9 +438,9 @@ export const ordersApi = {
     apiService.post<OrderData>("/api/orders/preview/", data),
 
   // 获取货代地址
-  freightForwarderAddress: (transport_mode: number | null) =>
+  freightForwarderAddress: (transport_mode: number | null, is_toc?: number) =>
     apiService.get<AddressDataItem>(
-      `/api/freight_forwarder_address/?transport_mode=${transport_mode}`
+      `/api/freight_forwarder_address/?transport_mode=${transport_mode}${is_toc !== undefined ? `&is_toc=${is_toc}` : ''}`
     ),
 
   // 获得物流价格

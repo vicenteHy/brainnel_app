@@ -19,7 +19,7 @@ interface PreviewShippingStore {
   state: PreviewShippingState;
   
   // 获取货代地址
-  fetchFreightForwarderAddress: (transportMode: number | null) => Promise<void>;
+  fetchFreightForwarderAddress: (transportMode: number | null, isToc?: number) => Promise<void>;
   // 计算物流价格
   calculateShippingFee: (data: ShippingFeeData) => Promise<void>;
   // 计算国内物流价格
@@ -39,13 +39,13 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     error: null,
   },
   
-  fetchFreightForwarderAddress: async (transportMode: number | null) => {
+  fetchFreightForwarderAddress: async (transportMode: number | null, isToc?: number) => {
     set((state) => ({
       state: { ...state.state, isLoading: true, error: null }
     }));
     
     try {
-      const response = await ordersApi.freightForwarderAddress(transportMode);     
+      const response = await ordersApi.freightForwarderAddress(transportMode, isToc);     
       if (response.current_country_address != null){
         response.other_addresses.unshift(response.current_country_address);
       } 

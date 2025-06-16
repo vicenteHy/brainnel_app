@@ -257,46 +257,46 @@ const getEventKeyInfo = (event: any): string => {
 
 // 统一的埋点调试日志函数
 const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
-  if (__DEV__) {
-    if (eventName === 'data_sent') {
-      // 数据发送日志特殊处理，更简洁地显示事件摘要
-      console.log(`[Analytics Debug] ${eventName}:`, {
-        event: eventName,
-        timestamp: getCurrentFormattedTime(),
-        context,
-        event_count: data.event_count,
-        user_id: data.user_id,
-        session_id: data.session_id,
-      });
+  // if (__DEV__) {
+  //   if (eventName === 'data_sent') {
+  //     // 数据发送日志特殊处理，更简洁地显示事件摘要
+  //     console.log(`[Analytics Debug] ${eventName}:`, {
+  //       event: eventName,
+  //       timestamp: getCurrentFormattedTime(),
+  //       context,
+  //       event_count: data.event_count,
+  //       user_id: data.user_id,
+  //       session_id: data.session_id,
+  //     });
       
-      // 单独显示事件摘要
-      console.log(`[Analytics Debug] Events Summary:`);
-      if (data.event_list && Array.isArray(data.event_list)) {
-        data.event_list.forEach((event: any, index: number) => {
-          const keyInfo = getEventKeyInfo(event);
-          console.log(`  ${index + 1}. ${event.event_name} (${event.page_name || 'null'}) - ${keyInfo}`);
+  //     // 单独显示事件摘要
+  //     console.log(`[Analytics Debug] Events Summary:`);
+  //     if (data.event_list && Array.isArray(data.event_list)) {
+  //       data.event_list.forEach((event: any, index: number) => {
+  //         const keyInfo = getEventKeyInfo(event);
+  //         console.log(`  ${index + 1}. ${event.event_name} (${event.page_name || 'null'}) - ${keyInfo}`);
           
-          // 显示完整的事件属性
-          if (event.event_properties && event.event_properties.length > 0) {
-            console.log(`     Properties:`, JSON.stringify(event.event_properties[0], null, 2));
-          }
-        });
-      } else {
-        console.log(`  事件列表为空或无效:`, data.event_list);
-      }
+  //         // 显示完整的事件属性
+  //         if (event.event_properties && event.event_properties.length > 0) {
+  //           console.log(`     Properties:`, JSON.stringify(event.event_properties[0], null, 2));
+  //         }
+  //       });
+  //     } else {
+  //       console.log(`  事件列表为空或无效:`, data.event_list);
+  //     }
       
-      // 如果需要查看完整数据，可以取消下面这行的注释
-      // console.log(`[Analytics Debug] Full Payload:`, JSON.stringify(data.full_payload, null, 2));
-    } else {
-      // 普通事件日志 - 移除重复的timestamp，直接使用事件数据中的timestamp
-      const logData = {
-        event: eventName,
-        data,
-        context,
-      };
-      console.log(`[Analytics Debug] ${eventName}:`, logData);
-    }
-  }
+  //     // 如果需要查看完整数据，可以取消下面这行的注释
+  //     // console.log(`[Analytics Debug] Full Payload:`, JSON.stringify(data.full_payload, null, 2));
+  //   } else {
+  //     // 普通事件日志 - 移除重复的timestamp，直接使用事件数据中的timestamp
+  //     const logData = {
+  //       event: eventName,
+  //       data,
+  //       context,
+  //     };
+  //     console.log(`[Analytics Debug] ${eventName}:`, logData);
+  //   }
+  // }
 };
 
 // 创建分析数据store
@@ -390,13 +390,13 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         await AsyncStorage.removeItem(ANALYTICS_STORAGE_KEY);
         
         // 优化发送成功的调试日志，使用保存的事件列表副本
-        logAnalyticsDebug('data_sent', {
-          event_count: eventListCopy.length,
-          user_id: analyticsData.user_id,
-          session_id: analyticsData.session_id,
-          event_list: eventListCopy,
-          full_payload: analyticsData // 完整的发送数据
-        }, `数据发送成功 - 共${eventListCopy.length}个事件`);
+        // logAnalyticsDebug('data_sent', {
+        //   event_count: eventListCopy.length,
+        //   user_id: analyticsData.user_id,
+        //   session_id: analyticsData.session_id,
+        //   event_list: eventListCopy,
+        //   full_payload: analyticsData // 完整的发送数据
+        // }, `数据发送成功 - 共${eventListCopy.length}个事件`);
         
         console.log('数据发送成功:', analyticsData.event_list.length, 'events');
         
@@ -452,7 +452,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
 
         // 立即发送：事件数 >= 10
         if (newEventList.length >= 10) {
-          logAnalyticsDebug('batch_trigger', { event_count: newEventList.length }, '事件数达到阈值，触发批量发送');
+          // logAnalyticsDebug('batch_trigger', { event_count: newEventList.length }, '事件数达到阈值，触发批量发送');
           console.log('事件数达到阈值，立即发送:', newEventList.length);
           // 使用异步发送避免阻塞
           setTimeout(() => get().sendDataWithRetry(), 0);
@@ -482,7 +482,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("app_launch", eventProperties, "应用启动");
+      // logAnalyticsDebug("app_launch", eventProperties, "应用启动");
       get().addEvent(appLaunchEvent);
     },
 
@@ -501,7 +501,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("login", eventProperties, `登录${isSuccess ? '成功' : '失败'} - ${loginMethod}`);
+      // logAnalyticsDebug("login", eventProperties, `登录${isSuccess ? '成功' : '失败'} - ${loginMethod}`);
       get().addEvent(loginEvent);
     },
 
@@ -520,7 +520,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("register", eventProperties, `注册${isSuccess ? '成功' : '失败'} - ${registerMethod}`);
+      // logAnalyticsDebug("register", eventProperties, `注册${isSuccess ? '成功' : '失败'} - ${registerMethod}`);
       get().addEvent(registerEvent);
     },
 
@@ -533,7 +533,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [productInfo],
       };
 
-      logAnalyticsDebug("product_view", productInfo, `浏览商品 - ${productInfo.product_name} (来源: ${fromPage})`);
+      // logAnalyticsDebug("product_view", productInfo, `浏览商品 - ${productInfo.product_name} (来源: ${fromPage})`);
       get().addEvent(viewProductEvent);
     },
 
@@ -551,7 +551,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("search", eventProperties, `搜索关键词: "${keyword}" (来源: ${fromPage})`);
+      // logAnalyticsDebug("search", eventProperties, `搜索关键词: "${keyword}" (来源: ${fromPage})`);
       get().addEvent(searchEvent);
     },
 
@@ -572,7 +572,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("address", eventProperties, `填写地址信息 - ${addressInfo.first_name} ${addressInfo.last_name} (${addressInfo.country})`);
+      // logAnalyticsDebug("address", eventProperties, `填写地址信息 - ${addressInfo.first_name} ${addressInfo.last_name} (${addressInfo.country})`);
       get().addEvent(addressEvent);
     },
 
@@ -593,7 +593,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("shipping", eventProperties, `选择物流 - ${shippingInfo.forwarder_name} (${shippingInfo.country_city})`);
+      // logAnalyticsDebug("shipping", eventProperties, `选择物流 - ${shippingInfo.forwarder_name} (${shippingInfo.country_city})`);
       get().addEvent(shippingEvent);
     },
 
@@ -614,7 +614,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("payment", eventProperties, `选择支付方式 - ${paymentInfo.pay_method} (总价: ${paymentInfo.all_price} ${paymentInfo.currency})`);
+      // logAnalyticsDebug("payment", eventProperties, `选择支付方式 - ${paymentInfo.pay_method} (总价: ${paymentInfo.all_price} ${paymentInfo.currency})`);
       get().addEvent(paymentEvent);
     },
 
@@ -631,7 +631,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("order", eventProperties, `预览订单 (来源: ${fromPage})`);
+      // logAnalyticsDebug("order", eventProperties, `预览订单 (来源: ${fromPage})`);
       get().addEvent(previewEvent);
     },
 
@@ -652,7 +652,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("checkout", eventProperties, `结账${checkoutInfo.is_suc ? '成功' : '失败'} - 总价: ${checkoutInfo.all_price} ${checkoutInfo.currency}`);
+      // logAnalyticsDebug("checkout", eventProperties, `结账${checkoutInfo.is_suc ? '成功' : '失败'} - 总价: ${checkoutInfo.all_price} ${checkoutInfo.currency}`);
       get().addEvent(checkoutEvent);
     },
 
@@ -680,7 +680,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       };
 
       const categoryType = isSubCategory ? "子分类" : "主分类";
-      logAnalyticsDebug("category", eventProperties, `浏览${categoryType} - ${categoryInfo.category_name} (ID: ${categoryInfo.category_id})`);
+      // logAnalyticsDebug("category", eventProperties, `浏览${categoryType} - ${categoryInfo.category_name} (ID: ${categoryInfo.category_id})`);
       get().addEvent(categoryEvent);
     },
 
@@ -701,7 +701,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("sub_category", eventProperties, `浏览子分类 - ${subCategoryInfo.category_name} (ID: ${subCategoryInfo.category_id})`);
+      // logAnalyticsDebug("sub_category", eventProperties, `浏览子分类 - ${subCategoryInfo.category_name} (ID: ${subCategoryInfo.category_id})`);
       get().addEvent(subCategoryEvent);
     },
 
@@ -722,7 +722,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("addToCart", eventProperties, `添加购物车 - ${cartInfo.product_name} x${cartInfo.quantity} (总价: ${cartInfo.all_price} ${cartInfo.currency})`);
+      // logAnalyticsDebug("addToCart", eventProperties, `添加购物车 - ${cartInfo.product_name} x${cartInfo.quantity} (总价: ${cartInfo.all_price} ${cartInfo.currency})`);
       get().addEvent(addToCartEvent);
     },
 
@@ -752,7 +752,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("page_view", eventProperties, `进入页面 - ${pageName} (来源: ${fromPage})`);
+      // logAnalyticsDebug("page_view", eventProperties, `进入页面 - ${pageName} (来源: ${fromPage})`);
       get().addEvent(pageViewEvent);
     },
 
@@ -776,7 +776,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
           event_properties: [eventProperties],
         };
 
-        logAnalyticsDebug("page_leave", eventProperties, `离开页面 - ${pageName} (停留时长: ${duration}秒)`);
+        // logAnalyticsDebug("page_leave", eventProperties, `离开页面 - ${pageName} (停留时长: ${duration}秒)`);
         get().addEvent(pageLeaveEvent);
         
         // 清除页面开始时间
@@ -806,7 +806,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("error", eventProperties, `错误事件 - ${errorMessage} (上下文: ${context})`);
+      // logAnalyticsDebug("error", eventProperties, `错误事件 - ${errorMessage} (上下文: ${context})`);
       get().addEvent(errorEvent);
       console.error('[Analytics] 错误事件记录:', errorMessage, context);
     },
@@ -830,7 +830,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒, 页面数: ${state.visitedPageCount}, 事件数: ${state.event_list.length}`);
+      // logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒, 页面数: ${state.visitedPageCount}, 事件数: ${state.event_list.length}`);
       get().addEvent(sessionEndEvent);
       
       // 立即发送会话结束事件
