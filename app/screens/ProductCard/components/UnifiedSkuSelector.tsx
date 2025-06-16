@@ -16,6 +16,7 @@ import { ProductDetailParams, Sku } from "../../../services/api/productApi";
 import { t } from "../../../i18n";
 import { getSkuNameTransLanguage } from "../../../utils/languageUtils";
 import { getCurrentLanguage as getI18nLanguage } from "../../../i18n";
+import { formatPrice } from "../../../utils/priceUtils";
 
 interface UnifiedSkuSelectorProps {
   product: ProductDetailParams;
@@ -142,7 +143,63 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
   // 单SKU选择器
   const renderSingleSkuSelector = () => {
     const sku = product.skus![0];
-    const imageUrl = sku.sku_image_url || product.product_image_urls?.[0];
+    
+    // 参考ProductDetailScreen的逻辑，从attributes中获取图片
+    let skuImageFromAttributes = null;
+    if (sku.attributes && sku.attributes.length > 0) {
+      // 查找attributes中有图片的项
+      const attributeWithImage = sku.attributes.find((attr: any) => attr.sku_image_url);
+      skuImageFromAttributes = attributeWithImage?.sku_image_url;
+    }
+    
+    // 同时保持原有的字段检查作为备用
+    const skuAny = sku as any;
+    const possibleImageFields = [
+      skuImageFromAttributes, // 优先使用从attributes中找到的图片
+      sku.sku_image_url,
+      skuAny.image_url,
+      skuAny.image,
+      skuAny.sku_image,
+      skuAny.picture_url,
+      skuAny.photo_url,
+      skuAny.img_url,
+      skuAny.imageUrl,
+      skuAny.skuImageUrl,
+      skuAny.sku_picture,
+      skuAny.picture,
+      skuAny.photo
+    ];
+    
+    // 找到第一个有效的图片URL
+    const skuImageUrl = possibleImageFields.find(url => url && typeof url === 'string' && url.trim() !== '');
+    const productImageUrl = product.product_image_urls?.[0];
+    const imageUrl = skuImageUrl || productImageUrl;
+
+    // 详细的调试日志
+    if (__DEV__) {
+      console.log('单SKU完整数据结构:', sku);
+      console.log('单SKU attributes:', sku.attributes);
+      console.log('单SKU图片字段检查:', {
+        'attributes中的图片': skuImageFromAttributes,
+        'sku.sku_image_url': sku.sku_image_url,
+        'sku.image_url': skuAny.image_url,
+        'sku.image': skuAny.image,
+        'sku.sku_image': skuAny.sku_image,
+        'sku.picture_url': skuAny.picture_url,
+        'sku.photo_url': skuAny.photo_url,
+        'sku.img_url': skuAny.img_url,
+        'sku.imageUrl': skuAny.imageUrl,
+        'sku.skuImageUrl': skuAny.skuImageUrl,
+        'sku.sku_picture': skuAny.sku_picture,
+        'sku.picture': skuAny.picture,
+        'sku.photo': skuAny.photo,
+        foundSkuImage: skuImageUrl,
+        productImageUrl,
+        finalImageUrl: imageUrl,
+        isUsingSKUImage: !!skuImageUrl,
+        isUsingAttributeImage: skuImageUrl === skuImageFromAttributes
+      });
+    }
 
     return (
       <View style={styles.productBox}>
@@ -168,17 +225,47 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             marginTop: 10,
           }}
         >
-          {imageUrl && (
-            <TouchableOpacity
-              style={styles.skuImageContainer}
-              onPress={() => handleImagePress(imageUrl)}
-              activeOpacity={0.8}
-            >
-              <Image
-                source={{ uri: imageUrl }}
-                style={styles.skuImage}
-              />
-            </TouchableOpacity>
+          {imageUrl && imageUrl.trim() !== '' ? (
+            <View style={styles.skuImageWrapper}>
+              <TouchableOpacity
+                style={styles.skuImageContainer}
+                onPress={() => handleImagePress(imageUrl)}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.skuImage}
+                  onError={(error) => {
+                    if (__DEV__) {
+                      console.log('单SKU图片加载失败:', imageUrl, error);
+                    }
+                  }}
+                  onLoad={() => {
+                    if (__DEV__) {
+                      console.log('单SKU图片加载成功:', imageUrl);
+                    }
+                  }}
+                />
+              </TouchableOpacity>
+              <View style={styles.skuPriceContainer}>
+                <Text style={styles.skuPriceText}>
+                  {formatPrice(sku.offer_price || sku.price || 0, product.currency)} {product.currency}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.skuImageWrapper}>
+              <View style={styles.skuImageContainer}>
+                <View style={[styles.skuImage, styles.noImagePlaceholder]}>
+                  <Text style={styles.noImageText}>无图</Text>
+                </View>
+              </View>
+              <View style={styles.skuPriceContainer}>
+                <Text style={styles.skuPriceText}>
+                  {formatPrice(sku.offer_price || sku.price || 0, product.currency)} {product.currency}
+                </Text>
+              </View>
+            </View>
           )}
           <View style={styles.skuContent}>
             <Text
@@ -259,20 +346,106 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
       >
         <View style={styles.skuListContainer}>
           {product.skus!.map((sku, index) => {
-            const imageUrl = sku.sku_image_url || product.product_image_urls?.[0];
+            // 参考ProductDetailScreen的逻辑，从attributes中获取图片
+            let skuImageFromAttributes = null;
+            if (sku.attributes && sku.attributes.length > 0) {
+              // 查找attributes中有图片的项
+              const attributeWithImage = sku.attributes.find((attr: any) => attr.sku_image_url);
+              skuImageFromAttributes = attributeWithImage?.sku_image_url;
+            }
+            
+            // 同时保持原有的字段检查作为备用
+            const skuAny = sku as any;
+            const possibleImageFields = [
+              skuImageFromAttributes, // 优先使用从attributes中找到的图片
+              sku.sku_image_url,
+              skuAny.image_url,
+              skuAny.image,
+              skuAny.sku_image,
+              skuAny.picture_url,
+              skuAny.photo_url,
+              skuAny.img_url,
+              skuAny.imageUrl,
+              skuAny.skuImageUrl,
+              skuAny.sku_picture,
+              skuAny.picture,
+              skuAny.photo
+            ];
+            
+            // 找到第一个有效的图片URL
+            const skuImageUrl = possibleImageFields.find(url => url && typeof url === 'string' && url.trim() !== '');
+            const productImageUrl = product.product_image_urls?.[0];
+            const imageUrl = skuImageUrl || productImageUrl;
+            
+            // 详细的调试日志
+            if (__DEV__) {
+              console.log(`SKU ${index} 完整数据结构:`, sku);
+              console.log(`SKU ${index} attributes:`, sku.attributes);
+              console.log(`SKU ${index} 图片字段检查:`, {
+                'attributes中的图片': skuImageFromAttributes,
+                'sku.sku_image_url': sku.sku_image_url,
+                'sku.image_url': skuAny.image_url,
+                'sku.image': skuAny.image,
+                'sku.sku_image': skuAny.sku_image,
+                'sku.picture_url': skuAny.picture_url,
+                'sku.photo_url': skuAny.photo_url,
+                'sku.img_url': skuAny.img_url,
+                'sku.imageUrl': skuAny.imageUrl,
+                'sku.skuImageUrl': skuAny.skuImageUrl,
+                'sku.sku_picture': skuAny.sku_picture,
+                'sku.picture': skuAny.picture,
+                'sku.photo': skuAny.photo,
+                foundSkuImage: skuImageUrl,
+                productImageUrl,
+                finalImageUrl: imageUrl,
+                isUsingSKUImage: !!skuImageUrl,
+                isUsingAttributeImage: skuImageUrl === skuImageFromAttributes
+              });
+            }
+            
             return (
             <View style={styles.skuItem} key={index}>
-              {imageUrl && (
-                <TouchableOpacity
-                  style={styles.skuImageContainer}
-                  onPress={() => handleImagePress(imageUrl)}
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{ uri: imageUrl }}
-                    style={styles.skuImage}
-                  />
-                </TouchableOpacity>
+              {imageUrl && imageUrl.trim() !== '' ? (
+                <View style={styles.skuImageWrapper}>
+                  <TouchableOpacity
+                    style={styles.skuImageContainer}
+                    onPress={() => handleImagePress(imageUrl)}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.skuImage}
+                      onError={(error) => {
+                        if (__DEV__) {
+                          console.log(`SKU ${index} 图片加载失败:`, imageUrl, error);
+                        }
+                      }}
+                      onLoad={() => {
+                        if (__DEV__) {
+                          console.log(`SKU ${index} 图片加载成功:`, imageUrl);
+                        }
+                      }}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.skuPriceContainer}>
+                    <Text style={styles.skuPriceText}>
+                      {formatPrice(sku.offer_price || sku.price || 0, product.currency)} {product.currency}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.skuImageWrapper}>
+                  <View style={styles.skuImageContainer}>
+                    <View style={[styles.skuImage, styles.noImagePlaceholder]}>
+                      <Text style={styles.noImageText}>无图</Text>
+                    </View>
+                  </View>
+                  <View style={styles.skuPriceContainer}>
+                    <Text style={styles.skuPriceText}>
+                      {formatPrice(sku.offer_price || sku.price || 0, product.currency)} {product.currency}
+                    </Text>
+                  </View>
+                </View>
               )}
 
               <View style={styles.skuContent}>
@@ -573,6 +746,31 @@ const styles = StyleSheet.create({
     lineHeight: fontSize(25),
     fontWeight: "300",
     color: "#bdbdbd",
+  },
+  skuImageWrapper: {
+    flexDirection: "column",
+    alignItems: "center",
+    width: 50,
+  },
+  skuPriceContainer: {
+    marginTop: 4,
+    alignItems: "center",
+  },
+  skuPriceText: {
+    fontSize: fontSize(10),
+    fontWeight: "500",
+    color: "#FF5100",
+    textAlign: "center",
+  },
+  noImagePlaceholder: {
+    backgroundColor: "#f3f4f8",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noImageText: {
+    fontSize: fontSize(12),
+    fontWeight: "500",
+    color: "#000",
   },
 });
 
