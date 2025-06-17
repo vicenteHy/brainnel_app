@@ -55,7 +55,7 @@ export const getAttributeNameTransLanguage = <T extends Record<string, any>>(
   if (currentLang === "fr") {
     return data.attribute_name_trans || data.attribute_name || "";
   } else {
-    return data.attribute_name_en || data.attribute_name_trans || data.attribute_name || "";
+    return data.attribute_name_trans_en || data.attribute_name_trans || data.attribute_name || "";
   }
 };
 

@@ -15,7 +15,9 @@ export interface Message {
 
 export interface ProductInquiry {
   product_image_urls?: string[];
+  subject?: string;
   subject_trans?: string;
+  subject_trans_en?: string;
   min_price?: number;
   offer_id?: string;
   lastInquiryTime: number;
@@ -28,13 +30,17 @@ export type RootStackParamList = {
   ChatScreen: { 
     product_id?: string;
     product_image_urls?: string[];
+    subject?: string;
     subject_trans?: string;
+    subject_trans_en?: string;
     min_price?: number;
     offer_id?: string;
   };
   ProductChatScreen: {
     product_image_urls?: string[];
+    subject?: string;
     subject_trans?: string;
+    subject_trans_en?: string;
     min_price?: number;
     offer_id?: string;
   };

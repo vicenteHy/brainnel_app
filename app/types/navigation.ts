@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Search: undefined;
   SearchResult: { keyword: string };
-  ProductDetail: { productId: string; searchKeyword?: string };
+  ProductDetail: { offer_id: string; searchKeyword?: string; price?: number };
   ShippingDetailsSection: undefined;
   InquiryScreen: undefined;
   Address:undefined

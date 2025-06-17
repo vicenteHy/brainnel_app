@@ -53,6 +53,19 @@ export default function ProductDetailScreen() {
   // 检查是否为直播商品
   const isLiveItem = route.params?.is_live_item || false;
 
+  const {
+    product,
+    groupList,
+    isLoading,
+    showBottomSheet,
+    setShowBottomSheet,
+    handleSizeSelect,
+    handleColorSelect,
+    expandedGroups,
+    toggleExpand,
+    getDisplayAttributes,
+  } = useProductDetail();
+
   // 页面加载时更新购物车数量
   useEffect(() => {
     if (user?.user_id) {
@@ -67,7 +80,7 @@ export default function ProductDetailScreen() {
         product_id: product.offer_id,
         product_name: product.subject_trans,
         product_image: product.product_image_urls?.[0] || '',
-        price: product.price || 0,
+        price: typeof product.price === 'string' ? parseFloat(product.price) || 0 : product.price || 0,
         currency: product.currency || user.currency || '$',
         category_id: product.category_id,
         seller_id: product.seller_open_id,
@@ -78,19 +91,6 @@ export default function ProductDetailScreen() {
       });
     }
   }, [product, addBrowseItem, user.currency]);
-
-  const {
-    product,
-    groupList,
-    isLoading,
-    showBottomSheet,
-    setShowBottomSheet,
-    handleSizeSelect,
-    handleColorSelect,
-    expandedGroups,
-    toggleExpand,
-    getDisplayAttributes,
-  } = useProductDetail();
 
   const { similars, isSimilarsFlag, renderSkeletonItems } = useSimilarProducts();
 
@@ -147,7 +147,9 @@ export default function ProductDetailScreen() {
     if (product) {
       navigation.navigate("ProductChatScreen", {
         product_image_urls: product.product_image_urls,
-        subject_trans: product.subject || product.subject_trans,
+        subject: product.subject,
+        subject_trans: product.subject_trans,
+        subject_trans_en: product.subject_trans_en,
         min_price: product.price,
         offer_id: product.offer_id,
       });

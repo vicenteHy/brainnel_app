@@ -61,6 +61,20 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
       return sku.name || sku.spec || sku.name_zh || '';
     }
   };
+  
+  // 获取产品名称的辅助函数（根据语言）
+  const getProductName = (): string => {
+    const currentLang = getI18nLanguage();
+    
+    if (currentLang === 'en') {
+      return product.subject_trans_en || product.subject || t("productCard.noName");
+    } else if (currentLang === 'fr') {
+      return product.subject_trans || product.subject || t("productCard.noName");
+    } else {
+      // 默认使用subject字段
+      return product.subject || t("productCard.noName");
+    }
+  };
   // 判断SKU类型
   const getSkuType = () => {
     if (!product.skus || product.skus.length === 0) {
@@ -84,7 +98,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
         <View style={styles.productItem}>
           <View style={styles.productItemTextContainer}>
             <Text style={styles.productItemText}>
-              {product.subject || t("productCard.noName")}
+              {getProductName()}
             </Text>
           </View>
         </View>
@@ -190,7 +204,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {product.subject || t("productCard.noName")}
+            {getProductName()}
           </Text>
         </View>
         <View

@@ -94,7 +94,6 @@ export type Products = Product[]
     "subject": "string",
     "subject_trans": "string",
     "vip_discount": number,
-    "subject_trans_ar": "string",
     "subject_trans_en": "string",
     "description": "string",
     "original_min_price": number,
@@ -143,6 +142,7 @@ export type Products = Product[]
         "attribute_id": "string",
         "attribute_name": "string",
         "attribute_name_trans": "string",
+        "attribute_name_trans_en": "string",
         "value": "string",
         "value_trans": "string",
         "value_trans_ar": "string",
@@ -168,7 +168,6 @@ export type Products = Product[]
     "offer_id": number,
     "subject": string,
     "subject_trans": string,
-    "subject_trans_ar": string,
     "subject_trans_en": string,
     "product_image_urls": string[],
     "category_id": number,
@@ -183,7 +182,6 @@ export type Products = Product[]
     attribute_name:string,
     has_image:boolean,
     attribute_name_trans:string,
-    attribute_name_trans_ar:string,
     attribute_name_trans_en:string,
     attributes:SkuAttribute[],
     value?:string
@@ -216,7 +214,6 @@ interface Favorite {
   subject: string;
   subject_trans: string;
   subject_trans_en: string;
-  subject_trans_ar: string;
   product_image_urls: string[];
   min_price: number;
   max_price: number;

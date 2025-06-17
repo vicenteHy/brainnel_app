@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { getAttributeTransLanguage } from '../../../utils/languageUtils';
-import fontSize from '../../../utils/fontsizeUtils';
+import { getAttributeTransLanguage, getAttributeNameTransLanguage } from '../../../utils/languageUtils';
 import { styles } from '../styles';
 
 interface ProductAttributesProps {
@@ -23,22 +22,26 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
   getDisplayAttributes,
 }) => {
   const { t } = useTranslation();
+  
+  
   return (
     <View style={styles.productDetailsContainer}>
       <View style={styles.productAttributesWrapper}>
         <View style={styles.attributesContainer}>
-          {groupList.map((item, index) =>
-            item.has_image ? (
-              <View key={item.attribute_name_trans}>
+          {groupList.map((item, index) => {
+            
+            
+            return item.has_image ? (
+              <View key={getAttributeNameTransLanguage(item)}>
                 <Text style={styles.attributeLabel}>
-                  {item.attribute_name_trans} :{" "}
+                  {getAttributeNameTransLanguage(item)} :{" "}
                   {(() => {
                     const selectedAttribute = item.attributes.find((item: any) => item.has_color);
                     return selectedAttribute ? getAttributeTransLanguage(selectedAttribute) : '';
                   })()}
                 </Text>
                 <View style={styles.horizontalFlexContainer}>
-                  {getDisplayAttributes(item.attributes, item.attribute_name_trans).map((attribute) => (
+                  {getDisplayAttributes(item.attributes, getAttributeNameTransLanguage(item)).map((attribute) => (
                     <TouchableOpacity
                       key={attribute.value}
                       onPress={() => handleColorSelect(attribute.value, index)}
@@ -54,11 +57,11 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       />
                     </TouchableOpacity>
                   ))}
-                  {!expandedGroups[item.attribute_name_trans] &&
+                  {!expandedGroups[getAttributeNameTransLanguage(item)] &&
                     item.attributes.length > 6 && (
                       <TouchableOpacity
                         style={styles.expandButton}
-                        onPress={() => toggleExpand(item.attribute_name_trans)}
+                        onPress={() => toggleExpand(getAttributeNameTransLanguage(item))}
                         activeOpacity={1}
                       >
                         <Text style={styles.expandButtonText}>
@@ -66,10 +69,10 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                         </Text>
                       </TouchableOpacity>
                     )}
-                  {expandedGroups[item.attribute_name_trans] && (
+                  {expandedGroups[getAttributeNameTransLanguage(item)] && (
                     <TouchableOpacity
                       style={styles.expandButton}
-                      onPress={() => toggleExpand(item.attribute_name_trans)}
+                      onPress={() => toggleExpand(getAttributeNameTransLanguage(item))}
                       activeOpacity={1}
                     >
                       <Text style={styles.expandButtonText}>{t('collapse')}</Text>
@@ -78,12 +81,12 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                 </View>
               </View>
             ) : (
-              <View key={item.attribute_name_trans}>
+              <View key={getAttributeNameTransLanguage(item)}>
                 <Text style={styles.attributeLabel}>
-                  {item.attribute_name_trans}
+                  {getAttributeNameTransLanguage(item)}
                 </Text>
                 <View style={styles.horizontalFlexContainer}>
-                  {getDisplayAttributes(item.attributes, item.attribute_name_trans).map((attribute) => (
+                  {getDisplayAttributes(item.attributes, getAttributeNameTransLanguage(item)).map((attribute) => (
                     <TouchableOpacity
                       key={attribute.value}
                       onPress={() => handleSizeSelect(attribute.value, index)}
@@ -103,20 +106,20 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                       </Text>
                     </TouchableOpacity>
                   ))}
-                  {!expandedGroups[item.attribute_name_trans] &&
+                  {!expandedGroups[getAttributeNameTransLanguage(item)] &&
                     item.attributes.length > 6 && (
                       <TouchableOpacity
                         style={styles.expandButton}
-                        onPress={() => toggleExpand(item.attribute_name_trans)}
+                        onPress={() => toggleExpand(getAttributeNameTransLanguage(item))}
                         activeOpacity={1}
                       >
                         <Text style={styles.expandButtonText}>{t('showMore')}</Text>
                       </TouchableOpacity>
                     )}
-                  {expandedGroups[item.attribute_name_trans] && (
+                  {expandedGroups[getAttributeNameTransLanguage(item)] && (
                     <TouchableOpacity
                       style={styles.expandButton}
-                      onPress={() => toggleExpand(item.attribute_name_trans)}
+                      onPress={() => toggleExpand(getAttributeNameTransLanguage(item))}
                       activeOpacity={1}
                     >
                       <Text style={styles.expandButtonText}>{t('collapse')}</Text>
@@ -124,8 +127,8 @@ export const ProductAttributes: React.FC<ProductAttributesProps> = ({
                   )}
                 </View>
               </View>
-            )
-          )}
+            );
+          })}
         </View>
       </View>
     </View>

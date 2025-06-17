@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { t } from "../../i18n";
 import BackIcon from "../../components/BackIcon";
 import { loadChatMessages, saveChatMessages } from "./utils/storage";
+import { getSubjectTransLanguage } from "../../utils/languageUtils";
 
 interface Message {
   id?: string;
@@ -38,14 +39,16 @@ interface Message {
 
 interface ProductInfo {
   product_image_urls?: string[];
+  subject?: string;
   subject_trans?: string;
+  subject_trans_en?: string;
   min_price?: number;
   offer_id?: string;
 }
 
 type RootStackParamList = {
   ProductChatScreen: ProductInfo;
-  ProductDetail: { productId: string; searchKeyword?: string };
+  ProductDetail: { offer_id: string; searchKeyword?: string; price?: number };
   Login: undefined;
 };
 
@@ -308,7 +311,7 @@ export const ProductChatScreen = () => {
         )}
         <View style={styles.productInfoDetails}>
           <Text style={styles.productInfoName} numberOfLines={2}>
-            {productInfo.subject_trans || t("chat.product_name_unavailable", "商品名称不可用")}
+            {getSubjectTransLanguage(productInfo) || t("chat.product_name_unavailable", "商品名称不可用")}
           </Text>
           {productInfo.min_price && (
             <Text style={styles.productInfoPrice}>

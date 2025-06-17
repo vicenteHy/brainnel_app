@@ -28,7 +28,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useOrderListStore } from "../../store/orderList";
-import { getOrderTransLanguage } from "../../utils/languageUtils";
+import { getOrderTransLanguage, getAttributeTransLanguage, getAttributeNameTransLanguage } from "../../utils/languageUtils";
 import { inquiriesApi,InquiryResponseDataList } from "../../services/api/inquiries";
 // import ImageView from "react-native-image-viewing";
 
@@ -462,7 +462,7 @@ export function Status() {
                                           style={styles.orderProductItemInfoPrice}
                                           key={index}
                                         >
-                                          {attr.attribute_name}:{attr.attribute_value}
+                                          {getAttributeNameTransLanguage(attr)}:{getAttributeTransLanguage(attr)}
                                         </Text>
                                       ))}
                                     </View>

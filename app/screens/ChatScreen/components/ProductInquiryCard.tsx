@@ -6,6 +6,7 @@ import customRF from "../../../utils/customRF";
 import { ProductInquiry, RootStackParamList } from "../types";
 import useUserStore from "../../../store/user";
 import { t } from "../../../i18n";
+import { getSubjectTransLanguage } from "../../../utils/languageUtils";
 
 interface ProductInquiryCardProps {
   item: ProductInquiry;
@@ -15,10 +16,24 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useUserStore();
 
+  // 使用与产品详情页相同的语言处理函数
+  const getProductName = (): string => {
+    const name = getSubjectTransLanguage(item);
+    
+    // 如果getSubjectTransLanguage返回空，使用fallback
+    if (!name) {
+      return item.subject || t("chat.product_name_unavailable", "商品名称不可用");
+    }
+    
+    return name;
+  };
+
   const navigateToProductChat = () => {
     navigation.navigate("ProductChatScreen", {
       product_image_urls: item.product_image_urls,
+      subject: item.subject,
       subject_trans: item.subject_trans,
+      subject_trans_en: item.subject_trans_en,
       min_price: item.min_price,
       offer_id: item.offer_id,
     });
@@ -39,7 +54,7 @@ export const ProductInquiryCard: React.FC<ProductInquiryCardProps> = ({ item }) 
         
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={2}>
-            {item.subject_trans || t("chat.product_name_unavailable", "商品名称不可用")}
+            {getProductName()}
           </Text>
           {item.min_price && (
             <Text style={styles.productPrice}>
