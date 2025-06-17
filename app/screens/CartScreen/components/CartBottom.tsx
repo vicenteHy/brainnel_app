@@ -70,13 +70,7 @@ export const CartBottom: React.FC<CartBottomProps> = ({
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: fontSize(18),
-                  fontWeight: "700",
-                }}
-              >
+              <Text style={styles.submitButtonText}>
                 {t("cart.submit")}
               </Text>
             )}
