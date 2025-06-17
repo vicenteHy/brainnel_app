@@ -138,16 +138,7 @@ export const CartScreen = () => {
     const itemToRemove = cartList.find((item) => item.cart_id === cartId);
     const skuToRemove = itemToRemove?.skus.find((sku) => sku.cart_item_id === cartItemId);
     
-    console.log('📋 [Delete] 删除目标信息', {
-      productName: itemToRemove?.subject,
-      skuInfo: skuToRemove ? {
-        quantity: skuToRemove.quantity,
-        price: skuToRemove.price,
-        selected: skuToRemove.selected,
-        attributes: skuToRemove.attributes.map(attr => attr.value).join(', ')
-      } : null,
-      totalSkusInProduct: itemToRemove?.skus.length || 0
-    });
+
     
     setItemToDelete({ cartId, cartItemId, cartId1 });
     setDeleteModalVisible(true);
@@ -434,44 +425,95 @@ export const CartScreen = () => {
 
       // 获取50000FCFA等值的用户货币金额
       const minAmountInUserCurrency = await convertCurrency();
-      let isCOD = true;
       
-      // 如果是leader（is_leader = 1），无论金额多少都可以购买
+      console.log('🔍 [COD-DEBUG] ===== 金额检查和COD判断开始 =====');
+      console.log('🔍 [COD-DEBUG] 用户信息:', {
+        user_id,
+        is_leader,
+        country_code,
+        currency,
+        totalAmount,
+        minAmountInUserCurrency
+      });
+      
+      // 第一步：检查是否可以下单（金额限制）
+      console.log('📋 [COD-DEBUG] ===== 步骤1: 下单资格检查 =====');
       if (is_leader === 1) {
-        isCOD = true;
+        console.log('👑 [COD-DEBUG] Leader用户 -> 无金额限制，可以下单');
       } else {
+        console.log('👤 [COD-DEBUG] 普通用户，检查金额限制');
+        
         if (country_code !== 225) {
-          // 非科特迪瓦用户：需要达到50000FCFA等值金额
+          console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 (country_code: %d)', country_code);
+          // 非科特迪瓦用户：需要达到50000FCFA等值金额才能下单
           if (totalAmount < minAmountInUserCurrency) {
+            console.log('❌ [COD-DEBUG] 金额不足: %f < %f, 无法下单', totalAmount, minAmountInUserCurrency);
             Toast.show({
               text1: `${t('cart.minimum')}${minAmountInUserCurrency?.toFixed(2)}${currency}`,
             });
             return;
+          } else {
+            console.log('✅ [COD-DEBUG] 非科特迪瓦用户金额充足，可以下单');
           }
         } else {
-          // 科特迪瓦(225)用户：根据金额判断基础COD资格
-          if (currency === "FCFA") {
-            // FCFA用户：直接比较50000FCFA
-            if (totalAmount < 50000) {
-              isCOD = false; // 低于50000FCFA，基础上不能COD
-            } else {
-              isCOD = true; // 达到50000FCFA，基础上可以COD
-            }
-          } else {
-            // USD/EUR等其他货币用户：比较等值金额
-            if (totalAmount < minAmountInUserCurrency) {
-              isCOD = false; // 低于50000FCFA等值，基础上不能COD
-            } else {
-              isCOD = true; // 达到50000FCFA等值，基础上可以COD
-            }
-          }
-          // 注意：最终的COD判断还需要在ShippingFee页面结合运输方式确定
-          // 如果选择空运，则强制为预付（isCOD = false）
+          console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户 (country_code: 225) -> 无金额限制，可以下单');
         }
       }
+      
+      // 第二步：判断isToc参数（科特迪瓦用户且金额<50000FCFA时为1）
+      console.log('📋 [COD-DEBUG] ===== 步骤2: isToc参数判断 =====');
+      let isToc = 0;
+      
+      if (country_code === 225) {
+        console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户，根据金额判断isToc');
+        // 科特迪瓦用户：金额<50000FCFA时isToc=1
+        if (currency === "FCFA") {
+          console.log('💰 [COD-DEBUG] FCFA货币，检查50000FCFA门槛');
+          if (totalAmount < 50000) {
+            isToc = 1; // 低于50000FCFA，isToc=1
+            console.log('⬇️ [COD-DEBUG] FCFA金额 %f < 50000 -> isToc: 1 (小金额订单)', totalAmount);
+          } else {
+            isToc = 0; // 达到50000FCFA，isToc=0
+            console.log('⬆️ [COD-DEBUG] FCFA金额 %f >= 50000 -> isToc: 0 (大金额订单)', totalAmount);
+          }
+        } else {
+          console.log('💱 [COD-DEBUG] 非FCFA货币 (%s)，检查等值金额', currency);
+          if (totalAmount < minAmountInUserCurrency) {
+            isToc = 1; // 低于50000FCFA等值，isToc=1
+            console.log('⬇️ [COD-DEBUG] 等值金额 %f < %f -> isToc: 1 (小金额订单)', totalAmount, minAmountInUserCurrency);
+          } else {
+            isToc = 0; // 达到50000FCFA等值，isToc=0
+            console.log('⬆️ [COD-DEBUG] 等值金额 %f >= %f -> isToc: 0 (大金额订单)', totalAmount, minAmountInUserCurrency);
+          }
+        }
+      } else {
+        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> isToc: 0');
+        isToc = 0;
+      }
+      
+      // 第三步：根据isToc判断初始COD状态
+      console.log('📋 [COD-DEBUG] ===== 步骤3: 初始COD状态判断 =====');
+      let isCOD = true;
+      
+      if (country_code === 225) {
+        if (isToc === 1) {
+          isCOD = false; // 科特迪瓦小金额用户不可以COD
+          console.log('✅ [COD-DEBUG] 科特迪瓦小金额订单 -> COD: false (不可货到付款)');
+        } else {
+          isCOD = true; // 科特迪瓦大金额用户可以COD
+          console.log('✅ [COD-DEBUG] 科特迪瓦大金额订单 -> COD: true (可货到付款)'); 
+        }
+        console.log('⚠️ [COD-DEBUG] 注意：最终COD状态还需在ShippingFee页面根据运输方式调整');
+      } else {
+        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> COD: true (可货到付款)');
+        isCOD = true;
+      }
+
+      console.log('🔍 [COD-DEBUG] CartScreen最终状态: isCOD=%s, isToc=%d', isCOD ? 'true' : 'false', isToc);
+      console.log('🔍 [COD-DEBUG] ===== 金额检查和COD判断结束 =====');
 
       setItems(items);
-      navigation.navigate("PreviewAddress", { isCOD: isCOD });
+      navigation.navigate("PreviewAddress", { isCOD: isCOD, isToc: isToc });
     } catch (error) {
       console.error("提交订单失败:", error);
       Toast.show({

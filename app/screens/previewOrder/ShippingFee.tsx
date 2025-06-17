@@ -42,12 +42,14 @@ import useAnalyticsStore from "../../store/analytics";
 import flagMap from "../../utils/flagMap";
 
 type RootStackParamList = {
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean };
-  PaymentMethod: { freight_forwarder_address_id: number; isCOD?: boolean };
+  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean; isToc?: number };
+  PaymentMethod: { freight_forwarder_address_id: number; isCOD?: boolean; isToc?: number };
 };
 type ShippingFeeParams = {
   cart_item_id: any;
   totalAmount: number;
+  isCOD?: boolean;
+  isToc?: number;
 };
 
 export const ShippingFee = () => {
@@ -87,18 +89,16 @@ export const ShippingFee = () => {
     const transportMode = shippingMethod === "sea" ? 0 : 1;
     
     // 调试信息
-    console.log("用户国家代码:", userStore.user?.country_code);
-    console.log("是否COD:", route.params.isCOD);
-    console.log("是否科特迪瓦用户:", userStore.user?.country_code === 225);
+    console.log('🚢 [COD-DEBUG] ===== ShippingFee页面参数检查 =====');
+    console.log('🚢 [COD-DEBUG] 接收到的路由参数:', route.params);
+    console.log('🚢 [COD-DEBUG] 用户国家代码:', userStore.user?.country_code);
+    console.log('🚢 [COD-DEBUG] 从CartScreen接收的COD状态:', route.params.isCOD);
+    console.log('🚢 [COD-DEBUG] 从CartScreen接收的isToc状态:', route.params.isToc);
     
-    // 判断is_toc：科特迪瓦用户且isCOD为true时为1
-    let isToc = 0;
-    if (userStore.user?.country_code === 225 && route.params.isCOD === true) {
-      isToc = 1;
-      console.log("满足条件，设置is_toc为1");
-    } else {
-      console.log("不满足条件，is_toc保持为0");
-    }
+    // 使用从CartScreen传递过来的isToc参数
+    let isToc = route.params?.isToc !== undefined ? route.params.isToc : 0;
+    console.log('🚢 [COD-DEBUG] 使用CartScreen传递的isToc值:', isToc);
+    console.log('🚢 [COD-DEBUG] isToc含义:', isToc === 1 ? '小金额订单' : '大金额订单或非科特迪瓦用户');
     
     console.log("获取货代地址，运输方式:", transportMode, "is_toc:", isToc);
     await fetchFreightForwarderAddress(transportMode, isToc);
@@ -110,23 +110,20 @@ export const ShippingFee = () => {
 
   useEffect(() => {
     if (state.freightForwarderAddress) {
-      console.log("货代地址返回数据:", JSON.stringify(state.freightForwarderAddress, null, 2));
+      console.log("🔍 [DEBUG] 货代地址返回数据:", JSON.stringify(state.freightForwarderAddress, null, 2));
+      
       setFreightForwarderAddress(state.freightForwarderAddress);
       
-      // 优先选择当前国家地址，如果没有则选择其他地址的第一个
+      // 使用other_addresses（store已将所有地址合并到此数组中）
       let firstItem = null;
       if (
-        state.freightForwarderAddress.current_country_addresses &&
-        state.freightForwarderAddress.current_country_addresses.length > 0
-      ) {
-        firstItem = state.freightForwarderAddress.current_country_addresses[0];
-        console.log("优先选择当前国家地址:", JSON.stringify(firstItem, null, 2));
-      } else if (
         state.freightForwarderAddress.other_addresses &&
         state.freightForwarderAddress.other_addresses.length > 0
       ) {
         firstItem = state.freightForwarderAddress.other_addresses[0];
-        console.log("选择其他地址的第一个:", JSON.stringify(firstItem, null, 2));
+        console.log("🔍 [DEBUG] 选择第一个地址:", JSON.stringify(firstItem, null, 2));
+      } else {
+        console.log("🔍 [DEBUG] ❌ 没有找到任何地址");
       }
       
       if (firstItem) {
@@ -184,9 +181,9 @@ export const ShippingFee = () => {
     console.log("运输方式变化时 - 是否COD:", route.params.isCOD);
     console.log("运输方式变化时 - 是否科特迪瓦用户:", userStore.user?.country_code === 225);
     
-    // 判断is_toc：科特迪瓦用户且isCOD为true时为1
+    // 判断is_toc：科特迪瓦用户且isCOD为false时为1
     let isToc = 0;
-    if (userStore.user?.country_code === 225 && route.params.isCOD === true) {
+    if (userStore.user?.country_code === 225 && route.params.isCOD === false) {
       isToc = 1;
       console.log("运输方式变化时 - 满足条件，设置is_toc为1");
     } else {
@@ -201,11 +198,8 @@ export const ShippingFee = () => {
     if (value && freightForwarderAddress) {
       console.log("选择的仓库标签:", value);
       
-      // 在当前国家地址和其他地址中查找
-      const allAddresses = [
-        ...(freightForwarderAddress.current_country_addresses || []),
-        ...(freightForwarderAddress.other_addresses || [])
-      ];
+      // 查找地址（store已将所有地址合并到other_addresses中）
+      const allAddresses = freightForwarderAddress.other_addresses || [];
       
       const selectedWarehouse = allAddresses.find(
         (item) =>
@@ -262,12 +256,26 @@ export const ShippingFee = () => {
     ) {
       // 计算更新后的COD状态：科特迪瓦用户选择空运时需要预付
       let updatedIsCOD = route.params.isCOD;
+      console.log('🚢 [COD-DEBUG] ===== 运输方式COD调整 =====');
+      console.log('🚢 [COD-DEBUG] 原始COD状态:', route.params.isCOD);
+      console.log('🚢 [COD-DEBUG] 选择的运输方式:', shippingMethod);
+      console.log('🚢 [COD-DEBUG] 用户国家代码:', userStore.user?.country_code);
+      
       if (userStore.user?.country_code === 225) {
+        console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户，检查运输方式限制');
         if (shippingMethod === "air") {
           updatedIsCOD = false; // 空运情况下科特迪瓦用户需要预付运费
+          console.log('✈️ [COD-DEBUG] 选择空运 -> 强制预付 COD: false');
+        } else {
+          console.log('🚢 [COD-DEBUG] 选择海运 -> 保持原有COD状态: %s', updatedIsCOD ? 'true' : 'false');
         }
         // 海运保持原有逻辑（基于50000FCFA判断）
+      } else {
+        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> 保持原有COD状态: %s', updatedIsCOD ? 'true' : 'false');
       }
+      
+      console.log('🚢 [COD-DEBUG] 最终COD状态:', updatedIsCOD ? 'true' : 'false');
+      console.log('🚢 [COD-DEBUG] ===== 运输方式COD调整结束 =====');
 
       setOrderData({
         ...orderData,
@@ -298,9 +306,17 @@ export const ShippingFee = () => {
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logShippingConfirm(shippingConfirmData, "shipping");
       
+      const isTocValue = route.params?.isToc !== undefined ? route.params.isToc : 0;
+      console.log('🚢 [COD-DEBUG] 导航到PaymentMethod，传递参数:', {
+        freight_forwarder_address_id: selectedWarehouse?.address_id || 0,
+        isCOD: updatedIsCOD,
+        isToc: isTocValue
+      });
+      
       navigation.navigate("PaymentMethod", {
         freight_forwarder_address_id: selectedWarehouse?.address_id || 0,
-        isCOD: updatedIsCOD
+        isCOD: updatedIsCOD,
+        isToc: isTocValue
       });
     } else {
       Alert.alert(t("order.shipping.select_method"));
@@ -566,10 +582,7 @@ export const ShippingFee = () => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={[
-                    ...(freightForwarderAddress?.current_country_addresses || []),
-                    ...(freightForwarderAddress?.other_addresses || [])
-                  ]}
+                  data={freightForwarderAddress?.other_addresses || []}
                   keyExtractor={(item, index) => index.toString()}
                   contentContainerStyle={styles.flatListContent}
                   showsVerticalScrollIndicator={false}

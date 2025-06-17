@@ -111,6 +111,10 @@ export interface OrderCreateRequest {
      * Transport Type，运输方式 1-海运 2-空运
      */
     transport_type?: number | null;
+    /**
+     * Is COD，是否货到付款
+     */
+    is_cod?: boolean | null;
     [property: string]: any;
 }
 
@@ -139,7 +143,8 @@ const initialOrderData: OrderCreateRequest = {
     currency: '',
     receiver_address: '',
     total_amount: 0,
-    transport_type: null
+    transport_type: null,
+    is_cod: false
 };
 
 const useCreateOrderStore = create<CreateOrderState>((set) => ({

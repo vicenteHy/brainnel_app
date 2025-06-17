@@ -48,9 +48,39 @@ export const PayError = () => {
   const navigation = useNavigation<NativeStackNavigationProp<PayErrorStackParamList>>();
   const route = useRoute();
   const { t } = useTranslation();
+
+  // 自定义返回处理函数
+  const handleGoBack = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{ 
+        name: 'MainTabs',
+        params: { screen: 'Home' }
+      }],
+    });
+  };
+
+  // 设置自定义返回处理
+  React.useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false, // 禁用手势返回
+      headerLeft: () => (
+        <TouchableOpacity onPress={handleGoBack} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
   
   // 获取路由参数
   const params = route.params as PayErrorRouteParams || {};
+  
+  // 添加调试日志
+  console.log("=== PayError 组件调试信息 ===");
+  console.log("完整路由参数:", JSON.stringify(params, null, 2));
+  console.log("参数类型:", typeof params);
+  console.log("参数键:", Object.keys(params));
+  
   const {
     order_no,
     order_id,
@@ -60,18 +90,22 @@ export const PayError = () => {
     orderData,
     msg
   } = params;
+  
+  console.log("解析后的参数:");
+  console.log("- order_no:", order_no);
+  console.log("- order_id:", order_id);
+  console.log("- amount:", amount);
+  console.log("- currency:", currency);
+  console.log("- errorReason:", errorReason);
+  console.log("- msg:", msg);
+  console.log("- orderData:", orderData);
+  console.log("========================");
 
   // 使用order_no或order_id作为真实订单号，优先使用order_no
   const realOrderNumber = order_no || order_id || ("ONL" + Date.now());
 
   const goToHome = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ 
-        name: 'MainTabs',
-        params: { screen: 'Home' }
-      }],
-    });
+    handleGoBack();
   };
 
   const handleRetryPayment = () => {
@@ -119,13 +153,7 @@ export const PayError = () => {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        navigation.reset({
-          index: 0,
-          routes: [{ 
-            name: 'MainTabs',
-            params: { screen: 'Home' }
-          }],
-        });
+        handleGoBack();
         return true;
       };
 

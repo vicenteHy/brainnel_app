@@ -54,6 +54,10 @@ export interface createOrderDataType {
      * Transport Type，运输方式 1-海运 2-空运
      */
     transport_type?: number | null;
+    /**
+     * Is COD，是否货到付款
+     */
+    is_cod?: boolean | null;
     [property: string]: any;
 }
 

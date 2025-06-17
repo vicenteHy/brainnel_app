@@ -15,21 +15,46 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
+import { Ionicons } from "@expo/vector-icons";
 
-// import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp } from "@react-navigation/native";
 // import { RootStackParamList } from "../../navigation/types";
 // import { payApi } from "../../services/api/payApi";
 
 type RootStackParamList = {
   MainTabs: { screen: string } | undefined;
-  PaymentSuccessScreen: undefined;
+  PaymentSuccessScreen: { order_id?: string; order_no?: string; [key: string]: any };
+  OrderDetails: { orderId?: number; status?: number };
 };
 
 export const PaymentSuccessScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   
-  // const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccessScreen'>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccessScreen'>>();
+
+  // 自定义返回处理函数
+  const handleGoBack = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{ 
+        name: 'MainTabs',
+        params: { screen: 'Home' }
+      }],
+    });
+  };
+
+  // 设置自定义返回处理
+  React.useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false, // 禁用手势返回
+      headerLeft: () => (
+        <TouchableOpacity onPress={handleGoBack} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
   // const { paymentId, PayerID } = route.params;
   // console.log("paymentId", paymentId);
   // console.log("PayerID", PayerID);
@@ -46,13 +71,7 @@ export const PaymentSuccessScreen = () => {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        navigation.reset({
-          index: 0,
-          routes: [{ 
-            name: 'MainTabs',
-            params: { screen: 'Home' }
-          }],
-        });
+        handleGoBack();
         return true; // 阻止默认返回行为
       };
 
@@ -125,13 +144,25 @@ export const PaymentSuccessScreen = () => {
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={() => {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ 
-                    name: 'MainTabs',
-                    params: { screen: 'Profile' }
-                  }],
-                });
+                // 获取订单ID，尝试从不同的路径参数中获取
+                const orderId = route.params?.order_id || route.params?.order_no || route.params?.orderId;
+                
+                if (orderId) {
+                  // 如果有订单ID，跳转到具体订单详情页面，并传递支付成功状态
+                  navigation.navigate("OrderDetails", { 
+                    orderId: parseInt(orderId.toString()),
+                    status: 1
+                  });
+                } else {
+                  // 如果没有订单ID，跳转到订单列表页面
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ 
+                      name: 'MainTabs',
+                      params: { screen: 'Profile' }
+                    }],
+                  });
+                }
               }}
             >
               <Text style={styles.secondaryButtonText}>

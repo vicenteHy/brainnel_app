@@ -94,6 +94,13 @@ export const PaymentMethod = () => {
 
   // Get isCOD parameter from route
   const isCOD = route.params?.isCOD || false;
+  
+  console.log('💳 [COD-DEBUG] ===== PaymentMethod页面参数状态 =====');
+  console.log('💳 [COD-DEBUG] 接收到的路由参数:', route.params);
+  console.log('💳 [COD-DEBUG] 最终COD状态:', isCOD ? 'true (货到付款)' : 'false (预付款)');
+  console.log('💳 [COD-DEBUG] 接收到的isToc状态:', route.params?.isToc);
+  console.log('💳 [COD-DEBUG] isToc含义:', route.params?.isToc === 1 ? '小金额订单' : '大金额订单或非科特迪瓦用户');
+  console.log('💳 [COD-DEBUG] ===== PaymentMethod页面参数状态结束 =====');
 
   // State to store the original total price (fixed, won't change)
   const [originalTotalPrice, setOriginalTotalPrice] = useState(0);
@@ -815,6 +822,9 @@ export const PaymentMethod = () => {
           : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
           ? getConvertedShippingFeeForCalculation()
           : getShippingFeeForCalculation();
+      // 添加isToc参数
+      createOrderData.is_toc = route.params?.isToc || 0;
+      console.log('💳 [COD-DEBUG] 添加is_toc参数到订单数据:', createOrderData.is_toc);
     }
     setOrderData(createOrderData || {});
 

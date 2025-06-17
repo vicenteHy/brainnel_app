@@ -135,7 +135,6 @@ export const PreviewOrder = () => {
       }
 
       const response = await settingApi.getSendSmsCountryList();
-      console.log(response);
       
       if (response && Array.isArray(response)) {
         setCountryList(response);
@@ -195,12 +194,7 @@ export const PreviewOrder = () => {
       return phone; // 如果都没有，返回原始电话号码
     }
 
-    // 如果电话号码以0开头，移除0
-    const phoneWithoutLeadingZero = cleanPhone.startsWith("0")
-      ? cleanPhone.substring(1)
-      : cleanPhone;
-
-    const formattedResult = `${countryCode}${phoneWithoutLeadingZero}`;
+    const formattedResult = `${countryCode}${cleanPhone}`;
     return formattedResult;
   };
 
@@ -343,7 +337,6 @@ export const PreviewOrder = () => {
       }
     }
 
-    console.log(route.params.currency);
 
     // 格式化电话号码，添加国家前缀
     const formattedPhone =
@@ -458,29 +451,28 @@ export const PreviewOrder = () => {
           }
 
           if (route.params.payMethod === "mobile_money") {
-            if (res.success === true) {
-              setLoading(false);
-              // 手机钱包支付成功，跳转到支付成功页面
-              navigation.navigate("PaymentSuccessScreen", res);
-              return;
-            } else {
-              // 移动支付失败的埋点数据收集
-              const checkoutFailData = prepareCheckoutData(0);
-              const analyticsStore = useAnalyticsStore.getState();
-              analyticsStore.logCheckout(checkoutFailData, "preview");
-              
-              console.log("支付结账失败埋点数据:", checkoutFailData);
-
-              setLoading(false);
-              // 手机钱包支付失败，跳转到支付失败页面
-              navigation.navigate("PayError", { 
-                msg: res.msg,
+            try {
+              // Mobile Money支付跳转到统一轮询页面
+              navigation.navigate("Pay", {
+                payUrl: res.payment_url,
+                method: "mobile_money",
+                order_id: route.params.data.order_id.toString()
+              });
+            } catch (error) {
+              console.error("Error opening Mobile Money payment:", error);
+              Alert.alert(
+                t("error"),
+                t("order.error.mobile_money_open") || "Failed to open Mobile Money payment"
+              );
+              // 打开失败时跳转到支付失败页面
+              navigation.navigate("PayError", {
                 order_id: route.params.data.order_id?.toString(),
                 order_no: route.params.data.order_no,
                 amount: route.params.data.actual_amount?.toString(),
                 currency: route.params.data.currency
               });
             }
+            return;
           }
 
           if (route.params.payMethod === "paypal") {

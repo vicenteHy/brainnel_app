@@ -6,10 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "com.brainnel.app",
     "owner": "newapp123",
-    "deepLinking": true,
     "splash": {
       "image": "./assets/logo/launch.png",
       "resizeMode": "cover",
@@ -59,21 +58,12 @@
       "permissions": [
         "android.permission.INTERNET"
       ],
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo/logo.png",
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
       "package": "com.brainnel.app",
-      "name": "brainnel",
-      "config": {
-        "facebook": {
-          "scheme": "fb995035562798467",
-          "appId": "995035562798467",
-          "displayName": "com.brainnel.app"
-        }
-      },
       "intentFilters": [
         {
           "action": "VIEW",

@@ -46,8 +46,10 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     
     try {
       const response = await ordersApi.freightForwarderAddress(transportMode, isToc);     
-      if (response.current_country_address != null){
-        response.other_addresses.unshift(response.current_country_address);
+      // 处理 current_country_addresses 数组（API实际返回的是复数）
+      if ((response as any).current_country_addresses && (response as any).current_country_addresses.length > 0){
+        // 将当前国家地址数组中的所有地址添加到other_addresses前面
+        response.other_addresses.unshift(...(response as any).current_country_addresses);
       } 
 
       // 收集货代地址选择埋点数据

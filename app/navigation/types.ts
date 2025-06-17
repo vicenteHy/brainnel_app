@@ -58,12 +58,12 @@ export type RootStackParamList = {
   Collection: undefined;
   MemberIntroduction: undefined;
   CompanyScreen: undefined;
-  PreviewAddress: undefined;
+  PreviewAddress: { isCOD?: boolean; isToc?: number };
   AddressList: undefined;
   AddAddress: undefined;
   EditAddress: undefined;
   PaymentMethod: undefined;
-  ShippingFee: undefined;
+  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean; isToc?: number };
   PreviewOrder: undefined;
   ForgotPhonePassword: undefined;
   PhoneLoginScreen: undefined;

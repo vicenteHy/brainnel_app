@@ -64,12 +64,11 @@ export interface ConvertCurrencyBody {
   };
 }
 
-export interface PaySuccessCallbackBody {
+export interface PaymentResponse {
   success: boolean;
-  msg: string;
   order_id: number;
-  transaction_id: string;
-  status: number;
+  status: number; // 0: unpaid, 1: paid
+  msg?: string; // 失败原因
 }
 
 export interface rechargeHistory {
@@ -106,11 +105,6 @@ export interface TransactionsResponse {
   page_size: number;
 }
 
-export interface WavePayResponse {
-  order_id: string;
-  pay_status: number;
-  status: number;
-}
 
 export const payApi = {
   // 获取当前国家支付方式
@@ -132,7 +126,7 @@ export const payApi = {
 
   // 支付成功的回调
   paySuccessCallback: (paymentId: string, PayerID: string) => {
-    return apiService.post<PaySuccessCallbackBody>(
+    return apiService.get<PaymentResponse>(
       `/api/payment/paypal/execute/`,
       { paymentId, PayerID }
     );
@@ -165,16 +159,16 @@ export const payApi = {
     );
   },
 
-  // wave 支付
+  // wave / mobile money 支付
   wavePay: (order_id: string) => {
-    return apiService.get<WavePayResponse>(
+    return apiService.get<PaymentResponse>(
       `/api/orders/${order_id}/payment-status/`
     );
   },
 
   // 查询支付状态
   checkPaymentStatus: (order_id: string) => {
-    return apiService.get<WavePayResponse>(
+    return apiService.get<PaymentResponse>(
       `/api/orders/${order_id}/`
     );
   },

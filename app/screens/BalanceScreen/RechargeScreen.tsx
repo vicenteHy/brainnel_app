@@ -132,7 +132,6 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
           const parsedLocalCountry: LocalCountryData =
             JSON.parse(savedLocalCountry);
           setLocalSelectedCountry(parsedLocalCountry);
-          console.log("使用本地存储的国家:", parsedLocalCountry);
         } catch (e) {
           console.error("解析本地存储国家数据失败:", e);
         }

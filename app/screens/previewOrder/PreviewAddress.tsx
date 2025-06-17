@@ -30,13 +30,21 @@ import useCreateOrderStore  from "../../store/createOrder";
 import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
 import useAnalyticsStore from "../../store/analytics";
+import { RootStackParamList } from "../../navigation/types";
 
-type RootStackParamList = {
-  AddRess: { address?: AddressItem; cart_item_id?: number | string; totalAmount?: number; isCOD?: boolean };
-  AddressList: undefined;
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean };
+type ShippingFeeNavParams = {
+  cart_item_id: any; 
+  totalAmount?: number; 
+  isCOD?: boolean; 
+  isToc?: number;
 };
-type AddRessRouteProp = RouteProp<RootStackParamList, "AddRess">;
+
+type PreviewAddressRouteProp = RouteProp<RootStackParamList, "PreviewAddress">;
+
+type NavigationParams = {
+  ShippingFee: ShippingFeeNavParams;
+  AddressList: undefined;
+};
 
 export const PreviewAddress = () => {
   const { t } = useTranslation();
@@ -48,8 +56,12 @@ export const PreviewAddress = () => {
     addresses,
     fetchAddresses,
   } = useAddressStore();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<AddRessRouteProp>();
+  const navigation = useNavigation<NativeStackNavigationProp<NavigationParams>>();
+  const route = useRoute<PreviewAddressRouteProp>();
+  
+  console.log('📍 [COD-DEBUG] PreviewAddress接收到的路由参数:', route.params);
+  console.log('📍 [COD-DEBUG] isCOD:', route.params?.isCOD);
+  console.log('📍 [COD-DEBUG] isToc:', route.params?.isToc);
   const { setOrderData ,orderData} = useCreateOrderStore();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string | null>(null);
@@ -337,6 +349,7 @@ export const PreviewAddress = () => {
           cart_item_id: route.params?.cart_item_id,
           totalAmount: route.params?.totalAmount,
           isCOD: route.params?.isCOD,
+          isToc: route.params?.isToc,
         });
       } catch (error) {
         console.error("保存地址失败:", error);
@@ -355,6 +368,7 @@ export const PreviewAddress = () => {
           cart_item_id: route.params?.cart_item_id,
           totalAmount: route.params?.totalAmount,
           isCOD: route.params?.isCOD,
+          isToc: route.params?.isToc,
         });
       }
     }

@@ -79,12 +79,34 @@ export const ProductChatScreen = () => {
     }
   }, [messages]);
 
-  // 加载历史聊天记录
+  // 加载历史聊天记录并处理自动回复
   useEffect(() => {
     const loadHistoryMessages = async () => {
       if (productInfo?.offer_id && user.user_id) {
         const historyMessages = await loadChatMessages("product", productInfo.offer_id.toString());
         setMessages(historyMessages);
+        
+        // 如果没有聊天记录，显示自动回复
+        if (historyMessages.length === 0) {
+          const autoReplyMessage: Message = {
+            mimetype: "text/plain",
+            userWs: "system",
+            app_id: "system",
+            country: user.country_code || 0,
+            body: "",
+            text: t("chat.product_auto_welcome"),
+            type: "product_support",
+            isMe: false,
+            timestamp: new Date(),
+            id: `auto-welcome-${Date.now()}`,
+          };
+          
+          const messagesWithAutoReply = [autoReplyMessage];
+          setMessages(messagesWithAutoReply);
+          
+          // 保存自动回复到聊天记录
+          await saveChatMessages(messagesWithAutoReply, "product", productInfo.offer_id.toString());
+        }
       }
     };
     

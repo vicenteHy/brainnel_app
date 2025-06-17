@@ -154,6 +154,7 @@ export interface CreateOrderRequest {
   domestic_shipping_fee: number;
   currency: string;
   receiver_address: string;
+  is_cod?: boolean;
 }
 
 // 创建订单响应类型

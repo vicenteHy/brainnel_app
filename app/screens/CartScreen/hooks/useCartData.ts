@@ -250,27 +250,13 @@ export const useCartData = () => {
   };
 
   const getCart = async () => {
-    console.log('🔄 [Cart] 开始获取购物车数据', {
-      user_id,
-      timestamp: new Date().toISOString()
-    });
     
     if (!user_id) {
-      console.log('❌ [Cart] 用户未登录，跳过获取购物车');
       return;
     }
 
     try {
       const res = await getCartList();
-      console.log('📦 [Cart] 获取购物车数据成功', {
-        totalItems: res.items?.length || 0,
-        items: res.items?.map(item => ({
-          cart_id: item.cart_id,
-          subject: item.subject,
-          skuCount: item.skus?.length || 0,
-          totalQuantity: item.skus?.reduce((sum, sku) => sum + sku.quantity, 0) || 0
-        })) || []
-      });
 
       // 修正父商品的选择状态，确保与子商品状态一致
       const correctedItems = res.items.map((item) => {
@@ -278,12 +264,6 @@ export const useCartData = () => {
         const corrected = allSkusSelected !== (item.selected === 1);
         
         if (corrected) {
-          console.log('🔧 [Cart] 修正商品选择状态', {
-            cart_id: item.cart_id,
-            subject: item.subject,
-            原状态: item.selected,
-            新状态: allSkusSelected ? 1 : 0
-          });
         }
         
         return {
@@ -298,7 +278,6 @@ export const useCartData = () => {
         calculateTotalAmount(correctedItems);
         
         if (correctedItems.length === 0) {
-          console.log('📭 [Cart] 购物车为空，取消全选状态');
           setAllSelected(false);
         } else {
           changeAllSelected(correctedItems);
@@ -308,11 +287,6 @@ export const useCartData = () => {
         updateCartIconCount(correctedItems);
       }, 0);
       
-      console.log('✅ [Cart] 购物车数据处理完成', {
-        totalProducts: correctedItems.length,
-        totalQuantity: correctedItems.reduce((total, item) => 
-          total + item.skus.reduce((sum, sku) => sum + sku.quantity, 0), 0)
-      });
     } catch (error) {
       console.error('❌ [Cart] 获取购物车数据失败', error);
     }
@@ -448,10 +422,6 @@ export const useCartData = () => {
   // 立即更新购物车图标数字（本地计算，无需API调用）
   const updateCartIconCount = (cartData: GetCartList[]) => {
     const totalCount = calculateCartTotalQuantity(cartData);
-    console.log('🔢 [Cart] 立即更新购物车图标数字', {
-      totalCount,
-      timestamp: new Date().toISOString()
-    });
     // 使用setTimeout避免在渲染过程中更新状态
     setTimeout(() => {
       setCartItemCount(totalCount);

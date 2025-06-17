@@ -175,31 +175,6 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
     const productImageUrl = product.product_image_urls?.[0];
     const imageUrl = skuImageUrl || productImageUrl;
 
-    // 详细的调试日志
-    if (__DEV__) {
-      console.log('单SKU完整数据结构:', sku);
-      console.log('单SKU attributes:', sku.attributes);
-      console.log('单SKU图片字段检查:', {
-        'attributes中的图片': skuImageFromAttributes,
-        'sku.sku_image_url': sku.sku_image_url,
-        'sku.image_url': skuAny.image_url,
-        'sku.image': skuAny.image,
-        'sku.sku_image': skuAny.sku_image,
-        'sku.picture_url': skuAny.picture_url,
-        'sku.photo_url': skuAny.photo_url,
-        'sku.img_url': skuAny.img_url,
-        'sku.imageUrl': skuAny.imageUrl,
-        'sku.skuImageUrl': skuAny.skuImageUrl,
-        'sku.sku_picture': skuAny.sku_picture,
-        'sku.picture': skuAny.picture,
-        'sku.photo': skuAny.photo,
-        foundSkuImage: skuImageUrl,
-        productImageUrl,
-        finalImageUrl: imageUrl,
-        isUsingSKUImage: !!skuImageUrl,
-        isUsingAttributeImage: skuImageUrl === skuImageFromAttributes
-      });
-    }
 
     return (
       <View style={styles.productBox}>
@@ -241,9 +216,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                     }
                   }}
                   onLoad={() => {
-                    if (__DEV__) {
-                      console.log('单SKU图片加载成功:', imageUrl);
-                    }
+                    // Image loaded successfully
                   }}
                 />
               </TouchableOpacity>
@@ -377,31 +350,6 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
             const productImageUrl = product.product_image_urls?.[0];
             const imageUrl = skuImageUrl || productImageUrl;
             
-            // 详细的调试日志
-            if (__DEV__) {
-              console.log(`SKU ${index} 完整数据结构:`, sku);
-              console.log(`SKU ${index} attributes:`, sku.attributes);
-              console.log(`SKU ${index} 图片字段检查:`, {
-                'attributes中的图片': skuImageFromAttributes,
-                'sku.sku_image_url': sku.sku_image_url,
-                'sku.image_url': skuAny.image_url,
-                'sku.image': skuAny.image,
-                'sku.sku_image': skuAny.sku_image,
-                'sku.picture_url': skuAny.picture_url,
-                'sku.photo_url': skuAny.photo_url,
-                'sku.img_url': skuAny.img_url,
-                'sku.imageUrl': skuAny.imageUrl,
-                'sku.skuImageUrl': skuAny.skuImageUrl,
-                'sku.sku_picture': skuAny.sku_picture,
-                'sku.picture': skuAny.picture,
-                'sku.photo': skuAny.photo,
-                foundSkuImage: skuImageUrl,
-                productImageUrl,
-                finalImageUrl: imageUrl,
-                isUsingSKUImage: !!skuImageUrl,
-                isUsingAttributeImage: skuImageUrl === skuImageFromAttributes
-              });
-            }
             
             return (
             <View style={styles.skuItem} key={index}>
@@ -421,9 +369,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                         }
                       }}
                       onLoad={() => {
-                        if (__DEV__) {
-                          console.log(`SKU ${index} 图片加载成功:`, imageUrl);
-                        }
+                        // Image loaded successfully
                       }}
                     />
                   </TouchableOpacity>
