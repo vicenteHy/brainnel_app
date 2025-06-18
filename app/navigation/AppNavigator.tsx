@@ -13,116 +13,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // 获取屏幕尺寸
 const { height: screenHeight } = Dimensions.get('window');
 
-// 获取当前路由信息的工具函数
-// [DEBUG-ROUTER-LOGGER] 路由跟踪函数 - 生产环境可删除
-const getActiveRouteName = (state: NavigationState | PartialState<NavigationState> | undefined): string => {
-  if (!state || !state.routes) return '';
-
-  const route = state.routes[state.index || 0];
-
-  // 检查是否存在嵌套导航
-  if (route.state && route.state.routes) {
-    return getActiveRouteName(route.state);
-  }
-
-  return route.name;
-};
-
-// 获取路由的完整路径
-// [DEBUG-ROUTER-LOGGER] 路由跟踪函数 - 生产环境可删除
-const getRoutePath = (state: NavigationState | PartialState<NavigationState> | undefined): string[] => {
-  if (!state || !state.routes) return [];
-
-  const route = state.routes[state.index || 0];
-  const currentPath = [route.name];
-
-  // 检查是否存在嵌套导航
-  if (route.state && route.state.routes) {
-    return [...currentPath, ...getRoutePath(route.state)];
-  }
-
-  return currentPath;
-};
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export const AppNavigator = () => {
-  // [DEBUG-ROUTER-LOGGER] 路由跟踪引用 - 生产环境可删除
-  const routeNameRef = useRef<string | undefined>(undefined);
-
   return (
     <NavigationContainer
       ref={navigationRef}
       onReady={() => {
         // 设置导航引用供其他模块使用
         setNavigationRef(navigationRef);
-        
-        // [DEBUG-ROUTER-LOGGER] 初始路由日志 - 生产环境可删除 - 开始
-        routeNameRef.current = getActiveRouteName(navigationRef.current?.getRootState());
-        console.log('[DEBUG-ROUTER] 初始路由:', routeNameRef.current);
-        
-        // 打印组件信息
-        let componentInfo;
-        if (routeNameRef.current) {
-          componentInfo = Screens[routeNameRef.current as keyof typeof Screens];
-          if (!componentInfo) {
-            const screenName = `${routeNameRef.current}Screen`;
-            componentInfo = Screens[screenName as keyof typeof Screens];
-          }
-          // 如果仍然找不到，则在Screens中进行更广泛的搜索
-          if (!componentInfo) {
-            const screenKeys = Object.keys(Screens);
-            const matchedKey = screenKeys.find(key => key.toLowerCase() === routeNameRef.current?.toLowerCase() || key.toLowerCase() === `${routeNameRef.current?.toLowerCase()}screen`);
-            if (matchedKey) {
-              componentInfo = Screens[matchedKey as keyof typeof Screens];
-            }
-          }
-        }
-        console.log('[DEBUG-ROUTER] 组件信息:', componentInfo ? (componentInfo as any).name || '未命名组件' : '未找到组件');
-        // [DEBUG-ROUTER-LOGGER] 初始路由日志 - 生产环境可删除 - 结束
-      }}
-      onStateChange={(state) => {
-        // [DEBUG-ROUTER-LOGGER] 路由变化日志 - 生产环境可删除 - 开始
-        const previousRouteName = routeNameRef.current;
-        const currentRouteName = getActiveRouteName(state);
-
-        if (previousRouteName !== currentRouteName) {
-          // 记录路由变化
-          console.log(`[DEBUG-ROUTER] 路由变化: ${previousRouteName} -> ${currentRouteName}`);
-          
-          // 打印完整路径
-          const fullPath = getRoutePath(state);
-          console.log('[DEBUG-ROUTER] 路由完整路径:', fullPath.join(' -> '));
-          
-          // 打印组件信息
-          let componentInfo;
-          if (currentRouteName) {
-            componentInfo = Screens[currentRouteName as keyof typeof Screens];
-            if (!componentInfo) {
-              const screenName = `${currentRouteName}Screen`;
-              componentInfo = Screens[screenName as keyof typeof Screens];
-            }
-            // 如果仍然找不到，则在Screens中进行更广泛的搜索
-            if (!componentInfo) {
-              const screenKeys = Object.keys(Screens);
-              const matchedKey = screenKeys.find(key => key.toLowerCase() === currentRouteName.toLowerCase() || key.toLowerCase() === `${currentRouteName.toLowerCase()}screen`);
-              if (matchedKey) {
-                componentInfo = Screens[matchedKey as keyof typeof Screens];
-              }
-            }
-          }
-          console.log('[DEBUG-ROUTER] 组件信息:', componentInfo ? (componentInfo as any).name || '未命名组件' : '未找到组件');
-          
-          // 打印路由参数信息
-          const currentRoute = state?.routes?.[state.index || 0];
-          if (currentRoute && currentRoute.params) {
-            console.log('[DEBUG-ROUTER] 路由参数:', JSON.stringify(currentRoute.params, null, 2));
-          }
-          
-          // 更新当前路由名称引用
-          routeNameRef.current = currentRouteName;
-        }
-        // [DEBUG-ROUTER-LOGGER] 路由变化日志 - 生产环境可删除 - 结束
       }}
     >
       <Stack.Navigator
@@ -230,6 +130,14 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="RechargeError"
           component={Screens.RechargeError}
+        />
+        <Stack.Screen
+          name="Recharge"
+          component={Screens.RechargeScreen}
+        />
+        <Stack.Screen
+          name="RechargeSummary"
+          component={Screens.RechargeSummaryScreen}
         />
         <Stack.Screen
           name="OfflinePayment"

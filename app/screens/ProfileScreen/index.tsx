@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   StyleSheet,
   View,
-  Modal,
   Platform,
   Text,
   TouchableOpacity,
@@ -20,7 +19,6 @@ import { OrderSection, ToolSection } from "./Sections";
 import { ProfileHeader } from "./ProfileHeader";
 import { VipCard } from "./VipCard";
 import { BalanceCard } from "./BalanceCard";
-import RechargeScreen from "../BalanceScreen/RechargeScreen";
 
 type RootStackParamList = {
   SettingList: undefined;
@@ -40,18 +38,12 @@ export const ProfileScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [showRechargeModal, setShowRechargeModal] = useState(false);
-
   const handleLogin = () => {
     navigation.navigate("Login");
   };
 
   const handleRechargePress = () => {
-    setShowRechargeModal(true);
-  };
-
-  const handleCloseRecharge = () => {
-    setShowRechargeModal(false);
+    navigation.navigate("Recharge");
   };
   
   return (
@@ -94,15 +86,6 @@ export const ProfileScreen = () => {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Recharge Modal */}
-      <Modal
-        visible={showRechargeModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleCloseRecharge}
-      >
-        <RechargeScreen onClose={handleCloseRecharge} />
-      </Modal>
     </LinearGradient>
   );
 };

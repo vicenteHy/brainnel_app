@@ -8,7 +8,6 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  Modal,
   SafeAreaView,
   StatusBar,
   Platform,
@@ -22,7 +21,6 @@ import widthUtils from "../../utils/widthUtils";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
-import RechargeScreen from "./RechargeScreen";
 import BackIcon from "../../components/BackIcon";
 import useUserStore from "../../store/user";
 import { Transaction, payApi } from "../../services/api/payApi";
@@ -38,7 +36,6 @@ export const BalanceScreen = () => {
   const { t } = useTranslation();
   const { user, setUser } = useUserStore();
   const navigation = useNavigation<BalanceScreenNavigationProp>();
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [rechargeHistory, setRechargeHistory] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -46,11 +43,7 @@ export const BalanceScreen = () => {
   const pageSize = 10;
 
   const handleOpenModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
+    navigation.navigate("Recharge");
   };
 
   const fetchRechargeHistory = async (page: number, refresh = false) => {
@@ -216,18 +209,6 @@ export const BalanceScreen = () => {
           />
         </View>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isModalVisible}
-          onRequestClose={handleCloseModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <RechargeScreen onClose={handleCloseModal} />
-            </View>
-          </View>
-        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -459,17 +440,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "white",
     textAlign: "center",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    height: "90%",
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   loaderContainer: {
     paddingVertical: 20,

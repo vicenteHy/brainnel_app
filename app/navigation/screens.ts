@@ -41,6 +41,8 @@ import { PayError } from '../screens/pay/PayError';
 import { OfflinePayment } from '../screens/pay/OfflinePayment';
 import { RechargeSuccess } from '../screens/BalanceScreen/RechargeSuccess';
 import { RechargeError } from '../screens/BalanceScreen/RechargeError';
+import RechargeScreen from '../screens/BalanceScreen/RechargeScreen';
+import RechargeSummaryScreen from '../screens/BalanceScreen/RechargeSummaryScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { ProductChatScreen } from '../screens/ChatScreen/ProductChatScreen';
 import { Info } from '../screens/setting/Info';
@@ -99,6 +101,8 @@ export {
   OfflinePayment,
   RechargeSuccess,
   RechargeError,
+  RechargeScreen,
+  RechargeSummaryScreen,
   Info,
   ChangePassword,
   PrivacyPolicyScreen,

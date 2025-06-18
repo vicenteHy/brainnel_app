@@ -18,9 +18,8 @@ import {
 import fontSize from "../../utils/fontsizeUtils";
 import widthUtils from "../../utils/widthUtils";
 import CircleOutlineIcon from "../../components/CircleOutlineIcon";
-import CloseIcon from "../../components/CloseIcon";
+import BackIcon from "../../components/BackIcon";
 import CheckIcon from "../../components/CheckIcon";
-import PhoneNumberInputModal from "./PhoneNumberInputModal";
 import useUserStore from "../../store/user";
 // 添加导航相关导入
 import { useNavigation, CommonActions } from "@react-navigation/native";
@@ -30,29 +29,15 @@ import {
   RechargeRecommendAmountResponse,
   PaymentMethod,
 } from "../../services/api/payApi";
-import { settingApi } from "../../services/api/setting";
 import payMap from "../../utils/payMap";
 import { useTranslation } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CountryList } from "../../constants/countries";
 import Toast from "react-native-toast-message";
-import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "../../constants/events";
-
-// 定义本地存储的国家数据类型
-interface LocalCountryData {
-  code: string;
-  flag: string;
-  name: string;
-  phoneCode: string;
-  userCount: number;
-  valid_digits?: number[];
-}
 
 interface RechargeScreenProps {
-  onClose: () => void;
+  // 可以添加其他 props，比如路由参数
 }
 
-const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
+const RechargeScreen = () => {
   const { t } = useTranslation();
   const [selectedPrice, setSelectedPrice] = useState<string>("");
   const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
@@ -78,7 +63,6 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     }[]
   >([]);
   const [currentCurrency, setCurrentCurrency] = useState("USD");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentParams, setPaymentParams] = useState<{
     originalAmount: number;
     amount: number;
@@ -87,21 +71,14 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     selectedPriceLabel: string;
     onCloses: () => void;
   } | null>(null);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
   // 添加PayPal展开视图的状态
   const [isPaypalExpanded, setIsPaypalExpanded] = useState(false);
   // 添加Wave展开视图的状态
   const [isWaveExpanded, setIsWaveExpanded] = useState(false);
+  // 添加信用卡展开视图的状态
+  const [isBankCardExpanded, setIsBankCardExpanded] = useState(false);
 
   // 添加国家选择相关状态
-  const [countryList, setCountryList] = useState<CountryList[]>([]);
-  const [selectedCountry, setSelectedCountry] = useState<CountryList | null>(
-    null
-  );
-  const [localSelectedCountry, setLocalSelectedCountry] =
-    useState<LocalCountryData | null>(null);
-  const [showCountryModal, setShowCountryModal] = useState(false);
-  const [loadingCountries, setLoadingCountries] = useState(false);
   const [validDigits, setValidDigits] = useState<number[]>([8]);
 
   useEffect(() => {
@@ -121,97 +98,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     });
   }, []);
 
-  // 获取国家列表
-  const loadCountryList = async () => {
-    setLoadingCountries(true);
-    try {
-      // 首先尝试读取本地存储的国家数据
-      const savedLocalCountry = await AsyncStorage.getItem("@selected_country");
-      if (savedLocalCountry) {
-        try {
-          const parsedLocalCountry: LocalCountryData =
-            JSON.parse(savedLocalCountry);
-          setLocalSelectedCountry(parsedLocalCountry);
-        } catch (e) {
-          console.error("解析本地存储国家数据失败:", e);
-        }
-      }
 
-      const response = await settingApi.getSendSmsCountryList();
-      if (response && Array.isArray(response)) {
-        setCountryList(response);
-
-        // 如果没有本地存储的国家，则使用API返回的数据进行匹配
-        if (!savedLocalCountry) {
-          // 如果用户有国家信息，自动选择对应的国家
-          if (user?.country_en) {
-            const userCountry = response.find(
-              (country: CountryList) =>
-                country.name_en.toLowerCase() === user.country_en.toLowerCase()
-            );
-            if (userCountry) {
-              setSelectedCountry(userCountry);
-              // 设置选中国家的 valid_digits
-              if (userCountry.valid_digits) {
-                setValidDigits(userCountry.valid_digits);
-              }
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("获取国家列表失败:", error);
-    } finally {
-      setLoadingCountries(false);
-    }
-  };
-
-  // 格式化电话号码
-  const formatPhoneNumber = (
-    phone: string,
-    localCountry: LocalCountryData | null,
-    apiCountry: CountryList | null
-  ): string => {
-    if (!phone) return phone;
-
-    // 移除电话号码中的空格、破折号等
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
-
-    // 如果已经有+号开头，直接返回
-    if (cleanPhone.startsWith("+")) {
-      return cleanPhone;
-    }
-
-    // 优先使用本地存储的国家数据的 phoneCode
-    let countryCode = "";
-    if (localCountry?.phoneCode) {
-      countryCode = localCountry.phoneCode;
-    } else if (apiCountry?.country) {
-      countryCode = `+${apiCountry.country}`;
-    } else {
-      return phone; // 如果都没有，返回原始电话号码
-    }
-
-    // 如果电话号码以0开头，移除0
-    const phoneWithoutLeadingZero = cleanPhone.startsWith("0")
-      ? cleanPhone.substring(1)
-      : cleanPhone;
-
-    return `${countryCode}${phoneWithoutLeadingZero}`;
-  };
-
-  // 获取显示的国家代码
-  const getDisplayCountryCode = () => {
-    if (loadingCountries) return "...";
-    if (localSelectedCountry?.phoneCode) {
-      return localSelectedCountry.phoneCode;
-    }
-    if (selectedCountry?.country) {
-      return `+${selectedCountry.country}`;
-    }
-    // 默认返回刚果民主共和国的区号
-    return "+243";
-  };
 
   const handlePriceSelect = (price: string) => {
     setSelectedPrice(price);
@@ -226,6 +113,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     else if (selectedOperator === "wave") {
       handleCurrencyConversion(price, "FCFA");
     }
+    // 如果当前已选择了信用卡支付方式，则重新计算转换后的金额
+    else if (selectedOperator === "bank_card") {
+      handleCurrencyConversion(price, currentCurrency);
+    }
     // 保留原有的逻辑
     else if (selectedOperator === "currency") {
       handleCurrencyConversion(price, currentCurrency);
@@ -233,13 +124,17 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
   };
 
   const handleOperatorSelect = (operator: string) => {
+    // 保存当前选中的操作符以便后续比较
+    const previousOperator = selectedOperator;
+    
     // 如果选择的不是之前选中的支付方式，则重置展开状态
-    if (operator !== selectedOperator) {
+    if (operator !== previousOperator) {
       setIsPaypalExpanded(false);
       setIsWaveExpanded(false);
+      setIsBankCardExpanded(false);
     }
 
-    setSelectedOperator(operator === selectedOperator ? null : operator);
+    setSelectedOperator(operator === previousOperator ? null : operator);
 
     // 查找选中的支付方式
     const selectedMethod = paymentMethods.find(
@@ -248,7 +143,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
 
     if (selectedMethod) {
       // 如果是PayPal支付方式
-      if (selectedMethod.key === "paypal" && operator !== selectedOperator) {
+      if (selectedMethod.key === "paypal" && operator !== previousOperator) {
         setIsPaypalExpanded(true);
 
         // 无条件触发货币转换，使用默认的USD
@@ -272,7 +167,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         }
       }
       // 如果是Wave支付方式
-      else if (selectedMethod.key === "wave" && operator !== selectedOperator) {
+      else if (selectedMethod.key === "wave" && operator !== previousOperator) {
         setIsWaveExpanded(true);
 
         // 无条件触发货币转换，使用FCFA
@@ -295,12 +190,32 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
           handleCurrencyConversion(amountToConvert, "FCFA");
         }
       }
-      // 如果是mobile_money，先加载国家列表
-      else if (selectedMethod.key === "mobile_money") {
-        // 先加载国家列表
-        loadCountryList();
+      // 如果是信用卡支付方式
+      else if (selectedMethod.key === "bank_card" && operator !== previousOperator) {
+        setIsBankCardExpanded(true);
+
+        // 无条件触发货币转换，使用默认的USD
+        let amountToConvert = selectedPrice;
+
+        // 如果用户还没有选择金额，使用推荐金额中的第一个
+        if (
+          !amountToConvert &&
+          recommendedAmounts &&
+          recommendedAmounts.amounts &&
+          recommendedAmounts.amounts.length > 0
+        ) {
+          amountToConvert = recommendedAmounts.amounts[0].toString();
+          setSelectedPrice(amountToConvert);
+        }
+
+        if (amountToConvert) {
+          setCurrentCurrency("USD");
+          setIsConverting(true);
+          handleCurrencyConversion(amountToConvert, "USD");
+        }
       }
-    } else if (operator === "currency" && operator !== selectedOperator) {
+      // mobile_money 的处理现在在 PhoneNumberInputModal 内部进行
+    } else if (operator === "currency" && operator !== previousOperator) {
       // 旧的逻辑保留作为备用
       handleCurrencySelect("USD");
     }
@@ -333,6 +248,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         else if (selectedOperator === "wave") {
           handleCurrencyConversion(formattedAmount, "FCFA");
         }
+        // 如果当前已选择了信用卡支付方式，则重新计算转换后的金额
+        else if (selectedOperator === "bank_card") {
+          handleCurrencyConversion(formattedAmount, currentCurrency);
+        }
         // 保留原有的逻辑
         else if (selectedOperator === "currency") {
           handleCurrencyConversion(formattedAmount, currentCurrency);
@@ -357,7 +276,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     }
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (selectedOperator) {
       // 准备支付参数，方便后续发送
       const params = {
@@ -366,7 +285,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         currency: user?.currency,
         payment_method: "",
         selectedPriceLabel: selectedPrice + " " + user?.currency,
-        onCloses: () => onClose(), // Close parent modal
+        onCloses: () => navigation.goBack(), // 返回上一页
       };
 
       // 根据selectedOperator确定支付方式
@@ -410,11 +329,21 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
           // selectedPriceLabel 保持显示原始美元金额
           // params.selectedPriceLabel 已经在上面设置为原始金额，不需要修改
         }
-        // 如果是mobile_money，先加载国家列表
-        else if (selectedMethod.key === "mobile_money") {
-          // 先加载国家列表
-          loadCountryList();
+        // 如果是信用卡，设置货币转换相关参数
+        else if (selectedMethod.key === "bank_card") {
+          params.currency = currentCurrency;
+
+          // 使用转换后的金额，如果有
+          if (convertedAmount.length > 0) {
+            const convertedTotal = convertedAmount.find(
+              (item) => item.item_key === "total_amount"
+            );
+            if (convertedTotal) {
+              params.amount = convertedTotal.converted_amount;
+            }
+          }
         }
+        // mobile_money 的处理现在在 PhoneNumberInputModal 内部进行
       } else if (selectedOperator === "balance") {
         params.payment_method = "Balance";
       } else if (selectedOperator === "currency") {
@@ -436,9 +365,12 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
       // 保存支付参数
       setPaymentParams(params);
 
-      console.log(params);
 
-      setShowPhoneModal(true);
+      // 导航到充值摘要页面而不是显示模态框
+      navigation.navigate("RechargeSummary", {
+        paymentParams: params,
+        validDigits: validDigits,
+      });
     }
   };
 
@@ -451,14 +383,12 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
 
     // 如果金额为0或无效，则不进行转换
     if (!amount || isNaN(amount)) {
-      console.warn("Invalid amount for currency conversion");
       setIsConverting(false);
       return;
     }
 
     // 如果源货币和目标货币相同，直接返回原金额
     if (user?.currency === currency) {
-      console.log(`Same currency (${currency}), no conversion needed`);
       setConvertedAmount([
         {
           converted_amount: amount,
@@ -470,7 +400,6 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
       return;
     }
 
-    console.log(`Converting ${amount} ${user?.currency} to ${currency}...`);
 
     // 调用货币转换API
     const data = {
@@ -491,10 +420,8 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
           res.converted_amounts_list &&
           res.converted_amounts_list.length > 0
         ) {
-          console.log("Conversion successful:", res.converted_amounts_list);
           setConvertedAmount(res.converted_amounts_list);
         } else {
-          console.error("Conversion response invalid:", res);
           // 使用近似汇率作为备用
           const fallbackRate = currency === "USD" ? 580.0 : 655.96; // 1 USD = 580 FCFA, 1 EUR = 655.96 FCFA
           const convertedValue = amount / fallbackRate;
@@ -509,7 +436,6 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         }
       })
       .catch((error) => {
-        console.error("Currency conversion failed:", error);
 
         // 使用近似汇率作为备用
         const fallbackRate = currency === "USD" ? 580.0 : 655.96;
@@ -545,227 +471,6 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
     }
   };
 
-  // 处理支付提交的函数，现在作为回调传递给PhoneNumberInputModal
-  const handlePaySubmit = async (phoneNumber: string) => {
-    if (!paymentParams) {
-      return;
-    }
-
-    // 验证电话号码（添加更严格的验证）
-    if (paymentParams.payment_method === "mobile_money") {
-      // 检查电话号码是否为空
-      if (!phoneNumber || phoneNumber.trim() === "") {
-        Toast.show({
-          type: "error",
-          text1:
-            t("balance.phone_modal.phone_required") ||
-            "Phone number is required",
-        });
-        return;
-      }
-
-      // 获取当前使用的 validDigits
-      const currentValidDigits = validDigits.length > 0 ? validDigits : [8]; // 如果没有设置，使用默认值 [8]
-
-      // 验证电话号码位数
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, ""); // 移除所有非数字字符
-      if (!currentValidDigits.includes(cleanPhoneNumber.length)) {
-        Toast.show({
-          type: "error",
-          text1: `${
-            t("order.error.invalid_phone") || "Invalid phone number"
-          } (${
-            t("order.error.requires_digits") || "Required digits"
-          }: ${currentValidDigits.join(", ")})`,
-        });
-        return;
-      }
-    }
-
-    // 显示提交中状态
-    setIsSubmitting(true);
-
-    try {
-      // 格式化电话号码，添加国家前缀（仅对mobile_money支付）
-      let formattedPhone = phoneNumber;
-      if (paymentParams.payment_method === "mobile_money") {
-        formattedPhone = formatPhoneNumber(
-          phoneNumber,
-          localSelectedCountry,
-          selectedCountry
-        );
-        console.log("发送的电话号码:", formattedPhone);
-      }
-
-      // 准备请求数据
-      const rechargeData: any = {
-        amount: paymentParams.amount,
-        currency: paymentParams.currency,
-        payment_method: paymentParams.payment_method,
-        type: "recharge",
-      };
-
-      // 如果是mobile_money支付，添加extra字段
-      if (paymentParams.payment_method === "mobile_money") {
-        // 格式化电话号码，确保包含国家区号
-        const formattedPhone = formatPhoneNumber(
-          phoneNumber,
-          localSelectedCountry,
-          selectedCountry
-        );
-        console.log("发送的电话号码:", formattedPhone);
-
-        rechargeData.extra = {
-          phone_number: formattedPhone,
-        };
-      }
-
-      console.log("Submitting recharge request:", rechargeData);
-
-      // 调用充值接口
-      const response = await payApi.initiateRecharge(rechargeData);
-      if (response && response.success) {
-        const paymentInfo = response.payment;
-
-        // 关闭模态框
-        setShowPhoneModal(false);
-        onClose();
-
-        if (paymentParams.payment_method === "wave") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_wave") || "Opening Wave app...",
-              text2: t("balance.recharge.complete_payment_wave") || "Please complete the payment in Wave app",
-              visibilityTime: 3000,
-            });
-
-            // 打开Wave应用
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            // 注意：不在这里处理支付结果，支付结果将通过深度链接处理
-            console.log('Wave app opened successfully');
-            
-          } catch (error) {
-            console.error("Error opening Wave app:", error);
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.wave_app_open") || "Failed to open Wave app",
-              visibilityTime: 4000,
-            });
-            
-            // 重置提交状态
-            setIsSubmitting(false);
-          }
-        }
-
-        if (paymentParams.payment_method === "mobile_money") {
-          if (response.success === true) {
-            Toast.show({
-              type: "success",
-              text1: response.msg || "",
-            });
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainTabs" }],
-            });
-            return;
-          } else {
-            Toast.show({
-              type: "error",
-              text1: response.msg || "",
-            });
-            // setLoading(false);
-          }
-        }
-
-        if (paymentParams.payment_method === "paypal") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_paypal") || "Opening PayPal...",
-              text2: t("balance.recharge.complete_payment_paypal") || "Please complete the payment in PayPal",
-              visibilityTime: 3000,
-            });
-
-            // 打开PayPal
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            // 注意：不在这里处理支付结果，支付结果将通过深度链接处理
-            console.log('PayPal opened successfully');
-            
-          } catch (error) {
-            console.error("Error opening PayPal:", error);
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.paypal_app_open") || "Failed to open PayPal",
-              visibilityTime: 4000,
-            });
-            
-            // 重置提交状态
-            setIsSubmitting(false);
-          }
-        }
-
-        if (paymentParams.payment_method === "bank_card") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_payment") || "Opening payment page...",
-              text2: t("balance.recharge.complete_payment") || "Please complete the payment",
-              visibilityTime: 3000,
-            });
-
-            // 打开银行卡支付页面
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            // 注意：不在这里处理支付结果，支付结果将通过深度链接处理
-            console.log('Bank card payment opened successfully');
-            
-          } catch (error) {
-            console.error("Error opening bank card payment:", error);
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.payment_open") || "Failed to open payment page",
-              visibilityTime: 4000,
-            });
-            
-            // 重置提交状态
-            setIsSubmitting(false);
-          }
-        }
-      } else {
-        // 处理失败情况，显示错误消息
-        const errorMessage =
-          response?.msg ||
-          "Une erreur s'est produite lors du traitement de la recharge. Veuillez réessayer.";
-
-        Alert.alert("Erreur", errorMessage);
-      }
-    } catch (error) {
-      // 处理异常
-      console.error("Recharge error:", error);
-
-      let errorMessage =
-        "Une erreur s'est produite lors du traitement de la recharge. Veuillez réessayer.";
-
-      // 尝试从错误对象中提取更具体的错误信息
-      if (error instanceof Error) {
-        errorMessage = error.message || errorMessage;
-      }
-
-      Alert.alert("Erreur", errorMessage);
-    } finally {
-      // 无论成功失败，都取消提交状态
-      setIsSubmitting(false);
-    }
-  };
 
   // 添加一个函数来判断确认按钮是否应该被禁用
   const isConfirmButtonDisabled = () => {
@@ -802,69 +507,28 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
       return true;
     }
 
+    // 如果选择了信用卡支付方式，但还没有转换结果，禁用按钮
+    if (
+      selectedOperator === "bank_card" &&
+      (convertedAmount.length === 0 ||
+        !convertedAmount.find((item) => item.item_key === "total_amount"))
+    ) {
+      return true;
+    }
+
     // 其他情况下，启用按钮
     return false;
   };
 
-  // 添加支付结果监听
-  useEffect(() => {
-    const handlePaymentSuccess = (data: any) => {
-      console.log('Payment success received in RechargeScreen:', data);
-      
-      // 关闭支付模态框
-      setShowPhoneModal(false);
-      
-      // 关闭充值页面
-      onClose();
-      
-      // 导航到充值成功页面
-      navigation.navigate('RechargeSuccess', {
-        amount: selectedPrice,
-        currency: paymentParams?.currency || user?.currency,
-        rechargeId: data.paymentId || data.rechargeId || "",
-      });
-    };
-
-    const handlePaymentFailure = (data: any) => {
-      console.log('Payment failure received in RechargeScreen:', data);
-      
-      // 关闭支付模态框
-      setShowPhoneModal(false);
-      
-      // 关闭充值页面
-      onClose();
-      
-      // 导航到充值失败页面
-      navigation.navigate('RechargeError', {
-        amount: selectedPrice,
-        currency: paymentParams?.currency || user?.currency,
-        error: data.error || t("balance.recharge.payment_failed_desc") || "Payment failed, please try again",
-        rechargeId: data.rechargeId || "",
-      });
-
-      // 重置提交状态
-      setIsSubmitting(false);
-    };
-
-    // 注册事件监听器
-    global.EventEmitter.on(PAYMENT_SUCCESS_EVENT, handlePaymentSuccess);
-    global.EventEmitter.on(PAYMENT_FAILURE_EVENT, handlePaymentFailure);
-
-    // 清理函数
-    return () => {
-      global.EventEmitter.off(PAYMENT_SUCCESS_EVENT, handlePaymentSuccess);
-      global.EventEmitter.off(PAYMENT_FAILURE_EVENT, handlePaymentFailure);
-    };
-  }, [onClose, navigation, t]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.mainContainer}>
         <View style={styles.header}>
-          <Text style={styles.title}>{t("balance.recharge.title")}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <CloseIcon size={fontSize(15)} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon size={fontSize(18)} />
           </TouchableOpacity>
+          <Text style={styles.title}>{t("balance.recharge.title")}</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -923,6 +587,9 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                       const isSelected = customAmountDisplayText
                         ? false
                         : selectedPrice === amount.toString();
+                      
+                      // 检查是否为第一行的最后一个元素
+                      const isLastInFirstRow = index === Math.min(recommendedAmounts.amounts.length, 3) - 1;
 
                       return (
                         <TouchableOpacity
@@ -934,11 +601,13 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                             isSelected
                               ? styles.priceBoxSelected
                               : styles.priceBoxUnselected,
+                            isLastInFirstRow && styles.priceBoxLast,
                           ]}
                           onPress={() => {
                             setCustomAmountDisplayText("");
                             handlePriceSelect(amount.toString());
                           }}
+                          activeOpacity={1}
                         >
                           <Text
                             style={[
@@ -969,7 +638,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                     })}
                 </View>
                 {recommendedAmounts.amounts.length > 3 && (
-                  <View style={styles.row}>
+                  <View style={[styles.row, styles.secondRow]}>
                     {recommendedAmounts.amounts
                       .slice(3)
                       .map((amount, index) => {
@@ -977,6 +646,10 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         const isSelected = customAmountDisplayText
                           ? false
                           : selectedPrice === amount.toString();
+                        
+                        // 检查是否为第二行的最后一个元素
+                        const secondRowItems = recommendedAmounts.amounts.slice(3);
+                        const isLastInSecondRow = index === secondRowItems.length - 1;
 
                         return (
                           <TouchableOpacity
@@ -986,11 +659,13 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                               isSelected
                                 ? styles.priceBoxSelected
                                 : styles.priceBoxUnselected,
+                              isLastInSecondRow && styles.priceBoxLast,
                             ]}
                             onPress={() => {
                               setCustomAmountDisplayText("");
                               handlePriceSelect(amount.toString());
                             }}
+                            activeOpacity={1}
                           >
                             <Text
                               style={[
@@ -1273,6 +948,81 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
                         </View>
                       </View>
                     )}
+
+                  {/* 信用卡展开视图 */}
+                  {method.key === "bank_card" &&
+                    selectedOperator === "bank_card" &&
+                    isBankCardExpanded && (
+                      <View style={styles.paypalExpandedContainer}>
+                        <View style={styles.paypalCurrencyContainer}>
+                          <Text style={styles.currencyTitle}>
+                            {t("balance.recharge.currency_title")}
+                          </Text>
+                          <View style={styles.currencyButtonsContainer}>
+                            <TouchableOpacity
+                              style={[
+                                styles.currencyButton,
+                                currentCurrency === "USD" &&
+                                  styles.currencyButtonActive,
+                              ]}
+                              onPress={() => handleCurrencySelect("USD")}
+                            >
+                              <Text
+                                style={[
+                                  styles.currencyButtonText,
+                                  currentCurrency === "USD" &&
+                                    styles.currencyButtonTextActive,
+                                ]}
+                              >
+                                USD
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[
+                                styles.currencyButton,
+                                currentCurrency === "EUR" &&
+                                  styles.currencyButtonActive,
+                              ]}
+                              onPress={() => handleCurrencySelect("EUR")}
+                            >
+                              <Text
+                                style={[
+                                  styles.currencyButtonText,
+                                  currentCurrency === "EUR" &&
+                                    styles.currencyButtonTextActive,
+                                ]}
+                              >
+                                EUR
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* 显示转换后的金额 */}
+                          {isConverting ? (
+                            <View style={styles.convertingContainer}>
+                              <ActivityIndicator size="small" color="#FF5100" />
+                              <Text style={styles.convertingText}>
+                                {t("balance.recharge.converting")}
+                              </Text>
+                            </View>
+                          ) : convertedAmount.length > 0 ? (
+                            <View style={styles.convertedAmountContainer}>
+                              <Text style={styles.convertedAmountLabel}>
+                                {t("balance.recharge.equivalent_amount")}
+                              </Text>
+                              <Text style={styles.convertedAmountValue}>
+                                {convertedAmount
+                                  .find(
+                                    (item) => item.item_key === "total_amount"
+                                  )
+                                  ?.converted_amount.toFixed(2)}{" "}
+                                {currentCurrency}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      </View>
+                    )}
                 </View>
               ))}
             </>
@@ -1352,7 +1102,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         {/* 操作按钮 - 固定在底部 */}
         <View style={styles.actionButtonsContainer}>
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
               <Text style={styles.buttonTextDark}>
                 {t("balance.recharge.cancel")}
               </Text>
@@ -1375,72 +1125,7 @@ const RechargeScreen = ({ onClose }: RechargeScreenProps) => {
         </View>
       </View>
 
-      {/* Phone Number Input Modal */}
-      <PhoneNumberInputModal
-        isVisible={showPhoneModal}
-        onClose={() => setShowPhoneModal(false)}
-        paymentParams={paymentParams}
-        onSubmit={handlePaySubmit}
-        onCloses={onClose}
-        displayCountryCode={getDisplayCountryCode()}
-        onCountrySelect={() => setShowCountryModal(true)}
-        validDigits={validDigits}
-      />
 
-      {/* 国家选择模态框 */}
-      <Modal
-        visible={showCountryModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowCountryModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>选择国家</Text>
-              <TouchableOpacity
-                onPress={() => setShowCountryModal(false)}
-                style={styles.closeButtonContainer}
-              >
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              data={countryList}
-              keyExtractor={(item) => item.country.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.countryItem,
-                    selectedCountry?.country === item.country &&
-                      styles.currencyButtonActive,
-                  ]}
-                  onPress={() => {
-                    setSelectedCountry(item);
-                    // 设置选中国家的 valid_digits
-                    if (item.valid_digits) {
-                      setValidDigits(item.valid_digits);
-                    }
-                    setShowCountryModal(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.countryItemText,
-                      selectedCountry?.country === item.country &&
-                        styles.currencyButtonTextActive,
-                    ]}
-                  >
-                    {item.name_en} (+{item.country})
-                  </Text>
-                </TouchableOpacity>
-              )}
-              style={styles.countryList}
-            />
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -1453,8 +1138,6 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   header: {
     flexDirection: "row",
@@ -1471,6 +1154,7 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 20,
     backgroundColor: "#f8f9fa",
+    paddingBottom: 100, // 为底部按钮留出空间
   },
   container: {
     padding: 24,
@@ -1482,11 +1166,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#333333",
-    position: "absolute",
-    left: 0,
-    right: 0,
+    flex: 1,
     textAlign: "center",
     letterSpacing: 0.5,
+    marginRight: 48, // 为了平衡左侧的返回按钮，右侧也留出相同的空间
   },
   section: {
     marginTop: 44,
@@ -1503,19 +1186,26 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     marginTop: 15,
+    paddingHorizontal: 2,
+  },
+  secondRow: {
+    marginTop: 20,
   },
   priceBoxBlue: {
-    width: "30%",
+    flex: 1,
+    minWidth: 90,
+    height: 60,
     backgroundColor: "rgba(255, 111, 48, 0.1)",
     borderColor: "#FF5100",
     borderWidth: 2,
     borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     alignItems: "center",
-    marginRight: "5%",
+    justifyContent: "center",
+    marginRight: "3%",
     elevation: 2,
     shadowColor: "#FF5100",
     shadowOffset: { width: 0, height: 2 },
@@ -1523,25 +1213,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   priceBoxWhite: {
-    width: "30%",
+    flex: 1,
+    minWidth: 90,
+    height: 60,
     backgroundColor: "white",
     borderColor: "#e0e0e0",
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     alignItems: "center",
-    marginRight: "5%",
+    justifyContent: "center",
+    marginRight: "3%",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
   },
+  priceBoxLast: {
+    marginRight: 0,
+  },
   priceTextBlue: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(14),
     fontWeight: "700",
     color: "#FF5100",
+    textAlign: "center",
+    numberOfLines: 1,
   },
   currencyTextBlue: {
     fontSize: fontSize(11),
@@ -1550,9 +1248,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   priceText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(14),
     fontWeight: "700",
     color: "#333",
+    textAlign: "center",
+    numberOfLines: 1,
   },
   currencyText: {
     fontSize: fontSize(11),
@@ -1812,9 +1512,15 @@ const styles = StyleSheet.create({
   },
   priceTextSelected: {
     color: "#FF5100",
+    fontSize: fontSize(14),
+    fontWeight: "700",
+    textAlign: "center",
   },
   priceTextUnselected: {
     color: "#333",
+    fontSize: fontSize(14),
+    fontWeight: "700",
+    textAlign: "center",
   },
   currencyTextSelected: {
     color: "#FF5100",
@@ -1822,10 +1528,10 @@ const styles = StyleSheet.create({
   currencyTextUnselected: {
     color: "#666666",
   },
-  closeButton: {
+  backButton: {
     padding: 5,
     position: "absolute",
-    right: 24,
+    left: 24,
     zIndex: 1,
   },
   checkboxContainer: {
@@ -2346,7 +2052,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10,
+    marginRight: 10,
   },
   customAmountConfirmButtonText: {
     color: "white",
@@ -2433,6 +2139,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 9999,
+    elevation: 9999,
   },
   modalContent: {
     backgroundColor: "white",
@@ -2445,6 +2153,8 @@ const styles = StyleSheet.create({
     maxHeight: "85%",
     minHeight: 400,
     height: "85%",
+    zIndex: 10000,
+    elevation: 10000,
   },
   modalHeader: {
     flexDirection: "row",

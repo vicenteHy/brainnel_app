@@ -12,6 +12,7 @@ import {
   BackHandler,
   Alert,
   Linking,
+  FlatList,
 } from "react-native";
 import fontSize from "../../utils/fontsizeUtils";
 import BackIcon from "../../components/BackIcon";
@@ -21,6 +22,20 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { settingApi } from "../../services/api/setting";
+import { CountryList } from "../../constants/countries";
+import useUserStore from "../../store/user";
+import RechargeSummary from "./RechargeSummary";
+
+// 定义本地存储的国家数据类型
+interface LocalCountryData {
+  code: string;
+  flag: string;
+  name: string;
+  phoneCode: string;
+  userCount: number;
+  valid_digits?: number[];
+}
 
 interface PhoneNumberInputModalProps {
   isVisible: boolean;
@@ -35,8 +50,6 @@ interface PhoneNumberInputModalProps {
   } | null;
   onSubmit: (phoneNumber: string) => Promise<void>;
   onCloses?: () => void;
-  displayCountryCode?: string;
-  onCountrySelect?: () => void;
   validDigits?: number[];
 }
 
@@ -50,16 +63,23 @@ const PhoneNumberInputModal = ({
   paymentParams,
   onSubmit,
   onCloses,
-  displayCountryCode,
-  onCountrySelect,
   validDigits,
 }: PhoneNumberInputModalProps) => {
   const { t } = useTranslation();
+  const { user } = useUserStore();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [localCountryCode, setLocalCountryCode] = useState<string>("+243"); // 默认值
+  
+  // 国家选择相关状态
+  const [countryList, setCountryList] = useState<CountryList[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<CountryList | null>(null);
+  const [localSelectedCountry, setLocalSelectedCountry] = useState<LocalCountryData | null>(null);
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [currentValidDigits, setCurrentValidDigits] = useState<number[]>(validDigits || [8]);
 
   useEffect(() => {
     const fetchCountryCode = async () => {
@@ -67,8 +87,8 @@ const PhoneNumberInputModal = ({
         const selectedCountry = await AsyncStorage.getItem('@selected_country');
         if (selectedCountry) {
           const parsed = JSON.parse(selectedCountry);
-          if (parsed.country) {
-            setLocalCountryCode(parsed.country);
+          if (parsed.phoneCode) {
+            setLocalCountryCode(parsed.phoneCode);
           }
         }
       } catch (e) {
@@ -93,6 +113,89 @@ const PhoneNumberInputModal = ({
     return () => backHandler.remove();
   }, [isVisible, onClose]);
 
+  // 当 validDigits prop 更新时，更新本地状态
+  useEffect(() => {
+    if (validDigits) {
+      setCurrentValidDigits(validDigits);
+    }
+  }, [validDigits]);
+
+  // 加载国家列表的函数
+  const loadCountryList = async () => {
+    setLoadingCountries(true);
+    try {
+      const response = await settingApi.getSendSmsCountryList();
+      if (response && Array.isArray(response)) {
+        setCountryList(response);
+        
+        // 如果用户有国家信息，自动选择对应的国家
+        if (user?.country_en) {
+          const userCountry = response.find(
+            (country: CountryList) =>
+              country.name_en.toLowerCase() === user.country_en.toLowerCase()
+          );
+          if (userCountry) {
+            setSelectedCountry(userCountry);
+            setLocalCountryCode(`+${userCountry.country}`);
+            
+            // 设置选中国家的 valid_digits
+            if (userCountry.valid_digits) {
+              setCurrentValidDigits(userCountry.valid_digits);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("获取国家列表失败:", error);
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
+
+  // 获取显示的国家代码
+  const getDisplayCountryCode = () => {
+    if (loadingCountries) return "...";
+    if (localSelectedCountry?.phoneCode) {
+      return localSelectedCountry.phoneCode;
+    }
+    if (selectedCountry?.country) {
+      return `+${selectedCountry.country}`;
+    }
+    return localCountryCode;
+  };
+
+  // 格式化电话号码
+  const formatPhoneNumber = (phone: string): string => {
+    if (!phone) return phone;
+
+    // 移除电话号码中的空格、破折号等
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+
+    // 如果已经有+号开头，直接返回
+    if (cleanPhone.startsWith("+")) {
+      return cleanPhone;
+    }
+
+    // 获取当前国家代码
+    let countryCode = "";
+    if (localSelectedCountry?.phoneCode) {
+      countryCode = localSelectedCountry.phoneCode;
+    } else if (selectedCountry?.country) {
+      countryCode = `+${selectedCountry.country}`;
+    } else {
+      countryCode = localCountryCode;
+    }
+
+    return `${countryCode}${cleanPhone}`;
+  };
+
+  // 初始化时加载国家列表
+  useEffect(() => {
+    if (isVisible && paymentParams?.payment_method === "mobile_money") {
+      loadCountryList();
+    }
+  }, [isVisible, paymentParams?.payment_method, user?.country_en]);
+
   const handlePaySubmit = async () => {
     if (!paymentParams) return;
 
@@ -109,17 +212,18 @@ const PhoneNumberInputModal = ({
     // 验证电话号码位数
     if (
       paymentParams.payment_method === "mobile_money" &&
-      validDigits &&
-      validDigits.length > 0
+      currentValidDigits &&
+      currentValidDigits.length > 0
     ) {
-      if (!validDigits.includes(phoneNumber.length)) {
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, ""); // 移除所有非数字字符
+      if (!currentValidDigits.includes(cleanPhoneNumber.length)) {
         Toast.show({
           type: "error",
           text1: `${
             t("order.error.invalid_phone") || "Invalid phone number"
           } (${
             t("order.error.requires_digits") || "Required digits"
-          }: ${validDigits.join(", ")})`,
+          }: ${currentValidDigits.join(", ")})`,
         });
         return;
       }
@@ -130,7 +234,12 @@ const PhoneNumberInputModal = ({
     try {
       // 如果有onSubmit函数，说明是从订单页面调用的，需要传递电话号码
       if (onSubmit) {
-        await onSubmit(phoneNumber);
+        // 格式化电话号码（仅对mobile_money支付）
+        let formattedPhone = phoneNumber;
+        if (paymentParams.payment_method === "mobile_money") {
+          formattedPhone = formatPhoneNumber(phoneNumber);
+        }
+        await onSubmit(formattedPhone);
       } else {
         // 原来的充值逻辑
         const data = {
@@ -223,53 +332,7 @@ const PhoneNumberInputModal = ({
 
           <View style={styles.paymentConfirmContainer}>
             {/* 充值金额信息 */}
-            <View style={styles.paymentSummaryCard}>
-              <Text style={styles.paymentSummaryTitle}>
-                {t("balance.phone_modal.recharge_summary")}
-              </Text>
-
-              <View style={styles.paymentSummaryRow}>
-                <Text style={styles.paymentSummaryLabel}>
-                  {t("balance.phone_modal.amount")}
-                </Text>
-                <Text style={styles.paymentSummaryValue}>
-                  {paymentParams?.selectedPriceLabel || ""}
-                </Text>
-              </View>
-
-              {paymentParams?.payment_method === "wave" && (
-                <View style={styles.paymentSummaryRow}>
-                  <Text style={styles.paymentSummaryLabel}>
-                    Montant converti:
-                  </Text>
-                  <Text style={styles.paymentSummaryValueHighlight}>
-                    {paymentParams?.amount.toFixed(2)} FCFA
-                  </Text>
-                </View>
-              )}
-
-              {paymentParams?.currency !== "FCFA" &&
-                paymentParams?.payment_method !== "wave" && (
-                  <View style={styles.paymentSummaryRow}>
-                    <Text style={styles.paymentSummaryLabel}>
-                      {t("balance.phone_modal.converted_amount")}
-                    </Text>
-                    <Text style={styles.paymentSummaryValueHighlight}>
-                      {paymentParams?.currency === "USD" ? "$" : "€"}
-                      {paymentParams?.amount.toFixed(2) || "0.00"}
-                    </Text>
-                  </View>
-                )}
-
-              <View style={styles.paymentSummaryRow}>
-                <Text style={styles.paymentSummaryLabel}>
-                  {t("balance.phone_modal.payment_method")}
-                </Text>
-                <Text style={styles.paymentSummaryValue}>
-                  {paymentParams?.payment_method || "Non sélectionné"}
-                </Text>
-              </View>
-            </View>
+            <RechargeSummary paymentParams={paymentParams} />
 
             {/* 电话号码输入 */}
 
@@ -282,11 +345,15 @@ const PhoneNumberInputModal = ({
                   <View style={styles.phoneInputWrapper}>
                     <TouchableOpacity
                       style={styles.countryCodeContainer}
-                      onPress={onCountrySelect}
+                      onPress={() => {
+                        console.log('Country code clicked');
+                        setShowCountryModal(true);
+                      }}
                     >
                       <Text style={styles.countryCodeText}>
-                        {displayCountryCode || localCountryCode}
+                        {getDisplayCountryCode()}
                       </Text>
+                      <Text style={styles.countryCodeArrow}>▼</Text>
                     </TouchableOpacity>
                     <TextInput
                       style={styles.phoneInput}
@@ -357,6 +424,85 @@ const PhoneNumberInputModal = ({
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* 国家选择模态框 */}
+        <Modal
+          visible={showCountryModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowCountryModal(false)}
+        >
+          <View style={styles.countryModalOverlay}>
+            <View style={styles.countryModalContent}>
+              <View style={styles.countryModalHeader}>
+                <Text style={styles.countryModalTitle}>
+                  {t("balance.phone_modal.select_country") || "Select Country"}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowCountryModal(false)}
+                  style={styles.countryCloseButton}
+                >
+                  <Text style={styles.countryCloseButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {loadingCountries ? (
+                <View style={styles.countryLoadingContainer}>
+                  <ActivityIndicator size="large" color="#FF5100" />
+                  <Text style={styles.countryLoadingText}>Loading countries...</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={countryList}
+                  keyExtractor={(item) => item.country.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.countryItem,
+                        selectedCountry?.country === item.country &&
+                          styles.countryItemSelected,
+                      ]}
+                      onPress={async () => {
+                        setSelectedCountry(item);
+                        setLocalCountryCode(`+${item.country}`);
+                        
+                        // 设置选中国家的 valid_digits
+                        if (item.valid_digits) {
+                          setCurrentValidDigits(item.valid_digits);
+                        }
+                        
+                        // 保存选择的国家到本地存储
+                        const countryToSave: LocalCountryData = {
+                          code: item.country_code || "",
+                          flag: item.flag || "",
+                          name: item.name_en,
+                          phoneCode: `+${item.country}`,
+                          userCount: 0,
+                          valid_digits: item.valid_digits
+                        };
+                        await AsyncStorage.setItem("@selected_country", JSON.stringify(countryToSave));
+                        setLocalSelectedCountry(countryToSave);
+                        
+                        setShowCountryModal(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.countryItemText,
+                          selectedCountry?.country === item.country &&
+                            styles.countryItemTextSelected,
+                        ]}
+                      >
+                        {item.name_en} (+{item.country})
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  style={styles.countryList}
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
 
         {/* 模态框内的 Toast 组件 */}
         <Toast
@@ -447,37 +593,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
   },
-  paymentSummaryCard: {
-    backgroundColor: "#f5f9ff",
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 20,
-  },
-  paymentSummaryTitle: {
-    fontSize: fontSize(18),
-    fontWeight: "700",
-    marginBottom: 15,
-    color: "#333",
-  },
-  paymentSummaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  paymentSummaryLabel: {
-    fontSize: fontSize(14),
-    color: "#666",
-  },
-  paymentSummaryValue: {
-    fontSize: fontSize(14),
-    fontWeight: "500",
-    color: "#333",
-  },
-  paymentSummaryValueHighlight: {
-    fontSize: fontSize(14),
-    fontWeight: "600",
-    color: "#ff5100",
-  },
   phoneInputContainer: {
     marginBottom: 20,
   },
@@ -500,14 +615,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRightWidth: 1,
     borderRightColor: "#ddd",
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 80,
   },
   countryCodeText: {
     fontSize: fontSize(16),
     color: "#333",
   },
   countryCodeArrow: {
-    fontSize: fontSize(12),
-    color: "#999",
+    fontSize: fontSize(10),
+    color: "#666",
     marginLeft: 5,
   },
   phoneInput: {
@@ -559,6 +677,78 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: fontSize(16),
     fontWeight: "700",
+  },
+  // 国家选择模态框样式
+  countryModalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    zIndex: 10000,
+    elevation: 10000,
+  },
+  countryModalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    width: "100%",
+    maxHeight: "80%",
+    minHeight: 400,
+  },
+  countryModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  countryModalTitle: {
+    fontSize: fontSize(18),
+    fontWeight: "700",
+    color: "#333",
+  },
+  countryCloseButton: {
+    padding: 5,
+  },
+  countryCloseButtonText: {
+    fontSize: fontSize(16),
+    fontWeight: "700",
+    color: "#007AFF",
+  },
+  countryLoadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  countryLoadingText: {
+    marginTop: 10,
+    fontSize: fontSize(14),
+    color: "#666",
+  },
+  countryList: {
+    flex: 1,
+  },
+  countryItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    backgroundColor: "white",
+  },
+  countryItemSelected: {
+    backgroundColor: "#FF5100",
+  },
+  countryItemText: {
+    fontSize: fontSize(16),
+    fontWeight: "500",
+    color: "#333",
+  },
+  countryItemTextSelected: {
+    color: "white",
+    fontWeight: "600",
   },
 });
 

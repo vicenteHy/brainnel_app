@@ -685,7 +685,9 @@
           "supported_operators": "Supported Operators",
           "pay": "PAY",
           "payment_failed": "Payment failed, please try again",
-          "phone_required": "Phone number is required"
+          "phone_required": "Phone number is required",
+          "mobile_money": "Mobile Money",
+          "select_country": "Select Country"
       }
   },
   "pay":{

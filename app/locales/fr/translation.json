@@ -691,7 +691,9 @@
           "supported_operators": "Opérateurs pris en charge",
           "pay": "PAYER",
           "payment_failed": "Paiement échoué, veuillez réessayer",
-          "phone_required": "Le numéro de téléphone est requis"
+          "phone_required": "Le numéro de téléphone est requis",
+          "mobile_money": "Mobile Money",
+          "select_country": "Sélectionner le pays"
       }
   },
   "pay":{

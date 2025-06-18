@@ -46,6 +46,18 @@ export type RootStackParamList = {
     rechargeId?: string;
     error?: string;
   };
+  Recharge: undefined;
+  RechargeSummary: {
+    paymentParams: {
+      originalAmount: number;
+      amount: number;
+      currency: string;
+      payment_method: string;
+      selectedPriceLabel: string;
+      onCloses?: () => void;
+    };
+    validDigits?: number[];
+  };
   OfflinePayment: undefined;
   MyAccount: undefined;
   Google: undefined;
