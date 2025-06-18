@@ -7,6 +7,7 @@ import Toast from "react-native-toast-message";
 import { View, Text, Dimensions } from 'react-native';
 import { createNavigationContainerRef } from '@react-navigation/native';
 import { setNavigationRef } from '../utils/navigationUtils';
+import fontSize from '../utils/fontsizeUtils';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -124,12 +125,8 @@ export const AppNavigator = () => {
           component={Screens.PayError}
         />
         <Stack.Screen
-          name="RechargeSuccess"
-          component={Screens.RechargeSuccess}
-        />
-        <Stack.Screen
-          name="RechargeError"
-          component={Screens.RechargeError}
+          name="RechargePay"
+          component={Screens.RechargePay}
         />
         <Stack.Screen
           name="Recharge"
@@ -258,7 +255,7 @@ export const AppNavigator = () => {
             }}>
               <Text style={{
                 color: '#FFFFFF',
-                fontSize: 16,
+                fontSize: fontSize(16),
                 textAlign: 'center',
               }}>
                 {props.text1}
@@ -266,7 +263,7 @@ export const AppNavigator = () => {
               {props.text2 && (
                 <Text style={{
                   color: '#FFFFFF',
-                  fontSize: 14,
+                  fontSize: fontSize(14),
                   textAlign: 'center',
                   marginTop: 4,
                   opacity: 0.8,
@@ -288,7 +285,7 @@ export const AppNavigator = () => {
             }}>
               <Text style={{
                 color: '#FFFFFF',
-                fontSize: 16,
+                fontSize: fontSize(16),
                 textAlign: 'center',
               }}>
                 {props.text1}
@@ -296,7 +293,7 @@ export const AppNavigator = () => {
               {props.text2 && (
                 <Text style={{
                   color: '#FFFFFF',
-                  fontSize: 14,
+                  fontSize: fontSize(14),
                   textAlign: 'center',
                   marginTop: 4,
                   opacity: 0.8,
@@ -318,7 +315,7 @@ export const AppNavigator = () => {
             }}>
               <Text style={{
                 color: '#FFFFFF',
-                fontSize: 16,
+                fontSize: fontSize(16),
                 textAlign: 'center',
               }}>
                 {props.text1}
@@ -326,7 +323,7 @@ export const AppNavigator = () => {
               {props.text2 && (
                 <Text style={{
                   color: '#FFFFFF',
-                  fontSize: 14,
+                  fontSize: fontSize(14),
                   textAlign: 'center',
                   marginTop: 4,
                   opacity: 0.8,

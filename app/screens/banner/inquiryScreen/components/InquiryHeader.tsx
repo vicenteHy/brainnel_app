@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   heardContainer1Text: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: 400,
     color: "#000",
   },

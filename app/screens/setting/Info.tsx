@@ -20,6 +20,7 @@ import { useAvatarCache } from "../../hooks/useAvatarCache";
 import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import Toast from "react-native-toast-message";
 import { avatarCacheService } from "../../services/avatarCacheService";
+import fontSize from "../../utils/fontsizeUtils";
 
 export const Info = () => {
   const { user, setUser } = useUserStore();
@@ -472,7 +473,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   deleteButtonText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#ff4444",
     fontWeight: "500",
   },
@@ -531,18 +532,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarPlaceholderText: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     fontWeight: "bold",
     color: "#666",
   },
   username: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: "bold",
     color: "#333",
     marginBottom: 5,
   },
   userId: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#666",
     marginBottom: 10,
   },
@@ -554,18 +555,18 @@ const styles = StyleSheet.create({
   },
   vipText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "bold",
   },
   notLoggedInText: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: "bold",
     color: "#666",
     marginBottom: 10,
     marginTop: 20,
   },
   loginPrompt: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#999",
     textAlign: "center",
   },
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "bold",
     color: "#333",
     marginBottom: 15,
@@ -593,12 +594,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f8f8f8",
   },
   infoLabel: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#666",
     flex: 1,
   },
   infoValue: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#333",
     flex: 2,
     textAlign: "right",
@@ -608,13 +609,13 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   balanceAmount: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     fontWeight: "bold",
     color: "#4CAF50",
     marginBottom: 5,
   },
   balanceLabel: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#666",
   },
   uploadingOverlay: {
@@ -623,14 +624,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   uploadingText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: 'bold',
   },
 });

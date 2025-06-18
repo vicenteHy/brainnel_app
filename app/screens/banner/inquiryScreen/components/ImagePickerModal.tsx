@@ -6,7 +6,7 @@ import fontSize from '../../../../utils/fontsizeUtils';
 interface ImagePickerModalProps {
   visible: boolean;
   galleryUsed: boolean;
-  onClose: () => void;
+  onClose: () => void; 
   onTakePhoto: () => void;
   onChooseFromGallery: () => void;
   onResetCamera: () => void;
@@ -75,7 +75,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   content: {

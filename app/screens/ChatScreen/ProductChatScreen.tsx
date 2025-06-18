@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import customRF from "../../utils/customRF";
+import fontSize from "../../utils/fontsizeUtils";
 import {
   View,
   Text,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   headerTitle: {
-    fontSize: customRF(18),
+    fontSize: fontSize(18),
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   },
   detailButtonText: {
     color: "white",
-    fontSize: customRF(12),
+    fontSize: fontSize(12),
     fontWeight: "600",
   },
   welcomeContainer: {
@@ -502,13 +502,13 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   welcomeTitle: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: "600",
     color: "#333",
     marginBottom: 8,
   },
   welcomeMessage: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#666",
     textAlign: "center",
     lineHeight: 20,
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   welcomeTime: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#999",
   },
   productInfoCard: {
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   productInfoTitle: {
-    fontSize: customRF(18),
+    fontSize: fontSize(18),
     fontWeight: "700",
     color: "#007a6c",
   },
@@ -561,20 +561,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   productInfoName: {
-    fontSize: customRF(16),
+    fontSize: fontSize(16),
     fontWeight: "600",
     color: "#333",
     marginBottom: 8,
     lineHeight: 22,
   },
   productInfoPrice: {
-    fontSize: customRF(18),
+    fontSize: fontSize(18),
     fontWeight: "700",
     color: "#FF5100",
     marginBottom: 5,
   },
   productInfoId: {
-    fontSize: customRF(12),
+    fontSize: fontSize(12),
     color: "#999",
   },
   chatContainer: {
@@ -610,12 +610,12 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   messageText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#333",
     lineHeight: 22,
   },
   timestamp: {
-    fontSize: 11,
+    fontSize: fontSize(11),
     color: "#999",
     alignSelf: "flex-end",
     marginTop: 6,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   myMessageTimestamp: {
-    color: "rgba(255,255,255,0.8)",
+    color: "#ffffffcc",
   },
   readStatusContainer: {
     alignItems: "flex-end",
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   readStatusText: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#999",
     fontStyle: "italic",
   },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
     marginRight: 12,
     maxHeight: 100,
-    fontSize: 16,
+    fontSize: fontSize(16),
     borderWidth: 1,
     borderColor: "#e5e5e5",
   },
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     color: "white",
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: "600",
   },
   disabledButton: {
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   loginPromptTitle: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: "700",
     color: "#333",
     marginBottom: 30,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "700",
   },
 }); 

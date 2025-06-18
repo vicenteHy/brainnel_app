@@ -24,6 +24,7 @@ import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, Image
 import CameraIcon from "../components/CameraIcon";
 import { productApi } from "../services/api/productApi";
 import useAnalyticsStore from "../store/analytics";
+import fontSize from "../utils/fontsizeUtils";
 
 // 图标组件 - 使用React.memo优化渲染
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -421,7 +422,7 @@ export const SearchScreen = () => {
         onRequestClose={() => setShowImagePickerModal(false)}
       >
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+          style={{ flex: 1, backgroundColor: "#00000080", justifyContent: "flex-end" }}
           activeOpacity={1}
           onPress={() => setShowImagePickerModal(false)}
         >
@@ -432,14 +433,14 @@ export const SearchScreen = () => {
                 onPress={handleTakePhoto}
               >
                 <CameraIcon size={24} color="#333" />
-                <Text style={{ fontSize: 16, color: "#333", marginLeft: 10 }}>{t('takePhoto')}</Text>
+                <Text style={{ fontSize: fontSize(16), color: "#333", marginLeft: 10 }}>{t('takePhoto')}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15 }}
                 onPress={resetAppState}
               >
-                <Text style={{ fontSize: 16, color: "#333", marginLeft: 10 }}>{t('resetCamera')}</Text>
+                <Text style={{ fontSize: fontSize(16), color: "#333", marginLeft: 10 }}>{t('resetCamera')}</Text>
               </TouchableOpacity>
             )}
             <View style={{ height: 1, backgroundColor: "#eee", marginHorizontal: 20 }} />
@@ -447,13 +448,13 @@ export const SearchScreen = () => {
               style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15 }}
               onPress={handleChooseFromGallery}
             >
-              <Text style={{ fontSize: 16, color: "#333" }}>{t('chooseFromGallery')}</Text>
+              <Text style={{ fontSize: fontSize(16), color: "#333" }}>{t('chooseFromGallery')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{ alignItems: "center", paddingVertical: 15, borderTopWidth: 1, borderTopColor: "#eee", marginTop: 10 }}
               onPress={() => setShowImagePickerModal(false)}
             >
-              <Text style={{ fontSize: 16, color: "#333" }}>{t('cancel')}</Text>
+              <Text style={{ fontSize: fontSize(16), color: "#333" }}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -495,7 +496,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     marginLeft: 8,
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#333',
     height: 40,
   },
@@ -508,15 +509,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -25,
     right: 15,
-    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+    backgroundColor: '#0066ff1a',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 102, 255, 0.3)',
+    borderColor: '#0066ff4d',
   },
   productIdHintText: {
-    fontSize: 11,
+    fontSize: fontSize(11),
     color: '#0066FF',
     fontWeight: '600',
   },
@@ -529,7 +530,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#333',
   },
   sectionContainer: {
@@ -543,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     color: '#333',
     marginBottom: 15,
@@ -568,7 +569,7 @@ const styles = StyleSheet.create({
     paddingRight: 40,
   },
   searchTagText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#333',
   },
   deleteButton: {
@@ -587,7 +588,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#9e9e9e',
     fontWeight: 700,
   },

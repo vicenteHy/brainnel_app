@@ -37,11 +37,13 @@ type PayErrorStackParamList = {
 interface PayErrorRouteParams {
   order_no?: string;
   order_id?: string;
+  recharge_id?: string;
   amount?: string;
   currency?: string;
   errorReason?: string;
   orderData?: any;
   msg?: string;
+  isRecharge?: boolean;
 }
 
 export const PayError = () => {
@@ -84,11 +86,13 @@ export const PayError = () => {
   const {
     order_no,
     order_id,
+    recharge_id,
     amount = "0",
     currency = "FCFA",
     errorReason = t("payment.error.payment_interrupted"),
     orderData,
-    msg
+    msg,
+    isRecharge = false
   } = params;
   
   console.log("解析后的参数:");
@@ -101,8 +105,10 @@ export const PayError = () => {
   console.log("- orderData:", orderData);
   console.log("========================");
 
-  // 使用order_no或order_id作为真实订单号，优先使用order_no
-  const realOrderNumber = order_no || order_id || ("ONL" + Date.now());
+  // 根据类型使用不同的ID
+  const realOrderNumber = isRecharge 
+    ? (recharge_id || ("RCH" + Date.now()))
+    : (order_no || order_id || ("ONL" + Date.now()));
 
   const goToHome = () => {
     handleGoBack();
@@ -115,27 +121,42 @@ export const PayError = () => {
   const viewOrderDetails = () => {
     console.log("PayError - viewOrderDetails clicked");
     console.log("PayError - params:", params);
+    console.log("PayError - isRecharge:", isRecharge);
     console.log("PayError - order_no:", order_no);
     console.log("PayError - order_id:", order_id);
+    console.log("PayError - recharge_id:", recharge_id);
     console.log("PayError - realOrderNumber:", realOrderNumber);
     
-    // 检查是否有真实的订单号，优先使用order_id
-    if (order_id) {
-      console.log("PayError - Navigating to OrderDetails with order_id:", order_id);
-      navigation.navigate("OrderDetails", { orderId: order_id, status: 0 });
-    } else if (order_no) {
-      console.log("PayError - Navigating to OrderDetails with order_no:", order_no);
-      navigation.navigate("OrderDetails", { orderId: order_no, status: 0 });
-    } else {
-      console.log("PayError - No valid order number, going to My tab");
-      // 没有订单号时，返回个人中心查看订单列表
+    if (isRecharge) {
+      // 充值失败，跳转到余额页面查看充值记录
+      console.log("PayError - Recharge failed, going to Balance tab");
       navigation.reset({
         index: 0,
         routes: [{ 
           name: 'MainTabs',
-          params: { screen: 'My' }
+          params: { screen: 'Balance' }
         }],
       });
+    } else {
+      // 订单支付失败，原有逻辑
+      // 检查是否有真实的订单号，优先使用order_id
+      if (order_id) {
+        console.log("PayError - Navigating to OrderDetails with order_id:", order_id);
+        navigation.navigate("OrderDetails", { orderId: order_id, status: 0 });
+      } else if (order_no) {
+        console.log("PayError - Navigating to OrderDetails with order_no:", order_no);
+        navigation.navigate("OrderDetails", { orderId: order_no, status: 0 });
+      } else {
+        console.log("PayError - No valid order number, going to My tab");
+        // 没有订单号时，返回个人中心查看订单列表
+        navigation.reset({
+          index: 0,
+          routes: [{ 
+            name: 'MainTabs',
+            params: { screen: 'My' }
+          }],
+        });
+      }
     }
   };
 
@@ -183,12 +204,12 @@ export const PayError = () => {
           <Text style={styles.errorMessage}>{t("payment.error.message")}</Text>
         </View>
 
-        {/* Order Details Card */}
+        {/* Order/Recharge Details Card */}
         <View style={styles.detailsCard}>
-          <Text style={styles.cardTitle}>{t("order.details")}</Text>
+          <Text style={styles.cardTitle}>{isRecharge ? t("recharge.details") : t("order.details")}</Text>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t("payment.error.order_number")}</Text>
+            <Text style={styles.detailLabel}>{isRecharge ? t("recharge.error.recharge_number") : t("payment.error.order_number")}</Text>
             <Text style={styles.detailValue}>{realOrderNumber}</Text>
           </View>
           
@@ -224,7 +245,7 @@ export const PayError = () => {
             onPress={viewOrderDetails}
             activeOpacity={0.8}
           >
-            <Text style={styles.secondaryButtonText}>{t("payment.error.view_order_details")}</Text>
+            <Text style={styles.secondaryButtonText}>{isRecharge ? t("recharge.error.view_recharge_details") : t("payment.error.view_order_details")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

@@ -685,7 +685,7 @@ export const styles = StyleSheet.create({
   // 自定义Alert弹窗样式
   alertOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,

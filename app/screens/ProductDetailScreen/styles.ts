@@ -436,7 +436,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
   },
   bottomSheet: {
     backgroundColor: "#fff",
@@ -512,7 +512,7 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: '#0000000d',
     borderRadius: 4,
     alignSelf: 'flex-start',
   },

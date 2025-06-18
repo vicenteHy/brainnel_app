@@ -12,6 +12,7 @@ import useUserStore from '../store/user';
 import useCartStore from '../store/cartStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { eventBus } from '../utils/eventBus';
+import fontSize from '../utils/fontsizeUtils';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
@@ -52,7 +53,7 @@ const CartIconWithBadge = ({ color, size }: TabBarIconProps) => {
         }}>
           <Text style={{
             color: 'white',
-            fontSize: 9,
+            fontSize: fontSize(9),
             fontWeight: 'bold',
             textAlign: 'center',
           }}>
@@ -236,7 +237,7 @@ export const TabNavigator = () => {
             paddingTop: 8,
           },
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: fontSize(10),
             marginTop: 2,
             marginBottom: 4,
           },
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
   },
   modalOverlayTouch: {
     flex: 1,
@@ -429,11 +430,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: '#0000001a',
     borderRadius: 15,
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     color: '#666',
     fontWeight: 'bold',
   },
@@ -445,14 +446,14 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: '600',
     color: '#000',
     textAlign: 'center',
     marginBottom: 12,
   },
   modalText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#666',
     textAlign: 'center',
     marginBottom: 24,
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '600',
   },
 }); 

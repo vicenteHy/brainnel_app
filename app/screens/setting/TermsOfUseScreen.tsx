@@ -79,7 +79,7 @@ export const TermsOfUseScreen = () => {
             }
             body { 
               font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-              font-size: 16px;
+              font-size: ${fontSize(16)}px;
               line-height: 1.5; 
               color: #1c1c1e;
               margin: 0;
@@ -96,19 +96,19 @@ export const TermsOfUseScreen = () => {
               line-height: 1.3;
             }
             h1 {
-              font-size: 24px;
+              font-size: ${fontSize(24)}px;
               margin-top: 0;
             }
             h2 {
-              font-size: 20px;
+              font-size: ${fontSize(20)}px;
             }
             h3 {
-              font-size: 18px;
+              font-size: ${fontSize(18)}px;
             }
             p { 
               margin-bottom: 16px; 
               text-align: left;
-              font-size: 16px;
+              font-size: ${fontSize(16)}px;
               line-height: 1.5;
             }
             ol, ul {
@@ -164,7 +164,7 @@ export const TermsOfUseScreen = () => {
               padding: 2px 6px;
               border-radius: 4px;
               font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-              font-size: 14px;
+              font-size: ${fontSize(14)}px;
             }
             .section {
               margin-bottom: 24px;
@@ -247,7 +247,7 @@ export const TermsOfUseScreen = () => {
                 padding: 10px; 
                 margin: 10px 0; 
                 text-align: left; 
-                font-size: 12px;
+                font-size: ${fontSize(12)}px;
                 border-radius: 4px;
               }
             </style>
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#ffffffe6',
     borderRadius: 20,
     padding: 8,
   },

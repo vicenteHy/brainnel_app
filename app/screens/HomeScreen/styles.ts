@@ -223,7 +223,7 @@ export const styles = StyleSheet.create<StylesType>({
     width: "100%",
   },
   dot: {
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "#ffffff80",
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -250,7 +250,7 @@ export const styles = StyleSheet.create<StylesType>({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   modalContent: {
@@ -368,12 +368,11 @@ export const styles = StyleSheet.create<StylesType>({
   },
   productCardList: {
     padding: 15,
-    paddingTop: 0,
   },
   productCardGroup: {
     justifyContent: "space-between",
     marginBottom: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: 0,
     backgroundColor: "#f5f5f5",
     gap: 8,
   },
@@ -390,7 +389,6 @@ export const styles = StyleSheet.create<StylesType>({
     shadowOpacity: 0,
     shadowRadius: 3,
     elevation: 0,
-    marginBottom: 8,
   },
   beautyCardContainer1: {
     flexDirection: "column",
@@ -492,7 +490,7 @@ export const styles = StyleSheet.create<StylesType>({
   inactiveIndicator: {
     width: 6,
     height: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: "#ffffff80",
   },
   skeletonContainer: {
     paddingHorizontal: 0,
@@ -538,7 +536,7 @@ export const styles = StyleSheet.create<StylesType>({
   shimmer: {
     width: "30%",
     height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "#ffffff4d",
     position: "absolute",
     top: 0,
     left: 0,
@@ -556,7 +554,7 @@ export const styles = StyleSheet.create<StylesType>({
   },
   imagePickerOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   imagePickerContent: {
@@ -623,7 +621,7 @@ export const styles = StyleSheet.create<StylesType>({
 export const loginModalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "#0000004d",
     justifyContent: "flex-end",
     alignItems: "center",
   },
@@ -650,13 +648,13 @@ export const loginModalStyles = StyleSheet.create({
     alignItems: "center",
   },
   closeButtonText: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     color: "#999",
     fontWeight: "bold",
     lineHeight: 28,
   },
   title: {
-    fontSize: 22,
+    fontSize: fontSize(22),
     fontWeight: "700",
     color: "#333",
     marginBottom: 10,
@@ -664,7 +662,7 @@ export const loginModalStyles = StyleSheet.create({
     marginTop: 16,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#666",
     marginBottom: 30,
     textAlign: "center",
@@ -679,7 +677,7 @@ export const loginModalStyles = StyleSheet.create({
   },
   loginButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "700",
     textAlign: "center",
   },

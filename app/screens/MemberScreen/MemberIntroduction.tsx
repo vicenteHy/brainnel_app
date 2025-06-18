@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0071f7",
     justifyContent: "center",
     alignItems: "center",
-    fontSize: 20,
+    fontSize: fontSize(20),
     color: "white",
   },
   memberPricingDetailsContainer: {
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   blueBoxThumbnail: {
     width: 67,
     height: 91,
-    shadowColor: "rgba(42, 136, 200, 0.3)",
+    shadowColor: "#2a88c84d",
     shadowOffset: { width: 3, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
   imageContainer1: {
     width: 80,
     height: 100,
-    shadowColor: "rgba(64, 111, 229, 0.3)",
+    shadowColor: "#406fe54d",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: "100%",
-    shadowColor: "rgba(181, 182, 186, 0.4)",
+    shadowColor: "#b5b6ba66",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   imageContainer2: {
     width: 74,
     height: 77,
-    shadowColor: "rgba(56, 186, 189, 0.3)",
+    shadowColor: "#38babd4d",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
   imageContainerStyled: {
     width: 68,
     height: 88,
-    shadowColor: "rgba(250, 155, 72, 0.3)",
+    shadowColor: "#fa9b484d",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
   imageContainerWithShadow: {
     width: 110,
     height: 110,
-    shadowColor: "rgba(254, 89, 41, 0.2)",
+    shadowColor: "#fe592933",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 4,
@@ -1057,7 +1057,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   gradientHeading: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: "500",
     color: "#fa934f", // 可用渐变文字
     marginBottom: 10,
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
     marginTop: 26,
   },
   cumulativeInfo: {
-    fontSize: 13,
+    fontSize: fontSize(13),
     color: "#fdd08f",
   },
   highlightedText: {
@@ -1108,7 +1108,7 @@ const styles = StyleSheet.create({
   majesticText: {
     fontStyle: "italic",
     fontWeight: "900",
-    fontSize: 38,
+    fontSize: fontSize(38),
     marginLeft: 10,
     color: "#3496ff",
   },
@@ -1116,23 +1116,23 @@ const styles = StyleSheet.create({
     marginTop: 11,
   },
   amountMessage: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#5fa9ff",
   },
   amountLabel: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "900",
     color: "#2a8bfa",
     marginTop: -2,
   },
   discountMessage: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#2a8bfa",
     marginTop: 8,
   },
   discountBold: {
     fontWeight: "900",
-    fontSize: 14,
+    fontSize: fontSize(14),
   },
   outerContainer: {
     backgroundColor: "#f1f2f6",
@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
   importantInfoHeading: {
     paddingTop: 10,
     fontWeight: "900",
-    fontSize: 20,
+    fontSize: fontSize(20),
     lineHeight: 22,
     color: "white",
     fontFamily: "System",
@@ -1212,7 +1212,7 @@ const styles = StyleSheet.create({
   vipStatusMessageTextStyle: {
     marginLeft: 2,
     fontWeight: "500",
-    fontSize: 13,
+    fontSize: fontSize(13),
     lineHeight: 20,
     color: "white",
     textAlign: "left",
@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 2,
     fontWeight: "500",
-    fontSize: 13,
+    fontSize: fontSize(13),
     lineHeight: 20,
     color: "white",
     textAlign: "left",
@@ -1238,9 +1238,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   exampleParagraphStyle: {
-    fontSize: 11,
+    fontSize: fontSize(11),
     lineHeight: 16,
-    color: "rgba(255,255,255,0.8)",
+    color: "#ffffffcc",
     textAlign: "left",
     fontFamily: "System",
   },

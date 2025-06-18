@@ -111,7 +111,6 @@ export const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "600",
     marginBottom: 4,
-    fontFamily: "PingFang SC",
     letterSpacing: 0,
   },
   priceRow: {
@@ -127,7 +126,6 @@ export const styles = StyleSheet.create({
   currency: {
     fontSize: fontSize(14),
     fontWeight: "600",
-    fontFamily: "PingFang SC",
     color: "#FF5100",
   },
   originalPrice: {
@@ -139,12 +137,10 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: "#9a9a9a",
     fontWeight: "600",
-    fontFamily: "PingFang SC",
   },
   productSales: {
     fontSize: fontSize(14),
     fontWeight: "600",
-    fontFamily: "PingFang SC",
     color: "#7c7c7c",
   },
   footerContainer: {
@@ -263,7 +259,7 @@ export const styles = StyleSheet.create({
   shimmer: {
     width: "30%",
     height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "#ffffff4d",
     position: "absolute",
     top: 0,
     left: 0,
@@ -287,7 +283,7 @@ export const styles = StyleSheet.create({
   productIdSearchHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+    backgroundColor: '#0066ff1a',
     marginHorizontal: 8,
     marginBottom: 8,
     paddingHorizontal: 12,
@@ -297,13 +293,12 @@ export const styles = StyleSheet.create({
     borderLeftColor: '#0066FF',
   },
   productIdSearchText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#333',
     marginLeft: 8,
     flex: 1,
   },
   productIdValue: {
-    fontFamily: 'Courier',
     fontWeight: '600',
     color: '#0066FF',
   },

@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    backgroundColor: "#000000CC",
   },
   modalImage: {
     width: screenWidth * 0.9,
@@ -692,15 +692,21 @@ const styles = StyleSheet.create({
   },
   quantityButtonText: {
     fontSize: fontSize(25),
-    lineHeight: fontSize(25),
+    lineHeight: Platform.OS === 'android' ? fontSize(18) : fontSize(25),
     fontWeight: "300",
     color: "#000",
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   quantityButtonDisabledText: {
     fontSize: fontSize(25),
-    lineHeight: fontSize(25),
+    lineHeight: Platform.OS === 'android' ? fontSize(18) : fontSize(25),
     fontWeight: "300",
     color: "#bdbdbd",
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   skuImageWrapper: {
     flexDirection: "column",

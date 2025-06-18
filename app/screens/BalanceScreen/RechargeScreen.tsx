@@ -29,7 +29,7 @@ import {
   RechargeRecommendAmountResponse,
   PaymentMethod,
 } from "../../services/api/payApi";
-import payMap from "../../utils/payMap";
+import getPayMap from "../../utils/payMap";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 
@@ -830,7 +830,7 @@ const RechargeScreen = () => {
                       <View style={styles.leftInfo}>
                         <View style={styles.blueBox}>
                           <Image
-                            source={payMap(method.key) as any}
+                            source={getPayMap(method.key) as any}
                             style={styles.operatorImage}
                           />
                         </View>
@@ -846,7 +846,7 @@ const RechargeScreen = () => {
                       <View style={styles.iconRow}>
                         <View style={styles.imageContainer}>
                           <Image
-                            source={payMap(method.key) as any}
+                            source={getPayMap(method.key) as any}
                             style={styles.operatorImage}
                           />
                           <View style={styles.mobileMoneyTextContainer}>
@@ -859,7 +859,7 @@ const RechargeScreen = () => {
                                   >
                                     <Image
                                       key={index}
-                                      source={payMap(item) as any}
+                                      source={getPayMap(item) as any}
                                       style={styles.mobileMoneyImg}
                                     />
                                   </View>
@@ -1281,7 +1281,7 @@ const styles = StyleSheet.create({
     position: "relative",
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 111, 48, 0.1)",
+    borderBottomColor: "#ff6f301a",
   },
   scrollContent: {
     padding: 24,
@@ -1296,7 +1296,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: fontSize(22),
     fontWeight: "700",
     color: "#333333",
     flex: 1,
@@ -1308,7 +1308,7 @@ const styles = StyleSheet.create({
     marginTop: 44,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "600",
     color: "#333333",
     marginBottom: 16,
@@ -1486,7 +1486,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     backgroundColor: "#ffffff",
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 111, 48, 0.1)",
+    borderTopColor: "#ff6f301a",
   },
   actionButtons: {
     flexDirection: "row",
@@ -1551,7 +1551,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   saleText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontFamily: "Timmana",
     color: "white",
     marginLeft: 4,
@@ -1705,7 +1705,7 @@ const styles = StyleSheet.create({
     flex: 0,
     padding: 0,
     margin: 0,
-    fontSize: 14,
+    fontSize: fontSize(14),
     lineHeight: 14,
     color: "#747474",
     // Note: PingFang SC font might not be available by default in React Native
@@ -1860,7 +1860,7 @@ const styles = StyleSheet.create({
   paymentHeadingStyle: {
     padding: 0,
     margin: 0,
-    fontSize: 24,
+    fontSize: fontSize(24),
     lineHeight: 22,
     color: "black",
     textTransform: "capitalize",
@@ -1874,7 +1874,7 @@ const styles = StyleSheet.create({
     paddingRight: 15,
     paddingLeft: 15,
     backgroundColor:
-      "linear-gradient(90deg, rgba(206, 229, 255, 1) 0%, rgba(238, 244, 255, 1) 100%",
+      "linear-gradient(90deg, #cee5ff 0%, #eef4ff 100%)",
     borderRadius: 5,
   },
   flexContainerWithImages: {
@@ -1907,7 +1907,7 @@ const styles = StyleSheet.create({
   amountLabel: {
     padding: 0,
     margin: 0,
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#7f7e7e",
     fontFamily: "PingFangSC-Medium",
   },
@@ -1921,7 +1921,7 @@ const styles = StyleSheet.create({
     padding: 0,
     paddingBottom: 5,
     margin: 0,
-    fontSize: 24,
+    fontSize: fontSize(24),
     lineHeight: 22,
     color: "#161616",
     fontFamily: "Montserrat-Bold",
@@ -1931,7 +1931,7 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     margin: 0,
     marginLeft: 3,
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#7f7e7e",
     fontFamily: "PingFangSC-Medium",
   },
@@ -1945,7 +1945,7 @@ const styles = StyleSheet.create({
   mobileNumberLabel: {
     padding: 0,
     margin: 0,
-    fontSize: 14,
+    fontSize: fontSize(14),
     lineHeight: 18,
     color: "black",
     fontFamily: "PingFangSC-Regular",
@@ -1977,7 +1977,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     marginLeft: 3,
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     color: "#1c284e",
     fontFamily: "PingFangSC-Semibold",
@@ -1998,7 +1998,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     marginLeft: 19.5,
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     color: "#1c284e",
     fontFamily: "PingFangSC-Semibold",
@@ -2037,7 +2037,7 @@ const styles = StyleSheet.create({
   paymentNotice: {
     padding: 0,
     margin: 0,
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "white",
     fontFamily: "Montserrat-Bold",
   },
@@ -2266,7 +2266,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     zIndex: 9999,
     elevation: 9999,
   },
@@ -2291,7 +2291,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "700",
     color: "black",
   },
@@ -2299,7 +2299,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   closeButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "700",
     color: "#007AFF",
   },
@@ -2310,7 +2310,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   countryItemText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "500",
     color: "#333",
   },

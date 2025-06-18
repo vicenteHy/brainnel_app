@@ -82,7 +82,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,

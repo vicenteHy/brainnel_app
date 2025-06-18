@@ -17,6 +17,7 @@ import CouponsIcon from "../../components/CouponsIcon";
 import RecipientManagementIcon from "../../components/RecipientManagementIcon";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import fontSize from "../../utils/fontsizeUtils";
 type RootStackParamList = {
   SettingList: undefined;
   Home: undefined;
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   title: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "600",
     color: "#000",
   },
@@ -287,12 +288,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   profileNameText: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: "600",
     color: "#000",
   },
   profileNameText1: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: "600",
     color: "#000",
     marginLeft: 10,
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   profilePriceText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "600",
     color: "#ff8c58",
   },
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   userIdText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#7c7c7c",
   },
   userinfo: {
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   userinfoText: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "600",
     color: "#fff",
   },
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
   },
   userinfoDetailsText: {
     color: "#FF5100",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "600",
     marginRight: 5,
   },
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   myOrderTitleText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "600",
     color: "#000",
   },
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   myOrderTitleText1: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "600",
     color: "#818282",
     marginRight: 5,
@@ -429,7 +430,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   myOrderListHeaderItemText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#575757",
     textAlign: "center",
     marginTop: 5,
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   FeaturesHeaderItemText:{
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#707070",
     fontWeight: "600",
     textAlign: "left",

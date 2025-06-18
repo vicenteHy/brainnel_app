@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#000000",
     fontWeight: "600",
     marginBottom: 4,

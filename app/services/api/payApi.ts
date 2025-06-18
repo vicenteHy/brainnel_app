@@ -71,6 +71,13 @@ export interface PaymentResponse {
   msg?: string; // 失败原因
 }
 
+export interface RechargePaymentResponse {
+  success: boolean;
+  recharge_id: string;
+  status: number; // 0: unpaid, 1: paid
+  msg?: string; // 失败原因
+}
+
 export interface rechargeHistory {
   recharge_id: number;
   user_id: number;
@@ -170,6 +177,13 @@ export const payApi = {
   checkPaymentStatus: (order_id: string) => {
     return apiService.get<PaymentResponse>(
       `/api/orders/${order_id}/`
+    );
+  },
+
+  // 查询充值支付状态
+  rechargePaymentStatus: (recharge_id: string) => {
+    return apiService.get<RechargePaymentResponse>(
+      `/api/orders/${recharge_id}/payment-status/`
     );
   },
 };

@@ -14,6 +14,7 @@ import { changeLanguage, getCurrentLanguage } from '../i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import fontSize from '../utils/fontsizeUtils';
 
 interface LanguageOption {
   code: string;
@@ -175,14 +176,14 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   title: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#E6F0FF',
     textAlign: 'center',
     lineHeight: 22,
@@ -192,14 +193,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   languageOption: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#ffffff26',
     borderRadius: 16,
     marginBottom: 16,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   selectedOption: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#ffffff40',
     borderColor: '#FFFFFF',
   },
   languageContent: {
@@ -208,14 +209,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   flag: {
-    fontSize: 32,
+    fontSize: fontSize(32),
     marginRight: 16,
   },
   languageTexts: {
     flex: 1,
   },
   languageName: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 4,
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   nativeName: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#E6F0FF',
   },
   selectedSubText: {
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   },
   checkmarkText: {
     color: '#0066FF',
-    fontSize: 14,
+    fontSize: fontSize(14),
     fontWeight: 'bold',
   },
   footer: {
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   footerText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#B3D9FF',
     textAlign: 'center',
   },

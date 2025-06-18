@@ -7,7 +7,7 @@ import widthUtils from '../../../../utils/widthUtils';
 interface FormData {
   name: string;
   quantity: string;
-  material: string;
+  material: string; 
   link: string;
   remark: string;
 }
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontFamily: "PingFang SC",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "500",
     color: "#676b74",
   },
@@ -209,14 +209,12 @@ const styles = StyleSheet.create({
   quantityLabelTextStyle: {
     padding: 0,
     margin: 0,
-    fontFamily: "PingFang SC",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "500",
     color: "#676b74",
   },
   highlightedText: {
-    fontFamily: "PingFang SC",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "500",
     color: "#fe1e00",
   },
@@ -278,15 +276,13 @@ const styles = StyleSheet.create({
     borderRadius: 43,
   },
   cancelButtonText: {
-    fontFamily: "Source Han Sans CN",
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "500",
     lineHeight: 22,
     color: "#333333",
   },
   confirmButtonText: {
-    fontFamily: "Source Han Sans CN",
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "500",
     lineHeight: 22,
     color: "white",

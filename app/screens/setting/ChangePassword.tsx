@@ -19,6 +19,7 @@ import { RootStackParamList } from "../../navigation/types";
 import BackIcon from "../../components/BackIcon";
 import Toast from "react-native-toast-message";
 import { userApi } from "../../services/api/userApi";
+import fontSize from "../../utils/fontsizeUtils";
 
 export const ChangePassword = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "600",
     color: "#000000",
     textAlign: "center",
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "500",
     color: "#333333",
     marginBottom: 8,
@@ -301,11 +302,11 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#333333",
   },
   errorText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#ff3b30",
     marginTop: 6,
     marginLeft: 4,
@@ -323,7 +324,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#cccccc",
   },
   submitButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: "600",
     color: "#ffffff",
   },

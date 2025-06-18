@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
   shimmer: {
     width: "30%",
     height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "#ffffff4d",
     position: "absolute",
     top: 0,
     left: 0,

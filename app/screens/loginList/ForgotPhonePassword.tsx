@@ -477,7 +477,7 @@ export const ForgotPhonePassword = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
     zIndex: 9999,
   },
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   // Country modal styles
   countryModalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
     zIndex: 999,
   },

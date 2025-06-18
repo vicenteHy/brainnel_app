@@ -654,6 +654,7 @@ export const modalStyles = StyleSheet.create({
     fontSize: fontSize(16),
     textAlign: "center",
     fontFamily: "Segoe UI",
+    color: "#000000",
   },
   quantityInputButtonContainer: {
     flexDirection: "row",

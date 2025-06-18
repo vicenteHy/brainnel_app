@@ -19,6 +19,7 @@ import BackIcon from "../../components/BackIcon";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { eventBus } from "../../utils/eventBus";
 import { AddressItem } from "../../services/api/addressApi";
+import fontSize from "../../utils/fontsizeUtils";
 
 type RootStackParamList = {
   AddRess: { address?: AddressItem };
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
   },
   titleHeading: {
     fontWeight: "600",
-    fontSize: 20,
+    fontSize: fontSize(20),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "black",
@@ -436,7 +437,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: 18,
+    fontSize: fontSize(18),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "black",
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontFamily: "PingFang SC",
     color: "#646472",
   },
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
     margin: 0,
     marginLeft: 1,
     fontWeight: "500",
-    fontSize: 18,
+    fontSize: fontSize(18),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "#fe1e00",
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
     margin: 0,
     marginTop: -2,
     fontWeight: "400",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "#807e7e",
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
     margin: 0,
     marginTop: -2,
     fontWeight: "400",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "#807e7e",
@@ -523,10 +524,10 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: "white",
-    fontSize: 12,
+    fontSize: fontSize(12),
   },
   checkboxLabel: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: "#646472",
     fontFamily: "PingFang SC",
   },
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
     margin: 0,
     marginLeft: 1,
     fontWeight: "500",
-    fontSize: 18,
+    fontSize: fontSize(18),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "#fe1e00",
@@ -593,7 +594,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: 14,
+    fontSize: fontSize(14),
     fontFamily: "PingFang SC",
     color: "#807e7e",
   },
@@ -601,7 +602,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: 14,
+    fontSize: fontSize(14),
     fontFamily: "PingFang SC",
     color: "#807e7e",
   },
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontWeight: "500",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "black",
@@ -647,7 +648,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     fontFamily: "PingFang SC",
     color: "white",
@@ -658,7 +659,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 22,
     fontFamily: "PingFang SC",
   },
@@ -679,11 +680,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#333",
   },
   dropdownLabel: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#333",
   },
   arrowIcon: {
@@ -703,14 +704,14 @@ const styles = StyleSheet.create({
     borderColor: "#dbdce0",
     borderRadius: 5,
     padding: 8,
-    fontSize: 16,
+    fontSize: fontSize(16),
   },
   phoneNumberError: {
     borderColor: "#fe1e00",
   },
   errorText: {
     color: "#fe1e00",
-    fontSize: 12,
+    fontSize: fontSize(12),
     marginTop: 4,
     fontFamily: "PingFang SC",
   },

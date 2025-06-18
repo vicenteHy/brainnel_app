@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableWithoutFeedback,
+  SafeAreaView,
   Keyboard,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ import { settingApi } from '../../services/api/setting';
 import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
+import fontSize from '../../utils/fontsizeUtils';
 
 // 国家代码到Country对象的映射
 const countryCodeToCountry: { [key: number]: Country } = {
@@ -314,7 +316,7 @@ export const PhoneLoginScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
       {/* 头部 */}
@@ -493,7 +495,7 @@ export const PhoneLoginScreen = () => {
         transparent={true}
         onRequestClose={() => setShowCountryModal(false)}
       >
-        <View style={styles.modalContainer}>
+        <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <TouchableOpacity 
@@ -509,12 +511,13 @@ export const PhoneLoginScreen = () => {
               renderItem={renderCountryItem}
               keyExtractor={(item) => item.code}
               style={styles.countryList}
+              contentContainerStyle={styles.countryListContent}
               showsVerticalScrollIndicator={false}
             />
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
-      </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -527,9 +530,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: 20,
     paddingHorizontal: 16,
-    paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
@@ -538,11 +540,11 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     color: '#000',
   },
   title: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     color: '#000',
     flex: 1,
@@ -575,23 +577,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   countryFlag: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     marginRight: 4,
   },
   countryCode: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#333',
     marginRight: 4,
   },
   downArrow: {
-    fontSize: 8,
+    fontSize: fontSize(8),
     color: '#666',
   },
   phoneInput: {
     flex: 1,
     height: '100%',
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: fontSize(16),
     paddingRight: 36, // 为清除按钮留出空间
     color: '#000000',
   },
@@ -606,13 +608,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   clearButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#999',
     fontWeight: '500',
     textAlign: 'center',
   },
   infoText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#666',
     marginBottom: 32,
     lineHeight: 20,
@@ -629,7 +631,7 @@ const styles = StyleSheet.create({
   },
   continueButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '600',
   },
   passwordInputContainer: {
@@ -642,7 +644,7 @@ const styles = StyleSheet.create({
     borderColor: '#E1E1E1',
     borderRadius: 25,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#000000',
   },
   verificationContainer: {
@@ -660,7 +662,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   toggleText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#FF5100',
     textDecorationLine: 'underline',
     fontWeight: '500',
@@ -668,7 +670,7 @@ const styles = StyleSheet.create({
   // 下拉框样式
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -688,18 +690,21 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   modalCloseButtonText: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     color: '#999',
   },
   modalTitle: {
     flex: 1,
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     textAlign: 'center',
     marginRight: 24, // Balance with close button
   },
   countryList: {
     padding: 8,
+  },
+  countryListContent: {
+    paddingBottom: 60,
   },
   countryItem: {
     flexDirection: 'row',
@@ -709,18 +714,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   countryItemFlag: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     marginRight: 16,
   },
   countryItemContent: {
     flex: 1,
   },
   countryItemName: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#333',
   },
   countryItemCode: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#666',
     marginTop: 4,
   },
@@ -731,14 +736,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   verificationTitle: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 12,
     textAlign: 'center',
   },
   verificationSubtitle: {
-    fontSize: 15,
+    fontSize: fontSize(15),
     color: '#6b7280',
     marginBottom: 32,
     textAlign: 'center',
@@ -762,7 +767,7 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     borderRadius: 16,
     padding: 20,
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     letterSpacing: 8,
     textAlign: 'center',
@@ -776,7 +781,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   resendText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#FF6B35',
     fontWeight: '600',
     textDecorationLine: 'underline',
@@ -790,7 +795,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   switchToPasswordText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#FF5100',
     textDecorationLine: 'underline',
     fontWeight: '500',

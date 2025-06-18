@@ -188,7 +188,7 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "#00000066",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -257,6 +257,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     textAlign: "center",
     fontFamily: "Segoe UI",
+    color: "#000000",
   },
 });
 

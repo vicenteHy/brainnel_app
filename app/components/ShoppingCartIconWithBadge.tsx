@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ShoppingCartIcon from './ShoppingCartIcon';
 import useCartStore from '../store/cartStore';
+import fontSize from '../utils/fontsizeUtils';
 
 interface ShoppingCartIconWithBadgeProps {
   color?: string;
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: fontSize(10),
     fontWeight: 'bold',
     textAlign: 'center',
   },

@@ -75,7 +75,7 @@ export const CountryModal: React.FC<CountryModalProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   modalContent: {

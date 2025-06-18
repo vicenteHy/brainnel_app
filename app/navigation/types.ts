@@ -34,17 +34,10 @@ export type RootStackParamList = {
   CartScreen: undefined;
   PaymentSuccessScreen: { paymentId?: string; PayerID?: string };
   PayError: undefined;
-  RechargeSuccess: {
-    amount?: string;
-    currency?: string;
-    rechargeId?: string;
-  };
-  RechargeError: {
-    amount?: string;
-    currency?: string;
-    errorReason?: string;
-    rechargeId?: string;
-    error?: string;
+  RechargePay: {
+    payUrl: string;
+    method: string;
+    recharge_id: string;
   };
   Recharge: undefined;
   RechargeSummary: {

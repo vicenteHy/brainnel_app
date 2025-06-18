@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: "#888",
-    fontSize: 14,
+    fontSize: fontSize(14),
   },
   noMoreText: {
     textAlign: "center",
     color: "#888",
-    fontSize: 14,
+    fontSize: fontSize(14),
     padding: 16,
   },
   emptyContainer: {

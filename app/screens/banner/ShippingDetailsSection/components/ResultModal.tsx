@@ -57,7 +57,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
 const styles = StyleSheet.create({
   resultModalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "center",
     alignItems: "center",
   },

@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: "bold",
   },
   defaultLabel: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   // 删除确认弹窗样式
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: '#00000066',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,

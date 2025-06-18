@@ -20,6 +20,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import flagMap from '../utils/flagMap';
 import { getCountryTransLanguage } from '../utils/languageUtils';
+import fontSize from '../utils/fontsizeUtils';
 
 const SELECTED_COUNTRY_KEY = '@selected_country';
 
@@ -261,14 +262,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     fontWeight: '700',
     marginBottom: 12,
     color: '#000000',
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#666',
     marginBottom: 24,
     lineHeight: 24,
@@ -303,13 +304,13 @@ const styles = StyleSheet.create({
   },
   countryName: {
     flex: 1,
-    fontSize: 17,
+    fontSize: fontSize(17),
     color: '#000000',
     fontWeight: '500',
     letterSpacing: 0.1,
   },
   countryCode: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#333333',
     marginRight: 16,
     minWidth: 48,
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   checkmark: {
-    fontSize: 22,
+    fontSize: fontSize(22),
     color: '#007AFF',
     fontWeight: 'bold',
   },

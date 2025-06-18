@@ -1167,7 +1167,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#00000080",
   },
   formContainer: {
     width: "90%",
@@ -1392,7 +1392,7 @@ const styles = StyleSheet.create({
   // Coupon modal styles
   couponModal: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "center",
     alignItems: "center",
   },

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import fontSize from './fontsizeUtils';
 
 interface PerformanceMonitorProps {
   name: string;
@@ -70,13 +71,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    backgroundColor: '#ff0000cc',
     padding: 5,
     zIndex: 9999,
   },
   text: {
     color: 'white',
-    fontSize: 10,
+    fontSize: fontSize(10),
     fontWeight: 'bold',
   },
 });

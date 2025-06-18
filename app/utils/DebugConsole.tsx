@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { getPerformanceStats } from './PerformanceMonitor';
+import fontSize from './fontsizeUtils';
 
 interface DebugConsoleProps {
   visible?: boolean;
@@ -113,14 +114,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 100,
     right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: '#000000cc',
     padding: 10,
     borderRadius: 5,
     zIndex: 10000,
   },
   toggleText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: 'bold',
   },
   container: {
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     left: 10,
     right: 10,
     height: 300,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: '#000000e6',
     borderRadius: 5,
     padding: 10,
     zIndex: 9999,
@@ -142,13 +143,13 @@ const styles = StyleSheet.create({
   },
   statsTitle: {
     color: 'white',
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: 'bold',
     marginBottom: 5,
   },
   statText: {
     color: '#0f0',
-    fontSize: 10,
+    fontSize: fontSize(10),
   },
   warningText: {
     color: '#f00',
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   },
   logText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: fontSize(10),
     fontFamily: 'monospace',
   },
   warnText: {

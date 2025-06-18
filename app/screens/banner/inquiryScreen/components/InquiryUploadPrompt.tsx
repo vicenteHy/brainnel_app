@@ -96,14 +96,14 @@ const styles = StyleSheet.create({
   },
   productInfoHeading: {
     fontWeight: "900",
-    fontSize: 16,
+    fontSize: fontSize(16),
     lineHeight: 20,
     color: "white",
   },
   productInfoMessage1: {
     marginTop: 7,
     fontWeight: "400",
-    fontSize: 12,
+    fontSize: fontSize(12),
     lineHeight: 16,
     color: "white",
     textAlign: "center",
