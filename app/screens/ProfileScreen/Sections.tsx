@@ -29,7 +29,6 @@ const serviceItems = [
   { nameKey: 'profile.services.item.collection', iconName: 'heart-outline', screen: 'Collection' },
   { nameKey: 'profile.services.item.history', iconName: 'time-outline', screen: 'BrowseHistoryScreen' },
   { nameKey: 'profile.services.item.address', iconName: 'location-outline', screen: 'AddressList' },
-  { nameKey: 'profile.services.item.share', iconName: 'share-social-outline', screen: 'Share' },
 ];
 
 const SectionCard: React.FC<{title: string, onAllPress?: () => void, children: React.ReactNode, allText?: string}> = ({ title, onAllPress, allText, children }) => (
