@@ -657,6 +657,7 @@
           "payment_method": "Choose your payment method",
           "payment_mode": "Payment Mode",
           "other": "Other",
+          "offline_payment": "Offline Payment",
           "supported_operators": "Supported Operators",
           "currency_title": "Select Currency:",
           "equivalent_amount": "Equivalent amount:",

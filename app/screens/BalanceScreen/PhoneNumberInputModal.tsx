@@ -46,10 +46,8 @@ interface PhoneNumberInputModalProps {
     currency: string;
     payment_method: string;
     selectedPriceLabel: string;
-    onCloses?: () => void;
   } | null;
   onSubmit: (phoneNumber: string) => Promise<void>;
-  onCloses?: () => void;
   validDigits?: number[];
 }
 
@@ -62,7 +60,6 @@ const PhoneNumberInputModal = ({
   onClose,
   paymentParams,
   onSubmit,
-  onCloses,
   validDigits,
 }: PhoneNumberInputModalProps) => {
   const { t } = useTranslation();
@@ -296,9 +293,6 @@ const PhoneNumberInputModal = ({
 
         // 成功后关闭所有模态窗口
         onClose();
-        if (onCloses) {
-          onCloses();
-        }
       }
     } catch (error) {
       console.error("Payment error:", error);

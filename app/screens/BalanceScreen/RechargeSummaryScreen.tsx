@@ -45,7 +45,6 @@ interface RechargeSummaryScreenProps {
         currency: string;
         payment_method: string;
         selectedPriceLabel: string;
-        onCloses?: () => void;
       };
       validDigits?: number[];
     };
@@ -60,8 +59,9 @@ const RechargeSummaryScreen = () => {
   const { paymentParams, validDigits } = route.params as any;
   
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberError, setPhoneNumberError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localCountryCode, setLocalCountryCode] = useState<string>("+243");
+  const [localCountryCode, setLocalCountryCode] = useState<string>("");
   const [currentValidDigits, setCurrentValidDigits] = useState<number[]>(validDigits || [8]);
   
   // 国家选择相关状态
@@ -74,19 +74,43 @@ const RechargeSummaryScreen = () => {
   useEffect(() => {
     const fetchCountryCode = async () => {
       try {
+        // 优先从用户信息获取国家代码
+        if (user?.country_code) {
+          setLocalCountryCode(`+${user.country_code}`);
+          return;
+        }
+
+        // 其次从本地存储获取选中的国家
         const selectedCountry = await AsyncStorage.getItem('@selected_country');
         if (selectedCountry) {
           const parsed = JSON.parse(selectedCountry);
+          setLocalSelectedCountry(parsed);
           if (parsed.phoneCode) {
             setLocalCountryCode(parsed.phoneCode);
+            return;
+          }
+          if (parsed.country) {
+            setLocalCountryCode(`+${parsed.country}`);
+            return;
           }
         }
+
+        // 最后使用默认值（刚果民主共和国）
+        setLocalCountryCode("+243");
       } catch (e) {
-        // 读取失败，保持默认
+        // 读取失败，使用默认值
+        setLocalCountryCode("+243");
       }
     };
     fetchCountryCode();
-  }, []);
+  }, [user?.country_code]);
+
+  // 当显示手机号输入时，自动加载国家列表
+  useEffect(() => {
+    if (paymentParams?.payment_method === "mobile_money") {
+      loadCountryList();
+    }
+  }, [paymentParams?.payment_method, user?.country_en]);
 
   // 添加支付结果监听
   useEffect(() => {
@@ -140,22 +164,112 @@ const RechargeSummaryScreen = () => {
     return localCountryCode;
   };
 
-  const handleCountryCodePress = async () => {
+  // 验证电话号码位数
+  const validatePhoneNumber = (
+    phoneNum: string,
+    countryData?: LocalCountryData | CountryList | null
+  ) => {
+    if (!phoneNum) return true; // 空号码不显示错误
+
+    let currentCountryData = countryData || selectedCountry;
+
+    // 如果没有selectedCountry，但有localSelectedCountry，则从countryList中找到对应的完整数据
+    if (!currentCountryData && localSelectedCountry) {
+      const foundCountry = countryList.find(
+        (country) => country.country === localSelectedCountry.country
+      );
+      if (foundCountry) {
+        currentCountryData = foundCountry;
+      } else {
+        currentCountryData = localSelectedCountry;
+      }
+    }
+
+    // 特殊处理：如果当前使用的是localSelectedCountry，但它没有valid_digits，
+    // 尝试从API数据中找到对应的完整数据
+    if (
+      currentCountryData === localSelectedCountry &&
+      !currentCountryData?.valid_digits &&
+      countryList.length > 0 &&
+      localSelectedCountry
+    ) {
+      const foundCountry = countryList.find(
+        (country) => country.country === localSelectedCountry.country
+      );
+      if (foundCountry) {
+        currentCountryData = foundCountry;
+      }
+    }
+
+    // 如果输入了电话号码但没有选择国家，返回false显示错误
+    if (!currentCountryData) {
+      return false;
+    }
+
+    // 如果没有valid_digits验证规则，则通过验证
+    if (
+      !currentCountryData?.valid_digits ||
+      !Array.isArray(currentCountryData.valid_digits)
+    ) {
+      return true;
+    }
+
+    const isValid = currentCountryData.valid_digits.includes(phoneNum.length);
+
+    return isValid;
+  };
+
+  // 处理电话号码输入
+  const handlePhoneNumberChange = (text: string) => {
+    setPhoneNumber(text);
+    if (text.length > 0) {
+      const isValid = validatePhoneNumber(text);
+      setPhoneNumberError(!isValid);
+    } else {
+      setPhoneNumberError(false);
+    }
+  };
+
+  // 获取国家列表
+  const loadCountryList = async () => {
     setLoadingCountries(true);
-    
     try {
-      // 获取国家列表
-      const countries = await settingApi.getCountryList();
-      setCountryList(countries);
-      setShowCountryModal(true);
+      const response = await settingApi.getCountryList();
+      
+      if (response && Array.isArray(response)) {
+        setCountryList(response);
+
+        // 如果没有本地存储的国家，则使用API返回的数据进行匹配
+        const savedLocalCountry = await AsyncStorage.getItem("@selected_country");
+        if (!savedLocalCountry) {
+          // 如果用户有国家信息，自动选择对应的国家
+          if (user?.country_en) {
+            const userCountry = response.find(
+              (country: CountryList) =>
+                country.name_en.toLowerCase() === user.country_en.toLowerCase()
+            );
+            if (userCountry) {
+              setSelectedCountry(userCountry);
+              setLocalCountryCode(`+${userCountry.country}`);
+              if (userCountry.valid_digits) {
+                setCurrentValidDigits(userCountry.valid_digits);
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to load countries",
-      });
+      console.error("获取国家列表失败:", error);
     } finally {
       setLoadingCountries(false);
     }
+  };
+
+  const handleCountryCodePress = async () => {
+    if (countryList.length === 0) {
+      await loadCountryList();
+    }
+    setShowCountryModal(true);
   };
 
   const handlePaySubmit = async () => {
@@ -172,21 +286,45 @@ const RechargeSummaryScreen = () => {
       return;
     }
 
-    // 验证电话号码位数
-    if (
-      paymentParams.payment_method === "mobile_money" &&
-      currentValidDigits &&
-      currentValidDigits.length > 0
-    ) {
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, "");
-      if (!currentValidDigits.includes(cleanPhoneNumber.length)) {
+    if (paymentParams.payment_method === "mobile_money" && !localSelectedCountry && !selectedCountry) {
+      Toast.show({
+        type: "error",
+        text1: t("balance.phone_modal.select_country") || "Please select a country",
+      });
+      return;
+    }
+
+    // 验证电话号码位数（针对mobile_money支付）
+    if (paymentParams.payment_method === "mobile_money" && phoneNumber) {
+      // 使用validatePhoneNumber函数来确保验证逻辑一致
+      if (!validatePhoneNumber(phoneNumber)) {
+        // 获取当前国家数据用于错误提示
+        let currentCountryData = localSelectedCountry || selectedCountry;
+        if (
+          currentCountryData === localSelectedCountry &&
+          !currentCountryData?.valid_digits &&
+          countryList.length > 0 &&
+          localSelectedCountry
+        ) {
+          const foundCountry = countryList.find(
+            (country) => country.country === localSelectedCountry.country
+          );
+          if (foundCountry) {
+            currentCountryData = foundCountry;
+          }
+        }
+
         Toast.show({
           type: "error",
           text1: `${
             t("order.error.invalid_phone") || "Invalid phone number"
-          } (${
-            t("order.error.requires_digits") || "Required digits"
-          }: ${currentValidDigits.join(", ")})`,
+          } ${
+            currentCountryData?.valid_digits
+              ? `(${
+                  t("order.error.requires_digits") || "Required digits"
+                }: ${currentCountryData.valid_digits.join(", ")})`
+              : ""
+          }`,
         });
         return;
       }
@@ -367,13 +505,35 @@ const RechargeSummaryScreen = () => {
                   <TextInput
                     style={styles.phoneInput}
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
+                    onChangeText={handlePhoneNumberChange}
                     keyboardType="phone-pad"
                     returnKeyType="done"
                     placeholder={t("balance.phone_modal.enter_phone")}
                     placeholderTextColor="#999"
                   />
                 </View>
+
+                {/* 电话号码错误提示 */}
+                {phoneNumberError && (
+                  <Text style={styles.phoneNumberErrorText}>
+                    {!localSelectedCountry && !selectedCountry
+                      ? t("balance.phone_modal.select_country") || "请先选择国家"
+                      : `${
+                          t("order.error.invalid_phone") ||
+                          "电话号码位数不正确"
+                        } ${
+                          (localSelectedCountry || selectedCountry)
+                            ?.valid_digits
+                            ? `(${
+                                t("order.error.requires_digits") ||
+                                "要求位数"
+                              }: ${(
+                                localSelectedCountry || selectedCountry
+                              )?.valid_digits?.join(", ")})`
+                            : ""
+                        }`}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.supportedOperatorsContainer}>
@@ -411,7 +571,9 @@ const RechargeSummaryScreen = () => {
             disabled={
               isSubmitting ||
               (paymentParams?.payment_method === "mobile_money" &&
-                !phoneNumber)
+                (!phoneNumber ||
+                  phoneNumberError ||
+                  (!localSelectedCountry && !selectedCountry)))
             }
           >
             {isSubmitting ? (
@@ -491,6 +653,13 @@ const RechargeSummaryScreen = () => {
                       };
                       await AsyncStorage.setItem("@selected_country", JSON.stringify(countryToSave));
                       setLocalSelectedCountry(countryToSave);
+                      
+                      // 重新验证电话号码
+                      if (phoneNumber) {
+                        setPhoneNumberError(
+                          !validatePhoneNumber(phoneNumber, item)
+                        );
+                      }
                       
                       setShowCountryModal(false);
                     }}
@@ -713,6 +882,12 @@ const styles = StyleSheet.create({
   countryItemTextSelected: {
     color: "white",
     fontWeight: "600",
+  },
+  phoneNumberErrorText: {
+    color: "#ff4444",
+    fontSize: fontSize(12),
+    marginTop: 6,
+    fontWeight: "400",
   },
 });
 

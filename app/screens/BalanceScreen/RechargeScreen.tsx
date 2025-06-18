@@ -69,7 +69,6 @@ const RechargeScreen = () => {
     currency: string;
     payment_method: string;
     selectedPriceLabel: string;
-    onCloses: () => void;
   } | null>(null);
   // 添加PayPal展开视图的状态
   const [isPaypalExpanded, setIsPaypalExpanded] = useState(false);
@@ -77,6 +76,8 @@ const RechargeScreen = () => {
   const [isWaveExpanded, setIsWaveExpanded] = useState(false);
   // 添加信用卡展开视图的状态
   const [isBankCardExpanded, setIsBankCardExpanded] = useState(false);
+  // 添加mobile money展开视图的状态
+  const [isMobileMoneyExpanded, setIsMobileMoneyExpanded] = useState(false);
 
   // 添加国家选择相关状态
   const [validDigits, setValidDigits] = useState<number[]>([8]);
@@ -91,12 +92,25 @@ const RechargeScreen = () => {
     });
 
     payApi.getCountryPaymentMethods().then((res) => {
-      const currentCountryMethods = res.current_country_methods.filter(
+      let currentCountryMethods = res.current_country_methods.filter(
         (method) => method.key !== "balance"
       );
+      
+      // Wave支付只在科特迪瓦显示
+      const isIvoryCoast = user?.country_en === "Ivory Coast" || 
+                          user?.country_en === "Côte d'Ivoire" || 
+                          user?.country === "科特迪瓦" ||
+                          user?.country_code === 225;
+      
+      if (!isIvoryCoast) {
+        currentCountryMethods = currentCountryMethods.filter(
+          (method) => method.key !== "wave"
+        );
+      }
+      
       setPaymentMethods(currentCountryMethods);
     });
-  }, []);
+  }, [user]);
 
 
 
@@ -117,6 +131,10 @@ const RechargeScreen = () => {
     else if (selectedOperator === "bank_card") {
       handleCurrencyConversion(price, currentCurrency);
     }
+    // 如果当前已选择了mobile money支付方式，则重新计算转换后的本地货币金额
+    else if (selectedOperator === "mobile_money") {
+      handleCurrencyConversion(price, currentCurrency);
+    }
     // 保留原有的逻辑
     else if (selectedOperator === "currency") {
       handleCurrencyConversion(price, currentCurrency);
@@ -132,6 +150,7 @@ const RechargeScreen = () => {
       setIsPaypalExpanded(false);
       setIsWaveExpanded(false);
       setIsBankCardExpanded(false);
+      setIsMobileMoneyExpanded(false);
     }
 
     setSelectedOperator(operator === previousOperator ? null : operator);
@@ -214,7 +233,38 @@ const RechargeScreen = () => {
           handleCurrencyConversion(amountToConvert, "USD");
         }
       }
-      // mobile_money 的处理现在在 PhoneNumberInputModal 内部进行
+      // 如果是mobile money支付方式
+      else if (selectedMethod.key === "mobile_money" && operator !== previousOperator) {
+        setIsMobileMoneyExpanded(true);
+        
+        // mobile money只支持本地货币，需要转换为当前国家对应的货币
+        let localCurrency = "FCFA"; // 默认为FCFA
+        
+        // 根据用户当前国家确定本地货币
+        // 这里可以根据实际的国家货币映射来设置
+        // 暂时使用FCFA作为默认本地货币
+        
+        // 无条件触发货币转换，使用本地货币
+        let amountToConvert = selectedPrice;
+
+        // 如果用户还没有选择金额，使用推荐金额中的第一个
+        if (
+          !amountToConvert &&
+          recommendedAmounts &&
+          recommendedAmounts.amounts &&
+          recommendedAmounts.amounts.length > 0
+        ) {
+          amountToConvert = recommendedAmounts.amounts[0].toString();
+          setSelectedPrice(amountToConvert);
+        }
+
+        if (amountToConvert) {
+          setCurrentCurrency(localCurrency);
+          setIsConverting(true);
+          handleCurrencyConversion(amountToConvert, localCurrency);
+        }
+      }
+      // mobile_money 的其他处理现在在 PhoneNumberInputModal 内部进行
     } else if (operator === "currency" && operator !== previousOperator) {
       // 旧的逻辑保留作为备用
       handleCurrencySelect("USD");
@@ -252,6 +302,10 @@ const RechargeScreen = () => {
         else if (selectedOperator === "bank_card") {
           handleCurrencyConversion(formattedAmount, currentCurrency);
         }
+        // 如果当前已选择了mobile money支付方式，则重新计算转换后的本地货币金额
+        else if (selectedOperator === "mobile_money") {
+          handleCurrencyConversion(formattedAmount, currentCurrency);
+        }
         // 保留原有的逻辑
         else if (selectedOperator === "currency") {
           handleCurrencyConversion(formattedAmount, currentCurrency);
@@ -285,7 +339,6 @@ const RechargeScreen = () => {
         currency: user?.currency,
         payment_method: "",
         selectedPriceLabel: selectedPrice + " " + user?.currency,
-        onCloses: () => navigation.goBack(), // 返回上一页
       };
 
       // 根据selectedOperator确定支付方式
@@ -343,7 +396,24 @@ const RechargeScreen = () => {
             }
           }
         }
-        // mobile_money 的处理现在在 PhoneNumberInputModal 内部进行
+        // 如果是mobile money，使用转换后的本地货币
+        else if (selectedMethod.key === "mobile_money") {
+          params.currency = currentCurrency; // 使用当前选择的本地货币
+
+          // 使用转换后的本地货币金额，如果有
+          if (convertedAmount.length > 0) {
+            const convertedTotal = convertedAmount.find(
+              (item) => item.item_key === "total_amount"
+            );
+            if (convertedTotal) {
+              params.amount = convertedTotal.converted_amount;
+            }
+          } else {
+            // 如果没有转换结果，使用原始金额作为备用
+            params.amount = parseFloat(selectedPrice.replace(/,/g, ""));
+          }
+        }
+        // mobile_money 的其他处理现在在 PhoneNumberInputModal 内部进行
       } else if (selectedOperator === "balance") {
         params.payment_method = "Balance";
       } else if (selectedOperator === "currency") {
@@ -510,6 +580,15 @@ const RechargeScreen = () => {
     // 如果选择了信用卡支付方式，但还没有转换结果，禁用按钮
     if (
       selectedOperator === "bank_card" &&
+      (convertedAmount.length === 0 ||
+        !convertedAmount.find((item) => item.item_key === "total_amount"))
+    ) {
+      return true;
+    }
+
+    // 如果选择了mobile money支付方式，但还没有转换结果，禁用按钮
+    if (
+      selectedOperator === "mobile_money" &&
       (convertedAmount.length === 0 ||
         !convertedAmount.find((item) => item.item_key === "total_amount"))
     ) {
@@ -720,7 +799,7 @@ const RechargeScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, activeTab === 1 && styles.activeTab]}
-              onPress={() => setActiveTab(1)}
+              onPress={() => navigation.navigate("OfflinePayment")}
             >
               <Text
                 style={[
@@ -728,7 +807,7 @@ const RechargeScreen = () => {
                   activeTab === 1 && styles.activeTabText,
                 ]}
               >
-                {t("balance.recharge.other")}
+                {t("balance.recharge.offline_payment")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1023,6 +1102,60 @@ const RechargeScreen = () => {
                         </View>
                       </View>
                     )}
+
+                  {/* Mobile Money展开视图 */}
+                  {method.key === "mobile_money" &&
+                    selectedOperator === "mobile_money" &&
+                    isMobileMoneyExpanded && (
+                      <View style={styles.paypalExpandedContainer}>
+                        <View style={styles.paypalCurrencyContainer}>
+                          <Text style={styles.currencyTitle}>
+                            {t("balance.recharge.currency_title")}
+                          </Text>
+                          <View style={styles.currencyButtonsContainer}>
+                            <View
+                              style={[
+                                styles.currencyButton,
+                                styles.currencyButtonActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.currencyButtonText,
+                                  styles.currencyButtonTextActive,
+                                ]}
+                              >
+                                {currentCurrency}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* 显示转换后的金额 */}
+                          {isConverting ? (
+                            <View style={styles.convertingContainer}>
+                              <ActivityIndicator size="small" color="#FF5100" />
+                              <Text style={styles.convertingText}>
+                                {t("balance.recharge.converting")}
+                              </Text>
+                            </View>
+                          ) : convertedAmount.length > 0 ? (
+                            <View style={styles.convertedAmountContainer}>
+                              <Text style={styles.convertedAmountLabel}>
+                                {t("balance.recharge.equivalent_amount")}
+                              </Text>
+                              <Text style={styles.convertedAmountValue}>
+                                {convertedAmount
+                                  .find(
+                                    (item) => item.item_key === "total_amount"
+                                  )
+                                  ?.converted_amount.toFixed(2)}{" "}
+                                {currentCurrency}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      </View>
+                    )}
                 </View>
               ))}
             </>
@@ -1239,7 +1372,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FF5100",
     textAlign: "center",
-    numberOfLines: 1,
   },
   currencyTextBlue: {
     fontSize: fontSize(11),
@@ -1252,7 +1384,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#333",
     textAlign: "center",
-    numberOfLines: 1,
   },
   currencyText: {
     fontSize: fontSize(11),
@@ -1680,11 +1811,6 @@ const styles = StyleSheet.create({
   svgContainer: {
     width: 24,
     height: 24,
-  },
-  backButton: {
-    position: "absolute",
-    left: 24,
-    zIndex: 1,
   },
   backButtonText: {
     fontSize: fontSize(14),

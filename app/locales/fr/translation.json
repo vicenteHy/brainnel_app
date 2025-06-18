@@ -663,6 +663,7 @@
           "payment_method": "Choisissez votre mode de paiement",
           "payment_mode": "Mode de paiement",
           "other": "Autre",
+          "offline_payment": "Paiement Hors Ligne",
           "supported_operators": "Opérateurs pris en charge",
           "currency_title": "Sélectionnez la devise:",
           "equivalent_amount": "Montant équivalent:",
