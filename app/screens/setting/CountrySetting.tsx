@@ -67,10 +67,26 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     setCountry(route.params?.mySetting?.country || 0);
   };
 
-  const getCurrency = async () => {
-    const res = await settingApi.getCurrencyList();
-    setCurrencyList(res);
-    setCurrency(route.params?.mySetting?.currency || "");
+  const getCurrency = async (countryCode?: number) => {
+    try {
+      let res;
+      if (countryCode) {
+        // 根据国家代码获取该国家支持的货币
+        res = await settingApi.getCurrencyListByCountry(countryCode);
+      } else {
+        // 获取所有货币（默认行为）
+        res = await settingApi.getCurrencyList();
+      }
+      setCurrencyList(res);
+      setCurrency(route.params?.mySetting?.currency || "");
+    } catch (error) {
+      console.error('获取货币列表失败:', error);
+      // 如果获取特定国家货币失败，回退到获取所有货币
+      if (countryCode) {
+        const res = await settingApi.getCurrencyList();
+        setCurrencyList(res);
+      }
+    }
   };
 
   const getLanguage = async () => {
@@ -84,6 +100,13 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     getCurrency();
     getLanguage();
   }, []);
+
+  // 当国家变化时，更新货币列表
+  useEffect(() => {
+    if (country && country !== 0) {
+      getCurrency(country);
+    }
+  }, [country]);
 
   useEffect(() => {
     // 根据用户登录状态设置初始选项卡
@@ -116,15 +139,51 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
       console.warn("缓存国家信息失败:", cacheError);
     }
     
+    // 根据选择的国家更新货币列表并自动选择本地货币
+    let localCurrency = null;
+    try {
+      const countryCurrencies = await settingApi.getCurrencyListByCountry(selectedCountry);
+      setCurrencyList(countryCurrencies);
+      
+      // 找到本地货币（优先选择非USD和EUR的货币）
+      localCurrency = countryCurrencies.find(curr => curr !== 'USD' && curr !== 'EUR');
+      
+      // 如果没有找到本地货币且只有USD和EUR，则默认选择EUR
+      if (!localCurrency && countryCurrencies.includes('EUR')) {
+        localCurrency = 'EUR';
+      }
+      
+      if (localCurrency) {
+        setCurrency(localCurrency);
+        // 同时更新全局状态和本地存储
+        setGlobalCurrency({ currency: localCurrency });
+        await saveCurrency(localCurrency);
+      }
+    } catch (error) {
+      console.error('获取货币列表失败:', error);
+      // 如果获取特定国家货币失败，回退到获取所有货币
+      await getCurrency();
+    }
+    
     try {
       if (user?.user_id) {
+        // 准备要更新的数据，包含国家和可能的货币
+        let updateData = { country: selectedCountry };
+        if (localCurrency) {
+          updateData = { ...updateData, currency: localCurrency };
+        }
+        
         try {
-          await settingApi.putSetting(data);
+          await settingApi.putSetting(updateData);
         } catch (error) {
           // 如果更新失败且是404错误，尝试创建首次登录设置
           if (error.status === 404) {
             console.log('用户设置不存在，创建首次登录设置');
             await settingApi.postFirstLogin(selectedCountry);
+            // 重新尝试更新设置
+            if (localCurrency) {
+              await settingApi.putSetting(updateData);
+            }
           } else {
             throw error;
           }

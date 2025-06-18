@@ -60,6 +60,8 @@ export const settingApi = {
     getCountryList: () => apiService.get<CountryList[]>('/api/user_settings/countries/'),
     // 获取货币
     getCurrencyList: () => apiService.get<string[]>('/api/user_settings/currencies/'),
+    // 获取特定国家的货币
+    getCurrencyListByCountry: (countryCode: number) => apiService.get<string[]>(`/api/user_settings/currencies/?country_code=${countryCode}`),
     // 获取语言
     getLanguageList: () => apiService.get<string[]>('/api/user_settings/languages/'),
     // 我的设置
