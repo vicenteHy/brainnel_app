@@ -165,10 +165,7 @@ cd android
 ./gradlew assembleRelease
 ```
 
----
-
-## 📁 **生成的文件位置**
-
+---                  
 ### **Debug APK**
 - **路径**: `/Library/code/app/android/app/build/outputs/apk/debug/app-debug.apk`
 - **大小**: 228MB
