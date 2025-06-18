@@ -175,7 +175,7 @@ export const SettingList = () => {
             onPress={() => navigation.navigate("Info")}
             activeOpacity={1}
           >
-            <Text>{t("settings.profile")}</Text>
+            <Text style={{color: '#000000'}}>{t("settings.profile")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
@@ -189,7 +189,7 @@ export const SettingList = () => {
             style={styles.item}
             activeOpacity={1}
           >
-            <Text>{t("settings.my_address")}</Text>
+            <Text style={{color: '#000000'}}>{t("settings.my_address")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
@@ -201,7 +201,7 @@ export const SettingList = () => {
             }}
             activeOpacity={1}
           >
-            <Text>{t("settings.privacy_policy")}</Text>
+            <Text style={{color: '#000000'}}>{t("settings.privacy_policy")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
@@ -213,7 +213,7 @@ export const SettingList = () => {
             }}
             activeOpacity={1}
           >
-            <Text>{t("settings.terms_of_use")}</Text>
+            <Text style={{color: '#000000'}}>{t("settings.terms_of_use")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
@@ -225,7 +225,7 @@ export const SettingList = () => {
             style={styles.item}
             activeOpacity={1}
           >
-            <Text>{t("settings.language_currency")}</Text>
+            <Text style={{color: '#000000'}}>{t("settings.language_currency")}</Text>
             <Text>
               <LeftArrowIcon size={fontSize(20)} color="#acacac" />
             </Text>
@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: fontSize(18),
     fontWeight: "600",
+    color: "#000000",
   },
   placeholder: {
     width: 24,

@@ -302,7 +302,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                       source={flagMap.get(item.name_en)}
                       style={styles.countryFlag}
                     />
-                    <Text style={loading ? styles.disabledText : {}}>{getCountryDisplayName(item.name_en)}</Text>
+                    <Text style={[{color: '#000000'}, loading ? styles.disabledText : {}]}>{getCountryDisplayName(item.name_en)}</Text>
                   </View>
                   <View>
                     {country === item.country && !loading && (
@@ -336,7 +336,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                 >
                   <View style={styles.countryItemContent}>
                     <View>
-                      <Text style={loading ? styles.disabledText : {}}>{item}</Text>
+                      <Text style={[{color: '#000000'}, loading ? styles.disabledText : {}]}>{item}</Text>
                     </View>
                   </View>
                   <View>
@@ -370,7 +370,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                   disabled={loading}
                 >
                   <View style={styles.countryItemContent}>
-                    <Text style={loading ? styles.disabledText : {}}>{getLanguageDisplayName(item)}</Text>
+                    <Text style={[{color: '#000000'}, loading ? styles.disabledText : {}]}>{getLanguageDisplayName(item)}</Text>
                   </View>
                   <View>
                     {language === item && !loading && (
@@ -427,6 +427,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
     textAlign: "center",
+    color: "#000000",
   },
   placeholder: {
     width: fontSize(24),
@@ -444,7 +445,7 @@ const styles = StyleSheet.create({
   },
   changeTypeTextTitle: {
     fontSize: fontSize(16),
-    color: "#343a40",
+    color: "#000000",
     fontFamily: "PingFangSC-Medium",
     textAlign: "center",
     fontWeight: "600",

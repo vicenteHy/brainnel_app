@@ -539,6 +539,7 @@ const styles = StyleSheet.create({
   statusTitle: {
     fontSize: fontSize(16),
     fontWeight: "600",
+    color: "#000000",
   },
   statusList: {
     width: "100%",
@@ -599,6 +600,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: "600",
     width: "70%",
+    color: "#000000",
   },
   orderStatusText: {
     color: "#f77f3a",
@@ -628,6 +630,7 @@ const styles = StyleSheet.create({
   orderProductItemInfoName: {
     fontSize: fontSize(16),
     fontWeight: "600",
+    color: "#000000",
   },
   orderProductItemInfoPrice: {
     fontSize: fontSize(14),
@@ -662,6 +665,7 @@ const styles = StyleSheet.create({
   orderProductTotalText: {
     fontSize: fontSize(16),
     fontWeight: "600",
+    color: "#000000",
   },
   orderProductPriceItem: {
     flexDirection: "row",

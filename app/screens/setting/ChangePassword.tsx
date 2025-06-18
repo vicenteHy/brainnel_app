@@ -163,6 +163,7 @@ export const ChangePassword = () => {
               <TextInput
                 style={styles.input}
                 placeholder={t("settings.changePassword.currentPasswordPlaceholder")}
+                placeholderTextColor="#999"
                 value={currentPassword}
                 onChangeText={(text) => {
                   setCurrentPassword(text);
@@ -185,6 +186,7 @@ export const ChangePassword = () => {
               <TextInput
                 style={styles.input}
                 placeholder={t("settings.changePassword.newPasswordPlaceholder")}
+                placeholderTextColor="#999"
                 value={newPassword}
                 onChangeText={(text) => {
                   setNewPassword(text);
@@ -207,6 +209,7 @@ export const ChangePassword = () => {
               <TextInput
                 style={styles.input}
                 placeholder={t("settings.changePassword.confirmPasswordPlaceholder")}
+                placeholderTextColor="#999"
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);

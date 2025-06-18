@@ -343,6 +343,7 @@ export const PhoneLoginScreen = () => {
           <TextInput
             style={styles.phoneInput}
             placeholder={t('phoneNumber')}
+            placeholderTextColor="#666666"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="numeric"
@@ -367,6 +368,7 @@ export const PhoneLoginScreen = () => {
             <TextInput
               style={styles.passwordInput}
               placeholder={t('passwordPlaceholder')}
+              placeholderTextColor="#666666"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -591,6 +593,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     paddingRight: 36, // 为清除按钮留出空间
+    color: '#000000',
   },
   clearButton: {
     position: 'absolute',
@@ -640,6 +643,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 16,
     fontSize: 16,
+    color: '#000000',
   },
   verificationContainer: {
     marginBottom: 20,

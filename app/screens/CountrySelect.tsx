@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 12,
-    color: '#1a1a1a',
+    color: '#000000',
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
   countryName: {
     flex: 1,
     fontSize: 17,
-    color: '#1a1a1a',
+    color: '#000000',
     fontWeight: '500',
     letterSpacing: 0.1,
   },
   countryCode: {
     fontSize: 16,
-    color: '#666',
+    color: '#333333',
     marginRight: 16,
     minWidth: 48,
     textAlign: 'center',

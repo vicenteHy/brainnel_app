@@ -145,7 +145,7 @@ export const styles = StyleSheet.create<StylesType>({
     flex: 1,
     marginLeft: -4,
     fontSize: fontSize(14),
-    color: "a9a9a9",
+    color: "#a9a9a9",
   },
   cameraButton: {
     padding: 2,

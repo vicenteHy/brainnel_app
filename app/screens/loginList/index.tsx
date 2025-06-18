@@ -387,6 +387,7 @@ export const LoginScreen = () => {
               <TextInput
                 style={styles.codeInput}
                 placeholder="Enter 4-digit code"
+                placeholderTextColor="#999"
                 value={verificationCode}
                 onChangeText={setVerificationCode}
                 keyboardType="numeric"

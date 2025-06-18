@@ -1330,7 +1330,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 90,
     height: 60,
-    backgroundColor: "rgba(255, 111, 48, 0.1)",
+    backgroundColor: "#FFF4F0",
     borderColor: "#FF5100",
     borderWidth: 2,
     borderRadius: 12,
@@ -1627,7 +1627,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(15),
   },
   priceBoxSelected: {
-    backgroundColor: "rgba(255, 111, 48, 0.1)",
+    backgroundColor: "#FFF4F0",
     borderColor: "#FF5100",
     borderWidth: 2,
     elevation: 3,
@@ -2110,6 +2110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: fontSize(16),
     color: "#333",
+    backgroundColor: "transparent",
   },
   supportedOperatorsContainer: {
     marginBottom: 30,
@@ -2158,6 +2159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: fontSize(16),
     color: "#333",
+    backgroundColor: "transparent",
   },
   currencyLabel: {
     fontSize: fontSize(14),
