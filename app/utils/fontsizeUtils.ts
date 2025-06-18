@@ -22,8 +22,21 @@ const fontSize = (size: number) => {
     const pixelRatio = PixelRatio.get();
     const densityFactor = pixelRatio / 3; // 以密度3为基准
     
-    // Android字体放大系数（可根据实际效果调整）
-    const androidFontScale = 1.15; // 增大15%
+    // 基于屏幕尺寸的动态字体缩放
+    const getAndroidFontScale = () => {
+      const screenSize = Math.sqrt(width * width + height * height);
+      
+      // 基于屏幕对角线尺寸动态调整
+      if (screenSize < 900) {
+        return 1.15; // 小屏手机，保持15%放大
+      } else if (screenSize < 1100) {
+        return 1.08; // 中等屏幕，适度放大
+      } else {
+        return 1.0; // 大屏设备，不放大
+      }
+    };
+    
+    const androidFontScale = getAndroidFontScale();
     
     baseFontSize = size * androidFontScale * Math.max(0.9, Math.min(1.1, densityFactor));
   }
