@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Linking } from "react-native";
 import customRF from "../../../utils/customRF";
 import { Message } from "../types";
 import { formatTime } from "../utils/formatters";
+import fontSize from "../../../utils/fontsizeUtils";
 
 interface MessageItemProps {
   item: Message;
@@ -62,10 +63,10 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   messageText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: "#666",
     alignSelf: "flex-end",
     marginTop: 5,

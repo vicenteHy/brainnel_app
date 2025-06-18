@@ -2,6 +2,7 @@ import React from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { SendIcon } from "./SendIcon";
 import { t } from "../../../i18n";
+import fontSize from "../../../utils/fontsizeUtils";
 
 interface ChatInputProps {
   inputText: string;
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
     marginRight: 12,
     maxHeight: 100,
-    fontSize: 16,
+    fontSize: fontSize(16),
     borderWidth: 1,
     borderColor: "#e5e5e5",
   },

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { t } from "../../../i18n";
+import fontSize from "../../../utils/fontsizeUtils";
 
 interface LoginOverlayProps {
   onLoginPress: () => void;
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "#ffffffe6",
     backdropFilter: "blur(10px)",
     justifyContent: "center",
     alignItems: "center",
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor:
-      Platform.OS === "android" ? "rgba(255, 255, 255, 0.95)" : "transparent",
+      Platform.OS === "android" ? "#fffffff2" : "transparent",
   },
   loginPromptContainer: {
     backgroundColor: "white",
@@ -73,23 +74,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 122, 108, 0.1)",
+    backgroundColor: "#007a6c1a",
     borderRadius: 40,
   },
   loginIconText: {
-    fontSize: 40,
+    fontSize: fontSize(40),
     fontWeight: "bold",
     color: "#007a6c",
   },
   loginPromptTitle: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: "700",
     color: "#333",
     marginBottom: 10,
     textAlign: "center",
   },
   loginPromptSubtitle: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: "#666",
     marginBottom: 30,
     textAlign: "center",
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: "700",
     textAlign: "center",
   },

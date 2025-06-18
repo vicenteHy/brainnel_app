@@ -181,7 +181,7 @@ const styles = {
     shadowRadius: 8,
   },
   iconText: {
-    fontSize: 40,
+    fontSize: fontSize(40),
     textAlign: 'center' as const,
   },
   title: {

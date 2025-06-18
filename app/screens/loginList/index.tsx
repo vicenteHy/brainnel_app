@@ -14,6 +14,7 @@ import {
   FlatList,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -299,7 +300,12 @@ export const LoginScreen = () => {
       </View>
 
       {/* 登录内容区域 */}
-      <View style={styles.loginContent}>
+      <ScrollView 
+        style={styles.loginContent}
+        contentContainerStyle={styles.loginContentContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         
         {/* WhatsApp登录表单 */}
         <View style={styles.whatsappFormSection}>
@@ -503,7 +509,7 @@ export const LoginScreen = () => {
             .
           </Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* 国家选择Modal */}
       <Modal
@@ -559,8 +565,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: Platform.OS === "ios" ? 20 : 15,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
@@ -569,7 +575,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     color: "#000",
   },
   headerTitle: {
@@ -587,6 +593,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 24,
     paddingTop: 24,
+  },
+  loginContentContainer: {
+    paddingBottom: 40,
   },
   titleContainer: {
     alignItems: "center",
@@ -896,7 +905,7 @@ const styles = StyleSheet.create({
   // 国家选择模态框样式
   countryModalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   countryModalOverlay: {
@@ -949,7 +958,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f3f4f6",
   },
   countryItemFlag: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     marginRight: 12,
   },
   countryItemContent: {
@@ -1035,11 +1044,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   countryFlag: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     marginRight: 6,
   },
   downArrow: {
-    fontSize: 10,
+    fontSize: fontSize(10),
     color: "#9CA3AF",
     marginLeft: 4,
   },
@@ -1136,7 +1145,7 @@ const styles = StyleSheet.create({
   // Modal样式
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
   modalContent: {

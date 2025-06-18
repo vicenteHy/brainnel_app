@@ -61,13 +61,13 @@ export const CompanyScreen = () => {
           <View style={styles.products}>
             <View style={styles.productItem}>
               <Text style={[styles.productItemTop, { color: "#FF5100" }]}>
-                56M<Text style={{ fontSize: 24 }}>+</Text>
+                56M<Text style={{ fontSize: fontSize(24) }}>+</Text>
               </Text>
               <Text style={styles.productItemBot}>{t("company.stats.customizable_products")}</Text>
             </View>
             <View style={styles.productItem}>
               <Text style={styles.productItemTop}>
-                1M<Text style={{ fontSize: 24 }}>+</Text>
+                1M<Text style={{ fontSize: fontSize(24) }}>+</Text>
               </Text>
               <Text style={styles.productItemBot}>
                 {t("company.stats.service_providers")}
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   productItemBot: {
     marginTop: 10,
-    backgroundColor: "rgba(186, 221, 255, 0.15)",
+    backgroundColor: "#baddfff26",
     borderRadius: 5,
     fontSize: fontSize(14),
     color: "#05A9C8",
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   faisons1: {
-    fontSize: fontSize(24)  ,
+    fontSize: fontSize(24),
     fontWeight: "bold",
     color: "#0035a3",
     textAlign: "center",

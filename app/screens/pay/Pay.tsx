@@ -803,14 +803,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   instructionBullet: {
-    fontSize: fontSize(14)  ,
+    fontSize: fontSize(14),
     color: '#64748b',
     marginRight: 8,
     marginTop: 1,
     lineHeight: 20,
   },
   instructionText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#64748b',
     lineHeight: 20,
     flex: 1,

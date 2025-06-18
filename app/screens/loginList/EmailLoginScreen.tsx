@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     color: '#000',
   },
   title: {

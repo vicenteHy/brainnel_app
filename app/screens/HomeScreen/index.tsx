@@ -36,6 +36,7 @@ import { useGlobalStore } from "../../store/useGlobalStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCategoryImageSource } from "../../utils/categoryImageUtils";
 import { eventBus } from "../../utils/eventBus";
+import fontSize from "../../utils/fontsizeUtils";
 
 // 导入拆分的组件
 import {
@@ -620,7 +621,7 @@ export const HomeScreen = () => {
           
           {/* 渐变遮罩 */}
           <LinearGradient
-            colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 1)']}
+            colors={['#ffffff00', '#ffffffff']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.categoryFadeOverlay}
@@ -822,7 +823,7 @@ export const HomeScreen = () => {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.5)",
+                  backgroundColor: "#00000080",
                   zIndex: 999,
                 }}
                 activeOpacity={1}
@@ -902,7 +903,7 @@ export const HomeScreen = () => {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.5)",
+                  backgroundColor: "#00000080",
                   zIndex: 999,
                 }}
                 activeOpacity={1}
@@ -983,7 +984,7 @@ export const HomeScreen = () => {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.5)",
+                  backgroundColor: "#00000080",
                   zIndex: 999,
                 }}
                 activeOpacity={1}
@@ -1015,7 +1016,7 @@ export const HomeScreen = () => {
                 >
                   <Text
                     style={{
-                      fontSize: 18,
+                      fontSize: fontSize(18),
                       fontWeight: "600",
                       color: "#333",
                     }}
@@ -1064,7 +1065,7 @@ export const HomeScreen = () => {
                   >
                     <Text
                       style={{
-                        fontSize: 16,
+                        fontSize: fontSize(16),
                         color: "#333",
                         fontWeight: "normal",
                       }}
@@ -1100,7 +1101,7 @@ export const HomeScreen = () => {
                     >
                       <Text
                         style={{
-                          fontSize: 16,
+                          fontSize: fontSize(16),
                           color: "#333",
                           fontWeight: "normal",
                         }}

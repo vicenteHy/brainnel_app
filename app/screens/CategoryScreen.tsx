@@ -197,7 +197,7 @@ export const CategoryScreen = () => {
           />
         ) : (
           <View style={[styles.subCategoryImage, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ fontSize: 12, color: '#999' }}>无图片</Text>
+            <Text style={{ fontSize: fontSize(12), color: '#999' }}>无图片</Text>
           </View>
         )}
         <View style={styles.subCategoryInfo}>

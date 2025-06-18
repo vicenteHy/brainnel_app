@@ -355,7 +355,7 @@ export const styles = StyleSheet.create({
     color: "white",
     backgroundColor: "#FF5100",
     borderRadius: 20,
-    shadowColor: "rgba(159, 78, 40, 0.5)",
+    shadowColor: "#9f4e2880",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -440,7 +440,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "#ffffffe6",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,
@@ -451,7 +451,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor:
-      Platform.OS === "android" ? "rgba(255, 255, 255, 0.95)" : "transparent",
+      Platform.OS === "android" ? "#fffffff2" : "transparent",
   },
   loginPromptContainer: {
     backgroundColor: "white",
@@ -474,11 +474,11 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 111, 48, 0.1)",
+    backgroundColor: "#ff6f301a",
     borderRadius: 40,
   },
   loginIconText: {
-    fontSize: 40,
+    fontSize: fontSize(40),
     fontWeight: "bold",
     color: "#FF5100",
   },
@@ -526,7 +526,7 @@ export const styles = StyleSheet.create({
 export const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "#00000066",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -546,7 +546,7 @@ export const modalStyles = StyleSheet.create({
     resizeMode: "cover",
   },
   promptText: {
-    fontSize: 20,
+    fontSize: fontSize(20),
     fontWeight: "600",
     color: "black",
     fontFamily: "Segoe UI",

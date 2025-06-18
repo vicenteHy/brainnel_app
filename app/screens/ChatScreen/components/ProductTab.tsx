@@ -4,6 +4,7 @@ import customRF from "../../../utils/customRF";
 import { ProductInquiryCard } from "./ProductInquiryCard";
 import { ProductInquiry } from "../types";
 import { t } from "../../../i18n";
+import fontSize from "../../../utils/fontsizeUtils";
 
 interface ProductTabProps {
   productInquiries: ProductInquiry[];
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyIcon: {
-    fontSize: 32,
+    fontSize: fontSize(32),
   },
   emptyTitle: {
     fontSize: customRF(18),

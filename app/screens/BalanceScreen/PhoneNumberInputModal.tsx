@@ -518,7 +518,7 @@ const PhoneNumberInputModal = ({
                 <Text
                   style={{
                     color: "#FFFFFF",
-                    fontSize: 16,
+                    fontSize: fontSize(16),
                     textAlign: "center",
                   }}
                 >
@@ -539,7 +539,7 @@ const PhoneNumberInputModal = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#00000080",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -560,10 +560,10 @@ const styles = StyleSheet.create({
     position: "relative",
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 111, 48, 0.1)",
+    borderBottomColor: "#ff6f301a",
   },
   title: {
-    fontSize: 22,
+    fontSize: fontSize(22),
     fontWeight: "700",
     color: "#333333",
     position: "absolute",
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: "#000000b3",
     zIndex: 10000,
     elevation: 10000,
   },

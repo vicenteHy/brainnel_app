@@ -5,6 +5,7 @@ import { Product } from "../../../services/api/productApi";
 import { getSubjectTransLanguage } from "../../../utils/languageUtils";
 import { styles } from "../styles";
 import { formatPrice } from "../../../utils/priceUtils";
+import fontSize from "../../../utils/fontsizeUtils";
 
 type IconProps = {
   name: string;
@@ -61,7 +62,7 @@ const LazyImage = React.memo(
           >
             <IconComponent name="image-outline" size={24} color="#999" />
             <Text
-              style={{ fontSize: 12, color: "#999", marginTop: 4 }}
+              style={{ fontSize: fontSize(12), color: "#999", marginTop: 4 }}
             >
               加载失败
             </Text>

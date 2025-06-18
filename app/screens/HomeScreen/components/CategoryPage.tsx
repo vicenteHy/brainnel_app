@@ -20,6 +20,7 @@ import { CarouselBanner } from './CarouselBanner';
 import { styles } from '../styles';
 import { getCategoryImageSource } from '../../../utils/categoryImageUtils';
 import i18n from '../../../i18n';
+import fontSize from '../../../utils/fontsizeUtils';
 
 // Icon组件
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -451,7 +452,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   // 列表内容容器样式
   const flatListContentContainerStyle = useMemo(
     () => ({
-      paddingBottom: 8,
+      padding: 15,
       backgroundColor: "#f5f5f5",
     }),
     [],
@@ -499,7 +500,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
               alignItems: 'center',
               paddingBottom: 100 
             }}>
-              <Text style={{ fontSize: 16, color: '#999' }}>
+              <Text style={{ fontSize: fontSize(16), color: '#999' }}>
                 {categoryId === -1 
                   ? '下拉刷新获取推荐商品' 
                   : `下拉刷新获取分类商品`}

@@ -30,6 +30,7 @@ import { CountryList } from "../../constants/countries";
 interface LocalCountryData {
   code: string;
   flag: string;
+  country: number;
   name: string;
   phoneCode: string;
   userCount: number;
@@ -164,6 +165,13 @@ const RechargeSummaryScreen = () => {
     return localCountryCode;
   };
 
+  // 验证E.164格式的电话号码
+  const isValidE164PhoneNumber = (phoneNumber: string): boolean => {
+    // E.164格式：+[国家代码][电话号码]，总长度不超过15位
+    const e164Regex = /^\+[1-9]\d{1,14}$/;
+    return e164Regex.test(phoneNumber);
+  };
+
   // 验证电话号码位数
   const validatePhoneNumber = (
     phoneNum: string,
@@ -201,9 +209,9 @@ const RechargeSummaryScreen = () => {
       }
     }
 
-    // 如果输入了电话号码但没有选择国家，返回false显示错误
+    // 如果没有国家数据，使用默认验证（允许通过）
     if (!currentCountryData) {
-      return false;
+      return true;
     }
 
     // 如果没有valid_digits验证规则，则通过验证
@@ -215,7 +223,6 @@ const RechargeSummaryScreen = () => {
     }
 
     const isValid = currentCountryData.valid_digits.includes(phoneNum.length);
-
     return isValid;
   };
 
@@ -286,13 +293,6 @@ const RechargeSummaryScreen = () => {
       return;
     }
 
-    if (paymentParams.payment_method === "mobile_money" && !localSelectedCountry && !selectedCountry) {
-      Toast.show({
-        type: "error",
-        text1: t("balance.phone_modal.select_country") || "Please select a country",
-      });
-      return;
-    }
 
     // 验证电话号码位数（针对mobile_money支付）
     if (paymentParams.payment_method === "mobile_money" && phoneNumber) {
@@ -317,11 +317,11 @@ const RechargeSummaryScreen = () => {
         Toast.show({
           type: "error",
           text1: `${
-            t("order.error.invalid_phone") || "Invalid phone number"
+            t("order.preview.phone_format_error") || "电话号码位数不正确"
           } ${
             currentCountryData?.valid_digits
               ? `(${
-                  t("order.error.requires_digits") || "Required digits"
+                  t("order.preview.requires_digits") || "要求位数"
                 }: ${currentCountryData.valid_digits.join(", ")})`
               : ""
           }`,
@@ -338,15 +338,12 @@ const RechargeSummaryScreen = () => {
         amount: paymentParams.amount,
         currency: paymentParams.currency,
         payment_method: paymentParams.payment_method,
-        type: "recharge",
       };
 
-      // 如果是mobile_money支付，添加extra字段
+      // 如果是mobile_money支付，添加phone_number字段
       if (paymentParams.payment_method === "mobile_money") {
         const formattedPhone = formatPhoneNumber(phoneNumber);
-        rechargeData.extra = {
-          phone_number: formattedPhone,
-        };
+        rechargeData.phone_number = formattedPhone;
       }
 
 
@@ -355,96 +352,12 @@ const RechargeSummaryScreen = () => {
       if (response && response.success) {
         const paymentInfo = response.payment;
 
-        if (paymentParams.payment_method === "wave") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_wave") || "Opening Wave app...",
-              text2: t("balance.recharge.complete_payment_wave") || "Please complete the payment in Wave app",
-              visibilityTime: 3000,
-            });
-
-            // 打开Wave应用
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            
-          } catch (error) {
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.wave_app_open") || "Failed to open Wave app",
-              visibilityTime: 4000,
-            });
-          }
-        }
-
-        if (paymentParams.payment_method === "mobile_money") {
-          if (response.success === true) {
-            Toast.show({
-              type: "success",
-              text1: response.msg || "",
-            });
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainTabs" }],
-            });
-            return;
-          } else {
-            Toast.show({
-              type: "error",
-              text1: response.msg || "",
-            });
-          }
-        }
-
-        if (paymentParams.payment_method === "paypal") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_paypal") || "Opening PayPal...",
-              text2: t("balance.recharge.complete_payment_paypal") || "Please complete the payment in PayPal",
-              visibilityTime: 3000,
-            });
-
-            // 打开PayPal
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            
-          } catch (error) {
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.paypal_app_open") || "Failed to open PayPal",
-              visibilityTime: 4000,
-            });
-          }
-        }
-
-        if (paymentParams.payment_method === "bank_card") {
-          try {
-            // 显示支付处理提示
-            Toast.show({
-              type: "info",
-              text1: t("balance.recharge.opening_payment") || "Opening payment page...",
-              text2: t("balance.recharge.complete_payment") || "Please complete the payment",
-              visibilityTime: 3000,
-            });
-
-            // 打开银行卡支付页面
-            await Linking.openURL(paymentInfo.payment_url);
-            
-            
-          } catch (error) {
-            Toast.show({
-              type: "error",
-              text1: t("error") || "Error",
-              text2: t("order.error.payment_open") || "Failed to open payment page",
-              visibilityTime: 4000,
-            });
-          }
-        }
+        // 跳转到充值轮询页面
+        navigation.navigate('RechargePay', {
+          payUrl: paymentInfo.payment_url,
+          method: paymentParams.payment_method,
+          recharge_id: response.recharge_id.toString()
+        });
       } else {
         // 处理失败情况，显示错误消息
         const errorMessage =
@@ -516,22 +429,20 @@ const RechargeSummaryScreen = () => {
                 {/* 电话号码错误提示 */}
                 {phoneNumberError && (
                   <Text style={styles.phoneNumberErrorText}>
-                    {!localSelectedCountry && !selectedCountry
-                      ? t("balance.phone_modal.select_country") || "请先选择国家"
-                      : `${
-                          t("order.error.invalid_phone") ||
-                          "电话号码位数不正确"
-                        } ${
-                          (localSelectedCountry || selectedCountry)
-                            ?.valid_digits
-                            ? `(${
-                                t("order.error.requires_digits") ||
-                                "要求位数"
-                              }: ${(
-                                localSelectedCountry || selectedCountry
-                              )?.valid_digits?.join(", ")})`
-                            : ""
-                        }`}
+                    {`${
+                      t("order.preview.phone_format_error") ||
+                      "电话号码位数不正确"
+                    } ${
+                      (localSelectedCountry || selectedCountry)
+                        ?.valid_digits
+                        ? `(${
+                            t("order.preview.requires_digits") ||
+                            "要求位数"
+                          }: ${(
+                            localSelectedCountry || selectedCountry
+                          )?.valid_digits?.join(", ")})`
+                        : ""
+                    }`}
                   </Text>
                 )}
               </View>
@@ -571,9 +482,7 @@ const RechargeSummaryScreen = () => {
             disabled={
               isSubmitting ||
               (paymentParams?.payment_method === "mobile_money" &&
-                (!phoneNumber ||
-                  phoneNumberError ||
-                  (!localSelectedCountry && !selectedCountry)))
+                (!phoneNumber || phoneNumberError))
             }
           >
             {isSubmitting ? (
@@ -646,6 +555,7 @@ const RechargeSummaryScreen = () => {
                       const countryToSave: LocalCountryData = {
                         code: item.country_code || "",
                         flag: item.flag || "",
+                        country: item.country,
                         name: item.name_en,
                         phoneCode: `+${item.country}`,
                         userCount: 0,
@@ -703,7 +613,7 @@ const styles = StyleSheet.create({
     position: "relative",
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 111, 48, 0.1)",
+    borderBottomColor: "#ff6f301a",
   },
   backButton: {
     position: "absolute",
@@ -712,7 +622,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   title: {
-    fontSize: 22,
+    fontSize: fontSize(22),
     fontWeight: "700",
     color: "#333333",
     flex: 1,
@@ -816,7 +726,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: "#000000b3",
     zIndex: 10000,
     elevation: 10000,
   },
