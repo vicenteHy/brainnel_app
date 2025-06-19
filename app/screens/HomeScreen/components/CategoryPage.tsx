@@ -452,7 +452,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   // 列表内容容器样式
   const flatListContentContainerStyle = useMemo(
     () => ({
-      padding: 15,
       backgroundColor: "#f5f5f5",
     }),
     [],

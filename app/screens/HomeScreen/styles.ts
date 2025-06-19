@@ -107,7 +107,6 @@ export const styles = StyleSheet.create<StylesType>({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: 0,
     backgroundColor: "#fff",
   },
   container: {
@@ -127,16 +126,14 @@ export const styles = StyleSheet.create<StylesType>({
   },
   searchContainer: {
     backgroundColor: "#fff",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    paddingTop: 8,
+    marginHorizontal: 8,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
     borderRadius: 20,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     height: 40,
     borderWidth: 1,
     borderColor: "#000",
@@ -157,16 +154,13 @@ export const styles = StyleSheet.create<StylesType>({
     height: 33,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 4,
-    marginRight: -12,
+    marginLeft: 5,
+    marginRight: -8
   },
   category: {
     width: "100%",
-    paddingVertical: 5,
-    paddingBottom: 2,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 2,
     backgroundColor: "#fff",
   },
   categoryScrollContainer: {
@@ -178,10 +172,8 @@ export const styles = StyleSheet.create<StylesType>({
   },
   categoryScroll: {
     flex: 1,
-    paddingHorizontal: 10,
   },
   viewAllButton: {
-    paddingHorizontal: 8,
     paddingVertical: 8,
     marginRight: 5,
     justifyContent: "center",
@@ -196,7 +188,6 @@ export const styles = StyleSheet.create<StylesType>({
     zIndex: 1,
   },
   categoryItem: {
-    paddingHorizontal: 2,
     paddingVertical: 8,
     marginRight: 5,
   },
@@ -306,14 +297,14 @@ export const styles = StyleSheet.create<StylesType>({
   subcategoryContainer: {
     minHeight: 120,
     backgroundColor: "#fff",
+    marginTop: 8,
     marginBottom: 8,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   subcategoryScroll: {
     flex: 1,
   },
   subcategoryContent: {
-    paddingHorizontal: 10,
     backgroundColor: "#fff",
   },
   subcategoryGrid: {
@@ -359,7 +350,6 @@ export const styles = StyleSheet.create<StylesType>({
     fontFamily: "Alexandria",
     width: "100%",
     lineHeight: fontSize(11),
-    paddingHorizontal: 1,
     height: 22,
   },
   productContainer: {
@@ -367,7 +357,7 @@ export const styles = StyleSheet.create<StylesType>({
     backgroundColor: "#fff",
   },
   productCardList: {
-    padding: 15,
+    paddingVertical: 15,
   },
   productCardGroup: {
     justifyContent: "space-between",
@@ -593,10 +583,9 @@ export const styles = StyleSheet.create<StylesType>({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#fff",
-    marginBottom: 8,
     marginTop: 8,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    marginBottom: 8,
+    paddingVertical: 8,
   },
   featureNavItem: {
     flex: 1,

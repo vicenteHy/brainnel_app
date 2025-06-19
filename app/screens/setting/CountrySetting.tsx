@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import { userApi } from "../../services/api/userApi";
 import useUserStore from "../../store/user";
-import { saveCurrency, saveLanguage } from "../../utils/storage";
+import { saveCurrency, saveLanguage, loadCurrency, loadLanguage } from "../../utils/storage";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -37,7 +37,7 @@ type CountrySettingProps = {
 
 export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySettingProps) => {
   const { t } = useTranslation();
-  const { setGlobalCountry, setGlobalCurrency, setGlobalLanguage } = useGlobalStore();
+  const { setGlobalCountry, setGlobalCurrency, setGlobalLanguage, globalCountry, globalCurrency, globalLanguage } = useGlobalStore();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "CountrySetting">>();
@@ -64,21 +64,39 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
   const getCountry = async () => {
     const res = await settingApi.getCountryList();
     setCountryList(res);    
-    setCountry(route.params?.mySetting?.country || 0);
+    
+    const selectedCountry = route.params?.mySetting?.country_code || 
+                           (globalCountry?.country ? parseInt(globalCountry.country) : null) || 
+                           user?.my_setting?.country_code || 
+                           user?.country_code || 
+                           0;
+    
+    setCountry(selectedCountry);
   };
 
-  const getCurrency = async (countryCode?: number) => {
+  const getCurrencyList = async (countryCode?: number) => {
     try {
       let res;
       if (countryCode) {
-        // 根据国家代码获取该国家支持的货币
         res = await settingApi.getCurrencyListByCountry(countryCode);
       } else {
-        // 获取所有货币（默认行为）
         res = await settingApi.getCurrencyList();
       }
       setCurrencyList(res);
-      setCurrency(route.params?.mySetting?.currency || "");
+      
+      const storedCurrency = await loadCurrency();
+      let selectedCurrency = route.params?.mySetting?.currency || 
+                            globalCurrency?.currency || 
+                            storedCurrency || 
+                            user?.my_setting?.currency || 
+                            user?.currency || 
+                            "";
+      
+      if (selectedCurrency && !res.includes(selectedCurrency)) {
+        selectedCurrency = res.length > 0 ? res[0] : selectedCurrency;
+      }
+      
+      setCurrency(selectedCurrency);
     } catch (error) {
       console.error('获取货币列表失败:', error);
       // 如果获取特定国家货币失败，回退到获取所有货币
@@ -89,22 +107,31 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     }
   };
 
-  const getLanguage = async () => {
+  const getLanguageList = async () => {
     const res = await settingApi.getLanguageList();
     setLanguageList(res);
-    setLanguage(route.params?.mySetting?.language || "");
+    
+    const storedLanguage = await loadLanguage();
+    const selectedLanguage = route.params?.mySetting?.language || 
+                            globalLanguage?.language || 
+                            storedLanguage || 
+                            user?.my_setting?.language || 
+                            user?.language || 
+                            "";
+    
+    setLanguage(selectedLanguage);
   };
 
   useEffect(() => {
     getCountry();
-    getCurrency();
-    getLanguage();
+    getCurrencyList();
+    getLanguageList();
   }, []);
 
   // 当国家变化时，更新货币列表
   useEffect(() => {
     if (country && country !== 0) {
-      getCurrency(country);
+      getCurrencyList(country);
     }
   }, [country]);
 
@@ -162,7 +189,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     } catch (error) {
       console.error('获取货币列表失败:', error);
       // 如果获取特定国家货币失败，回退到获取所有货币
-      await getCurrency();
+      await getCurrencyList();
     }
     
     try {
