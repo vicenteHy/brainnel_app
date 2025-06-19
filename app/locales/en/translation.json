@@ -5,6 +5,13 @@
       "footer": "You can change this later in settings",
       "error": "Failed to select language. Please try again."
   },
+  "update": {
+      "forceUpdateTitle": "Update Required",
+      "optionalUpdateTitle": "Update Available",
+      "updateNow": "Update Now",
+      "remindLater": "Remind Later",
+      "forceUpdateButton": "Update Now"
+  },
   "selectCountry": "Select your country",
   "loading": "Loading...",
   "related_goods": "Related goods",
@@ -587,7 +594,8 @@
           "confirm_exit": "Confirm Exit",
           "payment_not_complete_question": "Payment is not yet complete, are you sure you want to exit?",
           "continue_payment": "Continue Payment",
-          "payment_incomplete_retry": "Payment incomplete, you can retry later"
+          "payment_incomplete_retry": "Payment incomplete, you can retry later",
+          "mobile_money_max_attempts": "Mobile Money maximum attempts reached, please try again later"
       }
   },
   "recharge": {
@@ -661,6 +669,7 @@
           "confirm_payment": "Confirm Payment",
           "max_attempts_reached": "Maximum attempts reached",
           "mobile_money_max_attempts": "Mobile Money maximum attempts reached, please try again later",
+          "bank_card_payment": "Bank Card Payment",
           "invalid_payment_url": "Invalid payment URL",
           "timeout_message": "Recharge timeout, please retry",
           "cannot_open_link": "Cannot open payment link, please check device settings",

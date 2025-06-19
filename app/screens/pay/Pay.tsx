@@ -68,14 +68,14 @@ export const Pay = () => {
             console.error("响应数据:", error.response.data);
           }
         });
-    } else if (method === "paypal") {
-      console.log("开始PayPal支付状态轮询...");
+    } else if (method === "paypal" || method === "bank_card") {
+      console.log(`开始${method === "paypal" ? "PayPal" : "Bank Card"}支付状态轮询...`);
       console.log("调用API: /api/orders/" + order_id + "/payment-status/");
       
       payApi
         .wavePay(order_id)
         .then((res) => {
-          console.log("=== PayPal支付API响应 ===");
+          console.log(`=== ${method === "paypal" ? "PayPal" : "Bank Card"}支付API响应 ===`);
           console.log("完整响应:", JSON.stringify(res, null, 2));
           console.log("支付状态 res.status:", res.status);
           console.log("订单ID res.order_id:", res.order_id);
@@ -83,17 +83,17 @@ export const Pay = () => {
           console.log("========================");
           
           if (res.status === 1) {
-            console.log("✅ PayPal支付成功！停止轮询并跳转成功页面");
+            console.log(`✅ ${method === "paypal" ? "PayPal" : "Bank Card"}支付成功！停止轮询并跳转成功页面`);
             setPaymentStatus('completed');
             safeNavigate("PaymentSuccessScreen", res);
             stopPolling();
           } else {
-            console.log("⏳ PayPal支付尚未完成，状态:", res.status);
+            console.log(`⏳ ${method === "paypal" ? "PayPal" : "Bank Card"}支付尚未完成，状态:`, res.status);
             console.log("继续轮询...");
           }
         })
         .catch((error) => {
-          console.error("❌ PayPal支付轮询API调用失败:");
+          console.error(`❌ ${method === "paypal" ? "PayPal" : "Bank Card"}支付轮询API调用失败:`);
           console.error("错误详情:", error);
           console.error("错误消息:", error.message);
           if (error.response) {
@@ -245,8 +245,8 @@ export const Pay = () => {
   };
 
   useEffect(() => {
-    // PayPal和Wave支付自动打开浏览器
-    if (method === "paypal" || method === "wave") {
+    // PayPal、Wave和Bank Card支付自动打开浏览器
+    if (method === "paypal" || method === "wave" || method === "bank_card") {
       console.log(`=== ${method}支付页面加载，自动打开浏览器 ===`);
       openExternalPayment();
     }
@@ -272,9 +272,9 @@ export const Pay = () => {
         const parsed = Linking.parse(url);
         const params = parsed.queryParams || {};
         
-        // 检查是否有PayPal回调参数
-        if (params.paymentId && params.PayerID && method === "paypal") {
-          console.log("调用PayPal支付回调验证...");
+        // 检查是否有PayPal或Bank Card回调参数
+        if (params.paymentId && params.PayerID && (method === "paypal" || method === "bank_card")) {
+          console.log(`调用${method === "paypal" ? "PayPal" : "Bank Card"}支付回调验证...`);
           
           payApi
             .paySuccessCallback(
@@ -282,7 +282,7 @@ export const Pay = () => {
               params.PayerID as string
             )
             .then((res) => {
-              console.log("PayPal回调验证结果:", res);
+              console.log(`${method === "paypal" ? "PayPal" : "Bank Card"}回调验证结果:`, res);
               if (res.status === 1) {
                 setPaymentStatus('completed');
                 safeNavigate("PaymentSuccessScreen", res);
@@ -295,7 +295,7 @@ export const Pay = () => {
               }
             })
             .catch((error) => {
-              console.error("PayPal回调验证错误:", error);
+              console.error(`${method === "paypal" ? "PayPal" : "Bank Card"}回调验证错误:`, error);
               setPaymentStatus('failed');
               safeNavigate("PayError", { 
                 msg: t("payment.status.verification_failed_contact_support"),
@@ -452,7 +452,8 @@ export const Pay = () => {
         <Text style={styles.headerTitle}>
           {method === 'paypal' ? t("payment.status.paypal_payment") : 
            method === 'wave' ? t("payment.status.wave_payment") :
-           method === 'mobile_money' ? t("payment.status.mobile_money_payment") : t("payment.status.payment")}
+           method === 'mobile_money' ? t("payment.status.mobile_money_payment") :
+           method === 'bank_card' ? t("payment.status.bank_card_payment") : t("payment.status.payment")}
         </Text>
         <View style={styles.placeholder} />
       </View>
@@ -517,7 +518,8 @@ export const Pay = () => {
             <Text style={styles.orderValue}>
               {method === 'paypal' ? 'PayPal' : 
                method === 'wave' ? 'Wave' :
-               method === 'mobile_money' ? 'Mobile Money' : t("payment.status.other")}
+               method === 'mobile_money' ? 'Mobile Money' :
+               method === 'bank_card' ? 'Bank Card' : t("payment.status.other")}
             </Text>
           </View>
         </View>
@@ -614,7 +616,8 @@ export const Pay = () => {
                 <Text style={styles.instructionText}>
                   {t("payment.status.instruction_1", { 
                     paymentMethod: method === 'paypal' ? 'PayPal' : 
-                                  method === 'wave' ? 'Wave' : method 
+                                  method === 'wave' ? 'Wave' :
+                                  method === 'bank_card' ? 'Bank Card' : method 
                   })}
                 </Text>
               </View>

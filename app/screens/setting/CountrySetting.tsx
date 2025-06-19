@@ -37,7 +37,7 @@ type CountrySettingProps = {
 
 export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySettingProps) => {
   const { t } = useTranslation();
-  const { setGlobalCountry, setGlobalCurrency, setGlobalLanguage, globalCountry, globalCurrency, globalLanguage } = useGlobalStore();
+  const { setGlobalCountry, setGlobalCurrency, setGlobalLanguage, country: globalCountry, currency: globalCurrency, language: globalLanguage } = useGlobalStore();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "CountrySetting">>();
@@ -62,47 +62,50 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
   };
 
   const getCountry = async () => {
+    console.log('🌍 获取国家列表开始');
     const res = await settingApi.getCountryList();
+    console.log('🌍 获取到的国家列表:', res?.length, '个国家');
     setCountryList(res);    
     
     const selectedCountry = route.params?.mySetting?.country_code || 
-                           (globalCountry?.country ? parseInt(globalCountry.country) : null) || 
-                           user?.my_setting?.country_code || 
+                           (globalCountry ? parseInt(globalCountry) : null) || 
                            user?.country_code || 
                            0;
     
+    console.log('✅ 初始选择的国家:', selectedCountry);
     setCountry(selectedCountry);
   };
 
   const getCurrencyList = async (countryCode?: number) => {
+    console.log('📊 获取货币列表开始, countryCode:', countryCode);
     try {
       let res;
       if (countryCode) {
+        console.log('🌍 根据国家获取货币列表, countryCode:', countryCode);
         res = await settingApi.getCurrencyListByCountry(countryCode);
       } else {
+        console.log('🌍 获取所有货币列表');
         res = await settingApi.getCurrencyList();
       }
+      console.log('💰 获取到的货币列表:', res);
       setCurrencyList(res);
       
       const storedCurrency = await loadCurrency();
-      let selectedCurrency = route.params?.mySetting?.currency || 
-                            globalCurrency?.currency || 
-                            storedCurrency || 
-                            user?.my_setting?.currency || 
-                            user?.currency || 
-                            "";
+      console.log('💾 本地存储的货币:', storedCurrency);
       
-      if (selectedCurrency && !res.includes(selectedCurrency)) {
-        selectedCurrency = res.length > 0 ? res[0] : selectedCurrency;
-      }
-      
-      setCurrency(selectedCurrency);
+      setCurrency(storedCurrency || "");
     } catch (error) {
-      console.error('获取货币列表失败:', error);
+      console.error('❌ 获取货币列表失败:', error);
       // 如果获取特定国家货币失败，回退到获取所有货币
       if (countryCode) {
-        const res = await settingApi.getCurrencyList();
-        setCurrencyList(res);
+        console.log('🔄 回退到获取所有货币列表');
+        try {
+          const res = await settingApi.getCurrencyList();
+          console.log('💰 回退获取到的货币列表:', res);
+          setCurrencyList(res);
+        } catch (fallbackError) {
+          console.error('❌ 回退获取货币列表也失败:', fallbackError);
+        }
       }
     }
   };
@@ -113,7 +116,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
     
     const storedLanguage = await loadLanguage();
     const selectedLanguage = route.params?.mySetting?.language || 
-                            globalLanguage?.language || 
+                            globalLanguage || 
                             storedLanguage || 
                             user?.my_setting?.language || 
                             user?.language || 
@@ -123,6 +126,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
   };
 
   useEffect(() => {
+    console.log('🚀 组件初始化开始');
     getCountry();
     getCurrencyList();
     getLanguageList();
@@ -130,22 +134,28 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
 
   // 当国家变化时，更新货币列表
   useEffect(() => {
+    console.log('🔄 国家变化Effect触发, country:', country);
     if (country && country !== 0) {
+      console.log('🌍 开始根据国家更新货币列表');
       getCurrencyList(country);
     }
   }, [country]);
 
   useEffect(() => {
     // 根据用户登录状态设置初始选项卡
+    console.log('👤 用户登录状态变化:', user?.user_id, '当前类型:', changeType);
     if (user?.user_id && changeType === "language") {
+      console.log('✅ 用户已登录，切换到国家选项卡');
       setChangeType("country");
     } else if (!user?.user_id) {
+      console.log('✅ 用户未登录，切换到语言选项卡');
       setChangeType("language");
     }
   }, [user?.user_id]);
 
   // 新增：处理国家选择的函数
   const handleCountrySelect = async (selectedCountry: number) => {
+    console.log('🌍 开始处理国家选择:', selectedCountry);
     setCountry(selectedCountry);
     setLoading(true);
     const data = { country: selectedCountry };
@@ -161,71 +171,59 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
           "@selected_country",
           JSON.stringify(selectedCountryObj)
         );
+        console.log('✅ 国家信息已缓存');
       }
     } catch (cacheError) {
       console.warn("缓存国家信息失败:", cacheError);
     }
     
-    // 根据选择的国家更新货币列表并自动选择本地货币
-    let localCurrency = null;
-    try {
-      const countryCurrencies = await settingApi.getCurrencyListByCountry(selectedCountry);
-      setCurrencyList(countryCurrencies);
-      
-      // 找到本地货币（优先选择非USD和EUR的货币）
-      localCurrency = countryCurrencies.find(curr => curr !== 'USD' && curr !== 'EUR');
-      
-      // 如果没有找到本地货币且只有USD和EUR，则默认选择EUR
-      if (!localCurrency && countryCurrencies.includes('EUR')) {
-        localCurrency = 'EUR';
-      }
-      
-      if (localCurrency) {
-        setCurrency(localCurrency);
-        // 同时更新全局状态和本地存储
-        setGlobalCurrency({ currency: localCurrency });
-        await saveCurrency(localCurrency);
-      }
-    } catch (error) {
-      console.error('获取货币列表失败:', error);
-      // 如果获取特定国家货币失败，回退到获取所有货币
-      await getCurrencyList();
-    }
-    
     try {
       if (user?.user_id) {
-        // 准备要更新的数据，包含国家和可能的货币
-        let updateData = { country: selectedCountry };
-        if (localCurrency) {
-          updateData = { ...updateData, currency: localCurrency };
-        }
-        
+        console.log('🔄 开始更新服务器设置');
         try {
-          await settingApi.putSetting(updateData);
+          await settingApi.putSetting(data);
+          console.log('✅ 服务器设置更新成功');
         } catch (error) {
           // 如果更新失败且是404错误，尝试创建首次登录设置
           if (error.status === 404) {
             console.log('用户设置不存在，创建首次登录设置');
             await settingApi.postFirstLogin(selectedCountry);
-            // 重新尝试更新设置
-            if (localCurrency) {
-              await settingApi.putSetting(updateData);
-            }
+            console.log('✅ 首次登录设置创建成功');
           } else {
             throw error;
           }
         }
+        
+        // 调用 getMySetting 获取后端设置的默认货币
+        console.log('🔄 获取用户最新设置');
+        const mySetting = await settingApi.getMySetting();
+        console.log('✅ 获取到的用户设置:', mySetting);
+        
+        // 更新本地状态
+        if (mySetting.currency) {
+          console.log('💰 更新本地货币状态:', mySetting.currency);
+          setCurrency(mySetting.currency);
+          setGlobalCurrency({ currency: mySetting.currency });
+          await saveCurrency(mySetting.currency);
+        }
+        
+        // 更新货币列表（基于选择的国家）
+        console.log('🔄 更新货币列表');
+        await getCurrencyList(selectedCountry);
+        
         eventBus.emit("refreshSetting");
         const userData = await userApi.getProfile();
         setUser(userData);
+        console.log('✅ 用户数据已刷新');
       }
       if (onSuccess) onSuccess();
       Toast.show({
         type: 'success',
         text1: t('settings.success'),
       });
+      console.log('✅ 国家选择完成');
     } catch (error) {
-      console.error('保存设置到服务器失败:', error);
+      console.error('❌ 保存设置到服务器失败:', error);
       Toast.show({
         type: 'error',
         text1: t('error'),
@@ -236,25 +234,38 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
 
   // 新增：处理货币选择的函数
   const handleCurrencySelect = async (selectedCurrency: string) => {
+    console.log('💰 开始处理货币选择:', selectedCurrency);
+    console.log('👤 当前用户:', user?.user_id);
+    console.log('🌍 当前国家:', country);
+    console.log('💰 当前货币列表:', currencyList);
+    
     setCurrency(selectedCurrency);
     setLoading(true);
     const data = { currency: selectedCurrency };
     setGlobalCurrency({ currency: selectedCurrency });
     await saveCurrency(selectedCurrency);
     
+    console.log('✅ 本地状态已更新');
+    
     try {
       eventBus.emit("settingsChanged");
       if (user?.user_id) {
+        console.log('🔄 开始更新服务器设置');
         try {
           await settingApi.putSetting(data);
+          console.log('✅ 服务器设置更新成功');
         } catch (error) {
+          console.log('❌ 服务器设置更新失败:', error);
           // 如果更新失败且是404错误，尝试创建首次登录设置
           if (error.status === 404) {
             console.log('用户设置不存在，使用默认国家创建首次登录设置');
             const defaultCountry = country || 1; // 使用当前选中的国家或默认国家
+            console.log('🏳️ 使用默认国家:', defaultCountry);
             await settingApi.postFirstLogin(defaultCountry);
             // 重新尝试更新货币设置
+            console.log('🔄 重新尝试更新货币设置');
             await settingApi.putSetting(data);
+            console.log('✅ 重新更新货币设置成功');
           } else {
             throw error;
           }
@@ -262,14 +273,16 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
         eventBus.emit("refreshSetting");
         const userData = await userApi.getProfile();
         setUser(userData);
+        console.log('✅ 用户数据已刷新');
       }
       if (onSuccess) onSuccess();
       Toast.show({
         type: 'success',
         text1: t('settings.success'),
       });
+      console.log('✅ 货币选择完成');
     } catch (error) {
-      console.error('保存设置到服务器失败:', error);
+      console.error('❌ 保存设置到服务器失败:', error);
       Toast.show({
         type: 'error',
         text1: t('error'),
@@ -414,6 +427,7 @@ export const CountrySetting = ({ hideHeader = false, onSuccess }: CountrySetting
                 <TouchableOpacity
                   style={[styles.countryItem, loading && styles.countryItemDisabled]}
                   onPress={() => {
+                    console.log('💰 点击选择货币:', item, 'loading:', loading);
                     if (!loading) {
                       handleCurrencySelect(item);
                     }

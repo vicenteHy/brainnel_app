@@ -5,6 +5,13 @@
       "footer": "Vous pourrez la modifier plus tard dans les paramètres",
       "error": "Échec de la sélection de la langue. Veuillez réessayer."
   },
+  "update": {
+      "forceUpdateTitle": "Mise à jour requise",
+      "optionalUpdateTitle": "Mise à jour disponible",
+      "updateNow": "Mettre à jour",
+      "remindLater": "Rappeler plus tard",
+      "forceUpdateButton": "Mettre à jour maintenant"
+  },
   "loading": "Chargement...",
   "loading_product_details": "Chargement des détails du produit...",
   "moreFromStore": "Plus de ce magasin",
@@ -622,6 +629,7 @@
           "confirm_payment": "Confirmer le Paiement",
           "max_attempts_reached": "Nombre maximum de tentatives atteint",
           "mobile_money_max_attempts": "Nombre maximum de tentatives Mobile Money atteint, veuillez réessayer plus tard",
+          "bank_card_payment": "Paiement par Carte Bancaire",
           "invalid_payment_url": "URL de recharge invalide",
           "timeout_message": "Timeout de recharge, veuillez réessayer",
           "cannot_open_link": "Impossible d'ouvrir le lien de paiement, veuillez vérifier les paramètres de l'appareil",
@@ -635,7 +643,8 @@
           "confirm_exit": "Confirmer la Sortie",
           "payment_not_complete_question": "La recharge n'est pas encore terminée, êtes-vous sûr de vouloir sortir ?",
           "continue_payment": "Continuer la Recharge",
-          "payment_incomplete_retry": "Recharge incomplète, vous pouvez réessayer plus tard"
+          "payment_incomplete_retry": "Recharge incomplète, vous pouvez réessayer plus tard",
+          "mobile_money_max_attempts": "Nombre maximum de tentatives Mobile Money atteint, veuillez réessayer plus tard"
       }
   },
   "login": {

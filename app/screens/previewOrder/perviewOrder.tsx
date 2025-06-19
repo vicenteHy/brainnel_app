@@ -409,38 +409,13 @@ export const PreviewOrder = () => {
           console.log("支付结账成功埋点数据:");
 
           if (route.params.payMethod === "wave") {
-            try {
-              // 首先检查是否可以打开Wave应用
-              const canOpen = await Linking.canOpenURL(res.payment_url);
-              if (canOpen) {
-                // 如果可以打开Wave应用，直接跳转
-                await Linking.openURL(res.payment_url);
-              } else {
-                // 如果无法打开应用，提示用户下载或使用网页版
-                await Linking.openURL(res.payment_url);
-              }
-              
-              // 打开Wave应用后，跳转到支付页面进行状态监听
-              navigation.navigate("Pay", {
-                payUrl: res.payment_url,
-                method: "wave",
-                order_id: route.params.data.order_id.toString()
-              });
-            } catch (error) {
-              console.error("Error opening Wave app:", error);
-              Alert.alert(
-                t("error"),
-                t("order.error.wave_app_open") || "Failed to open Wave app"
-              );
-              // 打开失败时跳转到支付失败页面
-              navigation.navigate("PayError", {
-                order_id: route.params.data.order_id?.toString(),
-                order_no: route.params.data.order_no,
-                amount: route.params.data.actual_amount?.toString(),
-                currency: route.params.data.currency
-              });
-            }
-
+            // Wave支付直接跳转到Pay页面，让Pay页面处理外部应用跳转和轮询
+            console.log("Wave支付: 跳转到Pay页面进行统一处理");
+            navigation.navigate("Pay", {
+              payUrl: res.payment_url,
+              method: "wave",
+              order_id: route.params.data.order_id.toString()
+            });
             return;
           }
 

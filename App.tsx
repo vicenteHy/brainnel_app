@@ -15,6 +15,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import LanguageSelectionScreen, { checkLanguageSelected } from "./app/screens/LanguageSelectionScreen";
 import  useAnalyticsStore  from "./app/store/analytics";
 import { preloadService } from "./app/services/preloadService";
+import { useVersionCheck } from "./app/hooks/useVersionCheck";
+import { UpdateModal } from "./app/components/UpdateModal";
+import { UpdateType } from "./app/utils/versionUtils";
+import Constants from 'expo-constants';
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -44,6 +48,16 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [languageSelected, setLanguageSelected] = useState<boolean>(false);
   const [checkingLanguage, setCheckingLanguage] = useState(true);
+  
+  // 版本检查
+  const currentVersion = Constants.expoConfig?.version || '5.0.0';
+  const { updateType, versionInfo, isChecking } = useVersionCheck({
+    currentVersion,
+    checkOnMount: true,
+  });
+  
+  // 版本更新弹窗显示状态
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   
   // 开屏动画时间控制
   const splashStartTime = useRef<number>(Date.now());
@@ -139,6 +153,21 @@ function AppContent() {
       initApp();
     }
   }, [checkingLanguage, languageSelected]);
+
+  // 版本检查完成后显示更新弹窗
+  useEffect(() => {
+    console.log('[App] 版本检查状态变化:');
+    console.log('  - isChecking:', isChecking);
+    console.log('  - versionInfo:', versionInfo ? 'exists' : 'null');
+    console.log('  - updateType:', updateType);
+    
+    if (!isChecking && versionInfo && updateType !== UpdateType.NO_UPDATE) {
+      console.log('[App] 显示更新弹窗');
+      setShowUpdateModal(true);
+    } else {
+      console.log('[App] 不显示更新弹窗');
+    }
+  }, [isChecking, versionInfo, updateType]);
 
   // 控制加载屏幕显示（独立的useEffect）
   useEffect(() => {
@@ -245,6 +274,18 @@ function AppContent() {
     setLanguageSelected(true);
   };
 
+  // 处理版本更新
+  const handleUpdate = () => {
+    setShowUpdateModal(false);
+  };
+
+  // 处理关闭更新弹窗（仅非强制更新）
+  const handleCloseUpdate = () => {
+    if (updateType !== UpdateType.FORCE_UPDATE) {
+      setShowUpdateModal(false);
+    }
+  };
+
   // 如果还在检查语言状态，显示加载界面
   if (checkingLanguage) {
     return (
@@ -284,7 +325,22 @@ function AppContent() {
     );
   }
 
-  return <AppNavigator />;
+  return (
+    <>
+      <AppNavigator />
+      {versionInfo && (
+        <UpdateModal
+          visible={showUpdateModal}
+          updateType={updateType}
+          message={versionInfo.update_message}
+          messageEn={versionInfo.update_message_en}
+          linkUrl={versionInfo.link_url}
+          onUpdate={handleUpdate}
+          onClose={updateType !== UpdateType.FORCE_UPDATE ? handleCloseUpdate : undefined}
+        />
+      )}
+    </>
+  );
 }
 
 export default function App() {

@@ -55,6 +55,18 @@ export interface FirstLogin {
     message: string;
   }
 
+  export interface VersionInfo {
+    id: number;
+    platform: 'android' | 'ios';
+    latest_version: string;
+    min_force_version: string;
+    link_url: string;
+    update_message: string;
+    update_message_en: string;
+    created_at: string;
+    updated_at: string;
+  }
+
 export const settingApi = {
     // 获取国家
     getCountryList: () => apiService.get<CountryList[]>('/api/user_settings/countries/'),
@@ -74,4 +86,25 @@ export const settingApi = {
     getSendSmsCountryList: () => apiService.get<CountryList[]>('/api/user_settings/phone_config/'),
     // 获取运费信息
     getShippingFee: (data: ShippingFee) => apiService.post<ShippingFeeResponse>('/api/orders/calculate_manual_shipping_fee/', data),
+    // 获取版本信息
+    getVersionInfo: () => {
+      console.log('[API] 调用版本检查接口: https://api.brainnel.com/admin/api/v1/app-versions/');
+      return fetch('https://api.brainnel.com/admin/api/v1/app-versions/')
+        .then(res => {
+          console.log('[API] 版本检查接口响应状态:', res.status);
+          console.log('[API] 版本检查接口响应OK:', res.ok);
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('[API] 版本检查接口返回数据:', JSON.stringify(data, null, 2));
+          return data;
+        })
+        .catch(error => {
+          console.error('[API] 版本检查接口调用失败:', error);
+          throw error;
+        });
+    },
 }
