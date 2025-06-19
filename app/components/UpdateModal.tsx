@@ -34,7 +34,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   const isForceUpdate = updateType === UpdateType.FORCE_UPDATE;
   const currentLanguage = getCurrentLanguage();
   
-  // 根据当前语言选择显示的消息
+  // 根据当前语言选择显示的消息，没有语言时默认使用法语
   const displayMessage = currentLanguage === 'en' ? messageEn : message;
   
   console.log('[UpdateModal] 组件渲染:');
@@ -66,9 +66,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={handleClose}
+      onRequestClose={isForceUpdate ? undefined : handleClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, isForceUpdate && styles.forceUpdateOverlay]}>
         <View style={styles.modalContainer}>
           <View style={styles.content}>
             <Text style={styles.title}>
@@ -118,6 +118,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
+  forceUpdateOverlay: {
+    backgroundColor: '#000000CC', // 更深的背景，强调强制性
+  },
   modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -152,11 +155,10 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 40,
   },
   cancelButton: {
     backgroundColor: '#f5f5f5',
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   cancelButtonText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(12),
     fontWeight: '500',
     color: '#666',
   },
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   updateButtonText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(12),
     fontWeight: '600',
     color: '#fff',
   },

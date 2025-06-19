@@ -6,7 +6,7 @@ import useUserStore from "./app/store/user";
 import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
-import { View, ActivityIndicator, Alert, Text, Image, Animated } from "react-native";
+import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
 import * as Linking from "expo-linking";
@@ -58,6 +58,9 @@ function AppContent() {
   
   // 版本更新弹窗显示状态
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  
+  // 强制更新状态 - 用于确保强制更新弹窗持久显示
+  const [hasForceUpdate, setHasForceUpdate] = useState(false);
   
   // 开屏动画时间控制
   const splashStartTime = useRef<number>(Date.now());
@@ -164,6 +167,12 @@ function AppContent() {
     if (!isChecking && versionInfo && updateType !== UpdateType.NO_UPDATE) {
       console.log('[App] 显示更新弹窗');
       setShowUpdateModal(true);
+      
+      // 如果是强制更新，记录状态
+      if (updateType === UpdateType.FORCE_UPDATE) {
+        console.log('[App] 检测到强制更新，设置持久状态');
+        setHasForceUpdate(true);
+      }
     } else {
       console.log('[App] 不显示更新弹窗');
     }
@@ -274,9 +283,30 @@ function AppContent() {
     setLanguageSelected(true);
   };
 
+  // 监听应用状态变化，确保强制更新弹窗持久显示
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      console.log('[App] 应用状态变化:', nextAppState);
+      
+      // 如果应用重新激活且存在强制更新
+      if (nextAppState === 'active' && hasForceUpdate) {
+        console.log('[App] 应用重新激活，强制显示更新弹窗');
+        setShowUpdateModal(true);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => subscription?.remove();
+  }, [hasForceUpdate]);
+
   // 处理版本更新
   const handleUpdate = () => {
-    setShowUpdateModal(false);
+    console.log('[App] 用户点击更新，跳转到应用商店');
+    // 注意：强制更新时不关闭弹窗，因为用户可能从应用商店返回而没有更新
+    if (updateType !== UpdateType.FORCE_UPDATE) {
+      setShowUpdateModal(false);
+    }
   };
 
   // 处理关闭更新弹窗（仅非强制更新）
@@ -330,7 +360,7 @@ function AppContent() {
       <AppNavigator />
       {versionInfo && (
         <UpdateModal
-          visible={showUpdateModal}
+          visible={showUpdateModal || hasForceUpdate}
           updateType={updateType}
           message={versionInfo.update_message}
           messageEn={versionInfo.update_message_en}
