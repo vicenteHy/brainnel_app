@@ -117,6 +117,7 @@ export const CartModals: React.FC<CartModalsProps> = ({
               onChangeText={onQuantityInputChange}
               keyboardType="number-pad"
               autoFocus
+              placeholderTextColor="#9CA3AF"
             />
             <View style={modalStyles.quantityInputButtonContainer}>
               <TouchableOpacity

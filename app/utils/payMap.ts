@@ -11,6 +11,7 @@ payMap.set("MobiCash",require("../../assets/payimg/MobiCash.png"));
 payMap.set("mobile_money",require("../../assets/payimg/image_cb840273.png"));
 payMap.set("balance",require("../../assets/img/余额 icon.png"));
 payMap.set("bank_card",require("../../assets/img/image_4e72f054.png"))
+payMap.set("Airtel",require("../../assets/payimg/airtel.png"))
 
 
 const getPayMap = (key: string) => {

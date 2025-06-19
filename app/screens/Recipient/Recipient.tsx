@@ -67,13 +67,13 @@ const PaymentMethodItem = ({ option, isSelected, onSelect }: {
     <View style={styles.paymentContent}>
       <View style={styles.defaultPaymentContainer}>
         <Text style={styles.paymentIcon}>{option.icon}</Text>
-        <Text style={styles.paymentLabel}>{option.label}</Text>
+        <Text style={[styles.paymentLabel, { color: '#000000' }]}>{option.label}</Text>
       </View>
       {Array.isArray(option.value) && option.value.length > 0 && (
         <View style={styles.operatorContainer}>
           {option.value.map((op: string) => (
             <View key={op} style={styles.operatorBox}>
-              <Text style={styles.operatorText}>{op}</Text>
+              <Text style={[styles.operatorText, { color: '#666666' }]}>{op}</Text>
             </View>
           ))}
         </View>
@@ -417,14 +417,14 @@ export function Recipient({
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <BackIcon size={20} />
           </TouchableOpacity>
-          <Text style={styles.title}>Checkout</Text>
+          <Text style={[styles.title, { color: '#000000' }]}>Checkout</Text>
         </View>
 
         {/* Recipient Info */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>👤</Text>
-            <Text style={styles.sectionTitle}>Recipient Information</Text>
+            <Text style={[styles.sectionTitle, { color: '#000000' }]}>Recipient Information</Text>
           </View>
 
           {defaultAddress && (
@@ -437,7 +437,7 @@ export function Recipient({
                   {defaultAddress?.receiver_first_name} .{" "}
                   {defaultAddress?.receiver_last_name}
                 </Text>
-                <Text style={{ fontSize: fontSize(20), paddingVertical: 4 }}>
+                <Text style={{ fontSize: fontSize(20), paddingVertical: 4, color: '#000000' }}>
                   {defaultAddress?.country}
                 </Text>
                 <Text style={{ fontSize: fontSize(16), color: "#a0a5ab" }}>
@@ -448,7 +448,7 @@ export function Recipient({
           )}
           <TouchableOpacity style={styles.addRecipient} onPress={addRessHandel}>
             <Text style={styles.addRecipientIcon}>＋</Text>
-            <Text style={styles.addRecipientText}>
+            <Text style={[styles.addRecipientText, { color: '#666666' }]}>
               Add Recipient Information
             </Text>
           </TouchableOpacity>
@@ -459,7 +459,7 @@ export function Recipient({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>🚢</Text>
-            <Text style={styles.sectionTitle}>Shipping Method</Text>
+            <Text style={[styles.sectionTitle, { color: '#000000' }]}>Shipping Method</Text>
           </View>
           <View style={styles.shippingOptions}>
             {[
@@ -492,8 +492,8 @@ export function Recipient({
                   </View>
                 )}
                 <Text style={styles.shippingIcon}>{option.icon}</Text>
-                <Text style={styles.shippingLabel}>{option.label}</Text>
-                <Text style={styles.shippingDetail}>{option.detail}</Text>
+                <Text style={[styles.shippingLabel, { color: '#000000' }]}>{option.label}</Text>
+                <Text style={[styles.shippingDetail, { color: '#666666' }]}>{option.detail}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -504,11 +504,11 @@ export function Recipient({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>��</Text>
-            <Text style={styles.sectionTitle}>Delivery Warehouse</Text>
+            <Text style={[styles.sectionTitle, { color: '#000000' }]}>Delivery Warehouse</Text>
           </View>
           <View style={{ marginTop: 12 }}>
             <View style={styles.selectBox}>
-              <Text style={styles.selectLabel}>Select a warehouse:</Text>
+              <Text style={[styles.selectLabel, { color: '#666666' }]}>Select a warehouse:</Text>
               <View style={styles.selectWrapper}>
                 <Picker
                   selectedValue={warehouse}
@@ -533,10 +533,10 @@ export function Recipient({
             {warehouse && (
               <View style={styles.shippingInfo}>
                 <Text style={styles.shippingInfoRow}>
-                  <Text style={styles.shippingInfoLabel}>
+                  <Text style={[styles.shippingInfoLabel, { color: '#777777' }]}>
                     Estimated Arrival:{" "}
                   </Text>
-                  <Text style={{ flex: 1, textAlign: "left", marginLeft: 10 }}>
+                  <Text style={{ flex: 1, textAlign: "left", marginLeft: 10, color: '#000000' }}>
                     {shippingMethod === "sea"
                       ? orderData?.shipping_fee_sea_time
                       : orderData?.shipping_fee_air_time}
@@ -544,7 +544,7 @@ export function Recipient({
                 </Text>
 
                 <View style={styles.shippingInfoRow}>
-                  <Text style={styles.shippingInfoLabel}>
+                  <Text style={[styles.shippingInfoLabel, { color: '#777777' }]}>
                     International Fee:{" "}
                   </Text>
                   <Text
@@ -571,7 +571,7 @@ export function Recipient({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>💳</Text>
-            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <Text style={[styles.sectionTitle, { color: '#000000' }]}>Payment Method</Text>
           </View>
           
           {/* 选项卡 */}
@@ -587,7 +587,8 @@ export function Recipient({
               >
                 <Text style={[
                   styles.tabText,
-                  currentTab === tab.id && styles.tabTextActive
+                  currentTab === tab.id && styles.tabTextActive,
+                  { color: currentTab === tab.id ? '#000000' : '#666666' }
                 ]}>
                   {tab.label}
                 </Text>
@@ -614,15 +615,15 @@ export function Recipient({
           <View style={styles.section1}>
             <View style={styles.sectionHeader1}>
               <Text style={styles.sectionIcon1}>📦</Text>
-              <Text style={styles.sectionTitle1}>Order Summary</Text>
+              <Text style={[styles.sectionTitle1, { color: '#000000' }]}>Order Summary</Text>
             </View>
 
             <View style={styles.setOrderContent}>
-              <Text style={styles.noCouponsMessage}>
+              <Text style={[styles.noCouponsMessage, { color: '#666666' }]}>
                 Products({orderData?.items.length} items)
               </Text>
               <TouchableOpacity onPress={toggleExpanded}>
-                <Text style={styles.sectionAction}>
+                <Text style={[styles.sectionAction, { color: '#ff6000' }]}>
                   {expanded ? "Hide Details" : "View Details"}
                 </Text>
               </TouchableOpacity>
@@ -642,29 +643,29 @@ export function Recipient({
                   )}
 
                   <View style={styles.itemDetails}>
-                    <Text style={styles.itemName} numberOfLines={2}>
+                    <Text style={[styles.itemName, { color: '#000000' }]} numberOfLines={2}>
                       {item.product_name}
                     </Text>
                     {item.attributes.map((attribute) => (
                       <Text
-                        style={styles.itemVariant}
+                        style={[styles.itemVariant, { color: '#666666' }]}
                         key={attribute?.value}
                         numberOfLines={1}
                       >
                         {attribute?.attribute_name}: {attribute?.value}
                       </Text>
                     ))}
-                    <Text style={styles.itemQuantity}>
+                    <Text style={[styles.itemQuantity, { color: '#666666' }]}>
                       Qty: {item.quantity}
                     </Text>
                   </View>
 
                   <View style={styles.itemPrices}>
-                    <Text style={styles.itemPrice}>${item?.total_price}</Text>
-                    <Text style={styles.itemShipping}>
+                    <Text style={[styles.itemPrice, { color: '#ff6000' }]}>${item?.total_price}</Text>
+                    <Text style={[styles.itemShipping, { color: '#777777' }]}>
                       {/* +${item?.shipping.toFixed(2)} domestic */}
                     </Text>
-                    <Text style={styles.shippingNote}>
+                    <Text style={[styles.shippingNote, { color: '#888888' }]}>
                       Supplier to warehouse shipping
                     </Text>
                   </View>
@@ -678,9 +679,9 @@ export function Recipient({
           <View style={styles.section1}>
             <View style={styles.sectionHeader1}>
               <Text style={styles.sectionIcon1}>🎟️</Text>
-              <Text style={styles.sectionTitle1}>Coupons</Text>
+              <Text style={[styles.sectionTitle1, { color: '#000000' }]}>Coupons</Text>
               <TouchableOpacity onPress={() => setCouponModalVisible(true)}>
-                <Text style={[styles.sectionAction, { marginRight: 12 }]}>
+                <Text style={[styles.sectionAction, { marginRight: 12, color: '#ff6000' }]}>
                   Select
                 </Text>
               </TouchableOpacity>
@@ -688,7 +689,7 @@ export function Recipient({
 
             <View style={styles.sectionContent}>
               {appliedCoupons.length === 0 ? (
-                <Text style={styles.noCouponsMessage}>
+                <Text style={[styles.noCouponsMessage, { color: '#666666' }]}>
                   No coupons applied. Click "Select" to browse available
                   coupons.
                 </Text>
@@ -697,14 +698,14 @@ export function Recipient({
               <View style={styles.appliedCoupons}>
                 {appliedCoupons.map((coupon) => (
                   <View key={coupon.code} style={styles.couponTag}>
-                    <Text style={styles.couponTagName}>{coupon.name}</Text>
-                    <Text style={styles.couponTagDiscount}>
+                    <Text style={[styles.couponTagName, { color: '#ff6000' }]}>{coupon.name}</Text>
+                    <Text style={[styles.couponTagDiscount, { color: '#ff6000' }]}>
                       {coupon.type === "percent"
                         ? `${coupon.discount}% Off`
                         : `$${coupon.discount.toFixed(2)} Off`}
                     </Text>
                     <TouchableOpacity onPress={() => removeCoupon(coupon.code)}>
-                      <Text style={styles.couponDelete}>×</Text>
+                      <Text style={[styles.couponDelete, { color: '#777777' }]}>×</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -713,21 +714,21 @@ export function Recipient({
 
             <View style={styles.priceBox}>
               <View style={styles.priceBox1}>
-                <Text>Subtotal</Text>
-                <Text>{orderData?.total_amount}</Text>
+                <Text style={{ color: '#000000' }}>Subtotal</Text>
+                <Text style={{ color: '#000000' }}>{orderData?.total_amount}</Text>
               </View>
               <View style={styles.priceBox1}>
-                <Text>Domestic Shipping</Text>
+                <Text style={{ color: '#000000' }}>Domestic Shipping</Text>
                 {domesticShippingFee?.currency ? (
-                  <Text>{domesticShippingFee?.total_shipping_fee}</Text>
+                  <Text style={{ color: '#000000' }}>{domesticShippingFee?.total_shipping_fee}</Text>
                 ) : (
-                  <Text>{t('order.preview.calculating')}</Text>
+                  <Text style={{ color: '#666666' }}>{t('order.preview.calculating')}</Text>
                 )}
               </View>
 
               <View style={styles.priceBox1}>
-                <Text>Estimated International Shipping</Text>
-                <Text>
+                <Text style={{ color: '#000000' }}>Estimated International Shipping</Text>
+                <Text style={{ color: '#000000' }}>
                   {shippingMethod === "sea"
                     ? orderData?.shipping_fee_sea
                     : orderData?.shipping_fee_air}
@@ -742,7 +743,7 @@ export function Recipient({
                   style={{
                     fontSize: fontSize(18),
                     fontWeight: "600",
-                    color: "#000",
+                    color: "#000000",
                   }}
                 >
                   Total
@@ -764,7 +765,7 @@ export function Recipient({
                 </Text>
               </View>
               <View style={styles.remarks}>
-                <Text style={styles.remarksText}>
+                <Text style={[styles.remarksText, { color: '#666666' }]}>
                   + $
                   {shippingMethod === "sea"
                     ? orderData?.shipping_fee_sea
@@ -784,13 +785,13 @@ export function Recipient({
               <View style={styles.couponModal}>
                 <View style={styles.couponModalContainer}>
                   <View style={styles.couponModalHeader}>
-                    <Text style={styles.couponModalTitle}>
+                    <Text style={[styles.couponModalTitle, { color: '#000000' }]}>
                       Available Coupons
                     </Text>
                     <TouchableOpacity
                       onPress={() => setCouponModalVisible(false)}
                     >
-                      <Text style={styles.couponModalClose}>×</Text>
+                      <Text style={[styles.couponModalClose, { color: '#777777' }]}>×</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -798,11 +799,11 @@ export function Recipient({
                     <View style={styles.availableCoupons}>
                       <View style={styles.couponCard}>
                         <View style={styles.couponInfo}>
-                          <Text style={styles.couponName}>Welcome 10% Off</Text>
-                          <Text style={styles.couponDiscount}>
+                          <Text style={[styles.couponName, { color: '#ff6000' }]}>Welcome 10% Off</Text>
+                          <Text style={[styles.couponDiscount, { color: '#666666' }]}>
                             10% off your total order
                           </Text>
-                          <Text style={styles.couponExpiry}>
+                          <Text style={[styles.couponExpiry, { color: '#999999' }]}>
                             Valid until: 31/12/2023
                           </Text>
                         </View>
@@ -815,7 +816,7 @@ export function Recipient({
                           onPress={() => addCoupon("WELCOME10")}
                           disabled={isCouponApplied("WELCOME10")}
                         >
-                          <Text style={styles.couponUseBtnText}>
+                          <Text style={[styles.couponUseBtnText, { color: 'white' }]}>
                             {isCouponApplied("WELCOME10") ? "Used" : "Use"}
                           </Text>
                         </TouchableOpacity>
@@ -823,11 +824,11 @@ export function Recipient({
 
                       <View style={styles.couponCard}>
                         <View style={styles.couponInfo}>
-                          <Text style={styles.couponName}>$20 Off</Text>
-                          <Text style={styles.couponDiscount}>
+                          <Text style={[styles.couponName, { color: '#ff6000' }]}>$20 Off</Text>
+                          <Text style={[styles.couponDiscount, { color: '#666666' }]}>
                             $20 off your order over $100
                           </Text>
-                          <Text style={styles.couponExpiry}>
+                          <Text style={[styles.couponExpiry, { color: '#999999' }]}>
                             Valid until: 30/11/2023
                           </Text>
                         </View>
@@ -839,7 +840,7 @@ export function Recipient({
                           onPress={() => addCoupon("SAVE20")}
                           disabled={isCouponApplied("SAVE20")}
                         >
-                          <Text style={styles.couponUseBtnText}>
+                          <Text style={[styles.couponUseBtnText, { color: 'white' }]}>
                             {isCouponApplied("SAVE20") ? "Used" : "Use"}
                           </Text>
                         </TouchableOpacity>
@@ -847,13 +848,13 @@ export function Recipient({
 
                       <View style={styles.couponCard}>
                         <View style={styles.couponInfo}>
-                          <Text style={styles.couponName}>
+                          <Text style={[styles.couponName, { color: '#ff6000' }]}>
                             Free Domestic Shipping
                           </Text>
-                          <Text style={styles.couponDiscount}>
+                          <Text style={[styles.couponDiscount, { color: '#666666' }]}>
                             Free domestic shipping on your order
                           </Text>
-                          <Text style={styles.couponExpiry}>
+                          <Text style={[styles.couponExpiry, { color: '#999999' }]}>
                             Valid until: 15/12/2023
                           </Text>
                         </View>
@@ -865,7 +866,7 @@ export function Recipient({
                           onPress={() => addCoupon("FREESHIP")}
                           disabled={isCouponApplied("FREESHIP")}
                         >
-                          <Text style={styles.couponUseBtnText}>
+                          <Text style={[styles.couponUseBtnText, { color: 'white' }]}>
                             {isCouponApplied("FREESHIP") ? "Used" : "Use"}
                           </Text>
                         </TouchableOpacity>
@@ -883,7 +884,7 @@ export function Recipient({
           <View style={styles.modalOverlay}>
             <View style={styles.formContainer}>
               <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>选择收件人</Text>
+                <Text style={[styles.formTitle, { color: '#000000' }]}>选择收件人</Text>
               </View>
 
               <View style={styles.formBody}>
@@ -913,7 +914,7 @@ export function Recipient({
                                   <View style={styles.userInfoCard}>
                                     <View style={styles.userCardInfo2}>
                                       <Text
-                                        style={styles.userCardInfo}
+                                        style={[styles.userCardInfo, { color: '#000000' }]}
                                         numberOfLines={1}
                                         ellipsizeMode="tail"
                                       >
@@ -922,27 +923,27 @@ export function Recipient({
                                         {item.receiver_last_name}
                                       </Text>
                                       <Text
-                                        style={styles.userCardInfo1}
+                                        style={[styles.userCardInfo1, { color: '#666666' }]}
                                         numberOfLines={1}
                                         ellipsizeMode="tail"
                                       >
                                         {item.receiver_phone}
                                       </Text>
                                       <View style={styles.addressEmit}>
-                                        <Text>设置默认地址</Text>
+                                        <Text style={{ color: '#000000' }}>设置默认地址</Text>
                                         <TouchableOpacity
                                           onPress={() =>
                                             deleteAddress(item.address_id)
                                           }
                                         >
-                                          <Text>删除</Text>
+                                          <Text style={{ color: '#FF0000' }}>删除</Text>
                                         </TouchableOpacity>
                                       </View>
                                     </View>
                                     {item.is_default === 1 && (
                                       <View style={styles.centeredBoxWithText}>
                                         <Text
-                                          style={styles.blueHeadingTextStyle}
+                                          style={[styles.blueHeadingTextStyle, { color: '#002fa7' }]}
                                         >
                                           默认
                                         </Text>
@@ -976,7 +977,7 @@ export function Recipient({
                             <View style={styles.addCardRecipientText}>
                               <PlusIcon size={24} />
 
-                              <Text style={styles.addCard}>新增收件人</Text>
+                              <Text style={[styles.addCard, { color: '#002fa7' }]}>新增收件人</Text>
                             </View>
                           </View>
                         </TouchableOpacity>
@@ -991,7 +992,7 @@ export function Recipient({
                         style={styles.cancelButtonStyle}
                         onPress={() => setShowModal(false)}
                       >
-                        <Text style={styles.cancelButtonText}>取消</Text>
+                        <Text style={[styles.cancelButtonText, { color: '#333333' }]}>取消</Text>
                       </TouchableOpacity>
 
                       {/* Confirm Button */}
@@ -1006,7 +1007,7 @@ export function Recipient({
                             );
                         }}
                       >
-                        <Text style={styles.confirmButtonText}>确认</Text>
+                        <Text style={[styles.confirmButtonText, { color: 'white' }]}>确认</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1024,7 +1025,7 @@ export function Recipient({
           onPress={createOrder}
         >
           <View style={styles.bottomButtonContent}>
-            <Text style={styles.bottomButtonText}>
+            <Text style={[styles.bottomButtonText, { color: '#ffffff' }]}>
               {domesticShippingFee?.currency ? "确认订单" : "报价中..."}
             </Text>
           </View>

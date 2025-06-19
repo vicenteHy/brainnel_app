@@ -46,7 +46,7 @@ export const OfflinePayment = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1e293b" />
         </TouchableOpacity>
-        <Text style={styles.title}>{t("offline_payment.title")}</Text>
+        <Text style={[styles.title, { color: '#1e293b' }]}>{t("offline_payment.title")}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -59,54 +59,54 @@ export const OfflinePayment = () => {
         <View style={styles.paymentCard}>
           <View style={styles.cardHeader}>
             <Ionicons name="card-outline" size={24} color="#007efa" />
-            <Text style={styles.cardTitle}>{t("offline_payment.sepa_title")}</Text>
+            <Text style={[styles.cardTitle, { color: '#1e293b' }]}>{t("offline_payment.sepa_title")}</Text>
           </View>
           
-          <Text style={styles.cardSubtitle}>{t("offline_payment.sepa_subtitle")}</Text>
+          <Text style={[styles.cardSubtitle, { color: '#64748b' }]}>{t("offline_payment.sepa_subtitle")}</Text>
           
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.beneficiary_name")}:</Text>
-              <Text style={styles.value}>Brainstorm (Group) Holding Limited</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.beneficiary_name")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>Brainstorm (Group) Holding Limited</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.account_number")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.account_number")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("IE67CHAS93090301115654")}>
-                <Text style={[styles.value, styles.copyableText]}>IE67CHAS93090301115654</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>IE67CHAS93090301115654</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.swift_code")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.swift_code")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("CHASIE4L")}>
-                <Text style={[styles.value, styles.copyableText]}>CHASIE4L</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>CHASIE4L</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.bank_name")}:</Text>
-              <Text style={styles.value}>J.P. MORGAN BANK LUXEMBOURG S.A., DUBLIN BRANCH</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.bank_name")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>J.P. MORGAN BANK LUXEMBOURG S.A., DUBLIN BRANCH</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.address")}:</Text>
-              <Text style={styles.value}>200 Capital Dock 79 Sir John Rogersons Quay Dublin 2 D02 RK57</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.address")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>200 Capital Dock 79 Sir John Rogersons Quay Dublin 2 D02 RK57</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.country")}:</Text>
-              <Text style={styles.value}>IE</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.country")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>IE</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.accepted_currency")}:</Text>
-              <Text style={[styles.value, styles.currency]}>EUR</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.accepted_currency")}:</Text>
+              <Text style={[styles.value, styles.currency, { color: '#059669' }]}>EUR</Text>
             </View>
           </View>
           
           <View style={styles.feeSection}>
-            <Text style={styles.feeText}>{t("offline_payment.processing_fee")}: 0%</Text>
+            <Text style={[styles.feeText, { color: '#059669' }]}>{t("offline_payment.processing_fee")}: 0%</Text>
           </View>
         </View>
 
@@ -114,63 +114,63 @@ export const OfflinePayment = () => {
         <View style={styles.paymentCard}>
           <View style={styles.cardHeader}>
             <Ionicons name="globe-outline" size={24} color="#007efa" />
-            <Text style={styles.cardTitle}>{t("offline_payment.global_title")}</Text>
+            <Text style={[styles.cardTitle, { color: '#1e293b' }]}>{t("offline_payment.global_title")}</Text>
           </View>
           
-          <Text style={styles.cardSubtitle}>{t("offline_payment.global_subtitle")}</Text>
+          <Text style={[styles.cardSubtitle, { color: '#64748b' }]}>{t("offline_payment.global_subtitle")}</Text>
           
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.beneficiary_name")}:</Text>
-              <Text style={styles.value}>Brainstorm (Group) Holding Limited</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.beneficiary_name")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>Brainstorm (Group) Holding Limited</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.currencies")}:</Text>
-              <Text style={[styles.value, styles.currency]}>EUR, USD, HKD, GBP, CNH, CAD, SGD, JPY, AUD, NZD</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.currencies")}:</Text>
+              <Text style={[styles.value, styles.currency, { color: '#059669' }]}>EUR, USD, HKD, GBP, CNH, CAD, SGD, JPY, AUD, NZD</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.account_number")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.account_number")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("63003662130")}>
-                <Text style={[styles.value, styles.copyableText]}>63003662130</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>63003662130</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.swift_code")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.swift_code")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("CHASHKHH")}>
-                <Text style={[styles.value, styles.copyableText]}>CHASHKHH</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>CHASHKHH</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.bank_code")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.bank_code")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("007")}>
-                <Text style={[styles.value, styles.copyableText]}>007</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>007</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.branch_code")}:</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.branch_code")}:</Text>
               <TouchableOpacity onPress={() => copyToClipboard("863")}>
-                <Text style={[styles.value, styles.copyableText]}>863</Text>
+                <Text style={[styles.value, styles.copyableText, { color: '#007efa' }]}>863</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.bank_name")}:</Text>
-              <Text style={styles.value}>JPMorgan Chase Bank N.A., Hong Kong Branch</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.bank_name")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>JPMorgan Chase Bank N.A., Hong Kong Branch</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t("offline_payment.bank_address")}:</Text>
-              <Text style={styles.value}>18/F, 20/F, 22-29/F, CHATER HOUSE, 8 CONNAUGHT ROAD CENTRAL, HONG KONG</Text>
+              <Text style={[styles.label, { color: '#64748b' }]}>{t("offline_payment.bank_address")}:</Text>
+              <Text style={[styles.value, { color: '#1e293b' }]}>18/F, 20/F, 22-29/F, CHATER HOUSE, 8 CONNAUGHT ROAD CENTRAL, HONG KONG</Text>
             </View>
           </View>
           
           <View style={styles.feeSection}>
-            <Text style={styles.feeText}>{t("offline_payment.processing_fee")}: 0%</Text>
+            <Text style={[styles.feeText, { color: '#059669' }]}>{t("offline_payment.processing_fee")}: 0%</Text>
           </View>
         </View>
 
@@ -178,10 +178,10 @@ export const OfflinePayment = () => {
         <View style={styles.contactCard}>
           <View style={styles.contactHeader}>
             <Ionicons name="help-circle-outline" size={24} color="#007efa" />
-            <Text style={styles.contactTitle}>{t("offline_payment.need_help")}</Text>
+            <Text style={[styles.contactTitle, { color: '#1e293b' }]}>{t("offline_payment.need_help")}</Text>
           </View>
           
-          <Text style={styles.contactMessage}>{t("offline_payment.contact_message")}</Text>
+          <Text style={[styles.contactMessage, { color: '#64748b' }]}>{t("offline_payment.contact_message")}</Text>
           
           <TouchableOpacity 
             style={styles.whatsappButton}
@@ -189,7 +189,7 @@ export const OfflinePayment = () => {
             activeOpacity={0.8}
           >
             <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
-            <Text style={styles.whatsappText}>{t("offline_payment.contact_whatsapp")}</Text>
+            <Text style={[styles.whatsappText, { color: '#25D366' }]}>{t("offline_payment.contact_whatsapp")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

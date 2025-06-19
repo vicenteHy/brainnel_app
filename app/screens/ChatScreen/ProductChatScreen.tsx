@@ -399,6 +399,7 @@ export const ProductChatScreen = () => {
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder={t("chat.input_product_message")}
+                placeholderTextColor="#9CA3AF"
                 multiline
               />
               <TouchableOpacity

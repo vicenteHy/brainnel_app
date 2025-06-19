@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from "react-native";
 import widthUtils from "../../../../utils/widthUtils";
 import fontSize from "../../../../utils/fontsizeUtils";
@@ -32,16 +33,16 @@ export const ShippingMethodSelector: React.FC<ShippingMethodSelectorProps> = ({
         ]}
         onPress={() => onMethodChange("maritime")}
       >
-        <View style={styles.svgContainer1}>
-          <Image
-            source={IMAGES.maritimeIcon}
-            style={{
-              width: widthUtils(24, 24).width,
-              height: widthUtils(24, 24).height,
-              tintColor: shippingMethod === "maritime" ? "#fff" : "#747474",
-            }}
-          />
-        </View>
+        <Image
+          source={IMAGES.maritimeIcon}
+          style={{
+            width: 20,
+            height: 20,
+            tintColor: shippingMethod === "maritime" ? "#fff" : "#747474",
+            marginBottom: 4,
+          }}
+          resizeMode="contain"
+        />
         <Text
           style={[
             styles.maritimeHeadingStyle,
@@ -60,16 +61,16 @@ export const ShippingMethodSelector: React.FC<ShippingMethodSelectorProps> = ({
         ]}
         onPress={() => onMethodChange("airway")}
       >
-        <View style={styles.svgContainer2}>
-          <Image
-            source={IMAGES.airwayIcon}
-            style={{
-              width: widthUtils(24, 24).width,
-              height: widthUtils(24, 24).height,
-              tintColor: shippingMethod === "airway" ? "#fff" : "#747474",
-            }}
-          />
-        </View>
+        <Image
+          source={IMAGES.airwayIcon}
+          style={{
+            width: 20,
+            height: 20,
+            tintColor: shippingMethod === "airway" ? "#fff" : "#747474",
+            marginBottom: 4,
+          }}
+          resizeMode="contain"
+        />
         <Text
           style={[
             styles.flightModeLabel,
@@ -87,57 +88,54 @@ const styles = StyleSheet.create({
   shippingMethodContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    height: widthUtils(80, 80).height,
-    paddingRight: 10,
-    paddingLeft: 10,
+    justifyContent: "space-between",
+    minHeight: 80,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     backgroundColor: "#f2f6ff",
     borderRadius: 5,
   },
   maritimeInfoBox: {
-    height: widthUtils(60, 60).height,
-    paddingRight: 19,
-    paddingLeft: 20,
+    flex: 1,
+    minHeight: 60,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginRight: 5,
     backgroundColor: "#f2f6ff",
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   airwayInfoContainer: {
-    height: widthUtils(60, 60).height,
-    paddingRight: 24,
-    paddingLeft: 25,
-    marginLeft: 10,
+    flex: 1,
+    minHeight: 60,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginLeft: 5,
     backgroundColor: "#f2f6ff",
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   activeShippingMethod: {
     backgroundColor: "#005EE4",
   },
-  svgContainer1: {
-    width: widthUtils(32, 32).width,
-    height: widthUtils(32, 32).height,
-  },
   maritimeHeadingStyle: {
-    marginTop: -5,
-    fontSize: fontSize(14),
-    fontFamily: "Segoe UI",
-    fontWeight: "700",
+    fontSize: fontSize(12),
+    fontFamily: "PingFang SC",
+    fontWeight: "600",
     color: "white",
+    textAlign: "center",
     textTransform: "capitalize",
   },
-  svgContainer2: {
-    width: widthUtils(24, 24).width,
-    height: widthUtils(24, 24).height,
-  },
   flightModeLabel: {
-    marginTop: -2,
-    fontSize: fontSize(14),
-    fontFamily: "Segoe UI",
-    fontWeight: "400",
+    fontSize: fontSize(12),
+    fontFamily: "PingFang SC",
+    fontWeight: "600",
     color: "#747474",
+    textAlign: "center",
     textTransform: "capitalize",
   },
 });

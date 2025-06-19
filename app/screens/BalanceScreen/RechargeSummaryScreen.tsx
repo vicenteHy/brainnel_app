@@ -25,6 +25,8 @@ import RechargeSummary from "./RechargeSummary";
 import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "../../constants/events";
 import { settingApi } from "../../services/api/setting";
 import { CountryList } from "../../constants/countries";
+import getPayMap from "../../utils/payMap";
+import { PaymentMethod } from "../../services/api/payApi";
 
 // 定义本地存储的国家数据类型
 interface LocalCountryData {
@@ -71,6 +73,10 @@ const RechargeSummaryScreen = () => {
   const [localSelectedCountry, setLocalSelectedCountry] = useState<LocalCountryData | null>(null);
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [loadingCountries, setLoadingCountries] = useState(false);
+  
+  // 支付方式和运营商数据
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [mobileMoneyOperators, setMobileMoneyOperators] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCountryCode = async () => {
@@ -110,8 +116,58 @@ const RechargeSummaryScreen = () => {
   useEffect(() => {
     if (paymentParams?.payment_method === "mobile_money") {
       loadCountryList();
+      loadPaymentMethods();
     }
   }, [paymentParams?.payment_method, user?.country_en]);
+
+  // 获取支付方式数据
+  const loadPaymentMethods = async () => {
+    try {
+      console.log("=== RechargeSummaryScreen 获取支付方式数据 ===");
+      const response = await payApi.getCountryPaymentMethods();
+      console.log("支付方式原始数据:", JSON.stringify(response.current_country_methods, null, 2));
+      
+      let currentCountryMethods = response.current_country_methods.filter(
+        (method) => method.key !== "balance"
+      );
+      
+      // Wave支付只在科特迪瓦显示
+      const isIvoryCoast = user?.country_en === "Ivory Coast" || 
+                          user?.country_en === "Côte d'Ivoire" || 
+                          user?.country === "科特迪瓦" ||
+                          user?.country_code === 225;
+      
+      if (!isIvoryCoast) {
+        currentCountryMethods = currentCountryMethods.filter(
+          (method) => method.key !== "wave"
+        );
+      }
+      
+      setPaymentMethods(currentCountryMethods);
+      
+      // 查找 mobile money 支付方式并提取运营商数据
+      const mobileMoneyMethod = currentCountryMethods.find(method => method.key === "mobile_money");
+      if (mobileMoneyMethod) {
+        console.log("=== Mobile Money 运营商信息 ===");
+        console.log("Mobile Money 数据:", JSON.stringify(mobileMoneyMethod, null, 2));
+        
+        if (Array.isArray(mobileMoneyMethod.value)) {
+          console.log("运营商列表:", mobileMoneyMethod.value);
+          console.log("运营商数量:", mobileMoneyMethod.value.length);
+          setMobileMoneyOperators(mobileMoneyMethod.value);
+        } else {
+          console.log("Mobile Money value 不是数组:", mobileMoneyMethod.value);
+          setMobileMoneyOperators([]);
+        }
+      } else {
+        console.log("=== 未找到 Mobile Money 支付方式 ===");
+        setMobileMoneyOperators([]);
+      }
+    } catch (error) {
+      console.error("获取支付方式失败:", error);
+      setMobileMoneyOperators([]);
+    }
+  };
 
   // 添加支付结果监听
   useEffect(() => {
@@ -452,18 +508,35 @@ const RechargeSummaryScreen = () => {
                   {t("balance.phone_modal.supported_operators")}
                 </Text>
                 <View style={styles.operatorsRow}>
-                  <Image
-                    source={require("../../../assets/img/image_7337a807.png")}
-                    style={styles.operatorSmallIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/img/image_96b927ad.png")}
-                    style={styles.operatorSmallIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/img/image_1fee7e8b.png")}
-                    style={styles.operatorSmallIcon}
-                  />
+                  {mobileMoneyOperators.length > 0 ? (
+                    mobileMoneyOperators.map((operator, index) => {
+                      console.log(`=== 渲染运营商 ${index + 1}: ${operator} ===`);
+                      console.log("图片源:", getPayMap(operator));
+                      return (
+                        <Image
+                          key={index}
+                          source={getPayMap(operator) as any}
+                          style={styles.operatorSmallIcon}
+                        />
+                      );
+                    })
+                  ) : (
+                    // 备用显示：如果没有动态数据，显示默认的科特迪瓦运营商
+                    <>
+                      <Image
+                        source={require("../../../assets/img/image_7337a807.png")}
+                        style={styles.operatorSmallIcon}
+                      />
+                      <Image
+                        source={require("../../../assets/img/image_96b927ad.png")}
+                        style={styles.operatorSmallIcon}
+                      />
+                      <Image
+                        source={require("../../../assets/img/image_1fee7e8b.png")}
+                        style={styles.operatorSmallIcon}
+                      />
+                    </>
+                  )}
                 </View>
               </View>
             </>
@@ -553,8 +626,8 @@ const RechargeSummaryScreen = () => {
                       
                       // 保存选择的国家到本地存储
                       const countryToSave: LocalCountryData = {
-                        code: item.country_code || "",
-                        flag: item.flag || "",
+                        code: item.country.toString(),
+                        flag: "",
                         country: item.country,
                         name: item.name_en,
                         phoneCode: `+${item.country}`,

@@ -702,6 +702,7 @@ export const PreviewOrder = () => {
                         value={phoneNumber}
                         onChangeText={handlePhoneNumberChange}
                         placeholder={t("order.preview.phone_placeholder")}
+                        placeholderTextColor="#9CA3AF"
                         keyboardType="phone-pad"
                       />
                     </View>

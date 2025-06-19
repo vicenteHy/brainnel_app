@@ -233,6 +233,7 @@ export const WhatsAppLoginScreen = () => {
               <TextInput
                 style={styles.phoneInput}
                 placeholder={t('whatsapp.phone_placeholder')}
+                placeholderTextColor="#9CA3AF"
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
@@ -283,6 +284,7 @@ export const WhatsAppLoginScreen = () => {
             <TextInput
               style={styles.codeInput}
               placeholder={t('whatsapp.code_placeholder')}
+              placeholderTextColor="#9CA3AF"
               value={verificationCode}
               onChangeText={setVerificationCode}
               keyboardType="number-pad"

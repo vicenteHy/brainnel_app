@@ -189,6 +189,7 @@ export const AddRess = () => {
                     <TextInput
                       style={styles.pingFangText}
                       placeholder="请输入名"
+                      placeholderTextColor="#9CA3AF"
                       value={formData.receiver_first_name}
                       onChangeText={(text) =>
                         setFormData({ ...formData, receiver_first_name: text })
@@ -210,6 +211,7 @@ export const AddRess = () => {
                     <TextInput
                       style={styles.pingFangText}
                       placeholder="请输入姓"
+                      placeholderTextColor="#9CA3AF"
                       value={formData.receiver_last_name}
                       onChangeText={(text) =>
                         setFormData({ ...formData, receiver_last_name: text })
@@ -258,6 +260,7 @@ export const AddRess = () => {
                         <TextInput
                           style={styles.pingFangText1}
                           placeholder="请输入手机号码"
+                          placeholderTextColor="#9CA3AF"
                           value={formData.receiver_phone}
                           onChangeText={(text) =>
                             setFormData({
@@ -282,6 +285,7 @@ export const AddRess = () => {
                         <TextInput
                           style={styles.pingFangText1}
                           placeholder="请再次输入手机号码"
+                          placeholderTextColor="#9CA3AF"
                           value={formData.receiver_phone_again}
                           onChangeText={(text) =>
                             setFormData({
@@ -313,6 +317,7 @@ export const AddRess = () => {
                     <TextInput
                       style={styles.pingFangText}
                       placeholder="请输入WhatsApp号码"
+                      placeholderTextColor="#9CA3AF"
                       value={formData.whatsapp_phone}
                       onChangeText={(text) =>
                         setFormData({ ...formData, whatsapp_phone: text })

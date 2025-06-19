@@ -156,6 +156,7 @@ const ProductCardModals: React.FC<ProductCardModalsProps> = ({
               onChangeText={onQuantityInputChange}
               keyboardType="number-pad"
               autoFocus
+              placeholderTextColor="#9CA3AF"
             />
             <View style={styles.buttonContainer}>
               <TouchableOpacity

@@ -35,16 +35,16 @@ export const styles = StyleSheet.create({
     paddingLeft: 36,
   },
   timeDisplay: {
-    width: widthUtils(42, 42).width,
+    minWidth: 42,
     fontSize: fontSize(17),
-    fontFamily: "SF Pro",
+    fontFamily: "PingFang SC",
     fontWeight: "600",
     color: "white",
     textAlign: "center",
   },
   timeImageContainer: {
-    width: widthUtils(54, 154).width,
-    height: widthUtils(54, 154).height,
+    width: 54,
+    height: 54,
   },
   shippingCostContainer: {
     flexDirection: "row",
@@ -53,8 +53,8 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   svgContainer: {
-    width: widthUtils(18, 18).width,
-    height: widthUtils(18, 18).height,
+    width: 18,
+    height: 18,
     position: "absolute",
     left: 0,
   },
@@ -69,7 +69,7 @@ export const styles = StyleSheet.create({
     width: "100%",
   },
   shippingCalculatorContainer: {
-    marginTop: widthUtils(100, 100).height,
+    marginTop: 80,
     paddingTop: 18,
     paddingRight: 20,
     paddingBottom: 28,
@@ -84,12 +84,13 @@ export const styles = StyleSheet.create({
   },
   primaryButton: {
     width: "100%",
-    height: widthUtils(50, 50).height,
+    minHeight: 50,
     marginTop: 34,
     backgroundColor: "#002fa7",
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 15,
   },
   backButton: {
     padding: 10,

@@ -65,13 +65,13 @@ export const MemberIntroduction = () => {
             <View style={styles.VipContainerTop}>
               <View style={styles.VipContainerBox}>
                 <View style={styles.Vip}>
-                  <Text style={styles.VipText}>
+                  <Text style={[styles.VipText, { color: '#6b3611' }]}>
                     VIP {userStore.user?.vip_level || 0}
                   </Text>
                 </View>
                 <View style={styles.VipLine}>
                   <View style={styles.lineText}>
-                    <Text style={styles.lineTextText}>{t("member.vip.progress", {current: userStore.user?.points || 0, target: userStore.user.next_level_points_threshold})}</Text>
+                    <Text style={[styles.lineTextText, { color: '#6b3611' }]}>{t("member.vip.progress", {current: userStore.user?.points || 0, target: userStore.user.next_level_points_threshold})}</Text>
                   </View>
                   <View style={styles.line}>
                     <View
@@ -89,7 +89,7 @@ export const MemberIntroduction = () => {
                     navigation.navigate("ChatScreen", {});
                   }}>
                     <WatchAppIcon size={20} color="#fff" />
-                    <Text style={styles.VipContainerTopPhoneBoxTopText}>
+                    <Text style={[styles.VipContainerTopPhoneBoxTopText, { color: '#ffffff' }]}>
                       {t("member.client_service")}
                     </Text>
                   </TouchableOpacity>
@@ -99,7 +99,7 @@ export const MemberIntroduction = () => {
 
             <View style={styles.VipContainerBottom}>
               <View style={styles.left}>
-                <Text style={styles.leftText}>
+                <Text style={[styles.leftText, { color: '#6b3611' }]}>
                   {t("member.vip.spend_more_text")}
                 </Text>
               </View>
@@ -110,7 +110,7 @@ export const MemberIntroduction = () => {
                 }}
               >
                 <View style={styles.rechargeContainer}>
-                  <Text style={styles.rechargeText}>{t("member.recharge")}</Text>
+                  <Text style={[styles.rechargeText, { color: '#6b3611' }]}>{t("member.recharge")}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -119,16 +119,16 @@ export const MemberIntroduction = () => {
 
         <View style={styles.membershipBenefitsContainer}>
           <View style={styles.membershipBenefitsSection1}>
-            <Text style={styles.membershipBenefitsTitle}>
+            <Text style={[styles.membershipBenefitsTitle, { color: '#000000' }]}>
               {t("member.benefits.title")}
             </Text>
             <TouchableOpacity style={styles.membershipBenefitsButton}>
-              <Text style={styles.buttonText}>{t("member.learn_more")}</Text>
+              <Text style={[styles.buttonText, { color: '#7e522c' }]}>{t("member.learn_more")}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.membershipBenefitsSection}>
-            <Text style={styles.membershipBenefitsDescription}>
+            <Text style={[styles.membershipBenefitsDescription, { color: '#000000' }]}>
               {t("member.benefits.description")}
             </Text>
 
@@ -137,14 +137,14 @@ export const MemberIntroduction = () => {
               <View style={styles.membershipPricingSection}>
                 <View style={styles.membershipPricingSection1}>
                   <View style={styles.memberPricingBadge}>
-                    <Text style={styles.memberPricingBadgeText}>01</Text>
+                    <Text style={[styles.memberPricingBadgeText, { color: '#ffffff' }]}>01</Text>
                   </View>
                   <View style={styles.memberPricingSection1}>
                     <View style={styles.memberPricingDetailsContainer}>
-                      <Text style={styles.memberPriceDescription}>
+                      <Text style={[styles.memberPriceDescription, { color: '#002fa7' }]}>
                         {t("member.benefits.pricing.title")}
                       </Text>
-                      <Text style={styles.vipDiscountDetailsTextStyle}>
+                      <Text style={[styles.vipDiscountDetailsTextStyle, { color: '#000000' }]}>
                         {t("member.benefits.pricing.description")}
                       </Text>
                     </View>
@@ -164,18 +164,18 @@ export const MemberIntroduction = () => {
                 <View style={styles.serviceCard}>
                   <View style={styles.serviceSection}>
                     <View style={styles.serviceDetailsContainer}>
-                      <Text style={styles.dedicatedServiceTextStyle}>
+                      <Text style={[styles.dedicatedServiceTextStyle, { color: '#002fa7' }]}>
                         {t("member.benefits.dedicated_service.title")}
                       </Text>
                       <Text
-                        style={styles.orderTrackingServiceDescriptionTextStyle}
+                        style={[styles.orderTrackingServiceDescriptionTextStyle, { color: '#271f18' }]}
                       >
                         {t("member.benefits.dedicated_service.description")}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.dedicatedServiceBadge}>
-                    <Text style={styles.dedicatedServiceBadgeText}>02</Text>
+                    <Text style={[styles.dedicatedServiceBadgeText, { color: '#ffffff' }]}>02</Text>
                   </View>
                 </View>
                 <View style={styles.shoppingExperienceDetails}>
@@ -190,15 +190,15 @@ export const MemberIntroduction = () => {
               <View style={styles.photoServiceSection}>
                 <View style={styles.photoServiceContainer1}>
                   <View style={styles.photoRequestServiceBlock}>
-                    <Text style={styles.memberPriceDescription}>
+                    <Text style={[styles.memberPriceDescription, { color: '#002fa7' }]}>
                       {t("member.benefits.photo_service.title")}
                     </Text>
-                    <Text style={styles.vipDiscountDetailsTextStyle}>
+                    <Text style={[styles.vipDiscountDetailsTextStyle, { color: '#000000' }]}>
                       {t("member.benefits.photo_service.description")}
                     </Text>
                   </View>
                   <View style={styles.photoServiceBadge}>
-                    <Text style={styles.photoServiceBadgeText}>03</Text>
+                    <Text style={[styles.photoServiceBadgeText, { color: '#ffffff' }]}>03</Text>
                   </View>
                 </View>
 
@@ -215,18 +215,18 @@ export const MemberIntroduction = () => {
                 <View style={styles.serviceCard}>
                   <View style={styles.serviceSection}>
                     <View style={styles.serviceDetailsContainer}>
-                      <Text style={styles.dedicatedServiceTextStyle}>
+                      <Text style={[styles.dedicatedServiceTextStyle, { color: '#002fa7' }]}>
                         {t("member.benefits.inspection.title")}
                       </Text>
                       <Text
-                        style={styles.orderTrackingServiceDescriptionTextStyle}
+                        style={[styles.orderTrackingServiceDescriptionTextStyle, { color: '#271f18' }]}
                       >
                         {t("member.benefits.inspection.description")}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.dedicatedServiceBadge}>
-                    <Text style={styles.dedicatedServiceBadgeText}>04</Text>
+                    <Text style={[styles.dedicatedServiceBadgeText, { color: '#ffffff' }]}>04</Text>
                   </View>
                 </View>
                 <View style={styles.shoppingExperienceDetails}>
@@ -241,15 +241,15 @@ export const MemberIntroduction = () => {
               <View style={styles.photoServiceSection}>
                 <View style={styles.photoServiceContainer1}>
                   <View style={styles.photoRequestServiceBlock}>
-                    <Text style={styles.memberPriceDescription}>
+                    <Text style={[styles.memberPriceDescription, { color: '#002fa7' }]}>
                       {t("member.benefits.forwarder.title")}
                     </Text>
-                    <Text style={styles.vipDiscountDetailsTextStyle}>
+                    <Text style={[styles.vipDiscountDetailsTextStyle, { color: '#000000' }]}>
                       {t("member.benefits.forwarder.description")}
                     </Text>
                   </View>
                   <View style={styles.photoServiceBadge}>
-                    <Text style={styles.photoServiceBadgeText}>05</Text>
+                    <Text style={[styles.photoServiceBadgeText, { color: '#ffffff' }]}>05</Text>
                   </View>
                 </View>
 
@@ -266,18 +266,18 @@ export const MemberIntroduction = () => {
                 <View style={styles.serviceCard}>
                   <View style={styles.serviceSection}>
                     <View style={styles.serviceDetailsContainer}>
-                      <Text style={styles.dedicatedServiceTextStyle}>
+                      <Text style={[styles.dedicatedServiceTextStyle, { color: '#002fa7' }]}>
                         {t("member.benefits.custom_products.title")}
                       </Text>
                       <Text
-                        style={styles.orderTrackingServiceDescriptionTextStyle}
+                        style={[styles.orderTrackingServiceDescriptionTextStyle, { color: '#271f18' }]}
                       >
                         {t("member.benefits.custom_products.description")}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.dedicatedServiceBadge}>
-                    <Text style={styles.dedicatedServiceBadgeText}>06</Text>
+                    <Text style={[styles.dedicatedServiceBadgeText, { color: '#ffffff' }]}>06</Text>
                   </View>
                 </View>
                 <View style={styles.shoppingExperienceDetails}>
@@ -293,15 +293,15 @@ export const MemberIntroduction = () => {
 
         <View style={styles.membershipCard}>
           <View style={styles.inquirySection}>
-            <Text style={styles.gradientHeading}>{t("member.how_to_become")}</Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.cumulativeInfo}>{t("member.calculation_part1")} </Text>
-              <Text style={styles.highlightedText}>
+            <Text style={[styles.gradientHeading, { color: '#fa934f' }]}>{t("member.how_to_become")}</Text>
+            <Text style={[styles.infoText, { color: '#fdd08f' }]}>
+              <Text style={[styles.cumulativeInfo, { color: '#fdd08f' }]}>{t("member.calculation_part1")} </Text>
+              <Text style={[styles.highlightedText, { color: '#fdd08f' }]}>
                 {t("member.calculation_part2")}
               </Text>
-              <Text style={styles.cumulativeInfo}> {t("member.calculation_part3")}</Text>
-              <Text style={styles.totalStats}> 365 </Text>
-              <Text style={styles.cumulativeInfo}>{t("member.calculation_part4")}</Text>
+              <Text style={[styles.cumulativeInfo, { color: '#fdd08f' }]}> {t("member.calculation_part3")}</Text>
+              <Text style={[styles.totalStats, { color: '#fdd08f' }]}> 365 </Text>
+              <Text style={[styles.cumulativeInfo, { color: '#fdd08f' }]}>{t("member.calculation_part4")}</Text>
             </Text>
           </View>
 
@@ -319,18 +319,18 @@ export const MemberIntroduction = () => {
                   source={require("../../../assets/img/image_7f13ecf8.png")}
                   style={styles.cardImage}
                 />
-                <Text style={styles.majesticText}>1</Text>
+                <Text style={[styles.majesticText, { color: '#3496ff' }]}>1</Text>
               </View>
               <View style={styles.amountContainer}>
-                <Text style={styles.amountMessage}>
+                <Text style={[styles.amountMessage, { color: '#5fa9ff' }]}>
                   {t("member.vip.consumption_total")}
                 </Text>
-                <Text style={styles.amountLabel}>500 000 FCFA</Text>
+                <Text style={[styles.amountLabel, { color: '#2a8bfa' }]}>500 000 FCFA</Text>
               </View>
-              <Text style={styles.discountMessage}>
-                <Text>{t("member.vip.discount_part1")} </Text>
-                <Text style={styles.discountBold}>5%</Text>
-                <Text> {t("member.vip.discount_part2")}</Text>
+              <Text style={[styles.discountMessage, { color: '#2a8bfa' }]}>
+                <Text style={{ color: '#2a8bfa' }}>{t("member.vip.discount_part1")} </Text>
+                <Text style={[styles.discountBold, { color: '#2a8bfa' }]}>5%</Text>
+                <Text style={{ color: '#2a8bfa' }}> {t("member.vip.discount_part2")}</Text>
               </Text>
             </ImageBackground>
             {/* 第二张卡片 */}
@@ -359,7 +359,7 @@ export const MemberIntroduction = () => {
                 </Text>
               </View>
               <Text style={[styles.discountMessage, { color: "#33748e" }]}>
-                {t("member.vip.discount_part1")} <Text style={styles.discountBold}>10%</Text> {t("member.vip.discount_part2")}
+                {t("member.vip.discount_part1")} <Text style={[styles.discountBold, { color: "#33748e" }]}>10%</Text> {t("member.vip.discount_part2")}
               </Text>
             </ImageBackground>
             {/* 第三张卡片 */}
@@ -388,7 +388,7 @@ export const MemberIntroduction = () => {
                 </Text>
               </View>
               <Text style={[styles.discountMessage, { color: "#b76101" }]}>
-                {t("member.vip.discount_part1")} <Text style={styles.discountBold}>12%</Text> {t("member.vip.discount_part2")}
+                {t("member.vip.discount_part1")} <Text style={[styles.discountBold, { color: "#b76101" }]}>12%</Text> {t("member.vip.discount_part2")}
               </Text>
             </ImageBackground>
             {/* 第四张卡片 */}
@@ -417,7 +417,7 @@ export const MemberIntroduction = () => {
                 </Text>
               </View>
               <Text style={[styles.discountMessage, { color: "#3d35fa" }]}>
-                {t("member.vip.discount_part1")} <Text style={styles.discountBold}>15%</Text> {t("member.vip.discount_part2")}
+                {t("member.vip.discount_part1")} <Text style={[styles.discountBold, { color: "#3d35fa" }]}>15%</Text> {t("member.vip.discount_part2")}
               </Text>
             </ImageBackground>
             {/* 第五张卡片 */}
@@ -447,7 +447,7 @@ export const MemberIntroduction = () => {
                 </Text>
               </View>
               <Text style={[styles.discountMessage, { color: "#fed78d" }]}>
-                {t("member.vip.discount_part1")} <Text style={styles.discountBold}>20%</Text> {t("member.vip.discount_part2")}
+                {t("member.vip.discount_part1")} <Text style={[styles.discountBold, { color: "#fed78d" }]}>20%</Text> {t("member.vip.discount_part2")}
               </Text>
             </ImageBackground>
           </View>
@@ -463,7 +463,7 @@ export const MemberIntroduction = () => {
               <View style={styles.importantInfoContainer2}>
                 <View>
                   <View style={styles.importantInfoContainer}>
-                    <Text style={styles.importantInfoHeading}>
+                    <Text style={[styles.importantInfoHeading, { color: 'white' }]}>
                       {t("member.important_info.title")}
                     </Text>
                   </View>
@@ -473,7 +473,7 @@ export const MemberIntroduction = () => {
                         <BookLabIcon />
                       </View>
                     </View>
-                    <Text style={styles.vipStatusMessageTextStyle}>
+                    <Text style={[styles.vipStatusMessageTextStyle, { color: 'white' }]}>
                       {t("member.important_info.auto_update")}
                     </Text>
                   </View>
@@ -485,12 +485,12 @@ export const MemberIntroduction = () => {
                         <BookLabIcon />
                       </View>
                     </View>
-                    <Text style={styles.vipDescriptionTextStyle}>
+                    <Text style={[styles.vipDescriptionTextStyle, { color: 'white' }]}>
                       {t("member.important_info.reset_rule")}
                     </Text>
                   </View>
                   <View style={styles.paragraphContainer}>
-                    <Text style={styles.exampleParagraphStyle}>
+                    <Text style={[styles.exampleParagraphStyle, { color: '#ffffffcc' }]}>
                       {t("member.important_info.example")}
                     </Text>
                   </View>

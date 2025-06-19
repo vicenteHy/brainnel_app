@@ -118,7 +118,7 @@ export const OrderDetails = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <BackIcon />
           </TouchableOpacity>
-          <Text style={styles.title}>{t("order.details")}</Text>
+          <Text style={[styles.title, { color: '#000000' }]}>{t("order.details")}</Text>
           <TouchableOpacity onPress={handleChatNowPress}>
             <MassageIcon size={22} />
           </TouchableOpacity>
@@ -140,7 +140,7 @@ export const OrderDetails = () => {
                 <View style={styles.orderStatusContent}>
                   <View style={styles.orderStatusTitle}>
                     <OrderIcon size={20} color="#f77f3a" />
-                    <Text style={styles.orderStatusTitleText}>
+                    <Text style={[styles.orderStatusTitleText, { color: '#000000' }]}>
                       {t("order.status_title")}
                     </Text>
                   </View>
@@ -165,7 +165,7 @@ export const OrderDetails = () => {
                     <View style={styles.orderInfoHeader}>
                       <View style={styles.orderStatusTitleContainer}>
                         <InfoIcon size={20} color="#f77f3a" />
-                        <Text style={styles.orderStatusTitleText}>
+                        <Text style={[styles.orderStatusTitleText, { color: '#000000' }]}>
                           {t("order.information")}
                         </Text>
                       </View>
@@ -175,21 +175,21 @@ export const OrderDetails = () => {
                   </View>
                   <View style={styles.orderStatusContentPreview}>
                     <View style={styles.orderInfoItem}>
-                      <Text style={styles.orderInfoLabel}>{t("order.id")}</Text>
-                      <Text style={styles.orderInfoValue}>
+                      <Text style={[styles.orderInfoLabel, { color: '#666666' }]}>{t("order.id")}</Text>
+                      <Text style={[styles.orderInfoValue, { color: '#000000' }]}>
                         {orderDetails.order_no}
                       </Text>
                     </View>
                     <View style={styles.orderInfoItem}>
-                      <Text style={styles.orderInfoLabel}>
+                      <Text style={[styles.orderInfoLabel, { color: '#666666' }]}>
                         {t("order.create_time")}
                       </Text>
-                      <Text style={styles.orderInfoValue}>
+                      <Text style={[styles.orderInfoValue, { color: '#000000' }]}>
                         {orderDetails.create_time}
                       </Text>
                     </View>
                     <View style={styles.orderInfoItem}>
-                      <Text style={styles.orderInfoLabel}>
+                      <Text style={[styles.orderInfoLabel, { color: '#666666' }]}>
                         {t("order.shipping_type")}
                       </Text>
                       <View style={styles.shippingTypeContainer}>
@@ -197,7 +197,8 @@ export const OrderDetails = () => {
                           styles.shippingTypeText,
                           orderDetails.shipping_type === 0 
                             ? styles.shippingTypeSea 
-                            : styles.shippingTypeAir
+                            : styles.shippingTypeAir,
+                          { color: orderDetails.shipping_type === 0 ? '#3498db' : '#e74c3c' }
                         ]}>
                           {orderDetails.shipping_type === 0
                             ? t("order.shipping.sea")
@@ -210,10 +211,10 @@ export const OrderDetails = () => {
                     {/* 取件码 - 在待发货、运输中、已完成状态时显示 */}
                     {route.params.status >= 1 && route.params.status <= 3 && (
                       <View style={styles.orderInfoItem}>
-                        <Text style={styles.orderInfoLabel}>
+                        <Text style={[styles.orderInfoLabel, { color: '#666666' }]}>
                           {t("order.verification_code")}
                         </Text>
-                        <Text style={styles.orderInfoValue}>
+                        <Text style={[styles.orderInfoValue, { color: '#000000' }]}>
                           {orderDetails.verification_code || '--'}
                         </Text>
                       </View>
@@ -222,10 +223,10 @@ export const OrderDetails = () => {
                     {/* 货架号 - 在待发货、运输中、已完成状态时显示 */}
                     {route.params.status >= 1 && route.params.status <= 3 && (
                       <View style={styles.orderInfoItem}>
-                        <Text style={styles.orderInfoLabel}>
+                        <Text style={[styles.orderInfoLabel, { color: '#666666' }]}>
                           {t("order.location_code")}
                         </Text>
-                        <Text style={styles.orderInfoValue}>
+                        <Text style={[styles.orderInfoValue, { color: '#000000' }]}>
                           {orderDetails.location_code || '--'}
                         </Text>
                       </View>
@@ -239,41 +240,41 @@ export const OrderDetails = () => {
                 <View style={styles.orderStatusContent}>
                   <View style={styles.orderStatusTitle}>
                     <AddressIcon size={20} color={"#f77f3a"} />
-                    <Text style={styles.orderStatusTitleText}>
+                    <Text style={[styles.orderStatusTitleText, { color: '#000000' }]}>
                       {t("order.delivery_info")}
                     </Text>
                   </View>
                   <View style={styles.orderStatusContentPreview}>
                     <View style={styles.deliveryInfoContainer}>
                       <View style={styles.warehouseSection}>
-                        <Text style={styles.sectionTitle}>
+                        <Text style={[styles.sectionTitle, { color: '#000000' }]}>
                           {t("order.warehouse")}
                         </Text>
                         <View style={styles.warehouseInfo}>
-                          <Text style={styles.warehouseAddress}>
+                          <Text style={[styles.warehouseAddress, { color: '#666666' }]}>
                             {orderDetails.receiver_address}
                           </Text>
                         </View>
                       </View>
 
                       <View style={styles.recipientSection}>
-                        <Text style={styles.sectionTitle}>
+                        <Text style={[styles.sectionTitle, { color: '#000000' }]}>
                           {t("order.recipient")}
                         </Text>
                         <View style={styles.recipientInfo}>
-                          <Text style={styles.recipientName}>
+                          <Text style={[styles.recipientName, { color: '#000000' }]}>
                             {orderDetails.receiver_name}
                           </Text>
                           <View style={styles.contactMethods}>
                             <View style={styles.contactItem}>
                               <PhoneIcon size={14} color="#666" />
-                              <Text style={styles.contactText}>
+                              <Text style={[styles.contactText, { color: '#666666' }]}>
                                 {formatPhoneNumber(orderDetails.receiver_phone)}
                               </Text>
                             </View>
                             <View style={styles.contactItem}>
                               <WhatsAppIcon size={14} />
-                              <Text style={styles.contactText}>
+                              <Text style={[styles.contactText, { color: '#666666' }]}>
                                 {formatPhoneNumber(orderDetails.receiver_phone)}
                               </Text>
                             </View>
@@ -290,7 +291,7 @@ export const OrderDetails = () => {
                 <View style={styles.orderStatusContent}>
                   <View style={styles.orderStatusTitle}>
                     <ShoppingBagIcon size={18} color="#f77f3a" />
-                    <Text style={styles.orderStatusTitleText}>
+                    <Text style={[styles.orderStatusTitleText, { color: '#000000' }]}>
                       {t("order.product_info")} ({orderDetails.items.length})
                     </Text>
                   </View>
@@ -305,7 +306,7 @@ export const OrderDetails = () => {
                             />
                           </View>
                           <View style={styles.productItemInfo}>
-                            <Text style={styles.productItemInfoNameText}>
+                            <Text style={[styles.productItemInfoNameText, { color: '#000000' }]}>
                               {getOrderTransLanguage(item) ||
                                 item.product_name_fr}
                             </Text>
@@ -313,7 +314,7 @@ export const OrderDetails = () => {
                               {item.sku_attributes.map((sku, index) => (
                                 <Text
                                   key={index}
-                                  style={styles.productItemInfoSkuText}
+                                  style={[styles.productItemInfoSkuText, { color: '#666666' }]}
                                 >
                                   {getAttributeNameTransLanguage(sku) ||
                                     sku.attribute_name}
@@ -323,13 +324,13 @@ export const OrderDetails = () => {
                               ))}
                             </View>
                             <View style={styles.productPriceContainer}>
-                              <Text style={styles.productPrice}>
+                              <Text style={[styles.productPrice, { color: '#ff6000' }]}>
                                 {item.total_price} {orderDetails.currency}
                               </Text>
                             </View>
                           </View>
                           <View style={styles.productItemNum}>
-                            <Text style={styles.productItemNumText}>
+                            <Text style={[styles.productItemNumText, { color: '#666666' }]}>
                               x{item.quantity}
                             </Text>
                           </View>
@@ -344,7 +345,7 @@ export const OrderDetails = () => {
                       onPress={() => addToCart(orderDetails.items)}
                     >
                       <CardIcon size={16} color="#0098ef" />
-                      <Text style={styles.addToCartText}>
+                      <Text style={[styles.addToCartText, { color: '#0098ef' }]}>
                         {t("order.add_to_cart")}
                       </Text>
                     </TouchableOpacity>
@@ -357,26 +358,26 @@ export const OrderDetails = () => {
                 <View style={styles.orderStatusContent}>
                   <View style={styles.orderStatusTitle}>
                     <PowerIcon size={20} color="#f77f3a" />
-                    <Text style={styles.orderStatusTitleText}>
+                    <Text style={[styles.orderStatusTitleText, { color: '#000000' }]}>
                       {t("order.price_details")}
                     </Text>
                   </View>
                   <View style={styles.orderStatusContentPreview}>
                     <View style={styles.priceBreakdown}>
                       <View style={styles.priceItem}>
-                        <Text style={styles.priceLabel}>
+                        <Text style={[styles.priceLabel, { color: '#666666' }]}>
                           {t("order.platform_shipping")}
                         </Text>
-                        <Text style={styles.priceValue}>
+                        <Text style={[styles.priceValue, { color: '#000000' }]}>
                           {orderDetails.domestic_shipping_fee}{" "}
                           {orderDetails.currency}
                         </Text>
                       </View>
                       <View style={styles.priceItem}>
-                        <Text style={styles.priceLabel}>
+                        <Text style={[styles.priceLabel, { color: '#666666' }]}>
                           {t("order.international_shipping")}
                         </Text>
-                        <Text style={styles.priceValue}>
+                        <Text style={[styles.priceValue, { color: '#000000' }]}>
                           {orderDetails.shipping_fee} {orderDetails.currency}
                         </Text>
                       </View>
@@ -386,8 +387,8 @@ export const OrderDetails = () => {
                     
                     <View style={styles.totalSection}>
                       <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>{t("order.total")}</Text>
-                        <Text style={styles.totalPrice}>
+                        <Text style={[styles.totalLabel, { color: '#000000' }]}>{t("order.total")}</Text>
+                        <Text style={[styles.totalPrice, { color: '#ff6000' }]}>
                           {orderDetails.total_amount} {orderDetails.currency}
                         </Text>
                       </View>
@@ -419,7 +420,7 @@ export const OrderDetails = () => {
                     }
                   }}
                 >
-                  <Text style={styles.bottomButtonText1}>
+                  <Text style={[styles.bottomButtonText1, { color: '#666666' }]}>
                     {t("order.cancel")}
                   </Text>
                 </TouchableOpacity>
@@ -430,7 +431,7 @@ export const OrderDetails = () => {
                     orderData: orderDetails
                   })}
                 >
-                  <Text style={styles.bottomButtonText}>{t("order.pay")}</Text>
+                  <Text style={[styles.bottomButtonText, { color: '#ffffff' }]}>{t("order.pay")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -443,7 +444,7 @@ export const OrderDetails = () => {
                   style={styles.bottomButton1}
                   onPress={() => addToCart(orderDetails.items)}
                 >
-                  <Text style={styles.bottomButtonText1}>
+                  <Text style={[styles.bottomButtonText1, { color: '#666666' }]}>
                     {t("order.add_to_cart")}
                   </Text>
                 </TouchableOpacity>
@@ -451,7 +452,7 @@ export const OrderDetails = () => {
                   style={styles.bottomButton}
                   onPress={() => reorderHandle(orderDetails)}
                 >
-                  <Text style={styles.bottomButtonText}>
+                  <Text style={[styles.bottomButtonText, { color: '#ffffff' }]}>
                     {t("order.reorder")}
                   </Text>
                 </TouchableOpacity>
@@ -459,7 +460,7 @@ export const OrderDetails = () => {
             )}
           </View>
         ) : (
-          <Text>{t("order.unable_to_load")}</Text>
+          <Text style={{ color: '#666666' }}>{t("order.unable_to_load")}</Text>
         )}
       </View>
 
@@ -475,14 +476,14 @@ export const OrderDetails = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: '#000000' }]}>
                 {t("order.preview.select_country_modal")}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowCountryModal(false)}
                 style={styles.closeButtonContainer}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={[styles.closeButtonText, { color: '#666666' }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
@@ -507,6 +508,7 @@ export const OrderDetails = () => {
                       styles.buttonTextDark,
                       selectedCountry?.country === item.country &&
                         styles.currencyButtonTextActive,
+                      { color: selectedCountry?.country === item.country ? '#ff6000' : '#000000' }
                     ]}
                   >
                     {getCountryTransLanguage(item)} (+{item.country})
@@ -531,7 +533,7 @@ export const OrderDetails = () => {
             <View style={styles.modalWarningIcon}>
               <IconComponent name="exclamation" size={28} color="#FF5100" />
             </View>
-            <Text style={[styles.modalPromptText, styles.modalCancelText]}>
+            <Text style={[styles.modalPromptText, styles.modalCancelText, { color: '#000000' }]}>
               {t("order.confirm_cancel")}
             </Text>
             <View style={styles.modalCancelButtonsContainer}>
@@ -542,7 +544,7 @@ export const OrderDetails = () => {
                 ]}
                 onPress={() => setShowCancelModal(false)}
               >
-                <Text style={styles.modalCancelButtonOutlineText}>
+                <Text style={[styles.modalCancelButtonOutlineText, { color: '#666666' }]}>
                   {t("order.no")}
                 </Text>
               </TouchableOpacity>
@@ -557,7 +559,7 @@ export const OrderDetails = () => {
                 {isCancelling ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.modalCancelButtonFilledText}>
+                  <Text style={[styles.modalCancelButtonFilledText, { color: '#ffffff' }]}>
                     {t("order.yes")}
                   </Text>
                 )}

@@ -55,6 +55,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({
                 value={formData.name}
                 onChangeText={(text) => updateFormData('name', text)}
                 placeholder={t('banner.inquiry.enter_product_name')}
+                placeholderTextColor="#9CA3AF"
                 returnKeyType="done"
                 onSubmitEditing={dismissKeyboard}
               />
@@ -72,6 +73,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({
                 value={formData.quantity}
                 onChangeText={(text) => updateFormData('quantity', text)}
                 placeholder={t('banner.inquiry.enter_quantity')}
+                placeholderTextColor="#9CA3AF"
                 keyboardType="numeric"
                 returnKeyType="done"
                 onSubmitEditing={dismissKeyboard}
@@ -86,6 +88,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({
                 value={formData.material}
                 onChangeText={(text) => updateFormData('material', text)}
                 placeholder={t('banner.inquiry.enter_material')}
+                placeholderTextColor="#9CA3AF"
                 returnKeyType="done"
                 onSubmitEditing={dismissKeyboard}
               />
@@ -99,6 +102,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({
               value={formData.link}
               onChangeText={(text) => updateFormData('link', text)}
               placeholder={t('banner.inquiry.enter_link')}
+              placeholderTextColor="#9CA3AF"
               multiline={true}
               textAlignVertical="top"
               blurOnSubmit={true}
@@ -114,6 +118,7 @@ export const InquiryForm: React.FC<InquiryFormProps> = ({
               value={formData.remark}
               onChangeText={(text) => updateFormData('remark', text)}
               placeholder={t('banner.inquiry.enter_remark')}
+              placeholderTextColor="#9CA3AF"
               multiline={true}
               textAlignVertical="top"
               blurOnSubmit={true}

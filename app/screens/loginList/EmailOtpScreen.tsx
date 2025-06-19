@@ -163,6 +163,7 @@ export const EmailOtpScreen = () => {
           <TextInput
             style={[styles.input, error && styles.inputError]}
             placeholder={t('emailLogin.verificationCode.placeholder') || '请输入4位验证码'}
+            placeholderTextColor="#9CA3AF"
             value={otp}
             onChangeText={(text) => {
               const numericText = text.replace(/\D/g, '').slice(0, 4);

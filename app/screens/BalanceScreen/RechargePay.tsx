@@ -37,7 +37,7 @@ export const RechargePay = () => {
     
     if (method === "wave" || method === "mobile_money") {
       console.log(`开始${method}充值状态轮询...`);
-      console.log("调用API: /api/recharge/" + recharge_id + "/payment-status/");
+      console.log("调用API: /api/" + recharge_id + "/payment-status/");
       
       payApi
         .rechargePaymentStatus(recharge_id)

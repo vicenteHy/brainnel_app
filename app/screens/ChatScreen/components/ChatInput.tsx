@@ -24,6 +24,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         value={inputText}
         onChangeText={userLoggedIn ? onTextChange : undefined}
         placeholder={t("chat.input_message")}
+        placeholderTextColor="#999999"
         multiline
         editable={userLoggedIn}
       />

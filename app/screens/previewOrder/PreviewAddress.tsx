@@ -425,6 +425,7 @@ export const PreviewAddress = () => {
                           <TextInput
                             style={styles.pingFangText}
                             placeholder={t("address.placeholder.first_name")}
+                            placeholderTextColor="#9CA3AF"
                             value={formData.receiver_first_name}
                             onChangeText={(text) =>
                               setFormData({
@@ -449,6 +450,7 @@ export const PreviewAddress = () => {
                           <TextInput
                             style={styles.pingFangText}
                             placeholder={t("address.placeholder.last_name")}
+                            placeholderTextColor="#9CA3AF"
                             value={formData.receiver_last_name}
                             onChangeText={(text) =>
                               setFormData({ ...formData, receiver_last_name: text })
@@ -483,6 +485,7 @@ export const PreviewAddress = () => {
                                 <TextInput
                                   style={styles.phoneInput}
                                   placeholder={t("address.placeholder.phone_number")}
+                                  placeholderTextColor="#9CA3AF"
                                   value={formData.receiver_phone}
                                   onChangeText={(text) =>
                                     setFormData({
@@ -513,6 +516,7 @@ export const PreviewAddress = () => {
                                 <TextInput
                                   style={styles.phoneInput}
                                   placeholder={t("address.placeholder.confirm_phone_number")}
+                                  placeholderTextColor="#9CA3AF"
                                   value={formData.receiver_phone_again}
                                   onChangeText={(text) =>
                                     setFormData({
@@ -571,6 +575,7 @@ export const PreviewAddress = () => {
                             <TextInput
                               style={styles.pingFangText}
                               placeholder={t("address.placeholder.whatsapp")}
+                              placeholderTextColor="#9CA3AF"
                               value={formData.whatsapp_phone}
                               onChangeText={(text) =>
                                 setFormData({ ...formData, whatsapp_phone: text })

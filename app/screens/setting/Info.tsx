@@ -220,7 +220,7 @@ export const Info = () => {
             >
               <BackIcon />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{t("settings.profile")}</Text>
+            <Text style={[styles.headerTitle, { color: '#333333' }]}>{t("settings.profile")}</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -232,10 +232,10 @@ export const Info = () => {
                 style={[styles.avatarPlaceholder, { backgroundColor: "white" }]}
               ></View>
             )}
-            <Text style={styles.notLoggedInText}>
+            <Text style={[styles.notLoggedInText, { color: '#666666' }]}>
               {t("profile.not_logged_in")}
             </Text>
-            <Text style={styles.loginPrompt}>{t("profile.login_prompt")}</Text>
+            <Text style={[styles.loginPrompt, { color: '#999999' }]}>{t("profile.login_prompt")}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -304,23 +304,23 @@ export const Info = () => {
                 styles.avatarPlaceholder,
                 uploadingAvatar && { opacity: 0.7 }
               ]}>
-                <Text style={styles.avatarPlaceholderText}>
+                <Text style={[styles.avatarPlaceholderText, { color: '#666666' }]}>
                   {user.username?.charAt(0).toUpperCase() || "U"}
                 </Text>
               </View>
             )}
             {uploadingAvatar && (
               <View style={styles.uploadingOverlay}>
-                <Text style={styles.uploadingText}>上传中...</Text>
+                <Text style={[styles.uploadingText, { color: '#ffffff' }]}>上传中...</Text>
               </View>
             )}
           </TouchableOpacity>
-          <Text style={styles.username}>
+          <Text style={[styles.username, { color: '#333333' }]}>
             {user.username || t("profile.not_set")}
           </Text>
-          <Text style={styles.userId}>ID: {user.user_id}</Text>
+          <Text style={[styles.userId, { color: '#666666' }]}>ID: {user.user_id}</Text>
           <View style={styles.vipBadge}>
-            <Text style={styles.vipText}>
+            <Text style={[styles.vipText, { color: '#ffffff' }]}>
               {getVipLevelText(user.vip_level)}
             </Text>
           </View>
@@ -328,18 +328,18 @@ export const Info = () => {
 
         {/* 账户信息 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("profile.account_info")}</Text>
+          <Text style={[styles.sectionTitle, { color: '#333333' }]}>{t("profile.account_info")}</Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.email")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.email")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.email || t("profile.not_set")}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.phone")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.phone")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.phone
                 ? `+${user.country_code || ""} ${user.phone}`
                 : t("profile.not_set")}
@@ -347,15 +347,15 @@ export const Info = () => {
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.country_region")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.country_region")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.country || user.country_en || t("profile.not_set")}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.language")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.language")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.language || t("profile.not_set")}
             </Text>
           </View>
@@ -363,18 +363,18 @@ export const Info = () => {
 
         {/* 会员信息 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("profile.vip_info")}</Text>
+          <Text style={[styles.sectionTitle, { color: '#333333' }]}>{t("profile.vip_info")}</Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.vip_level")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.vip_level")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {getVipLevelText(user.vip_level)}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.vip_discount")}</Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.vip_discount")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.vip_discount
                 ? `${(user.vip_discount * 100).toFixed(1)}%`
                 : t("profile.no_discount")}
@@ -382,15 +382,15 @@ export const Info = () => {
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.points")}</Text>
-            <Text style={styles.infoValue}>{user.points || 0}</Text>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.points")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>{user.points || 0}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>
               {t("profile.next_level_points")}
             </Text>
-            <Text style={styles.infoValue}>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>
               {user.next_level_points_threshold || t("profile.next_level_max")}
             </Text>
           </View>
@@ -398,15 +398,15 @@ export const Info = () => {
 
         {/* 财务信息 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: '#333333' }]}>
             {t("profile.account_balance")}
           </Text>
 
           <View style={styles.balanceContainer}>
-            <Text style={styles.balanceAmount}>
+            <Text style={[styles.balanceAmount, { color: '#4CAF50' }]}>
               {formatBalance(user.balance, user.balance_currency)}
             </Text>
-            <Text style={styles.balanceLabel}>
+            <Text style={[styles.balanceLabel, { color: '#666666' }]}>
               {t("profile.available_balance")}
             </Text>
           </View>
@@ -414,21 +414,21 @@ export const Info = () => {
 
         {/* 时间信息 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("profile.time_info")}</Text>
+          <Text style={[styles.sectionTitle, { color: '#333333' }]}>{t("profile.time_info")}</Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.register_time")}</Text>
-            <Text style={styles.infoValue}>{formatDate(user.create_time)}</Text>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.register_time")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>{formatDate(user.create_time)}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.last_login")}</Text>
-            <Text style={styles.infoValue}>{formatDate(user.last_login)}</Text>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.last_login")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>{formatDate(user.last_login)}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{t("profile.info_updated")}</Text>
-            <Text style={styles.infoValue}>{formatDate(user.update_time)}</Text>
+            <Text style={[styles.infoLabel, { color: '#666666' }]}>{t("profile.info_updated")}</Text>
+            <Text style={[styles.infoValue, { color: '#333333' }]}>{formatDate(user.update_time)}</Text>
           </View>
         </View>
 
@@ -436,7 +436,7 @@ export const Info = () => {
           style={[styles.deleteButton, { alignItems: "center" }]}
           onPress={handleDeleteAccount}
         >
-          <Text style={styles.deleteButtonText}>
+          <Text style={[styles.deleteButtonText, { color: '#ff4444' }]}>
             {t("profile.delete_account")}
           </Text>
         </TouchableOpacity>

@@ -20,14 +20,27 @@ const fontSize = (size: number) => {
   if (Platform.OS === 'android') {
     // 根据像素密度调整Android字体大小
     const pixelRatio = PixelRatio.get();
-    const densityFactor = pixelRatio / 3; // 以密度3为基准
+    
+    // 针对不同设备的像素密度优化
+    let densityFactor;
+    if (pixelRatio <= 2) {
+      densityFactor = 1.0; // 低密度屏幕
+    } else if (pixelRatio <= 3) {
+      densityFactor = 1.0; // 标准密度屏幕（基准）
+    } else if (pixelRatio <= 4) {
+      densityFactor = 0.88; // 高密度屏幕，如Realme GT Neo5
+    } else {
+      densityFactor = 0.9; // 超高密度屏幕
+    }
     
     // 基于屏幕尺寸的动态字体缩放
     const getAndroidFontScale = () => {
       const screenSize = Math.sqrt(width * width + height * height);
       
-      // 基于屏幕对角线尺寸动态调整
-      if (screenSize < 900) {
+      // 针对Realme GT Neo5等高分辨率设备优化
+      if (width >= 1200 && height >= 2700) {
+        return 1.0; // 高分辨率设备，不放大
+      } else if (screenSize < 900) {
         return 1.15; // 小屏手机，保持15%放大
       } else if (screenSize < 1100) {
         return 1.08; // 中等屏幕，适度放大
@@ -38,7 +51,7 @@ const fontSize = (size: number) => {
     
     const androidFontScale = getAndroidFontScale();
     
-    baseFontSize = size * androidFontScale * Math.max(0.9, Math.min(1.1, densityFactor));
+    baseFontSize = size * androidFontScale * densityFactor;
   }
 
   // 计算自适应字体大小
