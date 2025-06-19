@@ -128,15 +128,9 @@ export const PayError = () => {
     console.log("PayError - realOrderNumber:", realOrderNumber);
     
     if (isRecharge) {
-      // 充值失败，跳转到余额页面查看充值记录
-      console.log("PayError - Recharge failed, going to Balance tab");
-      navigation.reset({
-        index: 0,
-        routes: [{ 
-          name: 'MainTabs',
-          params: { screen: 'Balance' }
-        }],
-      });
+      // 充值失败，跳转到余额详情页面查看充值记录
+      console.log("PayError - Recharge failed, going to BalanceScreen");
+      navigation.navigate("Balance");
     } else {
       // 订单支付失败，原有逻辑
       // 检查是否有真实的订单号，优先使用order_id

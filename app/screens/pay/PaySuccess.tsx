@@ -148,29 +148,8 @@ export const PaymentSuccessScreen = () => {
                 const isRecharge = route.params?.isRecharge;
                 
                 if (isRecharge) {
-                  // 充值支付，跳转到充值详情或充值记录页面
-                  const rechargeId = route.params?.recharge_id;
-                  if (rechargeId) {
-                    // 跳转到充值详情页面（如果存在）
-                    // navigation.navigate("RechargeDetails", { rechargeId });
-                    // 暂时跳转到余额页面查看充值记录
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ 
-                        name: 'MainTabs',
-                        params: { screen: 'Balance' }
-                      }],
-                    });
-                  } else {
-                    // 跳转到余额页面
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ 
-                        name: 'MainTabs',
-                        params: { screen: 'Balance' }
-                      }],
-                    });
-                  }
+                  // 充值支付，跳转到余额详情页面
+                  navigation.navigate("Balance");
                 } else {
                   // 订单支付，原有逻辑
                   const orderId = route.params?.order_id || route.params?.order_no || route.params?.orderId;

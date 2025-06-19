@@ -35,7 +35,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <View style={styles.profileHeaderContainer}>
         <View style={styles.headerContent}>
             <View style={styles.avatarContainer}>
-              {avatarUri ? (
+              {avatarUri && avatarUri !== 'string' && avatarUri.startsWith('http') ? (
                 <Image
                   source={{ uri: avatarUri }}
                   style={[
