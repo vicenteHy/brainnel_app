@@ -112,15 +112,18 @@ apiClient.interceptors.response.use(
     // 错误响应处理
     const { response, config } = error;
     // 为询盘请求错误添加更详细的日志
-    if (config?.url?.includes('/api/inquiries/') || config?.url?.includes('/api/cart/')) {
-      console.error("=== 询盘请求错误详细日志 ===");
+    if (config?.url?.includes('/api/inquiries/') || config?.url?.includes('/api/cart/') || config?.url?.includes('/api/orders/')) {
+      console.error("=== API请求错误详细日志 ===");
       console.error("请求URL:", config?.url || 'unknown');
       console.error("请求方法:", config?.method || 'unknown');
+      console.error("请求数据:", config?.data || 'no request data');
       console.error("错误信息:", error.message || 'unknown error');
       console.error("错误代码:", error.code || 'unknown code');
       console.error("响应状态:", response?.status || 'no response');
       console.error("响应数据:", response?.data || 'no response data');
-      console.error("原始配置:", config);
+      if (response?.status === 422) {
+        console.error("422错误详情:", JSON.stringify(response?.data, null, 2));
+      }
       console.error("=============================");
     }
     

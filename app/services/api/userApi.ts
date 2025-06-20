@@ -20,7 +20,13 @@ export interface User {
   country_en:string,
   language:string,
   vip_level:number,
+  vip_expired_time:string,
   points:number,
+  last_points_activity_time:string,
+  notifications_enabled:number,
+  setting_id:number,
+  theme:string,
+  timezone:string,
   next_level_points_threshold:number,
   is_leader:number
 }

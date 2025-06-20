@@ -58,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.removeItem('email_for_signin');
       await AsyncStorage.removeItem('auth_token');
       await AsyncStorage.removeItem('refresh_token');
+      await AsyncStorage.removeItem('user_id'); // 清除用户ID
       
       setIsLoggedIn(false);
     } catch (error) {

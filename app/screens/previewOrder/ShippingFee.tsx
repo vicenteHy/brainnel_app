@@ -88,19 +88,11 @@ export const ShippingFee = () => {
   const getFreightForwarderAddress = async () => {
     const transportMode = shippingMethod === "sea" ? 0 : 1;
     
-    // 调试信息
-    console.log('🚢 [COD-DEBUG] ===== ShippingFee页面参数检查 =====');
-    console.log('🚢 [COD-DEBUG] 接收到的路由参数:', route.params);
-    console.log('🚢 [COD-DEBUG] 用户国家代码:', userStore.user?.country_code);
-    console.log('🚢 [COD-DEBUG] 从CartScreen接收的COD状态:', route.params.isCOD);
-    console.log('🚢 [COD-DEBUG] 从CartScreen接收的isToc状态:', route.params.isToc);
+
     
     // 使用从CartScreen传递过来的isToc参数
     let isToc = route.params?.isToc !== undefined ? route.params.isToc : 0;
-    console.log('🚢 [COD-DEBUG] 使用CartScreen传递的isToc值:', isToc);
-    console.log('🚢 [COD-DEBUG] isToc含义:', isToc === 1 ? '小金额订单' : '大金额订单或非科特迪瓦用户');
-    
-    console.log("获取货代地址，运输方式:", transportMode, "is_toc:", isToc);
+
     await fetchFreightForwarderAddress(transportMode, isToc);
   };
 
@@ -110,7 +102,6 @@ export const ShippingFee = () => {
 
   useEffect(() => {
     if (state.freightForwarderAddress) {
-      console.log("🔍 [DEBUG] 货代地址返回数据:", JSON.stringify(state.freightForwarderAddress, null, 2));
       
       setFreightForwarderAddress(state.freightForwarderAddress);
       
@@ -121,9 +112,6 @@ export const ShippingFee = () => {
         state.freightForwarderAddress.other_addresses.length > 0
       ) {
         firstItem = state.freightForwarderAddress.other_addresses[0];
-        console.log("🔍 [DEBUG] 选择第一个地址:", JSON.stringify(firstItem, null, 2));
-      } else {
-        console.log("🔍 [DEBUG] ❌ 没有找到任何地址");
       }
       
       if (firstItem) {
@@ -173,30 +161,21 @@ export const ShippingFee = () => {
 
   // 当运输方式改变时，重新获取对应的货代地址
   useEffect(() => {
-    console.log("运输方式改变为:", shippingMethod);
     const transportMode = shippingMethod === "sea" ? 0 : 1;
     
-    // 调试信息
-    console.log("运输方式变化时 - 用户国家代码:", userStore.user?.country_code);
-    console.log("运输方式变化时 - 是否COD:", route.params.isCOD);
-    console.log("运输方式变化时 - 是否科特迪瓦用户:", userStore.user?.country_code === 225);
+
     
     // 判断is_toc：科特迪瓦用户且isCOD为false时为1
     let isToc = 0;
     if (userStore.user?.country_code === 225 && route.params.isCOD === false) {
       isToc = 1;
-      console.log("运输方式变化时 - 满足条件，设置is_toc为1");
-    } else {
-      console.log("运输方式变化时 - 不满足条件，is_toc保持为0");
     }
     
-    console.log("重新获取货代地址，运输方式:", transportMode, "is_toc:", isToc);
     fetchFreightForwarderAddress(transportMode, isToc);
   }, [shippingMethod]);
 
   const changeCountryHandel = async (value: string) => {
     if (value && freightForwarderAddress) {
-      console.log("选择的仓库标签:", value);
       
       // 查找地址（store已将所有地址合并到other_addresses中）
       const allAddresses = freightForwarderAddress.other_addresses || [];
@@ -211,7 +190,6 @@ export const ShippingFee = () => {
             (item.detail_address ? (" | " + item.detail_address) : "")) === value
       );
 
-      console.log("找到的仓库信息:", JSON.stringify(selectedWarehouse, null, 2));
       setSelectedWarehouse(selectedWarehouse);
 
       if (selectedWarehouse && items) {
@@ -219,8 +197,6 @@ export const ShippingFee = () => {
           items: items,
           freight_forwarder_address_id: selectedWarehouse.address_id,
         };
-
-        console.log("计算运费的参数:", JSON.stringify(data, null, 2));
 
         // Only calculate if we have the necessary data
         if (data.items && data.freight_forwarder_address_id) {
@@ -256,26 +232,13 @@ export const ShippingFee = () => {
     ) {
       // 计算更新后的COD状态：科特迪瓦用户选择空运时需要预付
       let updatedIsCOD = route.params.isCOD;
-      console.log('🚢 [COD-DEBUG] ===== 运输方式COD调整 =====');
-      console.log('🚢 [COD-DEBUG] 原始COD状态:', route.params.isCOD);
-      console.log('🚢 [COD-DEBUG] 选择的运输方式:', shippingMethod);
-      console.log('🚢 [COD-DEBUG] 用户国家代码:', userStore.user?.country_code);
       
       if (userStore.user?.country_code === 225) {
-        console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户，检查运输方式限制');
         if (shippingMethod === "air") {
           updatedIsCOD = false; // 空运情况下科特迪瓦用户需要预付运费
-          console.log('✈️ [COD-DEBUG] 选择空运 -> 强制预付 COD: false');
-        } else {
-          console.log('🚢 [COD-DEBUG] 选择海运 -> 保持原有COD状态: %s', updatedIsCOD ? 'true' : 'false');
         }
         // 海运保持原有逻辑（基于50000FCFA判断）
-      } else {
-        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> 保持原有COD状态: %s', updatedIsCOD ? 'true' : 'false');
       }
-      
-      console.log('🚢 [COD-DEBUG] 最终COD状态:', updatedIsCOD ? 'true' : 'false');
-      console.log('🚢 [COD-DEBUG] ===== 运输方式COD调整结束 =====');
 
       setOrderData({
         ...orderData,
@@ -307,11 +270,6 @@ export const ShippingFee = () => {
       analyticsStore.logShippingConfirm(shippingConfirmData, "shipping");
       
       const isTocValue = route.params?.isToc !== undefined ? route.params.isToc : 0;
-      console.log('🚢 [COD-DEBUG] 导航到PaymentMethod，传递参数:', {
-        freight_forwarder_address_id: selectedWarehouse?.address_id || 0,
-        isCOD: updatedIsCOD,
-        isToc: isTocValue
-      });
       
       navigation.navigate("PaymentMethod", {
         freight_forwarder_address_id: selectedWarehouse?.address_id || 0,

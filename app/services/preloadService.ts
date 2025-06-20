@@ -86,7 +86,12 @@ class PreloadService {
    * 获取预加载的推荐产品
    */
   public async getPreloadedRecommendations(userId?: string): Promise<Product[]> {
-    console.log('[PreloadService] 获取预加载数据', { requestUserId: userId });
+    console.log('[PreloadService] 获取预加载数据', { 
+      requestUserId: userId, 
+      requestType: typeof userId,
+      cachedUserId: this.cachedData?.userId,
+      cachedType: typeof this.cachedData?.userId
+    });
     
     // 如果有缓存且未过期，检查用户ID是否匹配
     if (this.cachedData && Date.now() < this.cachedData.expiry) {
@@ -94,13 +99,16 @@ class PreloadService {
       if (this.cachedData.userId === userId) {
         console.log('[PreloadService] 返回缓存数据 - 用户ID匹配', { 
           count: this.cachedData.products.length,
-          cachedUserId: this.cachedData.userId
+          cachedUserId: this.cachedData.userId,
+          requestUserId: userId
         });
         return this.cachedData.products;
       } else {
         console.log('[PreloadService] 缓存数据用户ID不匹配，需要重新加载', {
           cachedUserId: this.cachedData.userId,
-          requestUserId: userId
+          requestUserId: userId,
+          cachedType: typeof this.cachedData.userId,
+          requestType: typeof userId
         });
         // 用户ID不匹配，清除缓存，重新加载
         await this.clearCache();

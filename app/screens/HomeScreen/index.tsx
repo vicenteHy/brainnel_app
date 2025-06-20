@@ -493,21 +493,43 @@ export const HomeScreen = () => {
   }, [selectedCategoryId]);
 
   // 监听登录状态变化
+  const lastUserIdRef = useRef<number | undefined>(undefined);
   useEffect(() => {
-    if (userStore.user?.user_id) {
+    const currentUserId = userStore.user?.user_id;
+    
+    if (currentUserId) {
       setShowLoginModal(false);
       // 用户登录成功后，重置弹窗关闭状态，这样下次未登录时可以再次显示
       setHasUserDismissedLoginModal(false);
       AsyncStorage.removeItem('@login_modal_dismissed').catch(console.error);
       
-      // 用户登录后，如果当前在推荐页面，刷新数据以获取个性化推荐
-      if (selectedCategoryId === -1) {
-        setTimeout(() => {
-          console.log('[HomeScreen] 用户登录后刷新推荐数据');
-          refreshPageData(-1);
-        }, 500); // 稍微延迟，确保登录状态完全更新
+      // 只有当用户ID真正发生变化时才处理数据更新（避免重复刷新）
+      if (lastUserIdRef.current !== currentUserId) {
+        console.log('[HomeScreen] 用户ID发生变化，从', lastUserIdRef.current, '到', currentUserId);
+        lastUserIdRef.current = currentUserId;
+        
+        // 用户登录后，如果当前在推荐页面，优先尝试使用预加载数据，而不是立即刷新
+        if (selectedCategoryId === -1) {
+          const pageData = getPageData(-1);
+          
+          // 如果页面还没有数据，让它通过正常流程加载（会使用预加载数据）
+          if (!pageData.initialized || pageData.products.length === 0) {
+            console.log('[HomeScreen] 用户登录后触发初始数据加载');
+            setTimeout(() => {
+              loadPageData(-1);
+            }, 100);
+          } else {
+            console.log('[HomeScreen] 用户登录后已有数据，跳过刷新');
+          }
+        }
       }
     } else {
+      // 用户退出登录时也更新ref
+      if (lastUserIdRef.current !== undefined) {
+        console.log('[HomeScreen] 用户退出登录');
+        lastUserIdRef.current = undefined;
+      }
+      
       // 用户未登录且未关闭过弹窗时才显示登录弹窗
       if (!hasUserDismissedLoginModal) {
         setShowLoginModal(true);

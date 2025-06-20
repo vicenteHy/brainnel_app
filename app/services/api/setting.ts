@@ -88,18 +88,14 @@ export const settingApi = {
     getShippingFee: (data: ShippingFee) => apiService.post<ShippingFeeResponse>('/api/orders/calculate_manual_shipping_fee/', data),
     // 获取版本信息
     getVersionInfo: () => {
-      console.log('[API] 调用版本检查接口: https://api.brainnel.com/admin/api/v1/app-versions/');
       return fetch('https://api.brainnel.com/admin/api/v1/app-versions/')
         .then(res => {
-          console.log('[API] 版本检查接口响应状态:', res.status);
-          console.log('[API] 版本检查接口响应OK:', res.ok);
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           }
           return res.json();
         })
         .then(data => {
-          console.log('[API] 版本检查接口返回数据:', JSON.stringify(data, null, 2));
           return data;
         })
         .catch(error => {

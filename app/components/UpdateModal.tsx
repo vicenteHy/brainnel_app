@@ -37,17 +37,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   // 根据当前语言选择显示的消息，没有语言时默认使用法语
   const displayMessage = currentLanguage === 'en' ? messageEn : message;
   
-  console.log('[UpdateModal] 组件渲染:');
-  console.log('  - visible:', visible);
-  console.log('  - updateType:', updateType);
-  console.log('  - isForceUpdate:', isForceUpdate);
-  console.log('  - currentLanguage:', currentLanguage);
-  console.log('  - displayMessage:', displayMessage);
-  console.log('  - linkUrl:', linkUrl);
-  
   const handleUpdate = () => {
-    console.log('[UpdateModal] 用户点击更新按钮');
-    console.log('[UpdateModal] 即将打开链接:', linkUrl);
     onUpdate();
     Linking.openURL(linkUrl).catch(err => {
       console.error('[UpdateModal] 打开链接失败:', err);
@@ -55,7 +45,6 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   };
 
   const handleClose = () => {
-    console.log('[UpdateModal] 用户点击稍后提醒');
     if (!isForceUpdate && onClose) {
       onClose();
     }

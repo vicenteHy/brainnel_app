@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useUserStore from "../../store/user";
+import { userApi } from "../../services/api/userApi";
 import { LinearGradient } from 'expo-linear-gradient';
 import { LoggedOutView } from "./LoggedOutView";
 import { OrderSection, ToolSection } from "./Sections";
@@ -37,6 +38,19 @@ export const ProfileScreen = () => {
   const { user, setUser } = useUserStore();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // 刷新用户数据
+  useFocusEffect(
+    useCallback(() => {
+      if (user.user_id) {
+        userApi.getProfile().then((profile) => {
+          setUser(profile);
+        }).catch((error) => {
+          console.error('Failed to refresh user profile:', error);
+        });
+      }
+    }, [user.user_id, setUser])
+  );
 
   const handleLogin = () => {
     navigation.navigate("Login");
@@ -70,8 +84,8 @@ export const ProfileScreen = () => {
                 />
                 <VipCard user={user} />
                 <BalanceCard 
-                  balance={String(user.balance)} 
-                  currency={user.currency} 
+                  balance={String(user.balance || 0)} 
+                  currency={user.balance_currency || user.currency} 
                   onRechargePress={handleRechargePress}
                 />
               </>

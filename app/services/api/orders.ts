@@ -29,7 +29,6 @@ interface OrderItem {
   sku_image_url: string;
   product_name_en: string;
   product_name_fr: string;
-  product_name_ar: string;
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -105,7 +104,7 @@ export interface ShippingFeeData {
   items: {
     cart_item_id: number;
   }[];
-  country_code?: number;
+  freight_forwarder_address_id: number;
 }
 
 interface CartShippingFeeItem {

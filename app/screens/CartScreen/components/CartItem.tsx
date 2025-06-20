@@ -198,13 +198,12 @@ export const CartItem: React.FC<CartItemProps> = ({
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
-                        {getAttributeTransLanguage(sku.attributes[0]) ||
-                          sku.attributes[0].attribute_name_trans}{" "}
-                        {sku.attributes[1] ? "/" : ""}{" "}
-                        {sku.attributes[1]
-                          ? getAttributeTransLanguage(sku.attributes[1]) ||
-                            sku.attributes[1].attribute_name_trans
-                          : ""}
+                        {(() => {
+                          const attr0Text = getAttributeTransLanguage(sku.attributes[0]) || sku.attributes[0].attribute_name_trans;
+                          const attr1Text = sku.attributes[1] ? (getAttributeTransLanguage(sku.attributes[1]) || sku.attributes[1].attribute_name_trans) : "";
+                          
+                          return attr0Text + (sku.attributes[1] ? " / " : "") + attr1Text;
+                        })()}
                       </Text>
                     </View>
                   )}

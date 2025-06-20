@@ -28,7 +28,7 @@ import { styles } from "./styles";
 
 export const CartScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const { setItems } = useCreateOrderStore();
+  const { setItems, setCartData } = useCreateOrderStore();
   const { updateCartItemCount } = useCartStore();
 
   // 使用自定义hook管理购物车数据
@@ -87,12 +87,9 @@ export const CartScreen = () => {
   // 监听设置变更事件，刷新购物车数据以更新价格和货币
   useEffect(() => {
     const handleSettingsChanged = () => {
-      console.log('[CartScreen] 设置发生变更，刷新购物车数据');
-      
       // 重新获取购物车数据以更新价格和货币显示
       if (user_id) {
         setTimeout(() => {
-          console.log('[CartScreen] 重新获取购物车数据');
           getCart();
         }, 300);
       }
@@ -121,106 +118,35 @@ export const CartScreen = () => {
     cartItemId: number,
     cartId1: number
   ) => {
-    console.log('🗑️ [Delete] 开始删除SKU', {
-      cartId,
-      cartItemId,
-      cartId1,
-      user_id,
-      timestamp: new Date().toISOString()
-    });
-    
     if (!user_id) {
-      console.log('❌ [Delete] 用户未登录，取消删除');
       return;
     }
     
-    // 查找要删除的商品信息用于日志
-    const itemToRemove = cartList.find((item) => item.cart_id === cartId);
-    const skuToRemove = itemToRemove?.skus.find((sku) => sku.cart_item_id === cartItemId);
-    
-
-    
     setItemToDelete({ cartId, cartItemId, cartId1 });
     setDeleteModalVisible(true);
-    console.log('✅ [Delete] 删除确认弹窗已显示');
   };
 
   // 确认删除
   const confirmDelete = () => {
-    console.log('🔄 [Delete] 用户确认删除', {
-      user_id,
-      itemToDelete,
-      timestamp: new Date().toISOString()
-    });
-    
     if (!user_id || !itemToDelete) {
-      console.log('❌ [Delete] 确认删除失败 - 用户未登录或无删除项', {
-        user_id: !!user_id,
-        hasItemToDelete: !!itemToDelete
-      });
       return;
     }
 
     const { cartId, cartItemId, cartId1 } = itemToDelete;
-    console.log('📝 [Delete] 提取删除参数', { cartId, cartItemId, cartId1 });
-
-    // 执行删除逻辑
-    const itemToRemove = cartList.find((item) => item.cart_id === cartId);
-    console.log('🔍 [Delete] 查找要删除的商品', {
-      found: !!itemToRemove,
-      productName: itemToRemove?.subject,
-      totalSkus: itemToRemove?.skus.length
-    });
-    
-    if (itemToRemove) {
-      const skuToRemove = itemToRemove.skus.find(
-        (sku) => sku.cart_item_id === cartItemId
-      );
-      console.log('🔍 [Delete] 查找要删除的SKU', {
-        found: !!skuToRemove,
-        skuDetails: skuToRemove ? {
-          quantity: skuToRemove.quantity,
-          price: skuToRemove.price,
-          selected: skuToRemove.selected
-        } : null
-      });
-      
-      if (skuToRemove && skuToRemove.selected === 1) {
-        console.log('💰 [Delete] SKU已选中，将影响总价', {
-          currentPrice: skuToRemove.price,
-          quantity: skuToRemove.quantity,
-          totalImpact: skuToRemove.price * skuToRemove.quantity
-        });
-      }
-    }
 
     // 更新购物车列表
     const itemToUpdate = cartList.find((item) => item.cart_id === cartId);
-    console.log('🔄 [Delete] 准备更新购物车', {
-      found: !!itemToUpdate,
-      currentSkusCount: itemToUpdate?.skus.length
-    });
     
     if (itemToUpdate) {
       const remainingSkus = itemToUpdate.skus.filter(
         (sku) => sku.cart_item_id !== cartItemId
       );
-      
-      console.log('📊 [Delete] SKU删除后状态', {
-        originalSkuCount: itemToUpdate.skus.length,
-        remainingSkuCount: remainingSkus.length,
-        willDeleteEntireProduct: remainingSkus.length === 0
-      });
 
       // 立即更新本地UI状态，提供即时反馈
       let updatedCartList: any[];
       if (remainingSkus.length === 0) {
         // 删除整个商品
         updatedCartList = cartList.filter((item) => item.cart_id !== cartId);
-        console.log('🔄 [Delete] 立即更新本地状态 - 删除整个商品', {
-          原商品数: cartList.length,
-          新商品数: updatedCartList.length
-        });
       } else {
         // 删除单个SKU
         updatedCartList = cartList.map((item) => {
@@ -232,11 +158,6 @@ export const CartScreen = () => {
           }
           return item;
         });
-        console.log('🔄 [Delete] 立即更新本地状态 - 删除单个SKU', {
-          商品ID: cartId,
-          原SKU数: itemToUpdate.skus.length,
-          新SKU数: remainingSkus.length
-        });
       }
       
       setCartList(updatedCartList);
@@ -245,58 +166,37 @@ export const CartScreen = () => {
       updateCartIconCount(updatedCartList);
 
       if (remainingSkus.length === 0) {
-        console.log('🗑️ [Delete] 删除整个商品（所有SKU已删除）', {
-          cartId1,
-          cartItemId,
-          productName: itemToUpdate.subject
-        });
-        
         deleteCartItem(cartId1, cartItemId)
           .then((res) => {
-            console.log('✅ [Delete] 整个商品删除成功', res);
             // API删除成功后重新获取购物车数据（同步服务器状态）
             getCart();
           })
           .catch((error) => {
-            console.error('❌ [Delete] 整个商品删除失败', error);
+            console.error('删除失败', error);
             // 即使删除失败也重新获取数据以确保状态一致
             getCart();
           });
       } else {
-        console.log('🗑️ [Delete] 删除单个SKU（商品还有其他SKU）', {
-          cartId,
-          cartItemId,
-          remainingSkuCount: remainingSkus.length
-        });
-        
         deleteCartItem(cartId, cartItemId)
           .then((res) => {
-            console.log('✅ [Delete] 单个SKU删除成功', res);
             // API删除成功后重新获取购物车数据（同步服务器状态）
             getCart();
           })
           .catch((error) => {
-            console.error('❌ [Delete] 单个SKU删除失败', error);
+            console.error('删除失败', error);
             // 即使删除失败也重新获取数据以确保状态一致
             getCart();
           });
       }
-    } else {
-      console.log('❌ [Delete] 未找到要更新的商品');
     }
 
     // 关闭确认对话框
     setDeleteModalVisible(false);
     setItemToDelete(null);
-    console.log('🔒 [Delete] 删除流程完成，关闭弹窗');
   };
 
   // 取消删除
   const cancelDelete = () => {
-    console.log('❎ [Delete] 用户取消删除', {
-      itemToDelete,
-      timestamp: new Date().toISOString()
-    });
     setDeleteModalVisible(false);
     setItemToDelete(null);
   };
@@ -426,93 +326,58 @@ export const CartScreen = () => {
       // 获取50000FCFA等值的用户货币金额
       const minAmountInUserCurrency = await convertCurrency();
       
-      console.log('🔍 [COD-DEBUG] ===== 金额检查和COD判断开始 =====');
-      console.log('🔍 [COD-DEBUG] 用户信息:', {
-        user_id,
-        is_leader,
-        country_code,
-        currency,
-        totalAmount,
-        minAmountInUserCurrency
-      });
-      
       // 第一步：检查是否可以下单（金额限制）
-      console.log('📋 [COD-DEBUG] ===== 步骤1: 下单资格检查 =====');
       if (is_leader === 1) {
-        console.log('👑 [COD-DEBUG] Leader用户 -> 无金额限制，可以下单');
+        // Leader用户无金额限制
       } else {
-        console.log('👤 [COD-DEBUG] 普通用户，检查金额限制');
-        
         if (country_code !== 225) {
-          console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 (country_code: %d)', country_code);
           // 非科特迪瓦用户：需要达到50000FCFA等值金额才能下单
           if (totalAmount < minAmountInUserCurrency) {
-            console.log('❌ [COD-DEBUG] 金额不足: %f < %f, 无法下单', totalAmount, minAmountInUserCurrency);
             Toast.show({
               text1: `${t('cart.minimum')}${minAmountInUserCurrency?.toFixed(2)}${currency}`,
             });
             return;
-          } else {
-            console.log('✅ [COD-DEBUG] 非科特迪瓦用户金额充足，可以下单');
           }
-        } else {
-          console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户 (country_code: 225) -> 无金额限制，可以下单');
         }
       }
       
       // 第二步：判断isToc参数（科特迪瓦用户且金额<50000FCFA时为1）
-      console.log('📋 [COD-DEBUG] ===== 步骤2: isToc参数判断 =====');
       let isToc = 0;
       
       if (country_code === 225) {
-        console.log('🇨🇮 [COD-DEBUG] 科特迪瓦用户，根据金额判断isToc');
         // 科特迪瓦用户：金额<50000FCFA时isToc=1
         if (currency === "FCFA") {
-          console.log('💰 [COD-DEBUG] FCFA货币，检查50000FCFA门槛');
           if (totalAmount < 50000) {
             isToc = 1; // 低于50000FCFA，isToc=1
-            console.log('⬇️ [COD-DEBUG] FCFA金额 %f < 50000 -> isToc: 1 (小金额订单)', totalAmount);
           } else {
             isToc = 0; // 达到50000FCFA，isToc=0
-            console.log('⬆️ [COD-DEBUG] FCFA金额 %f >= 50000 -> isToc: 0 (大金额订单)', totalAmount);
           }
         } else {
-          console.log('💱 [COD-DEBUG] 非FCFA货币 (%s)，检查等值金额', currency);
           if (totalAmount < minAmountInUserCurrency) {
             isToc = 1; // 低于50000FCFA等值，isToc=1
-            console.log('⬇️ [COD-DEBUG] 等值金额 %f < %f -> isToc: 1 (小金额订单)', totalAmount, minAmountInUserCurrency);
           } else {
             isToc = 0; // 达到50000FCFA等值，isToc=0
-            console.log('⬆️ [COD-DEBUG] 等值金额 %f >= %f -> isToc: 0 (大金额订单)', totalAmount, minAmountInUserCurrency);
           }
         }
       } else {
-        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> isToc: 0');
         isToc = 0;
       }
       
       // 第三步：根据isToc判断初始COD状态
-      console.log('📋 [COD-DEBUG] ===== 步骤3: 初始COD状态判断 =====');
       let isCOD = true;
       
       if (country_code === 225) {
         if (isToc === 1) {
           isCOD = false; // 科特迪瓦小金额用户不可以COD
-          console.log('✅ [COD-DEBUG] 科特迪瓦小金额订单 -> COD: false (不可货到付款)');
         } else {
           isCOD = true; // 科特迪瓦大金额用户可以COD
-          console.log('✅ [COD-DEBUG] 科特迪瓦大金额订单 -> COD: true (可货到付款)'); 
         }
-        console.log('⚠️ [COD-DEBUG] 注意：最终COD状态还需在ShippingFee页面根据运输方式调整');
       } else {
-        console.log('🌍 [COD-DEBUG] 非科特迪瓦用户 -> COD: true (可货到付款)');
         isCOD = true;
       }
 
-      console.log('🔍 [COD-DEBUG] CartScreen最终状态: isCOD=%s, isToc=%d', isCOD ? 'true' : 'false', isToc);
-      console.log('🔍 [COD-DEBUG] ===== 金额检查和COD判断结束 =====');
-
       setItems(items);
+      setCartData(cartList);
       navigation.navigate("PreviewAddress", { isCOD: isCOD, isToc: isToc });
     } catch (error) {
       console.error("提交订单失败:", error);

@@ -41,6 +41,7 @@ export const CarouselBanner = React.memo(
             borderRadius: 0,
             overflow: "hidden",
             height: 200,
+            
           }}
         >
           <Image

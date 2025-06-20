@@ -261,10 +261,6 @@ export const useCartData = () => {
       // 修正父商品的选择状态，确保与子商品状态一致
       const correctedItems = res.items.map((item) => {
         const allSkusSelected = item.skus.every((sku) => sku.selected === 1);
-        const corrected = allSkusSelected !== (item.selected === 1);
-        
-        if (corrected) {
-        }
         
         return {
           ...item,

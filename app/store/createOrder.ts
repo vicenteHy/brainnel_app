@@ -128,6 +128,8 @@ interface CreateOrderState {
     resetOrder: () => void;
     items: {cart_item_id: number}[];
     setItems: (items: {cart_item_id: number}[]) => void;
+    cartData: any[];
+    setCartData: (data: any[]) => void;
 }
 
 const initialOrderData: OrderCreateRequest = {
@@ -197,10 +199,13 @@ const useCreateOrderStore = create<CreateOrderState>((set) => ({
     }),
     
     resetOrder: () => set({
-        orderData: { ...initialOrderData }
+        orderData: { ...initialOrderData },
+        cartData: []
     }),
     items: [],
-    setItems: (items: {cart_item_id: number}[]) => set({ items })
+    setItems: (items: {cart_item_id: number}[]) => set({ items }),
+    cartData: [],
+    setCartData: (data: any[]) => set({ cartData: data })
 }));
 
 export default useCreateOrderStore;

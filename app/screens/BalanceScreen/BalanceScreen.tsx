@@ -118,7 +118,7 @@ export const BalanceScreen = () => {
     if (!loading) return null;
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="small" color="#FF8000" />
+        <ActivityIndicator size="small" color="#FF5100" />
       </View>
     );
   };
@@ -182,7 +182,7 @@ export const BalanceScreen = () => {
                     <View
                       style={[
                         styles.buttonContainer,
-                        { backgroundColor: "#FF8000", alignSelf: "center" },
+                        { backgroundColor: "#FF5100", alignSelf: "center" },
                       ]}
                     >
                       <TouchableOpacity
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   sunriseGradientContainer: {
     backgroundColor:
-      "linear-gradient(180deg, rgba(255, 119, 0, 1) 0%, rgba(255, 77, 0, 1) 100%)",
+      "linear-gradient(180deg, rgba(255, 81, 0, 1) 0%, rgba(255, 81, 0, 1) 100%)",
     flexDirection: "column",
     alignItems: "stretch",
   },

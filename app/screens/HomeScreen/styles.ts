@@ -162,6 +162,7 @@ export const styles = StyleSheet.create<StylesType>({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
+    paddingHorizontal: 8,
   },
   categoryScrollContainer: {
     flex: 1,
@@ -300,6 +301,7 @@ export const styles = StyleSheet.create<StylesType>({
     marginTop: 8,
     marginBottom: 8,
     paddingVertical: 8,
+    paddingHorizontal: 8,
   },
   subcategoryScroll: {
     flex: 1,
@@ -586,6 +588,7 @@ export const styles = StyleSheet.create<StylesType>({
     marginTop: 8,
     marginBottom: 8,
     paddingVertical: 8,
+    paddingHorizontal: 8,
   },
   featureNavItem: {
     flex: 1,

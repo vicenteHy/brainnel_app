@@ -161,13 +161,14 @@ export const useMultiPageData = (categories: any[]) => {
         } else if (!isLoadMore && currentData.products.length === 0) {
           // 如果是第一次加载且没有现有产品，尝试使用预加载数据
           console.log(`[useMultiPageData] 尝试使用预加载数据 - categoryId: ${categoryId}`);
-          const preloadedProducts = await preloadService.getPreloadedRecommendations(
-            userStore.user?.user_id?.toString()
-          );
+          const currentUserId = userStore.user?.user_id?.toString();
+          console.log(`[useMultiPageData] 当前用户ID: ${currentUserId} (类型: ${typeof currentUserId})`);
+          const preloadedProducts = await preloadService.getPreloadedRecommendations(currentUserId);
           
           if (preloadedProducts.length > 0) {
             console.log(`[useMultiPageData] 使用预加载数据 - categoryId: ${categoryId}`, {
-              count: preloadedProducts.length
+              count: preloadedProducts.length,
+              userId: currentUserId
             });
             apiResponse = preloadedProducts;
           } else {

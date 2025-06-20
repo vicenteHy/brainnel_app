@@ -269,13 +269,13 @@ export const OrderDetails = () => {
                             <View style={styles.contactItem}>
                               <PhoneIcon size={14} color="#666" />
                               <Text style={[styles.contactText, { color: '#666666' }]}>
-                                {formatPhoneNumber(orderDetails.receiver_phone)}
+                                {orderDetails.receiver_phone}
                               </Text>
                             </View>
                             <View style={styles.contactItem}>
                               <WhatsAppIcon size={14} />
                               <Text style={[styles.contactText, { color: '#666666' }]}>
-                                {formatPhoneNumber(orderDetails.receiver_phone)}
+                                {orderDetails.receiver_phone}
                               </Text>
                             </View>
                           </View>

@@ -31,6 +31,7 @@ import PaymentMethodIcon from "../../components/PaymentMethodIcon";
 import PaymentIcon from "../../components/PaymentIcon";
 import useAnalyticsStore from "../../store/analytics";
 import { settingApi } from "../../services/api/setting";
+import { getOrderTransLanguage } from "../../utils/languageUtils";
 import { PaymentMethodItem } from "./payment/PaymentMethodItem";
 import { 
   PaymentMethodRouteParams,
@@ -72,7 +73,7 @@ export const PaymentMethod = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useUserStore();
   const [createOrderData, setCreateOrderData] = useState<createOrderDataType>();
-  const { items, orderData, setOrderData, resetOrder } = useCreateOrderStore();
+  const { items, orderData, setOrderData, resetOrder, cartData } = useCreateOrderStore();
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [convertedAmount, setConvertedAmount] = useState<ConvertedAmount[]>([]);
   const [isConverting, setIsConverting] = useState(false);
@@ -95,12 +96,6 @@ export const PaymentMethod = () => {
   // Get isCOD parameter from route
   const isCOD = route.params?.isCOD || false;
   
-  console.log('💳 [COD-DEBUG] ===== PaymentMethod页面参数状态 =====');
-  console.log('💳 [COD-DEBUG] 接收到的路由参数:', route.params);
-  console.log('💳 [COD-DEBUG] 最终COD状态:', isCOD ? 'true (货到付款)' : 'false (预付款)');
-  console.log('💳 [COD-DEBUG] 接收到的isToc状态:', route.params?.isToc);
-  console.log('💳 [COD-DEBUG] isToc含义:', route.params?.isToc === 1 ? '小金额订单' : '大金额订单或非科特迪瓦用户');
-  console.log('💳 [COD-DEBUG] ===== PaymentMethod页面参数状态结束 =====');
 
   // State to store the original total price (fixed, won't change)
   const [originalTotalPrice, setOriginalTotalPrice] = useState(0);
@@ -177,12 +172,10 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("PayPal初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
         .then((res) => {
-          console.log("PayPal货币转换结果:", res);
           setConvertedAmount(res.converted_amounts_list);
           setIsConverting(false);
         })
@@ -205,12 +198,10 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("信用卡初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
         .then((res) => {
-          console.log("信用卡货币转换结果:", res);
           setConvertedAmount(res.converted_amounts_list);
           setIsConverting(false);
         })
@@ -232,7 +223,6 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("Wave初始化货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -305,7 +295,6 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("PayPal选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -336,7 +325,6 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("信用卡选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -366,7 +354,6 @@ export const PaymentMethod = () => {
         },
       };
 
-      console.log("Wave选择货币转换数据:", data);
 
       payApi
         .convertCurrency(data)
@@ -425,12 +412,10 @@ export const PaymentMethod = () => {
       },
     };
 
-    console.log("货币选择转换数据:", data);
 
     payApi
       .convertCurrency(data)
       .then((res) => {
-        console.log("货币选择转换结果:", res);
         setConvertedAmount(res.converted_amounts_list);
         setIsConverting(false);
       })
@@ -555,7 +540,6 @@ export const PaymentMethod = () => {
     // 检查是否从OrderDetails传递了订单数据
     if (route.params?.orderData) {
       const existingOrder = route.params.orderData;
-      console.log("使用已存在的订单数据:", existingOrder);
       
       // 将已存在的订单数据转换为PaymentMethod页面期望的格式
       const previewOrderData = {
@@ -575,7 +559,7 @@ export const PaymentMethod = () => {
           offer_id: item.offer_id,
           cart_item_id: item.cart_item_id || 0,
           sku_id: item.sku_id,
-          product_name: item.product_name_fr || item.product_name || '',
+          product_name: getOrderTransLanguage(item),
           product_name_en: item.product_name_en || '',
           product_name_ar: item.product_name_ar || '',
           product_name_fr: item.product_name_fr || '',
@@ -651,7 +635,6 @@ export const PaymentMethod = () => {
       transport_type: orderData.transport_type,
       currency: user.currency,
     });
-    console.log("orderData", orderData);
   }, [orderData]);
 
   // Trigger initial currency conversion when all data is loaded
@@ -689,6 +672,27 @@ export const PaymentMethod = () => {
     }
   }, [userLocalCurrency]);
 
+  // Helper function to get selected cart items for display
+  const getSelectedCartItems = () => {
+    const selectedItems = [];
+    cartData.forEach((cartItem) => {
+      cartItem.skus.forEach((sku) => {
+        if (sku.selected === 1) {
+          selectedItems.push({
+            offer_id: cartItem.offer_id,
+            sku_id: sku.sku_id,
+            product_name: cartItem.subject_trans || cartItem.subject,
+            sku_image_url: sku.attributes[0]?.sku_image_url || cartItem.product_image,
+            sku_attributes: sku.attributes,
+            quantity: sku.quantity,
+            total_price: sku.price * sku.quantity,
+          });
+        }
+      });
+    });
+    return selectedItems;
+  };
+
   // Set original total price when both previewOrder and orderData are available
   useEffect(() => {
     if (previewOrder && orderData && originalTotalPrice === 0) {
@@ -706,61 +710,63 @@ export const PaymentMethod = () => {
       return;
     }
     
+    if (!cartData || cartData.length === 0) {
+      Alert.alert("错误", "购物车数据不存在，请重新从购物车进入");
+      return;
+    }
+    
     // 检查余额支付时余额是否充足
-    console.log("Selected payment method:", selectedPayment);
-    console.log("Checking if balance payment:", selectedPayment === "balance");
     
     if (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) {
-      console.log("进入余额检查逻辑");
-      
       const totalAmount = getTotalForCalculation();
-      console.log("计算的总金额:", totalAmount);
-      console.log("用户余额原始值:", user.balance);
-      console.log("用户货币:", user.currency);
       
       // 直接使用数字比较，因为从日志看user.balance已经是数字
       const userBalance = typeof user.balance === 'number' ? user.balance : parseFloat(String(user.balance));
-      console.log("解析后的用户余额:", userBalance);
-      
-      console.log("余额比较:", userBalance, "<", totalAmount, "=", userBalance < totalAmount);
       
       if (isNaN(userBalance) || isNaN(totalAmount)) {
-        console.log("余额或总金额解析失败:", { userBalance, totalAmount });
         return;
       }
       
       if (userBalance < totalAmount) {
-        console.log("余额不足，显示提示");
         setAlertModal({
           visible: true,
           title: t("payment.insufficient_balance") || "余额不足",
           message: t("payment.insufficient_balance_message") || `当前余额: ${userBalance}${user.currency}\n需要支付: ${totalAmount.toFixed(2)}${user.currency}\n请选择其他支付方式或先充值。`
         });
         return;
-      } else {
-        console.log("余额充足，继续处理");
       }
-    } else {
-      console.log("不是余额支付，跳过余额检查");
     }
-    const items =
-      previewOrder?.items.map((item) => ({
-        offer_id: String(item.offer_id),
-        cart_item_id: item.cart_item_id,
-        sku_id: String(item.sku_id),
-        product_name: item.product_name,
-        product_name_en: item.product_name_en,
-        product_name_ar: item.product_name_ar,
-        product_name_fr: item.product_name_fr,
-        sku_attributes: item.attributes.map((attr) => ({
-          attribute_name: attr.attribute_name,
-          attribute_value: attr.value,
-        })),
-        sku_image: item.sku_image_url,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-      })) || [];
+    // 从购物车数据构建订单商品信息，包含正确的翻译字段
+    const items = [];
+    cartData.forEach((cartItem) => {
+      cartItem.skus.forEach((sku) => {
+        if (sku.selected === 1) {
+          items.push({
+            offer_id: String(cartItem.offer_id),
+            cart_item_id: sku.cart_item_id,
+            sku_id: String(sku.sku_id),
+            product_name: cartItem.subject_trans || cartItem.subject, // 使用翻译字段
+            product_name_en: cartItem.subject_trans_en || '',
+            product_name_ar: cartItem.subject_trans_ar || '',
+            product_name_fr: cartItem.subject_trans || cartItem.subject, // subject_trans是法语
+            sku_attributes: sku.attributes.map((attr) => ({
+              attribute_name: attr.attribute_name,
+              attribute_name_trans: attr.attribute_name_trans,
+              attribute_name_trans_en: attr.attribute_name_trans_en,
+              attribute_name_trans_ar: attr.attribute_name_trans_ar,
+              attribute_value: attr.value,
+              attribute_value_trans: attr.value_trans,
+              attribute_value_trans_en: attr.value_trans_en,
+              attribute_value_trans_ar: attr.value_trans_ar,
+            })),
+            sku_image: sku.attributes[0]?.sku_image_url || cartItem.product_image,
+            quantity: sku.quantity,
+            unit_price: sku.price,
+            total_price: sku.price * sku.quantity,
+          });
+        }
+      });
+    });
     if (createOrderData) {
       createOrderData.items = items;
       createOrderData.payment_method = selectedPayment;
@@ -824,7 +830,6 @@ export const PaymentMethod = () => {
           : getShippingFeeForCalculation();
       // 添加isToc参数
       createOrderData.is_toc = route.params?.isToc || 0;
-      console.log('💳 [COD-DEBUG] 添加is_toc参数到订单数据:', createOrderData.is_toc);
     }
     setOrderData(createOrderData || {});
 
@@ -852,15 +857,15 @@ export const PaymentMethod = () => {
         ? (userLocalCurrency || user.currency) 
         : user.currency,
       pay_product: JSON.stringify(
-        previewOrder?.items.map((item) => {
+        getSelectedCartItems().map((item) => {
           return {
             offer_id: item.offer_id,
-            price: item.unit_price,
+            price: item.total_price / item.quantity, // unit_price
             all_price:
-              convertedAmount.find((item) => item.item_key === "total_amount")
+              convertedAmount.find((conv) => conv.item_key === "total_amount")
                 ?.converted_amount || item.total_price,
-            currency: selectedPayment === "paypal" ? selectedCurrency : selectedPayment === "Bank Card Payment" ? selectedCurrency : selectedPayment === "wave" ? "FCFA" : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0 ? (userLocalCurrency || user.currency) : previewOrder.currency,
-            sku: item.attributes.map((sku) => {
+            currency: selectedPayment === "paypal" ? selectedCurrency : selectedPayment === "Bank Card Payment" ? selectedCurrency : selectedPayment === "wave" ? "FCFA" : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0 ? (userLocalCurrency || user.currency) : previewOrder?.currency,
+            sku: item.sku_attributes.map((sku) => {
               return {
                 sku_id: item.sku_id,
                 value: sku.value,
@@ -884,17 +889,12 @@ export const PaymentMethod = () => {
     // 记录支付方式确认埋点事件
     const analyticsStore = useAnalyticsStore.getState();
     analyticsStore.logPaymentConfirm(paymentConfirmData, "shipping");
-    
-    console.log("支付确认信息埋点数据:", paymentConfirmData);
 
     setCreateLoading(true);
 
     // 检查是否是从OrderDetails跳转过来的（已存在订单）
     if (route.params?.orderId && route.params?.orderData) {
       // 更新现有订单的支付方式
-      console.log("=== 更新订单支付方式 ===");
-      console.log("订单ID:", route.params.orderId);
-      console.log("支付方式:", selectedPayment);
       
       const paymentData = {
         order_id: route.params.orderId,
@@ -926,7 +926,6 @@ export const PaymentMethod = () => {
         .updateOrderPaymentMethod(paymentData)
         .then(() => {
           setCreateLoading(false);
-          console.log("订单支付方式更新成功");
           
           // 跳转到支付预览页面
           navigation.navigate("PreviewOrder", {
@@ -943,24 +942,15 @@ export const PaymentMethod = () => {
         })
         .catch((error) => {
           setCreateLoading(false);
-          console.error("=== 更新订单支付方式错误 ===");
-          console.error("Error updating payment method:", error);
-          console.error("========================");
           Alert.alert("错误", "更新支付方式失败");
         });
     } else {
       // 原有的创建新订单逻辑
-      console.log("=== 创建订单请求数据 ===");
-      console.log("createOrderData:", JSON.stringify(createOrderData, null, 2));
-      console.log("用户信息:", { user, currency: user.currency });
-      console.log("订单数据:", { orderData, previewOrder });
-      console.log("========================");
 
       ordersApi
         .createOrder(createOrderData as unknown as CreateOrderRequest)
         .then((res) => {
           setCreateLoading(false);
-          console.log("订单创建成功:", res);
           // go to payment preview
           navigation.navigate("PreviewOrder", {
             data: res,
@@ -978,22 +968,10 @@ export const PaymentMethod = () => {
         })
         .catch((error) => {
           setCreateLoading(false);
-          console.error("=== 订单创建错误详情 ===");
-          console.error("Error creating order:", error);
-          console.error("错误状态码:", error.status);
-          console.error("错误数据:", error.data);
-          if (error.data && error.data.detail) {
-            console.error("详细错误信息:", JSON.stringify(error.data.detail, null, 2));
-          }
-          console.error("请求的数据:", JSON.stringify(createOrderData, null, 2));
-          console.error("========================");
           
           let errorMessage = "创建订单失败";
           if (error.status === 422) {
             errorMessage = "数据验证失败，请检查订单信息";
-            if (error.data && error.data.detail) {
-              console.log("422错误详情:", error.data.detail);
-            }
           }
           
           Alert.alert("错误", errorMessage);
@@ -1094,7 +1072,7 @@ export const PaymentMethod = () => {
                   <View style={styles.setOrderContent}>
                     <Text style={styles.noCouponsMessage}>
                       {t("payment.product_total")}(
-                      {previewOrder?.items?.length || 0} items)
+                      {getSelectedCartItems().length} items)
                     </Text>
                     <TouchableOpacity onPress={toggleExpanded}>
                       <Text style={styles.sectionAction}>
@@ -1110,7 +1088,7 @@ export const PaymentMethod = () => {
                       isPaypalExpanded && styles.orderItemsExpanded,
                     ]}
                   >
-                    {previewOrder?.items?.map((item) => (
+                    {getSelectedCartItems().map((item) => (
                       <View key={item.sku_id} style={styles.orderItem}>
                         {item.sku_image_url ? (
                           <Image
@@ -1124,14 +1102,14 @@ export const PaymentMethod = () => {
                           <Text style={styles.itemName} numberOfLines={2}>
                             {item.product_name}
                           </Text>
-                          {item.sku_attributes?.map((attribute) => (
+                          {item.sku_attributes?.map((attribute, index) => (
                             <Text
                               style={styles.itemVariant}
-                              key={attribute?.attribute_value}
+                              key={`${attribute?.attribute_name}-${index}`}
                               numberOfLines={1}
                             >
-                              {attribute?.attribute_name}:{" "}
-                              {attribute?.attribute_value}
+                              {attribute?.attribute_name_trans || attribute?.attribute_name}:{" "}
+                              {attribute?.value_trans || attribute?.value}
                             </Text>
                           ))}
                           <Text style={styles.itemQuantity}>
