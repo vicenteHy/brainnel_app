@@ -21,18 +21,45 @@ import { formatPrice } from "../../utils/priceUtils";
 export const TikTokScreen = () => {
   const [liveProducts, setLiveProducts] = useState<LiveProductListItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t, i18n } = useTranslation();
 
-  const fetchLiveProducts = async () => {
+  const fetchLiveProducts = async (page: number = 1, isLoadMore: boolean = false) => {
     try {
-      setLoading(true);
-      const response = await getLiveProducts({ page: 1, page_size: 20 });
-      setLiveProducts(response.items);
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      
+      const response = await getLiveProducts({ page, page_size: 20 });
+      console.log('Live products response:', response);
+      
+      if (isLoadMore) {
+        setLiveProducts(prev => [...prev, ...(response.items || [])]);
+      } else {
+        setLiveProducts(response.items || []);
+      }
+      
+      setHasMore(response.items && response.items.length >= 20);
+      setCurrentPage(page);
     } catch (error) {
       console.error(t('banner.tiktok.fetch_failed'), error);
+      if (!isLoadMore) {
+        setLiveProducts([]);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreProducts = () => {
+    if (!loadingMore && hasMore) {
+      fetchLiveProducts(currentPage + 1, true);
     }
   };
 
@@ -131,14 +158,34 @@ export const TikTokScreen = () => {
           style={styles.productContainer}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.productContainerContent}
+          onScroll={({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const paddingToBottom = 20;
+            if (layoutMeasurement.height + contentOffset.y >=
+                contentSize.height - paddingToBottom) {
+              loadMoreProducts();
+            }
+          }}
+          scrollEventThrottle={400}
         >
           <View style={styles.productList}>
             {loading ? (
               <View style={styles.loadingContainer}>
                 <Text style={styles.loadingText}>{t('loading')}</Text>
               </View>
+            ) : liveProducts.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{t('banner.tiktok.no_products')}</Text>
+              </View>
             ) : (
-              liveProducts.map(renderLiveProduct)
+              <>
+                {liveProducts.map(renderLiveProduct)}
+                {loadingMore && (
+                  <View style={styles.loadingMoreContainer}>
+                    <Text style={styles.loadingMoreText}>{t('loading')}</Text>
+                  </View>
+                )}
+              </>
             )}
           </View>
         </ScrollView>
@@ -270,5 +317,25 @@ const styles = StyleSheet.create({
   liveProductSold: {
     color: "#999",
     fontSize: fontSize(12),
+  },
+  emptyContainer: {
+    width: "100%",
+    height: widthUtils(200, 200).height,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#999",
+    fontSize: fontSize(16),
+  },
+  loadingMoreContainer: {
+    width: "100%",
+    paddingVertical: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingMoreText: {
+    color: "#999",
+    fontSize: fontSize(14),
   }
 });
