@@ -190,7 +190,7 @@ export const styles = StyleSheet.create<StylesType>({
   },
   categoryItem: {
     paddingVertical: 8,
-    marginRight: 5,
+    marginRight: 8,
   },
   categoryItemActive: {
     borderBottomWidth: 2,

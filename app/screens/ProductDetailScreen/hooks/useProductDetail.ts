@@ -204,22 +204,82 @@ export const useProductDetail = () => {
       
       // 检查是否为直播商品
       if (route.params.is_live_item) {
+        console.log('[ProductDetail] 获取直播商品详情', {
+          product_id: route.params.offer_id,
+          price: route.params.price,
+          is_live_item: route.params.is_live_item
+        });
+        
         res = await getLiveProductDetails(parseInt(route.params.offer_id));
+        
+        console.log('[ProductDetail] 直播商品API响应', {
+          product_id: res.product_id,
+          name: res.name,
+          name_en: res.name_en,
+          price: res.price,
+          original_price: res.original_price,
+          image_url: res.image_url,
+          skus_length: res.skus?.length || 0,
+          description_length: res.description?.length || 0
+        });
+        
         // 直播商品保持原始数据结构，只做最小必要的字段映射
         res.offer_id = res.product_id;
         res.subject = res.name;
         res.subject_trans = res.name_en || res.name;
         res.product_image_urls = res.image_url ? [res.image_url] : [];
         res.is_live_item = true; // 标记为直播商品
+        
+        console.log('[ProductDetail] 直播商品字段映射完成', {
+          offer_id: res.offer_id,
+          subject: res.subject,
+          subject_trans: res.subject_trans,
+          product_image_urls: res.product_image_urls,
+          final_price: res.price,
+          is_live_item: res.is_live_item
+        });
       } else {
+        console.log('[ProductDetail] 获取普通商品详情', {
+          offer_id: route.params.offer_id,
+          user_id: userStore.user?.user_id
+        });
+        
         res = await productApi.getProductDetail(route.params.offer_id, userStore.user?.user_id);
+        
+        console.log('[ProductDetail] 普通商品API响应', {
+          offer_id: res.offer_id,
+          subject: res.subject,
+          price_range: res.sale_info?.price_range_list?.length || 0,
+          skus_length: res.skus?.length || 0
+        });
       }
       
       if (res.skus != null) {
         let priceSelectedSku;
+        console.log('[ProductDetail] 处理SKU数据', {
+          skus_count: res.skus.length,
+          route_price: route.params.price,
+          is_live_item: route.params.is_live_item,
+          skus_preview: res.skus.slice(0, 2).map((sku: any) => ({
+            sku_id: sku.sku_id,
+            price: sku.price,
+            offer_price: sku.offer_price,
+            original_price: sku.original_price
+          }))
+        });
+        
         if (route.params.is_live_item) {
           // 直播商品：根据价格匹配SKU
           priceSelectedSku = res.skus.find((item: any) => item.price === route.params.price);
+          console.log('[ProductDetail] 直播商品SKU匹配结果', {
+            found: !!priceSelectedSku,
+            matched_sku: priceSelectedSku ? {
+              sku_id: priceSelectedSku.sku_id,
+              price: priceSelectedSku.price,
+              original_price: priceSelectedSku.original_price
+            } : null
+          });
+          
           if (priceSelectedSku) {
             res.price = priceSelectedSku.price;
             res.original_price = priceSelectedSku.original_price;
@@ -227,6 +287,15 @@ export const useProductDetail = () => {
         } else {
           // 普通商品：使用offer_price匹配
           priceSelectedSku = res.skus.find((item: any) => item.offer_price === route.params.price);
+          console.log('[ProductDetail] 普通商品SKU匹配结果', {
+            found: !!priceSelectedSku,
+            matched_sku: priceSelectedSku ? {
+              sku_id: priceSelectedSku.sku_id,
+              offer_price: priceSelectedSku.offer_price,
+              original_price: priceSelectedSku.original_price
+            } : null
+          });
+          
           if (priceSelectedSku) {
             res.price = priceSelectedSku.offer_price;
             res.original_price = priceSelectedSku.original_price;
@@ -237,15 +306,37 @@ export const useProductDetail = () => {
         }
         setPriceSelectedSku(priceSelectedSku);
       } else {
+        console.log('[ProductDetail] 无SKU数据，使用路由价格', {
+          route_price: route.params.price
+        });
         res.price = route.params.price;
       }
 
+      console.log('[ProductDetail] 设置最终产品数据', {
+        offer_id: res.offer_id,
+        final_price: res.price,
+        original_price: res.original_price,
+        is_live_item: res.is_live_item,
+        has_skus: !!res.skus,
+        product_image_urls_count: res.product_image_urls?.length || 0
+      });
+      
       setProduct(res);
       
       let list: ProductGroupList[] = [];
       if (res.skus != null && !route.params.is_live_item) {
         // 只有普通商品才处理属性分组，直播商品不需要
+        console.log('[ProductDetail] 处理普通商品属性分组');
         list = groupData(res, priceSelectedSku?.attributes as SkuAttribute[]);
+        console.log('[ProductDetail] 属性分组完成', {
+          groups_count: list.length,
+          groups: list.map(group => ({
+            name: group.attribute_name,
+            attributes_count: group.attributes.length
+          }))
+        });
+      } else if (route.params.is_live_item) {
+        console.log('[ProductDetail] 直播商品跳过属性分组处理');
       }
 
       const imageUrls = [];
@@ -254,6 +345,11 @@ export const useProductDetail = () => {
       while ((match = regex.exec(res.description)) !== null) {
         imageUrls.push(match[1]);
       }
+      console.log('[ProductDetail] 解析描述图片', {
+        description_length: res.description?.length || 0,
+        extracted_images: imageUrls.length
+      });
+      
       setImageUrls(imageUrls);
       setGroupList(list);
 
@@ -267,9 +363,25 @@ export const useProductDetail = () => {
         product_img: res.product_image_urls[0],
         timestamp: new Date().toISOString(),
       };
+      console.log('[ProductDetail] 记录产品浏览分析数据', {
+        offer_id: data.offer_id,
+        category_id: data.category_id,
+        price: data.price,
+        sku_id: data.sku_id,
+        product_name: data.product_name,
+        has_product_img: !!data.product_img
+      });
       analyticsData.logViewProduct(data);
+      
+      console.log('[ProductDetail] 产品详情加载完成');
     } catch (error: any) {
-      console.error("Error fetching product details:", error);
+      console.error("[ProductDetail] 获取产品详情失败:", error);
+      console.error("[ProductDetail] 错误详情:", {
+        message: error.message,
+        stack: error.stack,
+        offer_id: route.params?.offer_id,
+        is_live_item: route.params?.is_live_item
+      });
     } finally {
       setIsLoading(false);
     }

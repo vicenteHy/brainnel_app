@@ -52,6 +52,17 @@ export default function ProductDetailScreen() {
 
   // 检查是否为直播商品
   const isLiveItem = route.params?.is_live_item || false;
+  
+  // 添加调试日志
+  useEffect(() => {
+    console.log('[ProductDetailScreen] 页面初始化', {
+      offer_id: route.params?.offer_id,
+      price: route.params?.price,
+      is_live_item: route.params?.is_live_item,
+      searchKeyword: route.params?.searchKeyword,
+      isLiveItem: isLiveItem
+    });
+  }, [route.params]);
 
   const {
     product,
@@ -65,6 +76,33 @@ export default function ProductDetailScreen() {
     toggleExpand,
     getDisplayAttributes,
   } = useProductDetail();
+  
+  // 监听产品数据变化
+  useEffect(() => {
+    if (product) {
+      console.log('[ProductDetailScreen] 产品数据已加载', {
+        offer_id: product.offer_id,
+        subject: product.subject,
+        subject_trans: product.subject_trans,
+        price: product.price,
+        original_price: product.original_price,
+        is_live_item: product.is_live_item,
+        category_id: product.category_id,
+        seller_open_id: product.seller_open_id,
+        product_image_urls_count: product.product_image_urls?.length || 0,
+        skus_count: product.skus?.length || 0,
+        description_length: product.description?.length || 0
+      });
+    }
+  }, [product]);
+  
+  // 监听加载状态变化
+  useEffect(() => {
+    console.log('[ProductDetailScreen] 加载状态变化', {
+      isLoading: isLoading,
+      hasProduct: !!product
+    });
+  }, [isLoading]);
 
   // 页面加载时更新购物车数量
   useEffect(() => {
@@ -86,8 +124,16 @@ export default function ProductDetailScreen() {
         seller_id: product.seller_open_id,
       };
       
+      console.log('[ProductDetailScreen] 添加浏览记录', {
+        product_id: browseItem.product_id,
+        product_name: browseItem.product_name,
+        price: browseItem.price,
+        currency: browseItem.currency,
+        is_live_item: product.is_live_item
+      });
+      
       addBrowseItem(browseItem).catch(error => {
-        console.warn('Failed to add browse history:', error);
+        console.warn('[ProductDetailScreen] 添加浏览记录失败:', error);
       });
     }
   }, [product, addBrowseItem, user.currency]);

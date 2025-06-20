@@ -42,6 +42,33 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // 添加调试日志，打印live产品数据
+  React.useEffect(() => {
+    if (__DEV__) {
+      console.log('=== Live产品数据调试 ===');
+      console.log('Product完整数据:', JSON.stringify(product, null, 2));
+      console.log('Product.skus:', product.skus);
+      if (product.skus && product.skus.length > 0) {
+        product.skus.forEach((sku, index) => {
+          console.log(`SKU[${index}] 完整数据:`, JSON.stringify(sku, null, 2));
+          console.log(`SKU[${index}] amount_on_sale:`, sku.amount_on_sale);
+          console.log(`SKU[${index}] stock:`, (sku as any).stock);
+          console.log(`SKU[${index}] attributes:`, sku.attributes);
+        });
+      }
+      console.log('=== Live产品数据调试结束 ===');
+    }
+  }, [product]);
+
+  // 获取SKU库存的辅助函数
+  const getSkuStock = (sku: any): number => {
+    // 直播商品使用stock字段，普通商品使用amount_on_sale字段
+    if (product.is_live_item) {
+      return sku.stock ?? 0;
+    }
+    return sku.amount_on_sale ?? 0;
+  };
+
   const handleImagePress = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setModalVisible(true);
@@ -413,7 +440,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                   <Text
                     style={[
                       styles.skuText,
-                      ((sku.amount_on_sale ?? 0) === 0) && { color: "#bdbdbd" },
+                      (getSkuStock(sku) === 0) && { color: "#bdbdbd" },
                     ]}
                   >
                     {sku.attributes && sku.attributes.length > 0
@@ -423,14 +450,14 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                       : getLiveSkuName(sku) || `SKU ${index + 1}`}
                   </Text>
                   <Text style={styles.stockText}>
-                    {t("productCard.stock")} {sku.amount_on_sale ?? 0}
+                    {t("productCard.stock")} {getSkuStock(sku)}
                   </Text>
                 </View>
                 <View style={styles.quantityControls}>
                   <TouchableOpacity
                     style={[
                       styles.quantityButton,
-                      ((sku.amount_on_sale ?? 0) === 0) ||
+                      (getSkuStock(sku) === 0) ||
                       (skuQuantities[index] || 0) <= 0
                         ? styles.quantityButtonDisabled
                         : styles.quantityButtonEnabled,
@@ -441,12 +468,12 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                         onQuantityChange(index, currentQuantity - 1);
                       }
                     }}
-                    disabled={(sku.amount_on_sale ?? 0) === 0}
+                    disabled={getSkuStock(sku) === 0}
                     activeOpacity={1}
                   >
                     <Text
                       style={
-                        ((sku.amount_on_sale ?? 0) === 0) ||
+                        (getSkuStock(sku) === 0) ||
                         (skuQuantities[index] || 0) <= 0
                           ? styles.quantityButtonDisabledText
                           : styles.quantityButtonText
@@ -462,11 +489,11 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                         "hasImg",
                         index,
                         skuQuantities[index] || 0,
-                        sku.amount_on_sale ?? 0,
+                        getSkuStock(sku),
                         sku.sku_id?.toString(),
                       )
                     }
-                    disabled={(sku.amount_on_sale ?? 0) === 0}
+                    disabled={getSkuStock(sku) === 0}
                     activeOpacity={1}
                   >
                     <Text style={styles.quantityDisplayText}>
@@ -476,23 +503,23 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.quantityButton,
-                      ((sku.amount_on_sale ?? 0) === 0)
+                      (getSkuStock(sku) === 0)
                         ? styles.quantityButtonDisabled
                         : styles.quantityButtonEnabled,
                     ]}
                     onPress={() => {
                       const currentQuantity = skuQuantities[index] || 0;
-                      const maxQuantity = sku.amount_on_sale ?? 0;
+                      const maxQuantity = getSkuStock(sku);
                       if (currentQuantity < maxQuantity) {
                         onQuantityChange(index, currentQuantity + 1);
                       }
                     }}
-                    disabled={(sku.amount_on_sale ?? 0) === 0}
+                    disabled={getSkuStock(sku) === 0}
                     activeOpacity={1}
                   >
                     <Text
                       style={
-                        ((sku.amount_on_sale ?? 0) === 0)
+                        (getSkuStock(sku) === 0)
                           ? styles.quantityButtonDisabledText
                           : styles.quantityButtonText
                       }
