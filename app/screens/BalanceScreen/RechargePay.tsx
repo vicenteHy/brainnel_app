@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Text, ActivityIndicator, Platform } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
 import { payApi, PaymentInfoResponse } from "../../services/api/payApi";
@@ -197,6 +197,7 @@ export const RechargePay = () => {
       console.log("支付方式:", method);
       console.log("充值ID:", recharge_id);
       console.log("支付URL:", payUrl);
+      console.log("当前平台:", Platform.OS);
       
       // 检查payUrl是否有效
       if (!payUrl || payUrl === 'null' || payUrl === 'undefined') {
@@ -210,6 +211,72 @@ export const RechargePay = () => {
         return;
       }
       
+      // Android平台对Wave支付使用不同的处理逻辑
+      if (Platform.OS === 'android' && method === 'wave') {
+        console.log("Android平台Wave充值：直接打开URL，跳过canOpenURL检查");
+        setLoading(true);
+        
+        try {
+          await Linking.openURL(payUrl);
+          console.log("✅ Wave充值URL已在Android上打开");
+          
+          // 打开外部浏览器后开始轮询充值状态
+          console.log("等待2秒后开始轮询充值状态...");
+          setTimeout(() => {
+            startPolling();
+            setLoading(false);
+            console.log("轮询已启动，loading状态已清除");
+          }, 2000);
+          
+        } catch (linkingError) {
+          console.error("❌ Android Wave充值URL打开失败:", linkingError);
+          setLoading(false);
+          Alert.alert(t("common.error"), t("recharge.status.cannot_open_link"));
+          safeNavigate("PayError", {
+            msg: t("recharge.status.cannot_open_link"),
+            recharge_id: recharge_id,
+            isRecharge: true
+          });
+        }
+        return;
+      }
+      
+      // PayPal充值：直接打开URL，让系统决定使用应用还是浏览器
+      if (method === 'paypal') {
+        console.log("PayPal充值：直接打开支付URL");
+        console.log("PayPal充值URL类型:", payUrl.includes('paypal.com') ? 'Web URL' : 'App URL');
+        setLoading(true);
+        
+        try {
+          // 直接打开PayPal充值URL
+          // PayPal通常使用HTTPS网页链接，会在浏览器中打开
+          // 用户可以在PayPal网页中选择使用PayPal应用
+          console.log("直接打开PayPal充值URL（通常是网页链接）");
+          await Linking.openURL(payUrl);
+          console.log("✅ PayPal充值URL已打开（在浏览器中，用户可选择使用PayPal应用）");
+          
+          // 打开后开始轮询充值状态
+          console.log("等待2秒后开始轮询充值状态...");
+          setTimeout(() => {
+            startPolling();
+            setLoading(false);
+            console.log("轮询已启动，loading状态已清除");
+          }, 2000);
+          
+        } catch (linkingError) {
+          console.error("❌ PayPal充值URL打开失败:", linkingError);
+          setLoading(false);
+          Alert.alert(t("common.error"), t("recharge.status.cannot_open_link"));
+          safeNavigate("PayError", {
+            msg: t("recharge.status.cannot_open_link"),
+            recharge_id: recharge_id,
+            isRecharge: true
+          });
+        }
+        return;
+      }
+      
+      // 其他平台或支付方式使用原来的逻辑
       const supported = await Linking.canOpenURL(payUrl);
       console.log("URL是否支持打开:", supported);
       
@@ -240,6 +307,7 @@ export const RechargePay = () => {
     } catch (error) {
       console.error("❌ 打开外部浏览器失败:", error);
       console.error("错误详情:", error instanceof Error ? error.message : String(error));
+      setLoading(false);
       Alert.alert(t("common.error"), t("recharge.status.open_payment_failed"));
       safeNavigate("PayError", {
         msg: t("recharge.status.open_payment_failed"),

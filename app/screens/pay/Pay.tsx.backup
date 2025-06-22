@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Text, ActivityIndicator, Platform } from "react-native";
+import { View, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Text, ActivityIndicator, AppState } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
 import { payApi, PaymentInfoResponse } from "../../services/api/payApi";
@@ -25,8 +25,16 @@ export const Pay = () => {
   const [payInfo, setPayInfo] = useState<PaymentInfoResponse>();
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'checking' | 'completed' | 'failed'>('pending');
+  const paymentStatusRef = useRef<'pending' | 'checking' | 'completed' | 'failed'>('pending');
   const [mobileMoneyAttempts, setMobileMoneyAttempts] = useState(0);
+
+  // 更新支付状态的辅助函数
+  const updatePaymentStatus = (status: 'pending' | 'checking' | 'completed' | 'failed') => {
+    setPaymentStatus(status);
+    paymentStatusRef.current = status;
+  };
 
   // 轮询支付状态
   const pollPaymentStatus = () => {
@@ -51,7 +59,7 @@ export const Pay = () => {
           
           if (res.status === 1) {
             console.log(`✅ ${method}支付成功！停止轮询并跳转成功页面`);
-            setPaymentStatus('completed');
+            updatePaymentStatus('completed');
             safeNavigate("PaymentSuccessScreen", res);
             stopPolling();
           } else {
@@ -84,7 +92,7 @@ export const Pay = () => {
           
           if (res.status === 1) {
             console.log(`✅ ${method === "paypal" ? "PayPal" : "Bank Card"}支付成功！停止轮询并跳转成功页面`);
-            setPaymentStatus('completed');
+            updatePaymentStatus('completed');
             safeNavigate("PaymentSuccessScreen", res);
             stopPolling();
           } else {
@@ -112,7 +120,7 @@ export const Pay = () => {
     console.log("支付方式:", method);
     console.log("订单ID:", order_id);
     
-    setPaymentStatus('checking');
+    updatePaymentStatus('checking');
     
     // 立即执行一次
     console.log("立即执行第一次轮询...");
@@ -126,8 +134,8 @@ export const Pay = () => {
       console.log("轮询定时器已存在，跳过设置");
     }
 
-    // 设置超时时间：Mobile Money 5秒，其他支付 60秒
-    const timeoutDuration = method === "mobile_money" ? 5000 : 60000;
+    // 设置超时时间：所有支付方式统一60秒
+    const timeoutDuration = 60000;
     if (!timeoutRef.current) {
       console.log(`设置超时定时器：${timeoutDuration/1000}秒后停止轮询`);
       timeoutRef.current = setTimeout(() => {
@@ -137,12 +145,12 @@ export const Pay = () => {
           // Mobile Money轮询超时处理
           console.log(`Mobile Money第${mobileMoneyAttempts + 1}次尝试超时`);
           stopPolling();
-          setPaymentStatus('pending'); // 重置为pending状态，允许用户重试
+          updatePaymentStatus('pending'); // 重置为pending状态，允许用户重试
           
           // 如果已经尝试3次，跳转失败页面
           if (mobileMoneyAttempts + 1 >= 3) {
             console.log("Mobile Money已尝试3次，跳转到支付失败页面");
-            setPaymentStatus('failed');
+            updatePaymentStatus('failed');
             safeNavigate("PayError", { 
               msg: t("payment.status.mobile_money_max_attempts"),
               order_id: order_id 
@@ -152,7 +160,7 @@ export const Pay = () => {
           // 其他支付方式的超时处理
           console.log("停止轮询并跳转到支付失败页面");
           stopPolling();
-          setPaymentStatus('failed');
+          updatePaymentStatus('failed');
           safeNavigate("PayError", { 
             msg: t("payment.status.timeout_message"),
             order_id: order_id 
@@ -184,6 +192,14 @@ export const Pay = () => {
       console.log("超时定时器已为空，无需清除");
     }
     
+    if (fallbackTimeoutRef.current) {
+      console.log("清除兜底轮询定时器");
+      clearTimeout(fallbackTimeoutRef.current);
+      fallbackTimeoutRef.current = null;
+    } else {
+      console.log("兜底轮询定时器已为空，无需清除");
+    }
+    
     console.log("轮询停止完成");
   };
 
@@ -195,7 +211,6 @@ export const Pay = () => {
       console.log("支付方式:", method);
       console.log("订单ID:", order_id);
       console.log("支付URL:", payUrl);
-      console.log("当前平台:", Platform.OS);
       
       // 检查payUrl是否有效
       if (!payUrl || payUrl === 'null' || payUrl === 'undefined') {
@@ -208,70 +223,6 @@ export const Pay = () => {
         return;
       }
       
-      // Android平台对Wave支付使用不同的处理逻辑
-      if (Platform.OS === 'android' && method === 'wave') {
-        console.log("Android平台Wave支付：直接打开URL，跳过canOpenURL检查");
-        setLoading(true);
-        
-        try {
-          await Linking.openURL(payUrl);
-          console.log("✅ Wave支付URL已在Android上打开");
-          
-          // 打开外部浏览器后开始轮询支付状态
-          console.log("等待2秒后开始轮询支付状态...");
-          setTimeout(() => {
-            startPolling();
-            setLoading(false);
-            console.log("轮询已启动，loading状态已清除");
-          }, 2000);
-          
-        } catch (linkingError) {
-          console.error("❌ Android Wave支付URL打开失败:", linkingError);
-          setLoading(false);
-          Alert.alert(t("common.error"), t("payment.status.cannot_open_link"));
-          safeNavigate("PayError", {
-            msg: t("payment.status.cannot_open_link"),
-            order_id: order_id
-          });
-        }
-        return;
-      }
-      
-      // PayPal支付：直接打开URL，让系统决定使用应用还是浏览器
-      if (method === 'paypal') {
-        console.log("PayPal支付：直接打开支付URL");
-        console.log("PayPal支付URL类型:", payUrl.includes('paypal.com') ? 'Web URL' : 'App URL');
-        setLoading(true);
-        
-        try {
-          // 直接打开PayPal支付URL
-          // PayPal通常使用HTTPS网页链接，会在浏览器中打开
-          // 用户可以在PayPal网页中选择使用PayPal应用
-          console.log("直接打开PayPal支付URL（通常是网页链接）");
-          await Linking.openURL(payUrl);
-          console.log("✅ PayPal支付URL已打开（在浏览器中，用户可选择使用PayPal应用）");
-          
-          // 打开后开始轮询支付状态
-          console.log("等待2秒后开始轮询支付状态...");
-          setTimeout(() => {
-            startPolling();
-            setLoading(false);
-            console.log("轮询已启动，loading状态已清除");
-          }, 2000);
-          
-        } catch (linkingError) {
-          console.error("❌ PayPal支付URL打开失败:", linkingError);
-          setLoading(false);
-          Alert.alert(t("common.error"), t("payment.status.cannot_open_link"));
-          safeNavigate("PayError", {
-            msg: t("payment.status.cannot_open_link"),
-            order_id: order_id
-          });
-        }
-        return;
-      }
-      
-      // 其他平台或支付方式使用原来的逻辑
       const supported = await Linking.canOpenURL(payUrl);
       console.log("URL是否支持打开:", supported);
       
@@ -282,13 +233,30 @@ export const Pay = () => {
         await Linking.openURL(payUrl);
         console.log("✅ 外部浏览器已打开");
         
-        // 打开外部浏览器后开始轮询支付状态
-        console.log("等待2秒后开始轮询支付状态...");
-        setTimeout(() => {
-          startPolling();
+        // PayPal和Bank Card等待深度链接回调，Wave支付开始轮询
+        if (method === "wave") {
+          console.log("Wave支付：等待2秒后开始轮询支付状态...");
+          setTimeout(() => {
+            startPolling();
+            setLoading(false);
+            console.log("Wave轮询已启动，loading状态已清除");
+          }, 2000);
+        } else {
+          console.log(`${method}支付：等待用户完成支付并返回app...`);
           setLoading(false);
-          console.log("轮询已启动，loading状态已清除");
-        }, 2000);
+          updatePaymentStatus('pending');
+          
+          // 设置30秒后的兜底轮询
+          console.log(`${method}支付：设置30秒后启动兜底轮询...`);
+          fallbackTimeoutRef.current = setTimeout(() => {
+            if (paymentStatusRef.current === 'pending') {
+              console.log(`${method}支付：30秒后兜底轮询启动`);
+              startPolling();
+            } else {
+              console.log(`${method}支付：状态已变化(${paymentStatusRef.current})，取消兜底轮询`);
+            }
+          }, 30000);
+        }
         
       } else {
         console.error("❌ 无法打开支付链接");
@@ -301,7 +269,6 @@ export const Pay = () => {
     } catch (error) {
       console.error("❌ 打开外部浏览器失败:", error);
       console.error("错误详情:", error instanceof Error ? error.message : String(error));
-      setLoading(false);
       Alert.alert(t("common.error"), t("payment.status.open_payment_failed"));
       safeNavigate("PayError", {
         msg: t("payment.status.open_payment_failed"),
@@ -317,10 +284,10 @@ export const Pay = () => {
       openExternalPayment();
     }
     
-    // Mobile Money支付不自动开始轮询，等待用户手动确认
+    // Mobile Money支付直接开始自动轮询，不打开浏览器
     if (method === "mobile_money") {
-      console.log("=== Mobile Money支付页面加载，等待用户确认支付 ===");
-      setPaymentStatus('pending');
+      console.log("=== Mobile Money支付页面加载，开始自动轮询支付状态 ===");
+      startPolling();
     }
 
     // 设置处理深度链接的监听器
@@ -333,14 +300,15 @@ export const Pay = () => {
       ) {
         console.log("检测到支付成功深度链接");
         stopPolling();
-        setPaymentStatus('checking');
+        updatePaymentStatus('checking');
         
         const parsed = Linking.parse(url);
         const params = parsed.queryParams || {};
         
         // 检查是否有PayPal或Bank Card回调参数
         if (params.paymentId && params.PayerID && (method === "paypal" || method === "bank_card")) {
-          console.log(`调用${method === "paypal" ? "PayPal" : "Bank Card"}支付回调验证...`);
+          console.log(`${method === "paypal" ? "PayPal" : "Bank Card"}深度链接回调，开始验证支付...`);
+          updatePaymentStatus('checking');
           
           payApi
             .paySuccessCallback(
@@ -350,10 +318,10 @@ export const Pay = () => {
             .then((res) => {
               console.log(`${method === "paypal" ? "PayPal" : "Bank Card"}回调验证结果:`, res);
               if (res.status === 1) {
-                setPaymentStatus('completed');
+                updatePaymentStatus('completed');
                 safeNavigate("PaymentSuccessScreen", res);
               } else {
-                setPaymentStatus('failed');
+                updatePaymentStatus('failed');
                 safeNavigate("PayError", {
                   msg: res.msg || t("payment.status.verification_failed"),
                   order_id: order_id
@@ -362,7 +330,7 @@ export const Pay = () => {
             })
             .catch((error) => {
               console.error(`${method === "paypal" ? "PayPal" : "Bank Card"}回调验证错误:`, error);
-              setPaymentStatus('failed');
+              updatePaymentStatus('failed');
               safeNavigate("PayError", { 
                 msg: t("payment.status.verification_failed_contact_support"),
                 order_id: order_id 
@@ -379,10 +347,10 @@ export const Pay = () => {
             .then((res) => {
               console.log(`${method}支付状态验证结果:`, res);
               if (res.status === 1) {
-                setPaymentStatus('completed');
+                updatePaymentStatus('completed');
                 safeNavigate("PaymentSuccessScreen", res);
               } else {
-                setPaymentStatus('failed');
+                updatePaymentStatus('failed');
                 safeNavigate("PayError", {
                   msg: t("payment.status.wave_verification_failed"),
                   order_id: order_id
@@ -391,7 +359,7 @@ export const Pay = () => {
             })
             .catch((error) => {
               console.error(`${method}支付状态验证错误:`, error);
-              setPaymentStatus('failed');
+              updatePaymentStatus('failed');
               safeNavigate("PayError", { 
                 msg: t("payment.status.wave_verification_failed"),
                 order_id: order_id 
@@ -399,7 +367,7 @@ export const Pay = () => {
             });
         } else {
           // 其他支付方式或缺少参数，直接跳转成功页面
-          setPaymentStatus('completed');
+          updatePaymentStatus('completed');
           safeNavigate("PaymentSuccessScreen", params);
         }
       } else if (
@@ -408,7 +376,7 @@ export const Pay = () => {
       ) {
         console.log("检测到支付取消深度链接");
         stopPolling();
-        setPaymentStatus('failed');
+        updatePaymentStatus('failed');
         
         safeNavigate("PayError", {
           msg: t("payment.status.payment_cancelled"),
@@ -420,9 +388,23 @@ export const Pay = () => {
     // 添加深度链接事件监听器
     const subscription = Linking.addEventListener("url", handleDeepLink);
 
+    // 添加App状态监听器
+    const handleAppStateChange = (nextAppState: string) => {
+      console.log("App状态变化:", nextAppState);
+      
+      // 当用户从后台切回app时，检查支付状态
+      if (nextAppState === 'active' && (method === "paypal" || method === "bank_card") && paymentStatusRef.current === 'pending') {
+        console.log(`${method}支付：用户切回app，检查支付状态...`);
+        pollPaymentStatus();
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+
     return () => {
       // 清理订阅
       subscription.remove();
+      appStateSubscription?.remove();
       // 清理轮询
       stopPolling();
     };
@@ -430,7 +412,7 @@ export const Pay = () => {
 
   // 重新打开支付
   const retryPayment = () => {
-    setPaymentStatus('pending');
+    updatePaymentStatus('pending');
     stopPolling();
     if (method === "mobile_money") {
       // Mobile Money不需要打开浏览器，只是重置状态等待用户确认

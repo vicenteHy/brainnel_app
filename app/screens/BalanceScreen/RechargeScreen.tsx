@@ -259,11 +259,10 @@ const RechargeScreen = () => {
         setIsMobileMoneyExpanded(true);
         
         // mobile money只支持本地货币，需要转换为当前国家对应的货币
-        let localCurrency = "FCFA"; // 默认为FCFA
+        let localCurrency = user?.currency || "FCFA"; // 使用用户当前货币，默认为FCFA
         
         // 根据用户当前国家确定本地货币
-        // 这里可以根据实际的国家货币映射来设置
-        // 暂时使用FCFA作为默认本地货币
+        // 使用用户的本地货币设置
         
         // 无条件触发货币转换，使用本地货币
         let amountToConvert = selectedPrice;

@@ -60,6 +60,13 @@
 		<string>fb-messenger-api</string>
 		<string>fbauth2</string>
 		<string>fbshareextension</string>
+		<string>paypal</string>
+		<string>paypalhere</string>
+		<string>com.paypal.ppclient.touch.v1</string>
+		<string>com.paypal.ppclient.touch.v2</string>
+		<string>com.paypal.ppclient</string>
+		<string>paypal-m</string>
+		<string>wave</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.0</string>
