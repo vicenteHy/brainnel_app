@@ -29,6 +29,7 @@ import {
   RechargeRecommendAmountResponse,
   PaymentMethod,
 } from "../../services/api/payApi";
+import { settingApi } from "../../services/api/setting";
 import getPayMap from "../../utils/payMap";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
@@ -81,6 +82,24 @@ const RechargeScreen = () => {
 
   // 添加国家选择相关状态
   const [validDigits, setValidDigits] = useState<number[]>([8]);
+  const [countryList, setCountryList] = useState<any[]>([]);
+  const [userLocalCurrency, setUserLocalCurrency] = useState<string>("");
+
+  // 获取国家列表和用户本地货币
+  const getCountryListAndSetLocalCurrency = async () => {
+    try {
+      const countries = await settingApi.getCountryList();
+      setCountryList(countries);
+      
+      // 根据用户国家代码找到对应的本地货币
+      const userCountry = countries.find(country => country.country === user.country_code);
+      if (userCountry) {
+        setUserLocalCurrency(userCountry.currency);
+      }
+    } catch (error) {
+      console.error("Failed to get country list:", error);
+    }
+  };
 
   useEffect(() => {
     payApi.getRechargeRecommendAmount().then((res) => {
@@ -90,6 +109,8 @@ const RechargeScreen = () => {
         setSelectedPrice(res.amounts[0].toString());
       }
     });
+
+    getCountryListAndSetLocalCurrency();
 
     payApi.getCountryPaymentMethods().then((res) => {
       console.log("=== 支付方式原始数据 ===");
@@ -133,6 +154,14 @@ const RechargeScreen = () => {
     });
   }, [user]);
 
+  // 当用户本地货币设置后，如果当前选择的是mobile money，重新进行货币转换
+  useEffect(() => {
+    if (userLocalCurrency && selectedOperator === "mobile_money" && selectedPrice) {
+      setIsConverting(true);
+      handleCurrencyConversion(selectedPrice, userLocalCurrency);
+    }
+  }, [userLocalCurrency]);
+
 
 
   const handlePriceSelect = (price: string) => {
@@ -154,7 +183,8 @@ const RechargeScreen = () => {
     }
     // 如果当前已选择了mobile money支付方式，则重新计算转换后的本地货币金额
     else if (selectedOperator === "mobile_money") {
-      handleCurrencyConversion(price, currentCurrency);
+      const targetCurrency = userLocalCurrency || user?.currency || "FCFA";
+      handleCurrencyConversion(price, targetCurrency);
     }
     // 保留原有的逻辑
     else if (selectedOperator === "currency") {
@@ -258,11 +288,8 @@ const RechargeScreen = () => {
       else if (selectedMethod.key === "mobile_money" && operator !== previousOperator) {
         setIsMobileMoneyExpanded(true);
         
-        // mobile money只支持本地货币，需要转换为当前国家对应的货币
-        let localCurrency = user?.currency || "FCFA"; // 使用用户当前货币，默认为FCFA
-        
-        // 根据用户当前国家确定本地货币
-        // 使用用户的本地货币设置
+        // mobile money使用从国家API获取的本地货币
+        const targetCurrency = userLocalCurrency || user?.currency || "FCFA";
         
         // 无条件触发货币转换，使用本地货币
         let amountToConvert = selectedPrice;
@@ -279,9 +306,9 @@ const RechargeScreen = () => {
         }
 
         if (amountToConvert) {
-          setCurrentCurrency(localCurrency);
+          setCurrentCurrency(targetCurrency);
           setIsConverting(true);
-          handleCurrencyConversion(amountToConvert, localCurrency);
+          handleCurrencyConversion(amountToConvert, targetCurrency);
         }
       }
       // mobile_money 的其他处理现在在 PhoneNumberInputModal 内部进行
@@ -324,7 +351,8 @@ const RechargeScreen = () => {
         }
         // 如果当前已选择了mobile money支付方式，则重新计算转换后的本地货币金额
         else if (selectedOperator === "mobile_money") {
-          handleCurrencyConversion(formattedAmount, currentCurrency);
+          const targetCurrency = userLocalCurrency || user?.currency || "FCFA";
+          handleCurrencyConversion(formattedAmount, targetCurrency);
         }
         // 保留原有的逻辑
         else if (selectedOperator === "currency") {
@@ -418,7 +446,8 @@ const RechargeScreen = () => {
         }
         // 如果是mobile money，使用转换后的本地货币
         else if (selectedMethod.key === "mobile_money") {
-          params.currency = currentCurrency; // 使用当前选择的本地货币
+          const targetCurrency = userLocalCurrency || user?.currency || "FCFA";
+          params.currency = targetCurrency; // 使用从API获取的本地货币
 
           // 使用转换后的本地货币金额，如果有
           if (convertedAmount.length > 0) {

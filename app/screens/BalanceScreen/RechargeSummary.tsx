@@ -46,8 +46,23 @@ const RechargeSummary: React.FC<RechargeSummaryProps> = ({ paymentParams }) => {
         </View>
       )}
 
+      {/* Mobile Money 货币转换显示 */}
+      {paymentParams.payment_method === "mobile_money" && 
+        paymentParams.currency !== "USD" && (
+          <View style={styles.paymentSummaryRow}>
+            <Text style={styles.paymentSummaryLabel}>
+              {t("balance.phone_modal.converted_amount")}
+            </Text>
+            <Text style={styles.paymentSummaryValueHighlight}>
+              {paymentParams.amount.toFixed(2)} {paymentParams.currency}
+            </Text>
+          </View>
+        )}
+
+      {/* 其他支付方式的货币转换 */}
       {paymentParams.currency !== "FCFA" &&
-        paymentParams.payment_method !== "wave" && (
+        paymentParams.payment_method !== "wave" &&
+        paymentParams.payment_method !== "mobile_money" && (
           <View style={styles.paymentSummaryRow}>
             <Text style={styles.paymentSummaryLabel}>
               {t("balance.phone_modal.converted_amount")}
