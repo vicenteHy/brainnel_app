@@ -56,10 +56,6 @@
 	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>fbapi</string>
-		<string>fb-messenger-api</string>
-		<string>fbauth2</string>
-		<string>fbshareextension</string>
 		<string>paypal</string>
 		<string>paypalhere</string>
 		<string>com.paypal.ppclient.touch.v1</string>
@@ -96,25 +92,6 @@
 	<string>此应用程序需要访问您的相机以拍照。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>此应用程序需要访问您的照片库以上传图片。</string>
-	<key>SKAdNetworkItems</key>
-	<array>
-		<dict>
-			<key>SKAdNetworkIdentifier</key>
-			<string>v9wttpbfk9.skadnetwork</string>
-		</dict>
-		<dict>
-			<key>SKAdNetworkIdentifier</key>
-			<string>n38lu8286q.skadnetwork</string>
-		</dict>
-		<dict>
-			<key>SKAdNetworkIdentifier</key>
-			<string>v9wttpbfk9.skadnetwork</string>
-		</dict>
-		<dict>
-			<key>SKAdNetworkIdentifier</key>
-			<string>n38lu8286q.skadnetwork</string>
-		</dict>
-	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

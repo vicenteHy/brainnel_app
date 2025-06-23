@@ -30,7 +30,6 @@
             "CFBundleURLSchemes": [
               "com.brainnel.app",
               "myapp",
-              "fb995035562798467",
               "com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec"
             ]
           }
@@ -102,17 +101,6 @@
         }
       ],
       "expo-localization",
-      [
-        "react-native-fbsdk-next",
-        {
-          "appID": "995035562798467",
-          "displayName": "brainnel-new",
-          "scheme": "fb995035562798467",
-          "clientToken": "83c780425cf53d1e4529171beac9d450",
-          "iosDisplayName": "brainnel-new",
-          "isLimitedEventDataUsageEnabled": true
-        }
-      ],
       "@react-native-google-signin/google-signin",
       "expo-web-browser"
     ],
