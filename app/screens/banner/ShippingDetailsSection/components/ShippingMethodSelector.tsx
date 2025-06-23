@@ -33,16 +33,6 @@ export const ShippingMethodSelector: React.FC<ShippingMethodSelectorProps> = ({
         ]}
         onPress={() => onMethodChange("maritime")}
       >
-        <Image
-          source={IMAGES.maritimeIcon}
-          style={{
-            width: 20,
-            height: 20,
-            tintColor: shippingMethod === "maritime" ? "#fff" : "#747474",
-            marginBottom: 4,
-          }}
-          resizeMode="contain"
-        />
         <Text
           style={[
             styles.maritimeHeadingStyle,
@@ -61,16 +51,6 @@ export const ShippingMethodSelector: React.FC<ShippingMethodSelectorProps> = ({
         ]}
         onPress={() => onMethodChange("airway")}
       >
-        <Image
-          source={IMAGES.airwayIcon}
-          style={{
-            width: 20,
-            height: 20,
-            tintColor: shippingMethod === "airway" ? "#fff" : "#747474",
-            marginBottom: 4,
-          }}
-          resizeMode="contain"
-        />
         <Text
           style={[
             styles.flightModeLabel,
