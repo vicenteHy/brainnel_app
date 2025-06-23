@@ -40,13 +40,12 @@ export const getAttributeTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
   
-  
   let result = "";
   
   if (currentLang === "fr") {
-    result = data.value_trans || data.attribute_value || "";
+    result = data.attribute_value_trans || data.value_trans || data.attribute_value || "";
   } else {
-    result = data.value_trans_en || data.attribute_value_en || data.value_trans || data.attribute_value || "";
+    result = data.attribute_value_trans_en || data.value_trans_en || data.attribute_value_en || data.attribute_value_trans || data.value_trans || data.attribute_value || "";
   }
   
   return result;
