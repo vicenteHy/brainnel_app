@@ -59,9 +59,6 @@ export const PreviewAddress = () => {
   const navigation = useNavigation<NativeStackNavigationProp<NavigationParams>>();
   const route = useRoute<PreviewAddressRouteProp>();
   
-  console.log('📍 [COD-DEBUG] PreviewAddress接收到的路由参数:', route.params);
-  console.log('📍 [COD-DEBUG] isCOD:', route.params?.isCOD);
-  console.log('📍 [COD-DEBUG] isToc:', route.params?.isToc);
   const { setOrderData ,orderData} = useCreateOrderStore();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string | null>(null);

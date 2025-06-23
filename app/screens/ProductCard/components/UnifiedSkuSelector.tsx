@@ -42,23 +42,6 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // 添加调试日志，打印live产品数据
-  React.useEffect(() => {
-    if (__DEV__) {
-      console.log('=== Live产品数据调试 ===');
-      console.log('Product完整数据:', JSON.stringify(product, null, 2));
-      console.log('Product.skus:', product.skus);
-      if (product.skus && product.skus.length > 0) {
-        product.skus.forEach((sku, index) => {
-          console.log(`SKU[${index}] 完整数据:`, JSON.stringify(sku, null, 2));
-          console.log(`SKU[${index}] amount_on_sale:`, sku.amount_on_sale);
-          console.log(`SKU[${index}] stock:`, (sku as any).stock);
-          console.log(`SKU[${index}] attributes:`, sku.attributes);
-        });
-      }
-      console.log('=== Live产品数据调试结束 ===');
-    }
-  }, [product]);
 
   // 获取SKU库存的辅助函数
   const getSkuStock = (sku: any): number => {
@@ -252,9 +235,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                   source={{ uri: imageUrl }}
                   style={styles.skuImage}
                   onError={(error) => {
-                    if (__DEV__) {
-                      console.log('单SKU图片加载失败:', imageUrl, error);
-                    }
+                    // Image loading failed
                   }}
                   onLoad={() => {
                     // Image loaded successfully
@@ -405,9 +386,7 @@ const UnifiedSkuSelector: React.FC<UnifiedSkuSelectorProps> = ({
                       source={{ uri: imageUrl }}
                       style={styles.skuImage}
                       onError={(error) => {
-                        if (__DEV__) {
-                          console.log(`SKU ${index} 图片加载失败:`, imageUrl, error);
-                        }
+                        // Image loading failed
                       }}
                       onLoad={() => {
                         // Image loaded successfully

@@ -151,6 +151,39 @@ export const PaymentMethod = () => {
     );
   };
 
+  // Helper function to get the current display currency
+  const getDisplayCurrency = () => {
+    if (selectedPayment === "paypal" || selectedPayment === "bank_card") {
+      return selectedCurrency;
+    } else if (selectedPayment === "wave") {
+      return "FCFA";
+    } else if ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) {
+      return userLocalCurrency || user.currency;
+    }
+    return previewOrder?.currency || user.currency;
+  };
+
+  // Helper function to get currency symbol
+  const getCurrencySymbol = (currency: string) => {
+    // 不需要货币符号，因为后面会显示货币代码
+    return "";
+  };
+
+  // Helper function to get converted item price
+  const getConvertedItemPrice = (item: any) => {
+    if (selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
+        ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0)) {
+      const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+      const totalQuantity = getSelectedCartItems().reduce((sum, i) => sum + i.quantity, 0);
+      if (totalQuantity > 0) {
+        // Calculate the item's proportion of the total based on its value
+        const itemProportion = item.total_price / (previewOrder?.total_amount || 1);
+        return (totalConvertedAmount * itemProportion).toFixed(2);
+      }
+    }
+    return item?.total_price?.toFixed(2) || "0.00";
+  };
+
   const toggleExpanded = () => {
     setIsPaypalExpanded(!isPaypalExpanded);
   };
@@ -1118,7 +1151,7 @@ export const PaymentMethod = () => {
                         </View>
                         <View style={styles.itemPrices}>
                           <Text style={styles.itemPrice}>
-                            ${item?.total_price}
+                            {getConvertedItemPrice(item)} {getDisplayCurrency()}
                           </Text>
                         </View>
                       </View>

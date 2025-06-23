@@ -525,6 +525,7 @@
           "redirecting_to_result": "Redirection vers la page de résultat...",
           "payment_failed": "Paiement Échoué",
           "retry_or_contact_support": "Veuillez réessayer ou contacter le service client",
+          "checking_payment": "Vérification du Paiement",
           "order_info": "Informations de Commande",
           "order_number": "Numéro de Commande :",
           "payment_method": "Méthode de Paiement :",
@@ -537,10 +538,12 @@
           "instruction_2": "Retournez à l'app après paiement pour vérification automatique",
           "instruction_3": "Si statut non mis à jour, cliquez \"Vérification Manuelle\"",
           "mobile_money_ready": "Prêt à démarrer le paiement Mobile Money",
-          "mobile_money_checking": "Vérification du statut de paiement Mobile Money (timeout 10s)...",
-          "mobile_money_instruction_1": "Cliquez \"Confirmer le Paiement\" pour démarrer le processus Mobile Money",
-          "mobile_money_instruction_2": "Complétez le paiement par SMS dans les 10 secondes",
-          "mobile_money_instruction_3": "Le système vérifiera automatiquement le statut pendant 10 secondes",
+          "mobile_money_checking": "Vérification du statut de paiement Mobile Money...",
+          "mobile_money_instruction_1": "Vous recevrez les instructions de paiement par SMS",
+          "mobile_money_instruction_2": "Complétez le paiement en suivant les instructions SMS",
+          "mobile_money_instruction_3": "Retournez à l'app pour vérifier le statut du paiement",
+          "mobile_money_not_paid": "Paiement non complété",
+          "mobile_money_not_paid_message": "Veuillez compléter le paiement en suivant les instructions SMS",
           "confirm_payment": "Confirmer le Paiement",
           "invalid_payment_url": "URL de paiement invalide",
           "timeout_message": "Timeout du paiement, veuillez réessayer",
@@ -555,7 +558,8 @@
           "confirm_exit": "Confirmer la Sortie",
           "payment_not_complete_question": "Le paiement n'est pas encore terminé, êtes-vous sûr de vouloir sortir ?",
           "continue_payment": "Continuer le Paiement",
-          "payment_incomplete_retry": "Paiement incomplet, vous pouvez réessayer plus tard"
+          "payment_incomplete_retry": "Paiement incomplet, vous pouvez réessayer plus tard",
+          "cancel_payment": "Annuler le Paiement"
       }
   },
   "recharge": {
@@ -610,6 +614,7 @@
           "redirecting_to_result": "Redirection vers la page de résultat...",
           "payment_failed": "Recharge Échouée",
           "retry_or_contact_support": "Veuillez réessayer ou contacter le service client",
+          "checking_payment": "Vérification de la Recharge",
           "recharge_info": "Informations de Recharge",
           "recharge_id": "ID de Recharge :",
           "payment_method": "Méthode de Paiement :",
@@ -622,10 +627,12 @@
           "instruction_2": "Retournez à l'app après paiement pour vérification automatique",
           "instruction_3": "Si statut non mis à jour, cliquez \"Vérification Manuelle\"",
           "mobile_money_ready": "Prêt à démarrer la recharge Mobile Money",
-          "mobile_money_checking": "Vérification du statut de recharge Mobile Money (timeout 10s)...",
-          "mobile_money_instruction_1": "Cliquez \"Confirmer le Paiement\" pour démarrer le processus de recharge Mobile Money",
-          "mobile_money_instruction_2": "Complétez le paiement par SMS dans les 10 secondes",
-          "mobile_money_instruction_3": "Le système vérifiera automatiquement le statut pendant 10 secondes",
+          "mobile_money_checking": "Vérification du statut de recharge Mobile Money...",
+          "mobile_money_instruction_1": "Vous recevrez les instructions de recharge par SMS",
+          "mobile_money_instruction_2": "Complétez le paiement en suivant les instructions SMS",
+          "mobile_money_instruction_3": "Retournez à l'app pour vérifier le statut du paiement",
+          "mobile_money_not_paid": "Recharge non complétée",
+          "mobile_money_not_paid_message": "Veuillez compléter le paiement en suivant les instructions SMS",
           "confirm_payment": "Confirmer le Paiement",
           "max_attempts_reached": "Nombre maximum de tentatives atteint",
           "mobile_money_max_attempts": "Nombre maximum de tentatives Mobile Money atteint, veuillez réessayer plus tard",
@@ -644,7 +651,8 @@
           "payment_not_complete_question": "La recharge n'est pas encore terminée, êtes-vous sûr de vouloir sortir ?",
           "continue_payment": "Continuer la Recharge",
           "payment_incomplete_retry": "Recharge incomplète, vous pouvez réessayer plus tard",
-          "mobile_money_max_attempts": "Nombre maximum de tentatives Mobile Money atteint, veuillez réessayer plus tard"
+          "mobile_money_max_attempts": "Nombre maximum de tentatives Mobile Money atteint, veuillez réessayer plus tard",
+          "cancel_payment": "Annuler la Recharge"
       }
   },
   "login": {

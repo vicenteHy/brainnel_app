@@ -1,7 +1,5 @@
 import { getCurrentLanguage } from "../i18n";
 
-// 在模块加载时记录当前语言设置
-console.log('🔍 [LanguageUtils-Init] 语言工具模块初始化，当前语言:', getCurrentLanguage());
 
 export const getSubjectTransLanguage = <T extends Record<string, any>>(
   data: T
@@ -42,42 +40,15 @@ export const getAttributeTransLanguage = <T extends Record<string, any>>(
   // 获取当前i18n语言
   const currentLang = getCurrentLanguage();
   
-  // 调试日志：记录翻译函数的输入和处理过程
-  console.log('🔍 [LanguageUtils-AttrTrans] 属性翻译函数调用:', {
-    currentLang,
-    input_data: {
-      value_trans: data.value_trans,
-      value_trans_en: data.value_trans_en,
-      value_trans_ar: data.value_trans_ar,
-      attribute_value: data.attribute_value,
-      attribute_value_en: data.attribute_value_en,
-      attribute_name: data.attribute_name,
-      attribute_name_trans: data.attribute_name_trans,
-      attribute_name_trans_en: data.attribute_name_trans_en,
-      attribute_name_trans_ar: data.attribute_name_trans_ar
-    }
-  });
   
   let result = "";
   
   if (currentLang === "fr") {
     result = data.value_trans || data.attribute_value || "";
-    console.log('🔍 [LanguageUtils-AttrTrans] 法语模式结果:', {
-      result,
-      used_field: data.value_trans ? 'value_trans' : (data.attribute_value ? 'attribute_value' : 'none')
-    });
   } else {
     result = data.value_trans_en || data.attribute_value_en || data.value_trans || data.attribute_value || "";
-    console.log('🔍 [LanguageUtils-AttrTrans] 英语模式结果:', {
-      result,
-      used_field: data.value_trans_en ? 'value_trans_en' : 
-                  (data.attribute_value_en ? 'attribute_value_en' : 
-                   (data.value_trans ? 'value_trans' : 
-                    (data.attribute_value ? 'attribute_value' : 'none')))
-    });
   }
   
-  console.log('🔍 [LanguageUtils-AttrTrans] 最终返回值:', result);
   return result;
 };
 
@@ -141,16 +112,6 @@ export const getOrderTransLanguage = <T extends Record<string, any>>(
     key.startsWith("product_name")
   );
 
-  console.log('🔍 [OrderTransLanguage] 订单商品翻译函数调用:', {
-    currentLang,
-    translationFields,
-    input_data: {
-      product_name: data.product_name,
-      product_name_en: data.product_name_en,
-      product_name_fr: data.product_name_fr,
-      product_name_ar: data.product_name_ar
-    }
-  });
 
   // 查找匹配的字段
   const matchedField = translationFields.find((field) => {
@@ -161,15 +122,10 @@ export const getOrderTransLanguage = <T extends Record<string, any>>(
     return langCode === "" ? currentLang === "fr" : langCode === currentLang;
   });
 
-  console.log('🔍 [OrderTransLanguage] 匹配字段:', {
-    matchedField,
-    fallbackField: "product_name_fr"
-  });
 
   // 返回匹配的翻译值，如果没有匹配则返回法语
   const result = (data[matchedField || "product_name_fr"] as string) || "";
   
-  console.log('🔍 [OrderTransLanguage] 最终返回值:', result);
   return result;
 };
 

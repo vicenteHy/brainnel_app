@@ -564,6 +564,7 @@
           "redirecting_to_result": "Redirecting to result page...",
           "payment_failed": "Payment Failed",
           "retry_or_contact_support": "Please retry or contact customer service",
+          "checking_payment": "Checking Payment",
           "order_info": "Order Information",
           "order_number": "Order Number:",
           "payment_method": "Payment Method:",
@@ -576,10 +577,12 @@
           "instruction_2": "Return to app after payment completion for automatic verification",
           "instruction_3": "If status doesn't update, click \"Manual Check Status\"",
           "mobile_money_ready": "Ready to start Mobile Money payment",
-          "mobile_money_checking": "Checking Mobile Money payment status (10s timeout)...",
-          "mobile_money_instruction_1": "Click \"Confirm Payment\" to start Mobile Money payment process",
-          "mobile_money_instruction_2": "Complete payment via SMS within 10 seconds",
-          "mobile_money_instruction_3": "System will automatically check payment status for 10 seconds",
+          "mobile_money_checking": "Checking Mobile Money payment status...",
+          "mobile_money_instruction_1": "You will receive SMS payment instructions",
+          "mobile_money_instruction_2": "Complete payment following SMS instructions",
+          "mobile_money_instruction_3": "Return to app to check payment status",
+          "mobile_money_not_paid": "Payment not completed",
+          "mobile_money_not_paid_message": "Please complete payment following SMS instructions",
           "confirm_payment": "Confirm Payment",
           "invalid_payment_url": "Invalid payment URL",
           "timeout_message": "Payment timeout, please retry",
@@ -595,7 +598,8 @@
           "payment_not_complete_question": "Payment is not yet complete, are you sure you want to exit?",
           "continue_payment": "Continue Payment",
           "payment_incomplete_retry": "Payment incomplete, you can retry later",
-          "mobile_money_max_attempts": "Mobile Money maximum attempts reached, please try again later"
+          "mobile_money_max_attempts": "Mobile Money maximum attempts reached, please try again later",
+          "cancel_payment": "Cancel Payment"
       }
   },
   "recharge": {
@@ -650,6 +654,7 @@
           "redirecting_to_result": "Redirecting to result page...",
           "payment_failed": "Recharge Failed",
           "retry_or_contact_support": "Please retry or contact customer service",
+          "checking_payment": "Checking Recharge",
           "recharge_info": "Recharge Information",
           "recharge_id": "Recharge ID:",
           "payment_method": "Payment Method:",
@@ -662,10 +667,12 @@
           "instruction_2": "Return to app after payment completion for automatic verification",
           "instruction_3": "If status doesn't update, click \"Manual Check Status\"",
           "mobile_money_ready": "Ready to start Mobile Money recharge",
-          "mobile_money_checking": "Checking Mobile Money recharge status (10s timeout)...",
-          "mobile_money_instruction_1": "Click \"Confirm Payment\" to start Mobile Money recharge process",
-          "mobile_money_instruction_2": "Complete payment via SMS within 10 seconds",
-          "mobile_money_instruction_3": "System will automatically check payment status for 10 seconds",
+          "mobile_money_checking": "Checking Mobile Money recharge status...",
+          "mobile_money_instruction_1": "You will receive SMS recharge instructions",
+          "mobile_money_instruction_2": "Complete payment following SMS instructions",
+          "mobile_money_instruction_3": "Return to app to check payment status",
+          "mobile_money_not_paid": "Recharge not completed",
+          "mobile_money_not_paid_message": "Please complete payment following SMS instructions",
           "confirm_payment": "Confirm Payment",
           "max_attempts_reached": "Maximum attempts reached",
           "mobile_money_max_attempts": "Mobile Money maximum attempts reached, please try again later",
@@ -683,7 +690,8 @@
           "confirm_exit": "Confirm Exit",
           "payment_not_complete_question": "Recharge is not yet complete, are you sure you want to exit?",
           "continue_payment": "Continue Recharge",
-          "payment_incomplete_retry": "Recharge incomplete, you can retry later"
+          "payment_incomplete_retry": "Recharge incomplete, you can retry later",
+          "cancel_payment": "Cancel Recharge"
       }
   },
   "homePage":{

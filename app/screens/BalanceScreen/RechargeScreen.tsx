@@ -113,8 +113,6 @@ const RechargeScreen = () => {
     getCountryListAndSetLocalCurrency();
 
     payApi.getCountryPaymentMethods().then((res) => {
-      console.log("=== 支付方式原始数据 ===");
-      console.log("所有支付方式:", JSON.stringify(res.current_country_methods, null, 2));
       
       let currentCountryMethods = res.current_country_methods.filter(
         (method) => method.key !== "balance"
@@ -132,23 +130,7 @@ const RechargeScreen = () => {
         );
       }
       
-      console.log("=== 过滤后的支付方式 ===");
-      console.log("当前可用支付方式:", JSON.stringify(currentCountryMethods, null, 2));
       
-      // 专门打印 mobile money 的运营商信息
-      const mobileMoneyMethod = currentCountryMethods.find(method => method.key === "mobile_money");
-      if (mobileMoneyMethod) {
-        console.log("=== Mobile Money 运营商信息 ===");
-        console.log("Mobile Money 数据:", JSON.stringify(mobileMoneyMethod, null, 2));
-        console.log("运营商列表:", mobileMoneyMethod.value);
-        console.log("运营商类型:", Array.isArray(mobileMoneyMethod.value) ? "数组" : typeof mobileMoneyMethod.value);
-        if (Array.isArray(mobileMoneyMethod.value)) {
-          console.log("运营商数量:", mobileMoneyMethod.value.length);
-          console.log("运营商名称:", mobileMoneyMethod.value.join(", "));
-        }
-      } else {
-        console.log("=== 未找到 Mobile Money 支付方式 ===");
-      }
       
       setPaymentMethods(currentCountryMethods);
     });
@@ -900,34 +882,21 @@ const RechargeScreen = () => {
                           />
                           <View style={styles.mobileMoneyTextContainer}>
                             {method.key === "mobile_money" &&
-                              (Array.isArray(method.value) ? (
-                                (() => {
-                                  console.log("=== 渲染 Mobile Money 运营商图片 ===");
-                                  console.log("运营商数组:", method.value);
-                                  console.log("准备渲染", method.value.length, "个运营商图片");
-                                  return method.value.map((item, index) => {
-                                    console.log(`运营商 ${index + 1}:`, item, "图片源:", getPayMap(item));
-                                    return (
-                                      <View
-                                        style={styles.mobileMoneyImgContainer}
-                                        key={index}
-                                      >
-                                        <Image
-                                          key={index}
-                                          source={getPayMap(item) as any}
-                                          style={styles.mobileMoneyImg}
-                                        />
-                                      </View>
-                                    );
-                                  });
-                                })()
+(Array.isArray(method.value) ? (
+                                method.value.map((item, index) => (
+                                  <View
+                                    style={styles.mobileMoneyImgContainer}
+                                    key={index}
+                                  >
+                                    <Image
+                                      key={index}
+                                      source={getPayMap(item) as any}
+                                      style={styles.mobileMoneyImg}
+                                    />
+                                  </View>
+                                ))
                               ) : (
-                                (() => {
-                                  console.log("=== Mobile Money 非数组数据 ===");
-                                  console.log("method.value:", method.value);
-                                  console.log("显示备用文本: 1234");
-                                  return <Text style={styles.mobileMoneyText}>1234</Text>;
-                                })()
+                                <Text style={styles.mobileMoneyText}>1234</Text>
                               ))}
                           </View>
                         </View>
