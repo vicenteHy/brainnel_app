@@ -563,15 +563,21 @@ const RechargeSummaryScreen = () => {
             ) : (
               <Text style={styles.payButtonText}>
                 {t("balance.phone_modal.pay")}{" "}
-                {paymentParams?.payment_method === "wave"
-                  ? paymentParams.amount.toFixed(2) + " FCFA"
-                  : paymentParams?.currency === "FCFA"
-                  ? paymentParams.originalAmount.toLocaleString() +
-                    " " +
-                    paymentParams.currency
-                  : paymentParams?.currency === "USD"
-                  ? "$" + paymentParams?.amount.toFixed(2)
-                  : paymentParams?.amount.toFixed(2) + " €"}
+                {(() => {
+                  if (paymentParams?.payment_method === "wave") {
+                    // Wave 支付显示整数 FCFA
+                    return Math.round(paymentParams.amount) + " FCFA";
+                  } else if (paymentParams?.currency === "FCFA" || paymentParams?.currency === user?.currency) {
+                    // 本地货币显示整数
+                    return paymentParams.originalAmount.toLocaleString() + " " + paymentParams.currency;
+                  } else if (paymentParams?.currency === "USD") {
+                    // USD 显示两位小数
+                    return "$" + paymentParams?.amount.toFixed(2);
+                  } else {
+                    // 其他货币（EUR等）显示两位小数
+                    return paymentParams?.amount.toFixed(2) + " €";
+                  }
+                })()}
               </Text>
             )}
           </TouchableOpacity>

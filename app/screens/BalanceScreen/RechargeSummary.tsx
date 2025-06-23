@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import fontSize from "../../utils/fontsizeUtils";
 import { useTranslation } from "react-i18next";
+import useUserStore from "../../store/user";
 
 interface RechargeSummaryProps {
   paymentParams: {
@@ -15,6 +16,7 @@ interface RechargeSummaryProps {
 
 const RechargeSummary: React.FC<RechargeSummaryProps> = ({ paymentParams }) => {
   const { t } = useTranslation();
+  const { user } = useUserStore();
 
   if (!paymentParams) {
     return null;
@@ -41,7 +43,7 @@ const RechargeSummary: React.FC<RechargeSummaryProps> = ({ paymentParams }) => {
             Montant converti:
           </Text>
           <Text style={styles.paymentSummaryValueHighlight}>
-            {paymentParams.amount.toFixed(2)} FCFA
+            {Math.round(paymentParams.amount)} FCFA
           </Text>
         </View>
       )}
@@ -54,7 +56,14 @@ const RechargeSummary: React.FC<RechargeSummaryProps> = ({ paymentParams }) => {
               {t("balance.phone_modal.converted_amount")}
             </Text>
             <Text style={styles.paymentSummaryValueHighlight}>
-              {paymentParams.amount.toFixed(2)} {paymentParams.currency}
+              {(() => {
+                // 如果是本地货币，显示整数（四舍五入）
+                if (paymentParams.currency === user?.currency) {
+                  return Math.round(paymentParams.amount);
+                }
+                // 其他货币显示两位小数
+                return paymentParams.amount.toFixed(2);
+              })()} {paymentParams.currency}
             </Text>
           </View>
         )}

@@ -331,7 +331,17 @@ function AppContent() {
       if (!url.includes('payment-success') && 
           !url.includes('payment-failure') && 
           !url.includes('payment-polling')) {
-        navigationRef.navigate("MainTabs");
+        // 检查导航器是否已准备好
+        if (navigationRef.isReady()) {
+          navigationRef.navigate("MainTabs");
+        } else {
+          // 如果导航器还未准备好，延迟执行导航
+          setTimeout(() => {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate("MainTabs");
+            }
+          }, 100);
+        }
       }
     };
 
@@ -342,7 +352,10 @@ function AppContent() {
     Linking.getInitialURL().then((url) => {
       console.log(url);
       if (url) {
-        handleDeepLink({ url });
+        // 延迟处理，确保导航器已准备好
+        setTimeout(() => {
+          handleDeepLink({ url });
+        }, 500);
       }
     });
 

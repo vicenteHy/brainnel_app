@@ -992,11 +992,18 @@ const RechargeScreen = () => {
                                 {t("balance.recharge.equivalent_amount")}
                               </Text>
                               <Text style={styles.convertedAmountValue}>
-                                {convertedAmount
-                                  .find(
+                                {(() => {
+                                  const amount = convertedAmount.find(
                                     (item) => item.item_key === "total_amount"
-                                  )
-                                  ?.converted_amount.toFixed(2)}{" "}
+                                  )?.converted_amount;
+                                  if (!amount) return "0";
+                                  // 如果是本地货币，显示整数（四舍五入）
+                                  if (currentCurrency === userLocalCurrency || currentCurrency === user?.currency) {
+                                    return Math.round(amount);
+                                  }
+                                  // 其他货币显示两位小数
+                                  return amount.toFixed(2);
+                                })()}{" "}
                                 {currentCurrency}
                               </Text>
                             </View>
@@ -1046,11 +1053,18 @@ const RechargeScreen = () => {
                                 {t("balance.recharge.equivalent_amount")}
                               </Text>
                               <Text style={styles.convertedAmountValue}>
-                                {convertedAmount
-                                  .find(
+                                {(() => {
+                                  const amount = convertedAmount.find(
                                     (item) => item.item_key === "total_amount"
-                                  )
-                                  ?.converted_amount.toFixed(2)}{" "}
+                                  )?.converted_amount;
+                                  if (!amount) return "0";
+                                  // 如果是本地货币，显示整数（四舍五入）
+                                  if (currentCurrency === userLocalCurrency || currentCurrency === user?.currency) {
+                                    return Math.round(amount);
+                                  }
+                                  // 其他货币显示两位小数
+                                  return amount.toFixed(2);
+                                })()}{" "}
                                 {currentCurrency}
                               </Text>
                             </View>
@@ -1121,11 +1135,18 @@ const RechargeScreen = () => {
                                 {t("balance.recharge.equivalent_amount")}
                               </Text>
                               <Text style={styles.convertedAmountValue}>
-                                {convertedAmount
-                                  .find(
+                                {(() => {
+                                  const amount = convertedAmount.find(
                                     (item) => item.item_key === "total_amount"
-                                  )
-                                  ?.converted_amount.toFixed(2)}{" "}
+                                  )?.converted_amount;
+                                  if (!amount) return "0";
+                                  // 如果是本地货币，显示整数（四舍五入）
+                                  if (currentCurrency === userLocalCurrency || currentCurrency === user?.currency) {
+                                    return Math.round(amount);
+                                  }
+                                  // 其他货币显示两位小数
+                                  return amount.toFixed(2);
+                                })()}{" "}
                                 {currentCurrency}
                               </Text>
                             </View>
@@ -1175,11 +1196,18 @@ const RechargeScreen = () => {
                                 {t("balance.recharge.equivalent_amount")}
                               </Text>
                               <Text style={styles.convertedAmountValue}>
-                                {convertedAmount
-                                  .find(
+                                {(() => {
+                                  const amount = convertedAmount.find(
                                     (item) => item.item_key === "total_amount"
-                                  )
-                                  ?.converted_amount.toFixed(2)}{" "}
+                                  )?.converted_amount;
+                                  if (!amount) return "0";
+                                  // 如果是本地货币，显示整数（四舍五入）
+                                  if (currentCurrency === userLocalCurrency || currentCurrency === user?.currency) {
+                                    return Math.round(amount);
+                                  }
+                                  // 其他货币显示两位小数
+                                  return amount.toFixed(2);
+                                })()}{" "}
                                 {currentCurrency}
                               </Text>
                             </View>
