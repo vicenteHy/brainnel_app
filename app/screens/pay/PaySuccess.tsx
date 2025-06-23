@@ -162,13 +162,7 @@ export const PaymentSuccessScreen = () => {
                     });
                   } else {
                     // 如果没有订单ID，跳转到订单列表页面
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ 
-                        name: 'MainTabs',
-                        params: { screen: 'Profile' }
-                      }],
-                    });
+                    navigation.navigate("MyOrders");
                   }
                 }
               }}

@@ -271,6 +271,17 @@ function AppContent() {
     const handleDeepLink = ({ url }: { url: string }) => {
       console.log('Deep link received:', url);
       
+      // 处理 payment-polling 深度链接
+      if (
+        url.includes("com.brainnel.app://payment-polling") ||
+        url.includes("myapp://payment-polling") ||
+        url.includes("exp://") && url.includes("/payment-polling")
+      ) {
+        console.log('Payment polling deep link detected, staying on current screen');
+        // 不做任何导航，保持在当前页面
+        return;
+      }
+      
       if (
         url.startsWith("myapp://payment-success") ||
         url.startsWith("exp://192.168.0.101:8084/--/payment-success")
@@ -317,7 +328,9 @@ function AppContent() {
       }
 
       // 只有在非支付相关的深度链接时才跳转到MainTabs
-      if (!url.includes('payment-success') && !url.includes('payment-failure')) {
+      if (!url.includes('payment-success') && 
+          !url.includes('payment-failure') && 
+          !url.includes('payment-polling')) {
         navigationRef.navigate("MainTabs");
       }
     };
@@ -328,7 +341,7 @@ function AppContent() {
     // 处理应用冷启动的深度链接
     Linking.getInitialURL().then((url) => {
       console.log(url);
-      if (url && url.startsWith("myapp://payment-success")) {
+      if (url) {
         handleDeepLink({ url });
       }
     });

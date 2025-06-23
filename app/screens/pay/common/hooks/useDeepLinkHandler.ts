@@ -28,6 +28,16 @@ export const useDeepLinkHandler = ({
     const handleDeepLink = async ({ url }: { url: string }) => {
       console.log("收到深度链接:", url);
 
+      // 处理 payment-polling 深度链接
+      if (
+        url.includes("com.brainnel.app://payment-polling") ||
+        url.includes("myapp://payment-polling")
+      ) {
+        console.log("检测到支付轮询深度链接，保持在当前页面");
+        // 不做任何跳转，保持在当前支付页面
+        return;
+      }
+
       if (
         url.includes("com.brainnel.app://payment-success") ||
         url.includes("myapp://payment-success")
