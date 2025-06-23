@@ -1,4 +1,4 @@
-package com.brainnel.app
+package uni.UNIC87CC93
 
 import android.app.Application
 import android.content.res.Configuration
