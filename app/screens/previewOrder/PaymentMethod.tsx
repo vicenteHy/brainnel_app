@@ -774,6 +774,26 @@ export const PaymentMethod = () => {
     cartData.forEach((cartItem) => {
       cartItem.skus.forEach((sku) => {
         if (sku.selected === 1) {
+          // 计算换算后的单价和总价
+          let convertedUnitPrice = sku.price;
+          let convertedTotalPrice = sku.price * sku.quantity;
+          
+          // 如果是需要货币转换的支付方式且有转换数据
+          if ((selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
+               (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay"))) 
+               && convertedAmount.length > 0) {
+            
+            // 获取商品总额的转换比例
+            const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+            const originalTotalAmount = previewOrder?.total_amount || 0;
+            
+            if (originalTotalAmount > 0) {
+              const conversionRate = totalConvertedAmount / originalTotalAmount;
+              convertedUnitPrice = Number((sku.price * conversionRate).toFixed(2));
+              convertedTotalPrice = Number((sku.price * sku.quantity * conversionRate).toFixed(2));
+            }
+          }
+          
           items.push({
             offer_id: String(cartItem.offer_id),
             cart_item_id: sku.cart_item_id,
@@ -794,8 +814,8 @@ export const PaymentMethod = () => {
             })),
             sku_image: sku.attributes[0]?.sku_image_url || cartItem.product_image,
             quantity: sku.quantity,
-            unit_price: sku.price,
-            total_price: sku.price * sku.quantity,
+            unit_price: convertedUnitPrice,
+            total_price: convertedTotalPrice,
           });
         }
       });
@@ -955,6 +975,10 @@ export const PaymentMethod = () => {
           : route.params.orderData.domestic_shipping_fee || 0,
       };
 
+      console.log("=== 更新订单支付方式参数 ===");
+      console.log("订单ID:", route.params.orderId);
+      console.log("支付数据:", JSON.stringify(paymentData, null, 2));
+
       ordersApi
         .updateOrderPaymentMethod(paymentData)
         .then(() => {
@@ -975,15 +999,25 @@ export const PaymentMethod = () => {
         })
         .catch((error) => {
           setCreateLoading(false);
+          console.error("更新订单支付方式失败:", error);
           Alert.alert("错误", "更新支付方式失败");
         });
     } else {
       // 原有的创建新订单逻辑
+      console.log("=== 创建新订单参数 ===");
+      console.log("选择的支付方式:", selectedPayment);
+      console.log("选择的货币:", selectedCurrency);
+      console.log("用户本地货币:", userLocalCurrency);
+      console.log("换算金额列表:", convertedAmount);
+      console.log("创建订单数据:", JSON.stringify(createOrderData, null, 2));
 
       ordersApi
         .createOrder(createOrderData as unknown as CreateOrderRequest)
         .then((res) => {
           setCreateLoading(false);
+          console.log("=== 创建订单成功 ===");
+          console.log("后端返回的订单数据:", JSON.stringify(res, null, 2));
+          
           // go to payment preview
           navigation.navigate("PreviewOrder", {
             data: res,
@@ -1001,6 +1035,8 @@ export const PaymentMethod = () => {
         })
         .catch((error) => {
           setCreateLoading(false);
+          console.error("=== 创建订单失败 ===");
+          console.error("错误详情:", error);
           
           let errorMessage = "创建订单失败";
           if (error.status === 422) {
