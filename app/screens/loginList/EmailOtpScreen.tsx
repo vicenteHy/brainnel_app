@@ -61,6 +61,128 @@ export const EmailOtpScreen = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 处理首次登录设置同步 - 使用与Google登录相同的逻辑
+  const handleFirstLoginSettings = async (loginResponse: any) => {
+    try {
+      // 检查是否是首次登录
+      if (loginResponse.first_login) {
+        console.log("✅ [邮箱登录] 检测到首次登录，开始同步本地设置");
+
+        // 读取本地存储的国家设置
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        let countryCode = 221; // 默认国家
+
+        if (savedCountry) {
+          try {
+            const parsedCountry = JSON.parse(savedCountry);
+            countryCode = parsedCountry.country;
+            console.log("✅ [邮箱登录] 读取到本地国家设置:", countryCode);
+          } catch (e) {
+            console.error("❌ [邮箱登录] 解析本地国家设置失败:", e);
+          }
+        } else {
+          console.log("ℹ️ [邮箱登录] 未找到本地国家设置，使用默认国家:", countryCode);
+        }
+
+        // 调用首次登录API创建用户设置（包含国家对应的默认货币）
+        console.log("📡 [邮箱登录] 调用首次登录API，国家代码:", countryCode);
+        const firstLoginData = await settingApi.postFirstLogin(countryCode);
+        console.log("✅ [邮箱登录] 首次登录设置创建成功:", firstLoginData);
+        setSettings(firstLoginData);
+
+        // 读取本地存储的语言设置
+        const savedLanguage = await AsyncStorage.getItem("app_language");
+        if (savedLanguage && savedLanguage !== firstLoginData.language) {
+          console.log("🌐 [邮箱登录] 同步本地语言设置:", savedLanguage);
+          try {
+            await settingApi.putSetting({ language: savedLanguage });
+            console.log("✅ [邮箱登录] 语言设置同步成功");
+          } catch (error) {
+            console.error("❌ [邮箱登录] 语言设置同步失败:", error);
+          }
+        }
+      } else {
+        console.log("ℹ️ [邮箱登录] 非首次登录，跳过设置同步");
+      }
+    } catch (error) {
+      console.error("❌ [邮箱登录] 处理首次登录设置失败:", error);
+      // 不阻断登录流程，只记录错误
+    }
+  };
+
+  // 检查并修复用户国家信息
+  const checkAndFixCountryInfo = async (user: any) => {
+    try {
+      console.log("🔍 [邮箱登录] 检查用户国家信息:", { country_en: user?.country_en, country_code: user?.country_code });
+      
+      // 如果用户缺少country_en字段，尝试修复
+      if (!user?.country_en && user?.country_code) {
+        console.log("⚠️ [邮箱登录] 用户缺少country_en字段，尝试通过country_code修复");
+        
+        // 从本地存储读取国家设置
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        if (savedCountry) {
+          try {
+            const parsedCountry = JSON.parse(savedCountry);
+            console.log("📍 [邮箱登录] 本地存储的国家信息:", parsedCountry);
+            
+            // 如果本地存储的国家代码与用户的country_code匹配，尝试更新用户设置
+            if (parsedCountry.country === user.country_code) {
+              console.log("🔄 [邮箱登录] 尝试更新用户设置以修复country_en字段");
+              await settingApi.putSetting({ country: user.country_code });
+              
+              // 重新获取用户信息
+              console.log("🔄 [邮箱登录] 重新获取用户信息");
+              const updatedUser = await userApi.getProfile();
+              console.log("✅ [邮箱登录] 更新后的用户信息:", { country_en: updatedUser?.country_en, country_code: updatedUser?.country_code });
+              return updatedUser;
+            }
+          } catch (e) {
+            console.error("❌ [邮箱登录] 修复国家信息失败:", e);
+          }
+        }
+      } else if (!user?.country_en && !user?.country_code) {
+        console.log("⚠️ [邮箱登录] 用户完全缺少国家信息，建议用户设置国家");
+        
+        // 读取本地存储的国家设置
+        const savedCountry = await AsyncStorage.getItem("@selected_country");
+        if (savedCountry) {
+          try {
+            const parsedCountry = JSON.parse(savedCountry);
+            console.log("🔄 [邮箱登录] 使用本地国家设置创建用户设置:", parsedCountry.country);
+            
+            // 尝试创建用户设置（可能是404错误的情况）
+            try {
+              await settingApi.putSetting({ country: parsedCountry.country });
+            } catch (error: any) {
+              if (error.status === 404) {
+                console.log("📡 [邮箱登录] 用户设置不存在，创建首次登录设置");
+                await settingApi.postFirstLogin(parsedCountry.country);
+              } else {
+                throw error;
+              }
+            }
+            
+            // 重新获取用户信息
+            console.log("🔄 [邮箱登录] 重新获取用户信息");
+            const updatedUser = await userApi.getProfile();
+            console.log("✅ [邮箱登录] 更新后的用户信息:", { country_en: updatedUser?.country_en, country_code: updatedUser?.country_code });
+            return updatedUser;
+          } catch (e) {
+            console.error("❌ [邮箱登录] 设置国家信息失败:", e);
+          }
+        }
+      } else {
+        console.log("✅ [邮箱登录] 用户国家信息完整");
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("❌ [邮箱登录] 检查国家信息时发生错误:", error);
+      return user;
+    }
+  };
+
   const handleVerifyOtp = async () => {
     if (!otp || otp.length !== 4) {
       setError(t('emailLogin.code_error'));
@@ -77,16 +199,28 @@ export const EmailOtpScreen = () => {
         const token = response.token_type + " " + response.access_token;
         await AsyncStorage.setItem("token", token);
         
-        if (response.first_login) {
-          const data = await settingApi.postFirstLogin(221);
-          setSettings(data);
-        }
+        // 使用与Google登录相同的首次登录处理逻辑
+        await handleFirstLoginSettings(response);
         
         const user = await userApi.getProfile();
-        if (user.language) {
-          await changeLanguage(user.language);
+        console.log("👤 [邮箱登录] 获取到的用户信息:", { 
+          user_id: user?.user_id, 
+          country_en: user?.country_en, 
+          country_code: user?.country_code,
+          email: user?.email 
+        });
+        
+        // 检查并修复用户国家信息（无论是否首次登录）
+        const finalUser = await checkAndFixCountryInfo(user);
+        
+        if (finalUser.language) {
+          await changeLanguage(finalUser.language);
         }
-        setUser(user);
+        
+        // 确保设置最终的用户信息
+        console.log("📱 [邮箱登录] 设置最终用户信息到状态中");
+        setUser(finalUser);
+        
         analyticsStore.logLogin(true, "email");
         
         // 导航到主页面

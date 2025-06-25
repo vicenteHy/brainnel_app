@@ -58,6 +58,7 @@ export interface PaymentMethodItemProps {
   isPaypalExpanded?: boolean;
   isCreditCardExpanded?: boolean;
   isCOD?: number;
+  userLocalCurrency?: string;
 }
 
 export interface AlertModalState {

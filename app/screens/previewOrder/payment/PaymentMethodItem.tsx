@@ -27,6 +27,7 @@ export const PaymentMethodItem: React.FC<PaymentMethodItemProps> = ({
   isPaypalExpanded,
   isCreditCardExpanded,
   isCOD,
+  userLocalCurrency,
 }) => {
   const { t } = useTranslation();
   const { user } = useUserStore();
@@ -58,8 +59,23 @@ export const PaymentMethodItem: React.FC<PaymentMethodItemProps> = ({
             <Text style={styles.balanceText}>
               {t("balance.recharge.balance_remaining") || "Balance remaining"}
               {"\n"}
-              {user.balance}
-              {user.currency}
+              {isSelected && convertedAmount && convertedAmount.length > 0 && userLocalCurrency ? (
+                // 如果选择了余额支付且有货币转换，计算转换后的余额
+                (() => {
+                  // 获取转换比例（使用商品总价的转换比例）
+                  const totalConverted = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+                  const totalOriginal = convertedAmount.find((conv) => conv.item_key === "total_amount")?.original_amount || 0;
+                  
+                  if (totalOriginal > 0) {
+                    const conversionRate = totalConverted / totalOriginal;
+                    const convertedBalance = (user.balance * conversionRate).toFixed(2);
+                    return `${convertedBalance}${userLocalCurrency}`;
+                  }
+                  return `${user.balance}${user.currency}`;
+                })()
+              ) : (
+                `${user.balance}${user.currency}`
+              )}
             </Text>
           </View>
         ) : (

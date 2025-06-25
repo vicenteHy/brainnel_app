@@ -1349,6 +1349,7 @@ export const PaymentMethod = () => {
                           isPaypalExpanded={isPaypalExpanded}
                           isCreditCardExpanded={isCreditCardExpanded}
                           isCOD={isCOD}
+                          userLocalCurrency={userLocalCurrency}
                         />
                       ))}
                   </View>
@@ -1466,6 +1467,8 @@ export const PaymentMethod = () => {
                         ? "FCFA"
                         : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
                         ? (userLocalCurrency || user.currency)
+                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
+                        ? (userLocalCurrency || user.currency)
                         : previewOrder?.currency}
                     </Text>
                   </View>
@@ -1498,6 +1501,8 @@ export const PaymentMethod = () => {
                         : selectedPayment === "wave"
                         ? "FCFA"
                         : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
+                        ? (userLocalCurrency || user.currency)
+                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
                         ? (userLocalCurrency || user.currency)
                         : previewOrder?.currency}
                     </Text>
