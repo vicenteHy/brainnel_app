@@ -65,14 +65,6 @@ apiClient.interceptors.request.use(
 
     // 为询盘请求添加详细日志
     if (config.url?.includes('/api/inquiries/')) {
-      console.log("=== 询盘请求详细日志 ===");
-      console.log("环境:", __DEV__ ? "开发环境" : "生产环境");
-      console.log("请求方法:", config.method);
-      console.log("完整URL:", fullUrl);
-      console.log("请求头:", config.headers);
-      console.log("请求参数:", config.params);
-      console.log("请求数据:", config.data);
-      console.log("=======================");
     }
 
     // 从AsyncStorage获取token
@@ -91,7 +83,6 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error: AxiosError) => {
-    console.error("请求拦截器错误:", error);
     return Promise.reject(error);
   }
 );
@@ -113,34 +104,11 @@ apiClient.interceptors.response.use(
     const { response, config } = error;
     // 为询盘请求错误添加更详细的日志
     if (config?.url?.includes('/api/inquiries/') || config?.url?.includes('/api/cart/') || config?.url?.includes('/api/orders/')) {
-      console.error("=== API请求错误详细日志 ===");
-      console.error("请求URL:", config?.url || 'unknown');
-      console.error("请求方法:", config?.method || 'unknown');
-      console.error("请求数据:", config?.data || 'no request data');
-      console.error("错误信息:", error.message || 'unknown error');
-      console.error("错误代码:", error.code || 'unknown code');
-      console.error("响应状态:", response?.status || 'no response');
-      console.error("响应数据:", response?.data || 'no response data');
-      if (response?.status === 422) {
-        console.error("422错误详情:", JSON.stringify(response?.data, null, 2));
-      }
-      console.error("=============================");
     }
     
-    console.error("响应错误:", {
-      url: config?.url || 'unknown',
-      method: config?.method || 'unknown',
-      message: error.message || 'unknown error',
-      code: error.code || 'unknown code',
-    });
 
     // 处理网络错误
     if (!response) {
-      console.error("网络错误:", {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-      });
       
       // 如果是网络错误，尝试重试
       const customConfig = config as CustomAxiosRequestConfig;
@@ -148,7 +116,6 @@ apiClient.interceptors.response.use(
         customConfig.retry -= 1;
         if (customConfig.retry > 0) {
           const delay = customConfig.retryDelay ? customConfig.retryDelay(customConfig.retry) : 1000;
-          console.log(`重试请求 (${customConfig.retry}): ${customConfig.url}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return apiClient(customConfig);
         }
@@ -157,7 +124,6 @@ apiClient.interceptors.response.use(
 
     // 处理401错误 (未授权)
     if (response && response.status === 401) {
-      console.log("未授权错误，清除token");
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       
       // 检查是否为多设备登录冲突

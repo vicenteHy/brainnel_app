@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { loginApi, userApi } from '../../services/api';
 import useUserStore from '../../store/user';
+import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 
@@ -32,6 +33,7 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
+  const analyticsStore = useAnalyticsStore();
 
   const handleAppleLogin = async () => {
     console.log("🚀 Apple登录按钮被点击");
@@ -110,10 +112,12 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
 
         // 导航到主页
         console.log("🏠 导航到主页...");
+        analyticsStore.logLogin(true, "apple");
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ Apple登录流程完成");
       } catch (err) {
         console.error("❌ 后端Apple登录验证失败:", err);
+        analyticsStore.logLogin(false, "apple");
         Alert.alert("登录失败", "服务器处理Apple登录时出错，请稍后重试");
         if (onLoginError) {
           onLoginError(err);
@@ -128,6 +132,7 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
         // 用户取消，不显示错误
       } else {
         console.error("❌ 其他错误:", error.message);
+        analyticsStore.logLogin(false, "apple");
         Alert.alert(
           "登录失败",
           `Apple登录出现错误: ${error.message || "未知错误"}`,

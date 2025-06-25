@@ -153,27 +153,19 @@ export const useMultiPageData = (categories: any[]) => {
         
         // 如果是刷新操作，直接调用API获取新数据
         if (isRefresh) {
-          console.log(`[useMultiPageData] 刷新操作，调用API - categoryId: ${categoryId}`);
           apiResponse = await productApi.getPersonalRecommendations({
             count: 20,
             ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
           });
         } else if (!isLoadMore && currentData.products.length === 0) {
           // 如果是第一次加载且没有现有产品，尝试使用预加载数据
-          console.log(`[useMultiPageData] 尝试使用预加载数据 - categoryId: ${categoryId}`);
           const currentUserId = userStore.user?.user_id?.toString();
-          console.log(`[useMultiPageData] 当前用户ID: ${currentUserId} (类型: ${typeof currentUserId})`);
           const preloadedProducts = await preloadService.getPreloadedRecommendations(currentUserId);
           
           if (preloadedProducts.length > 0) {
-            console.log(`[useMultiPageData] 使用预加载数据 - categoryId: ${categoryId}`, {
-              count: preloadedProducts.length,
-              userId: currentUserId
-            });
             apiResponse = preloadedProducts;
           } else {
             // 如果没有预加载数据，调用API
-            console.log(`[useMultiPageData] 预加载数据为空，调用API - categoryId: ${categoryId}`);
             apiResponse = await productApi.getPersonalRecommendations({
               count: 20,
               ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
@@ -181,7 +173,6 @@ export const useMultiPageData = (categories: any[]) => {
           }
         } else {
           // 加载更多时直接调用API
-          console.log(`[useMultiPageData] 加载更多，调用API - categoryId: ${categoryId}`);
           apiResponse = await productApi.getPersonalRecommendations({
             count: 20,
             ...(userStore.user?.user_id ? { user_id: userStore.user.user_id } : {}),
@@ -384,7 +375,6 @@ export const useMultiPageData = (categories: any[]) => {
 
   // 刷新页面数据
   const refreshPageData = useCallback((categoryId: number) => {
-    console.log(`[useMultiPageData] refreshPageData called - categoryId: ${categoryId}`);
     // 清除该页面的去重记录
     seenProductIds.current.set(categoryId, new Set());
     // 重置页面数据，确保从第一页开始

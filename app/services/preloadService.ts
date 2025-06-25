@@ -29,29 +29,18 @@ class PreloadService {
    * 在应用启动时开始预加载推荐产品
    */
   public async startPreloading(userId?: string): Promise<void> {
-    console.log('[PreloadService] 开始预加载推荐产品', { userId });
     
     // 检查是否已有缓存且用户ID匹配
     const cachedData = await this.getCachedData();
     if (cachedData && Date.now() < cachedData.expiry && cachedData.userId === userId) {
-      console.log('[PreloadService] 使用缓存数据', { 
-        count: cachedData.products.length,
-        cacheAge: Date.now() - cachedData.timestamp,
-        userId: cachedData.userId
-      });
       this.cachedData = cachedData;
       return;
     } else if (cachedData && cachedData.userId !== userId) {
-      console.log('[PreloadService] 缓存用户ID不匹配，清除缓存', {
-        cachedUserId: cachedData.userId,
-        requestUserId: userId
-      });
       await this.clearCache();
     }
 
     // 如果已经在预加载中，不重复启动
     if (this.preloadPromise) {
-      console.log('[PreloadService] 预加载已在进行中');
       return;
     }
 
@@ -71,12 +60,7 @@ class PreloadService {
       this.cachedData = preloadedData;
       await this.setCachedData(preloadedData);
       
-      console.log('[PreloadService] 预加载完成', { 
-        count: products.length,
-        cached: true
-      });
     } catch (error) {
-      console.error('[PreloadService] 预加载失败:', error);
     } finally {
       this.preloadPromise = null;
     }
@@ -86,30 +70,13 @@ class PreloadService {
    * 获取预加载的推荐产品
    */
   public async getPreloadedRecommendations(userId?: string): Promise<Product[]> {
-    console.log('[PreloadService] 获取预加载数据', { 
-      requestUserId: userId, 
-      requestType: typeof userId,
-      cachedUserId: this.cachedData?.userId,
-      cachedType: typeof this.cachedData?.userId
-    });
     
     // 如果有缓存且未过期，检查用户ID是否匹配
     if (this.cachedData && Date.now() < this.cachedData.expiry) {
       // 检查缓存的用户ID是否与请求的用户ID匹配
       if (this.cachedData.userId === userId) {
-        console.log('[PreloadService] 返回缓存数据 - 用户ID匹配', { 
-          count: this.cachedData.products.length,
-          cachedUserId: this.cachedData.userId,
-          requestUserId: userId
-        });
         return this.cachedData.products;
       } else {
-        console.log('[PreloadService] 缓存数据用户ID不匹配，需要重新加载', {
-          cachedUserId: this.cachedData.userId,
-          requestUserId: userId,
-          cachedType: typeof this.cachedData.userId,
-          requestType: typeof userId
-        });
         // 用户ID不匹配，清除缓存，重新加载
         await this.clearCache();
       }
@@ -117,18 +84,15 @@ class PreloadService {
 
     // 如果正在预加载中，等待完成
     if (this.preloadPromise) {
-      console.log('[PreloadService] 等待预加载完成');
       try {
         await this.preloadPromise;
         return this.cachedData?.products || [];
       } catch (error) {
-        console.error('[PreloadService] 等待预加载失败:', error);
         return [];
       }
     }
 
     // 如果没有缓存也没有正在预加载，立即开始加载
-    console.log('[PreloadService] 立即开始加载');
     try {
       const products = await this.fetchRecommendations(userId);
       
@@ -145,7 +109,6 @@ class PreloadService {
       
       return products;
     } catch (error) {
-      console.error('[PreloadService] 立即加载失败:', error);
       return [];
     }
   }
@@ -154,7 +117,6 @@ class PreloadService {
    * 清除预加载缓存
    */
   public async clearCache(): Promise<void> {
-    console.log('[PreloadService] 清除缓存');
     this.cachedData = null;
     this.preloadPromise = null;
     await AsyncStorage.removeItem(PRELOAD_CACHE_KEY);
@@ -181,14 +143,12 @@ class PreloadService {
   }
 
   private async fetchRecommendations(userId?: string): Promise<Product[]> {
-    console.log('[PreloadService] 开始获取推荐产品', { userId });
     
     const response = await productApi.getPersonalRecommendations({
       count: 20, // 预加载更多产品
       ...(userId ? { user_id: parseInt(userId) } : {})
     });
 
-    console.log('[PreloadService] 获取推荐产品成功', { count: response.length });
     return response;
   }
 
@@ -202,7 +162,6 @@ class PreloadService {
         }
       }
     } catch (error) {
-      console.error('[PreloadService] 读取缓存失败:', error);
     }
     return null;
   }
@@ -211,7 +170,6 @@ class PreloadService {
     try {
       await AsyncStorage.setItem(PRELOAD_CACHE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.error('[PreloadService] 保存缓存失败:', error);
     }
   }
 }

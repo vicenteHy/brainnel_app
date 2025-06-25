@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { loginApi, userApi } from '../../services/api';
 import useUserStore from '../../store/user';
+import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { settingApi } from '../../services/api/setting';
@@ -36,6 +37,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
+  const analyticsStore = useAnalyticsStore();
 
   useEffect(() => {
     // 配置 Google 登录 - 避免重复配置
@@ -191,11 +193,13 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         
         // 导航到主页
         console.log("🏠 导航到主页...");
+        analyticsStore.logLogin(true, "google");
         navigation.navigate("MainTabs", { screen: "Home" });
         console.log("✅ 登录流程完成");
         
       } catch (err) {
         console.error("❌ 后端登录验证失败:", err);
+        analyticsStore.logLogin(false, "google");
         Alert.alert("登录失败", "服务器处理Google登录时出错，请稍后重试");
       }
       
@@ -214,6 +218,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         Alert.alert("登录失败", "Google Play服务不可用，请更新Google Play服务后重试");
       } else {
         console.error("❌ 其他错误:", error.message);
+        analyticsStore.logLogin(false, "google");
         Alert.alert("登录失败", `Google登录出现错误: ${error.message || '未知错误'}`);
       }
     }

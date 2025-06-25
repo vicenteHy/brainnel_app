@@ -140,22 +140,18 @@ function AppContent() {
       // 方法2: 从AsyncStorage获取保存的用户ID
       const savedUserId = await AsyncStorage.getItem('user_id');
       if (savedUserId) {
-        console.log('[App] 从本地存储获取到用户ID:', savedUserId);
         return savedUserId;
       }
 
       // 方法3: 从AsyncStorage获取token，如果有token说明用户已登录
       const authToken = await AsyncStorage.getItem('auth_token');
       if (authToken) {
-        console.log('[App] 检测到auth_token，用户应该已登录，但未找到用户ID');
         // 可以在这里尝试从token中解析用户ID，或者返回一个特殊标识
         // 暂时返回undefined，让预加载使用通用推荐
       }
 
-      console.log('[App] 未找到本地用户ID');
       return undefined;
     } catch (error) {
-      console.error('[App] 获取本地用户ID失败:', error);
       return undefined;
     }
   };
@@ -169,17 +165,13 @@ function AppContent() {
           analyticsData.logAppLaunch(1);
           
           // 直接使用本地用户ID开始预加载
-          console.log('[App] 开始预加载推荐产品');
           const localUserId = await getLocalUserId();
-          console.log('[App] 获取到本地用户ID:', localUserId);
           
           // 使用本地用户ID开始预加载，如果没有就按未登录情况加载
           preloadService.startPreloading(localUserId).catch(error => {
-            console.error('[App] 预加载推荐产品失败:', error);
           });
           
           // 并行获取用户资料（不影响预加载）
-          console.log('[App] 并行获取用户资料');
           fetchUserProfile().then(async (success) => {
             if (success) {
               const store = useUserStore.getState();
@@ -189,14 +181,11 @@ function AppContent() {
               if (networkUserId) {
                 try {
                   await AsyncStorage.setItem('user_id', networkUserId);
-                  console.log('[App] 用户ID已保存到本地:', networkUserId);
                 } catch (error) {
-                  console.error('[App] 保存用户ID失败:', error);
                 }
               }
             }
           }).catch(error => {
-            console.error('[App] 获取用户资料失败:', error);
           });
           
         } catch (error) {
@@ -213,16 +202,13 @@ function AppContent() {
   // 版本检查完成后显示更新弹窗
   useEffect(() => {
     if (!isChecking && versionInfo && updateType !== UpdateType.NO_UPDATE) {
-      console.log('[App] 显示更新弹窗');
       setShowUpdateModal(true);
       
       // 如果是强制更新，记录状态
       if (updateType === UpdateType.FORCE_UPDATE) {
-        console.log('[App] 检测到强制更新，设置持久状态');
         setHasForceUpdate(true);
       }
     } else {
-      console.log('[App] 不显示更新弹窗');
     }
   }, [isChecking, versionInfo, updateType]);
 
@@ -240,14 +226,11 @@ function AppContent() {
       // 登录成功后，重新预加载推荐产品（使用用户ID）
       if (success && userStore.user?.user_id) {
         const userId = userStore.user.user_id.toString();
-        console.log('[App] 登录成功，重新预加载推荐产品', { userId });
         
         // 保存用户ID到本地存储
         try {
           await AsyncStorage.setItem('user_id', userId);
-          console.log('[App] 登录成功后，用户ID已保存到本地:', userId);
         } catch (error) {
-          console.error('[App] 登录成功后，保存用户ID失败:', error);
         }
         
         preloadService.clearCache().then(() => {
@@ -384,7 +367,6 @@ function AppContent() {
 
   // 处理版本更新
   const handleUpdate = () => {
-    console.log('[App] 用户点击更新，跳转到应用商店');
     // 注意：强制更新时不关闭弹窗，因为用户可能从应用商店返回而没有更新
     if (updateType !== UpdateType.FORCE_UPDATE) {
       setShowUpdateModal(false);

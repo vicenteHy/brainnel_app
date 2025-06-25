@@ -96,15 +96,8 @@ export const HomeScreen = () => {
 
   // 组件挂载日志
   useEffect(() => {
-    console.log('[HomeScreen] Component mounted', {
-      timestamp: new Date().toISOString(),
-      hasUser: !!userStore.user?.user_id
-    });
     
     return () => {
-      console.log('[HomeScreen] Component will unmount', {
-        timestamp: new Date().toISOString()
-      });
     };
   }, []);
 
@@ -117,7 +110,6 @@ export const HomeScreen = () => {
           setHasUserDismissedLoginModal(true);
         }
       } catch (error) {
-        console.error('加载登录弹窗关闭状态失败:', error);
       }
     };
     loadDismissedLoginModalState();
@@ -134,15 +126,11 @@ export const HomeScreen = () => {
 
   // 调试selectedCategoryId变化
   useEffect(() => {
-    console.log('[HomeScreen] selectedCategoryId changed to:', selectedCategoryId, {
-      timestamp: new Date().toISOString()
-    });
   }, [selectedCategoryId]);
 
   // 监听导航到推荐页的事件
   useEffect(() => {
     const handleNavigateToRecommend = () => {
-      console.log('[HomeScreen] Navigating to recommend page');
       setSelectedCategoryId(-1); // -1 表示推荐页
     };
 
@@ -248,7 +236,6 @@ export const HomeScreen = () => {
       return;
     }
     
-    console.log(`[HomeScreen] handleCategoryChange called - categoryId: ${categoryId}`);
     setSelectedCategoryId(categoryId);
     
     // 使用requestAnimationFrame确保在下一帧执行滚动，避免冲突
@@ -262,7 +249,6 @@ export const HomeScreen = () => {
       
       // 如果页面没有初始化或者没有产品数据，则加载数据
       if (!pageData.initialized || pageData.products.length === 0) {
-        console.log(`[HomeScreen] 触发loadPageData - categoryId: ${categoryId}`);
         loadPageData(categoryId);
       }
     }
@@ -289,7 +275,6 @@ export const HomeScreen = () => {
   // 处理二级分类点击
   const handleSubcategoryPress = useCallback(
     (subcategoryId: number) => {
-      console.log(`[HomeScreen] 二级分类点击 - subcategoryId: ${subcategoryId}`);
       InteractionManager.runAfterInteractions(() => {
         navigation.navigate("SearchResult", {
           category_id: subcategoryId,
@@ -302,7 +287,6 @@ export const HomeScreen = () => {
   // 处理查看全部二级分类
   const handleViewAllSubcategories = useCallback(
     (categoryId: number) => {
-      console.log(`[HomeScreen] 查看全部二级分类 - categoryId: ${categoryId}`);
       InteractionManager.runAfterInteractions(() => {
         // 可以导航到专门的二级分类页面，或者显示弹窗
         // 这里示例导航到搜索结果页面，显示该一级分类下的所有产品
@@ -325,19 +309,15 @@ export const HomeScreen = () => {
     setHasUserDismissedLoginModal(true);
     try {
       await AsyncStorage.setItem('@login_modal_dismissed', 'true');
-      console.log('[HomeScreen] 用户关闭登录弹窗，已保存状态');
     } catch (error) {
-      console.error('保存登录弹窗关闭状态失败:', error);
     }
   }, []);
 
   // 图片选择器相关函数
   const cleanupImagePickerCache = async () => {
     try {
-      console.log("react-native-image-picker 自动管理缓存");
       setGalleryUsed(false);
     } catch (error) {
-      console.log("清理缓存错误", error);
       setGalleryUsed(false);
     }
   };
@@ -356,12 +336,10 @@ export const HomeScreen = () => {
         
         launchImageLibrary(options, (response: ImagePickerResponse) => {
           if (response.didCancel) {
-            console.log('用户取消了图片选择');
             return;
           }
           
           if (response.errorMessage) {
-            console.log('相册错误:', response.errorMessage);
             return;
           }
           
@@ -376,7 +354,6 @@ export const HomeScreen = () => {
           }
         });
       } catch (error) {
-        console.error("相册错误:", error);
         await cleanupImagePickerCache();
       }
     }, 500);
@@ -396,12 +373,10 @@ export const HomeScreen = () => {
         
         launchCamera(options, (response: ImagePickerResponse) => {
           if (response.didCancel) {
-            console.log('用户取消了拍照');
             return;
           }
           
           if (response.errorMessage) {
-            console.log('相机错误:', response.errorMessage);
             return;
           }
           
@@ -416,7 +391,6 @@ export const HomeScreen = () => {
           }
         });
       } catch (error) {
-        console.error("相机错误:", error);
         await cleanupImagePickerCache();
       }
     }, 500);
@@ -430,22 +404,15 @@ export const HomeScreen = () => {
 
   // 获取一级类目并初始化数据（只在组件挂载时执行一次）
   useEffect(() => {
-    console.log('[HomeScreen] fetchCategories useEffect triggered', {
-      timestamp: new Date().toISOString(),
-      categoriesLength: categories.length
-    });
     
     const fetchCategories = async () => {
       try {
-        console.log('[HomeScreen] Calling getFirstCategory API');
         const res = await productApi.getFirstCategory();
-        console.log('[HomeScreen] getFirstCategory API response:', res.length, 'categories');
         setCategories(res);
         
         // 不再自动加载推荐数据，等用户手动触发
         // loadPageData(-1);
       } catch (e) {
-        console.error("获取一级类目失败", e);
       }
     };
     fetchCategories();
@@ -461,7 +428,6 @@ export const HomeScreen = () => {
         if (selectedCategoryId === -1) {
           const pageData = getPageData(-1);
           if (!pageData.initialized || pageData.products.length === 0) {
-            console.log('[HomeScreen] 自动加载推荐页面数据');
             loadPageData(-1);
           }
         }
@@ -501,11 +467,10 @@ export const HomeScreen = () => {
       setShowLoginModal(false);
       // 用户登录成功后，重置弹窗关闭状态，这样下次未登录时可以再次显示
       setHasUserDismissedLoginModal(false);
-      AsyncStorage.removeItem('@login_modal_dismissed').catch(console.error);
+      AsyncStorage.removeItem('@login_modal_dismissed').catch(() => {});
       
       // 只有当用户ID真正发生变化时才处理数据更新（避免重复刷新）
       if (lastUserIdRef.current !== currentUserId) {
-        console.log('[HomeScreen] 用户ID发生变化，从', lastUserIdRef.current, '到', currentUserId);
         lastUserIdRef.current = currentUserId;
         
         // 用户登录后，如果当前在推荐页面，优先尝试使用预加载数据，而不是立即刷新
@@ -514,19 +479,16 @@ export const HomeScreen = () => {
           
           // 如果页面还没有数据，让它通过正常流程加载（会使用预加载数据）
           if (!pageData.initialized || pageData.products.length === 0) {
-            console.log('[HomeScreen] 用户登录后触发初始数据加载');
             setTimeout(() => {
               loadPageData(-1);
             }, 100);
           } else {
-            console.log('[HomeScreen] 用户登录后已有数据，跳过刷新');
           }
         }
       }
     } else {
       // 用户退出登录时也更新ref
       if (lastUserIdRef.current !== undefined) {
-        console.log('[HomeScreen] 用户退出登录');
         lastUserIdRef.current = undefined;
       }
       
@@ -540,19 +502,16 @@ export const HomeScreen = () => {
   // 监听设置变更事件，强制刷新首页数据
   useEffect(() => {
     const handleSettingsChanged = () => {
-      console.log('[HomeScreen] 设置发生变更，强制刷新首页数据');
       
       // 强制刷新当前页面的数据
       if (selectedCategoryId === -1) {
         // 如果当前在推荐页面，刷新推荐数据
         setTimeout(() => {
-          console.log('[HomeScreen] 刷新推荐页面数据');
           refreshPageData(-1);
         }, 300);
       } else if (selectedCategoryId > 0) {
         // 如果当前在分类页面，刷新分类数据
         setTimeout(() => {
-          console.log('[HomeScreen] 刷新分类页面数据:', selectedCategoryId);
           refreshPageData(selectedCategoryId);
         }, 300);
       }
@@ -560,11 +519,9 @@ export const HomeScreen = () => {
       // 重新获取一级类目（可能因为语言变更需要重新获取）
       setTimeout(async () => {
         try {
-          console.log('[HomeScreen] 重新获取一级类目');
           const res = await productApi.getFirstCategory();
           setCategories(res);
         } catch (error) {
-          console.error('[HomeScreen] 重新获取一级类目失败:', error);
         }
       }, 500);
     };
