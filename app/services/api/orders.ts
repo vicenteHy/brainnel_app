@@ -153,7 +153,7 @@ export interface CreateOrderRequest {
   domestic_shipping_fee: number;
   currency: string;
   receiver_address: string;
-  is_cod?: boolean;
+  is_cod?: number;
 }
 
 // 创建订单响应类型
@@ -335,6 +335,7 @@ export interface OrderDetailsType {
   update_time: string; // or Date
   verification_code?: string; // 取件码
   location_code?: string; // 货架号
+  is_cod?: number; // COD标记，0=非COD，1=COD
 }
 export interface UpdateOrderShippingInfo {
   shipping_status: number;

@@ -28,7 +28,9 @@ export const useOrderListStore = create<OrderListState>((set, get) => ({
   },
 
   getAllOrders: async (data: PaginatedOrderRequest, page: number) => {
+    console.log('📋 请求订单列表参数:', JSON.stringify(data, null, 2), '页码:', page);
     const response = await ordersApi.getAllOrders(data);
+    console.log('📋 获取订单列表响应:', JSON.stringify(response, null, 2));
     set((state) => ({
       orders: {
         ...response,
@@ -38,10 +40,13 @@ export const useOrderListStore = create<OrderListState>((set, get) => ({
             : [...state.orders.items, ...response.items],
       },
     }));
+    console.log('📋 订单列表状态更新完成，当前总数:', response.total);
   },
 
   deleteOrder: async (orderId: string) => {
+    console.log('📋 正在删除订单:', orderId);
     await ordersApi.deleteOrder(orderId);
+    console.log('📋 订单删除成功:', orderId);
     set((state) => ({
       orders: {
         ...state.orders,
@@ -77,6 +82,7 @@ export const useOrderListStore = create<OrderListState>((set, get) => ({
   },
   // 取消订单
   cancelOrder: async (orderId: string) => {
+    console.log('📋 Store-正在取消订单:', orderId);
     set((state) => ({
       orders: {
         ...state.orders,
@@ -85,6 +91,7 @@ export const useOrderListStore = create<OrderListState>((set, get) => ({
       },
     }));
     await ordersApi.cancelOrder(orderId);
+    console.log('📋 Store-订单取消成功:', orderId);
   },
 
   // 确定收货

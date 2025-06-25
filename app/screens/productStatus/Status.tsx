@@ -189,6 +189,7 @@ export function Status() {
         status: route.params.status,
       };
       const res =  await inquiriesApi.getInquiries(data.page, data.page_size, 1);
+      console.log('📋 获取询价数据:', JSON.stringify(res, null, 2));
       setInquiries(res.items);
       setLoading(false);
     }else{
@@ -199,6 +200,7 @@ export function Status() {
           status: route.params.status,
         };
         await getAllOrders(data, page);
+        console.log('📋 获取订单数据完成，状态:', route.params.status, '页码:', page);
         setLoading(false);
       } finally {
         setLoading(false);
@@ -249,6 +251,7 @@ export function Status() {
       // 调用询价接口
       try {
         const res = await inquiriesApi.getInquiries(1, pageSize, 1);
+        console.log('📋 切换状态-获取询价数据:', JSON.stringify(res, null, 2));
         setInquiries(res.items);
       } finally {
         setLoading(false);
@@ -266,16 +269,18 @@ export function Status() {
         data.status = 0;
       }
 
+      console.log('📋 切换状态-请求订单数据参数:', JSON.stringify(data, null, 2));
       try {
         await getAllOrders(data, 1);
+        console.log('📋 切换状态-获取订单数据完成，状态:', selectedStatus);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const handleOrderDetailsPress = (orderId: string) => {
-    navigation.navigate("OrderDetails", { orderId, status });
+  const handleOrderDetailsPress = (orderId: string, orderStatus: number) => {
+    navigation.navigate("OrderDetails", { orderId, status: orderStatus });
   };
 
   return (
@@ -331,7 +336,7 @@ export function Status() {
               <View style={styles.orderContent}>
                 {loading && page === 1 ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#f77f3a" />
+                    <ActivityIndicator size="large" color="#FF5100" />
                   </View>
                 ) : (
                   <ScrollView
@@ -356,6 +361,7 @@ export function Status() {
                           // 询价分页加载
                           try {
                             const res = await inquiriesApi.getInquiries(page + 1, pageSize, 1);
+                            console.log('📋 分页加载询价数据:', JSON.stringify(res, null, 2));
                             setInquiries(prev => [...prev, ...res.items]);
                           } finally {
                             setLoading(false);
@@ -367,6 +373,7 @@ export function Status() {
                             page_size: pageSize,
                             status: statusItem.status,
                           };
+                          console.log('📋 分页加载订单数据参数:', JSON.stringify(data, null, 2));
                           getAllOrders(data, page);
                         }
                       }
@@ -478,7 +485,7 @@ export function Status() {
                                 </View>
                                 <TouchableOpacity
                                   style={styles.orderProductView}
-                                  onPress={() => handleOrderDetailsPress(item.order_id)}
+                                  onPress={() => handleOrderDetailsPress(item.order_id, item.status)}
                                 >
                                   <Text style={styles.orderProductViewText}>
                                     {t("order.view_details")}
@@ -496,7 +503,7 @@ export function Status() {
                     )}
                     {loading && page > 1 && (
                       <View style={styles.loadingMoreContainer}>
-                        <ActivityIndicator size="small" color="#f77f3a" />
+                        <ActivityIndicator size="small" color="#FF5100" />
                       </View>
                     )}
                   </ScrollView>
@@ -603,7 +610,7 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   orderStatusText: {
-    color: "#f77f3a",
+    color: "#FF5100",
     width: "30%",
     textAlign: "right",
   },
@@ -647,19 +654,20 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   orderProductViewText: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(14),
     borderWidth: 1,
-    borderColor: "#f77f3a",
-    width: "50%",
+    borderColor: "#FF5100",
     borderRadius: 8,
-    padding: 5,
+    padding: 8,
+    paddingHorizontal: 12,
     textAlign: "center",
+    minWidth: 80,
   },
   orderProductPriceText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    color: "#f77f3a",
+    color: "#FF5100",
     textAlign: "right",
   },
   orderProductTotalText: {

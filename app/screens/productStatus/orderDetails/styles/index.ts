@@ -159,13 +159,13 @@ export const styles = StyleSheet.create<Styles>({
     textAlign: "right",
   },
   TotalText: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(18),
     fontWeight: "700",
     flex: 1,
   },
   TotalPrice: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(18),
     fontWeight: "700",
     flex: 1,
@@ -293,9 +293,9 @@ export const styles = StyleSheet.create<Styles>({
     flex: 1,
     paddingVertical: 14,
     alignItems: "center",
-    backgroundColor: "#f77f3a",
+    backgroundColor: "#FF5100",
     borderRadius: 12,
-    shadowColor: "#f77f3a",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -372,7 +372,7 @@ export const styles = StyleSheet.create<Styles>({
     marginRight: 20,
     position: "relative",
     borderBottomWidth: 2,
-    borderBottomColor: "#f77f3a",
+    borderBottomColor: "#FF5100",
   },
   tabText: {
     fontSize: fontSize(15),
@@ -380,7 +380,7 @@ export const styles = StyleSheet.create<Styles>({
     fontWeight: "500",
   },
   tabTextActive: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontWeight: "700",
   },
   underline: {
@@ -389,7 +389,7 @@ export const styles = StyleSheet.create<Styles>({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: "#f77f3a",
+    backgroundColor: "#FF5100",
     borderRadius: 1,
   },
   paymentOptions: {
@@ -482,7 +482,7 @@ export const styles = StyleSheet.create<Styles>({
   },
   currencyButtonActive: {
     backgroundColor: "#fff4f0",
-    borderColor: "#f77f3a",
+    borderColor: "#FF5100",
   },
   currencyButtonText: {
     fontSize: fontSize(14),
@@ -490,7 +490,7 @@ export const styles = StyleSheet.create<Styles>({
     fontWeight: "500",
   },
   currencyButtonTextActive: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontWeight: "700",
   },
   convertingContainer: {
@@ -522,7 +522,7 @@ export const styles = StyleSheet.create<Styles>({
   convertedAmountValue: {
     fontSize: fontSize(16),
     fontWeight: "700",
-    color: "#f77f3a",
+    color: "#FF5100",
   },
   actionButtonsContainer: {
     marginTop: 24,
@@ -547,9 +547,9 @@ export const styles = StyleSheet.create<Styles>({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: "#f77f3a",
+    backgroundColor: "#FF5100",
     alignItems: "center",
-    shadowColor: "#f77f3a",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -719,8 +719,8 @@ export const styles = StyleSheet.create<Styles>({
     borderColor: "#e8e8e8",
   },
   modalCancelButtonFilled: {
-    backgroundColor: "#f77f3a",
-    shadowColor: "#f77f3a",
+    backgroundColor: "#FF5100",
+    shadowColor: "#FF5100",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -755,11 +755,11 @@ export const styles = StyleSheet.create<Styles>({
     backgroundColor: "#fff4f0",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#f77f3a",
+    borderColor: "#FF5100",
   },
   checkPaymentText: {
     fontSize: fontSize(13),
-    color: "#f77f3a",
+    color: "#FF5100",
     fontWeight: "600",
   },
   orderInfoItem: {
@@ -876,7 +876,7 @@ export const styles = StyleSheet.create<Styles>({
     alignItems: "flex-start",
   },
   productPrice: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(16),
     fontWeight: "700",
   },
@@ -931,13 +931,13 @@ export const styles = StyleSheet.create<Styles>({
     width: "100%",
   },
   totalLabel: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(18),
     fontWeight: "700",
     flex: 1,
   },
   totalPrice: {
-    color: "#f77f3a",
+    color: "#FF5100",
     fontSize: fontSize(18),
     fontWeight: "700",
     flex: 1,

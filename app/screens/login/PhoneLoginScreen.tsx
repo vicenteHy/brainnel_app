@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     textAlign: 'center',
     backgroundColor: '#ffffff',
-    color: '#1f2937',
+    color: '#000000',
     minHeight: 64,
   },
   resendContainer: {

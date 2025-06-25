@@ -26,6 +26,8 @@ type RootStackParamList = {
   PaymentSuccessScreen: { order_id?: string; order_no?: string; recharge_id?: string; isRecharge?: boolean; [key: string]: any };
   OrderDetails: { orderId?: number; status?: number };
   RechargeDetails: { rechargeId?: string };
+  Status: { status: number | null };
+  Balance: undefined;
 };
 
 export const PaymentSuccessScreen = () => {
@@ -151,18 +153,29 @@ export const PaymentSuccessScreen = () => {
                   // 充值支付，跳转到余额详情页面
                   navigation.navigate("Balance");
                 } else {
-                  // 订单支付，原有逻辑
-                  const orderId = route.params?.order_id || route.params?.order_no || route.params?.orderId;
+                  // 订单支付，参考PayError.tsx的逻辑跳转到订单详情页面
+                  const { order_id, order_no, orderId } = route.params || {};
                   
-                  if (orderId) {
-                    // 如果有订单ID，跳转到具体订单详情页面，并传递支付成功状态
-                    navigation.navigate("OrderDetails", { 
-                      orderId: parseInt(orderId.toString()),
-                      status: 1
-                    });
+                  console.log('🔍 支付成功页面 - 准备跳转到订单详情');
+                  console.log('🔍 - route.params:', route.params);
+                  console.log('🔍 - order_id:', order_id);
+                  console.log('🔍 - order_no:', order_no);
+                  console.log('🔍 - orderId:', orderId);
+                  
+                  // 参考PayError.tsx的逻辑：优先使用order_id，然后是order_no
+                  if (order_id) {
+                    console.log('🔍 - 使用order_id跳转到订单详情:', order_id);
+                    navigation.navigate("OrderDetails", { orderId: order_id, status: 1 });
+                  } else if (order_no) {
+                    console.log('🔍 - 使用order_no跳转到订单详情:', order_no);
+                    navigation.navigate("OrderDetails", { orderId: order_no, status: 1 });
+                  } else if (orderId) {
+                    console.log('🔍 - 使用orderId跳转到订单详情:', orderId);
+                    navigation.navigate("OrderDetails", { orderId: orderId.toString(), status: 1 });
                   } else {
-                    // 如果没有订单ID，跳转到订单列表页面
-                    navigation.navigate("MyOrders");
+                    console.log('🔍 - 未找到任何订单ID，跳转到订单列表');
+                    // 如果真的没有订单ID，跳转到订单列表页面
+                    navigation.navigate("Status", { status: null });
                   }
                 }
               }}

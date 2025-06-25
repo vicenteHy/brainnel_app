@@ -55,9 +55,9 @@ export interface createOrderDataType {
      */
     transport_type?: number | null;
     /**
-     * Is COD，是否货到付款
+     * Is COD，是否货到付款 (0=非COD，1=COD)
      */
-    is_cod?: boolean | null;
+    is_cod?: number | null;
     [property: string]: any;
 }
 

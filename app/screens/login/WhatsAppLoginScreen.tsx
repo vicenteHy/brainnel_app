@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: fontSize(16),
     paddingRight: 36,
+    color: '#000000',
   },
   clearButton: {
     position: 'absolute',
@@ -476,6 +477,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
     letterSpacing: 4,
+    color: '#000000',
   },
   continueButton: {
     height: 50,

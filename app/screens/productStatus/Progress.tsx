@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   completedNode: {
-    backgroundColor: '#f77f3a',
+    backgroundColor: '#FF5100',
     borderWidth: 2,
     borderColor: '#fff',
   },
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     top: 14,
     left: '12.5%',
     height: 2,
-    backgroundColor: '#f77f3a',
+    backgroundColor: '#FF5100',
     zIndex: 1,
     borderRadius: 1,
   },
