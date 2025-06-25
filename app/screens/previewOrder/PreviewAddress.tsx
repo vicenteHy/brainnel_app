@@ -35,7 +35,7 @@ import { RootStackParamList } from "../../navigation/types";
 type ShippingFeeNavParams = {
   cart_item_id: any; 
   totalAmount?: number; 
-  isCOD?: boolean; 
+  isCOD?: number; 
   isToc?: number;
 };
 

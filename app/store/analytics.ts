@@ -258,7 +258,7 @@ const getEventKeyInfo = (event: any): string => {
 // 统一的埋点调试日志函数
 const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
   // 埋点调试开关 - 设置为 true 开启调试日志，false 关闭
-  const ANALYTICS_DEBUG = true;
+  const ANALYTICS_DEBUG = false;
   
   if (ANALYTICS_DEBUG) {
     if (eventName === 'data_sent') {

@@ -364,16 +364,16 @@ export const CartScreen = () => {
       }
       
       // 第三步：根据isToc判断初始COD状态
-      let isCOD = true;
+      let isCOD = 1;
       
       if (country_code === 225) {
         if (isToc === 1) {
-          isCOD = false; // 科特迪瓦小金额用户不可以COD
+          isCOD = 0; // 科特迪瓦小金额用户不可以COD
         } else {
-          isCOD = true; // 科特迪瓦大金额用户可以COD
+          isCOD = 1; // 科特迪瓦大金额用户可以COD
         }
       } else {
-        isCOD = true;
+        isCOD = 1;
       }
 
       setItems(items);

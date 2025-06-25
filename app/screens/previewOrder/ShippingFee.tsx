@@ -42,13 +42,13 @@ import useAnalyticsStore from "../../store/analytics";
 import flagMap from "../../utils/flagMap";
 
 type RootStackParamList = {
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean; isToc?: number };
-  PaymentMethod: { freight_forwarder_address_id: number; isCOD?: boolean; isToc?: number };
+  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: number; isToc?: number };
+  PaymentMethod: { freight_forwarder_address_id: number; isCOD?: number; isToc?: number };
 };
 type ShippingFeeParams = {
   cart_item_id: any;
   totalAmount: number;
-  isCOD?: boolean;
+  isCOD?: number;
   isToc?: number;
 };
 
@@ -165,9 +165,9 @@ export const ShippingFee = () => {
     
 
     
-    // 判断is_toc：科特迪瓦用户且isCOD为false时为1
+    // 判断is_toc：科特迪瓦用户且isCOD为0时为1
     let isToc = 0;
-    if (userStore.user?.country_code === 225 && route.params.isCOD === false) {
+    if (userStore.user?.country_code === 225 && route.params.isCOD === 0) {
       isToc = 1;
     }
     
@@ -231,11 +231,11 @@ export const ShippingFee = () => {
       domesticShippingFeeData?.total_shipping_fee != null
     ) {
       // 计算更新后的COD状态：科特迪瓦用户选择空运时需要预付
-      let updatedIsCOD = route.params.isCOD;
+      let updatedIsCOD = route.params.isCOD || 0;
       
       if (userStore.user?.country_code === 225) {
         if (shippingMethod === "air") {
-          updatedIsCOD = false; // 空运情况下科特迪瓦用户需要预付运费
+          updatedIsCOD = 0; // 空运情况下科特迪瓦用户需要预付运费
         }
         // 海运保持原有逻辑（基于50000FCFA判断）
       }
@@ -471,7 +471,7 @@ export const ShippingFee = () => {
                               </View>
                             ) : (
                               // 科特迪瓦用户的COD逻辑：空运需要预付，海运根据金额判断
-                              (shippingMethod === "sea" && route.params.isCOD) ? (
+                              (shippingMethod === "sea" && route.params.isCOD === 1) ? (
                                 <View style={styles.delivery}>
                                   <Text style={styles.deliveryText}>
                                     {t("order.preview.Cash_on_delivery")}

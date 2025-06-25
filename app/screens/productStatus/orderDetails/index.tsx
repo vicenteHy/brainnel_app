@@ -428,7 +428,8 @@ export const OrderDetails = () => {
                   style={styles.bottomButton}
                   onPress={() => navigation.navigate("PaymentMethod", {
                     orderId: orderDetails.order_id,
-                    orderData: orderDetails
+                    orderData: orderDetails,
+                    isCOD: orderDetails.is_cod || 0
                   })}
                 >
                   <Text style={[styles.bottomButtonText, { color: '#ffffff' }]}>{t("order.pay")}</Text>

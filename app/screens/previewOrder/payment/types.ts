@@ -3,7 +3,7 @@ import { Order } from "../../../services/api/orders";
 // Define route params type
 export type PaymentMethodRouteParams = {
   freight_forwarder_address_id?: number;
-  isCOD?: boolean;
+  isCOD?: number;
   isToc?: number;
   orderData?: any; // 从OrderDetails传递的订单数据
   orderId?: string; // 订单ID
@@ -20,8 +20,8 @@ export type RootStackParamList = {
   PreviewOrder: { data: Order, payMethod: string, currency: string };
   OfflinePayment: undefined;
   Pay: { order_id: string };
-  ShippingFee: { freight_forwarder_address_id?: number; isCOD?: boolean };
-  PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: boolean; isToc?: number; orderData?: any; orderId?: string };
+  ShippingFee: { freight_forwarder_address_id?: number; isCOD?: number };
+  PaymentMethod: { freight_forwarder_address_id?: number; isCOD?: number; isToc?: number; orderData?: any; orderId?: string };
   // Add other routes as needed
 };
 
@@ -57,7 +57,7 @@ export interface PaymentMethodItemProps {
   isConverting?: boolean;
   isPaypalExpanded?: boolean;
   isCreditCardExpanded?: boolean;
-  isCOD?: boolean;
+  isCOD?: number;
 }
 
 export interface AlertModalState {

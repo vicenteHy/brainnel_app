@@ -31,12 +31,12 @@ export const PaymentMethodItem: React.FC<PaymentMethodItemProps> = ({
   const { t } = useTranslation();
   const { user } = useUserStore();
   
-  // Helper function to get converted total amount for calculation (excluding shipping fee if isCOD is true)
+  // Helper function to get converted total amount for calculation (excluding shipping fee if isCOD is 1)
   const getConvertedTotalForCalculation = () => {
     if (!convertedAmount || convertedAmount.length === 0) return 0;
     
-    if (isCOD) {
-      // If isCOD is true, subtract the shipping fee from the total converted amount
+    if (isCOD === 1) {
+      // If isCOD is 1, subtract the shipping fee from the total converted amount
       const totalConverted = convertedAmount.reduce((acc, item) => acc + item.converted_amount, 0);
       const shippingFeeConverted = convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
       return totalConverted - shippingFeeConverted;
