@@ -36,7 +36,6 @@ export const TikTokScreen = () => {
       }
       
       const response = await getLiveProducts({ page, page_size: 20 });
-      console.log('Live products response:', response);
       
       if (isLoadMore) {
         setLiveProducts(prev => [...prev, ...(response.items || [])]);

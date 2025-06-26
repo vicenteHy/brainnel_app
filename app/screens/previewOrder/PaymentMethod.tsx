@@ -42,6 +42,19 @@ import {
   ConvertedAmount 
 } from "./payment/types";
 import { styles } from "./payment/styles";
+import {
+  isUSDPayment,
+  isWavePayment,
+  isMobileMoneyPayment,
+  isBalancePayment,
+  isConvertiblePayment,
+  getTargetCurrency,
+  getConvertedAmountByKey,
+  calculateConvertedTotal,
+  performCurrencyConversion,
+  shouldShowConvertedAmount,
+  getDisplayAmount,
+} from "./payment/utils";
 
 
 
@@ -107,7 +120,7 @@ export const PaymentMethod = () => {
 
   // Helper function to get converted shipping fee - always return actual converted fee for display
   const getConvertedShippingFee = () => {
-    return convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
+    return getConvertedAmountByKey(convertedAmount, "shipping_fee");
   };
 
   // Helper function to get shipping fee for calculation (always return actual fee)
@@ -117,18 +130,12 @@ export const PaymentMethod = () => {
 
   // Helper function to get converted shipping fee for calculation (always return actual converted fee)
   const getConvertedShippingFeeForCalculation = () => {
-    return convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
+    return getConvertedAmountByKey(convertedAmount, "shipping_fee");
   };
 
   // Helper function to get converted total amount for calculation (excluding shipping fee if isCOD is 1)
   const getConvertedTotalForCalculation = () => {
-    if (isCOD === 1) {
-      // If isCOD is 1, subtract the shipping fee from the total converted amount
-      const totalConverted = convertedAmount.reduce((acc, item) => acc + item.converted_amount, 0);
-      const shippingFeeConverted = convertedAmount.find((item) => item.item_key === "shipping_fee")?.converted_amount || 0;
-      return totalConverted - shippingFeeConverted;
-    }
-    return convertedAmount.reduce((acc, item) => acc + item.converted_amount, 0);
+    return calculateConvertedTotal(convertedAmount, isCOD);
   };
 
   // Helper function to get total amount for calculation (excluding shipping fee if isCOD is 1)
@@ -153,15 +160,14 @@ export const PaymentMethod = () => {
 
   // Helper function to get the current display currency
   const getDisplayCurrency = () => {
-    if (selectedPayment === "paypal" || selectedPayment === "bank_card") {
-      return selectedCurrency;
-    } else if (selectedPayment === "wave") {
-      return "FCFA";
-    } else if ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) {
-      return userLocalCurrency || user.currency;
-    } else if ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0) {
-      return userLocalCurrency || user.currency;
+    if (!selectedPayment) {
+      return previewOrder?.currency || user.currency;
     }
+    
+    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      return getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
+    }
+    
     return previewOrder?.currency || user.currency;
   };
 
@@ -178,12 +184,9 @@ export const PaymentMethod = () => {
       const originalItemPrice = item.total_price || 0;
       
       // 如果需要货币转换
-      if (selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
-          ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) ||
-          ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)) {
-        
+      if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
         // 对于订单详情，基于商品总价计算转换比例
-        const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+        const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
         const originalProductTotal = previewOrder?.items?.reduce((sum: number, i: any) => sum + (i.total_price || 0), 0) || 0;
         
         console.log("=== 单个商品价格转换 ===");
@@ -204,10 +207,8 @@ export const PaymentMethod = () => {
     }
     
     // 正常下单流程
-    if (selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
-        ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) ||
-        ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)) {
-      const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
       const totalQuantity = getSelectedCartItems().reduce((sum, i) => sum + i.quantity, 0);
       if (totalQuantity > 0) {
         // Calculate the item's proportion of the total based on its value
@@ -238,148 +239,59 @@ export const PaymentMethod = () => {
     return normalTotal;
   };
 
-  const handleInitialPaymentSelection = (paymentId: string) => {
+  const handleInitialPaymentSelection = async (paymentId: string) => {
     // Handle initial currency conversion for default selected payment method
-    if (paymentId === "paypal") {
-      setIsPaypalExpanded(true);
-      setIsConverting(true);
+    if (!isConvertiblePayment(paymentId)) {
+      return;
+    }
+
+    // Set expansion state based on payment type
+    if (isUSDPayment(paymentId)) {
+      if (paymentId === "paypal") {
+        setIsPaypalExpanded(true);
+      } else if (paymentId === "bank_card") {
+        setIsCreditCardExpanded(true);
+      }
       setSelectedCurrency("USD");
-
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "USD",
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "bank_card") {
-      setIsCreditCardExpanded(true);
-      setIsConverting(true);
-      setSelectedCurrency("USD");
-
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "USD",
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "wave") {
-      setIsConverting(true);
+    } else if (isWavePayment(paymentId)) {
       setSelectedCurrency("FCFA");
+    }
 
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "FCFA",
-        amounts: {
+    // Perform currency conversion
+    setIsConverting(true);
+    
+    const targetCurrency = getTargetCurrency(paymentId, selectedCurrency, userLocalCurrency, user.currency);
+    const fromCurrency = previewOrder?.currency || user.currency;
+    
+    // Special handling for mobile money and balance - use USD as source if previewOrder currency is not set
+    const sourceCurrency = (isMobileMoneyPayment(paymentId) || isBalancePayment(paymentId)) && !previewOrder?.currency 
+      ? "USD" 
+      : fromCurrency;
+
+    try {
+      const convertedAmounts = await performCurrencyConversion(
+        sourceCurrency,
+        targetCurrency,
+        {
           total_amount: getActualProductTotalForConversion(),
           domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
           shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "mobile_money" || paymentId.includes("mobile_money") || paymentId.includes("Brainnel Pay")) {
-      setIsConverting(true);
-
-      const targetCurrency = userLocalCurrency || user.currency;
-      const data = {
-        from_currency: previewOrder?.currency || "USD",
-        to_currency: targetCurrency,
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "balance" || paymentId === "soldes" || paymentId?.toLowerCase().includes("balance") || paymentId?.toLowerCase().includes("soldes")) {
-      // Handle balance payment - convert to user's local currency
-      setIsConverting(true);
-
-      const targetCurrency = userLocalCurrency || user.currency;
-      const data = {
-        from_currency: previewOrder?.currency || "USD",
-        to_currency: targetCurrency,
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-      console.log("=== 余额支付货币转换请求数据 ===");
-      console.log("转换请求数据:", JSON.stringify(data, null, 2));
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
+        }
+      );
+      
+      setConvertedAmount(convertedAmounts);
+      setIsConverting(false);
+    } catch (error) {
+      setIsConverting(false);
     }
   };
 
-  const onSelectPayment = (paymentId: string) => {
+  const onSelectPayment = async (paymentId: string) => {
     if (paymentId === selectedPayment) {
-      // If clicking on already selected paypal, toggle expansion
+      // If clicking on already selected payment, toggle expansion
       if (paymentId === "paypal") {
         setIsPaypalExpanded(!isPaypalExpanded);
-      }
-      // If clicking on already selected credit card, toggle expansion
-      if (paymentId === "bank_card") {
+      } else if (paymentId === "bank_card") {
         setIsCreditCardExpanded(!isCreditCardExpanded);
       }
       return;
@@ -387,183 +299,73 @@ export const PaymentMethod = () => {
 
     setSelectedPayment(paymentId);
 
-    // Auto-expand paypal when selecting it
-    if (paymentId === "paypal") {
-      setIsPaypalExpanded(true);
-      setIsCreditCardExpanded(false);
-      setIsConverting(true);
+    // Reset expansion states
+    setIsPaypalExpanded(false);
+    setIsCreditCardExpanded(false);
 
-      // Reset to USD when selecting PayPal
+    // Handle expansion and currency setting based on payment type
+    if (isUSDPayment(paymentId)) {
+      if (paymentId === "paypal") {
+        setIsPaypalExpanded(true);
+      } else if (paymentId === "bank_card") {
+        setIsCreditCardExpanded(true);
+      }
       setSelectedCurrency("USD");
-
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "USD",
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "bank_card") {
-      // Auto-expand credit card when selecting it
-      setIsCreditCardExpanded(true);
-      setIsPaypalExpanded(false);
-      setIsConverting(true);
-
-      // Reset to USD when selecting Credit Card
-      setSelectedCurrency("USD");
-
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "USD",
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "wave") {
-      // Handle wave payment - convert to FCFA
-      setIsPaypalExpanded(false);
-      setIsCreditCardExpanded(false);
-      setIsConverting(true);
-
+    } else if (isWavePayment(paymentId)) {
       setSelectedCurrency("FCFA");
+    }
 
-      const data = {
-        from_currency: previewOrder?.currency || user.currency,
-        to_currency: "FCFA",
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "mobile_money" || paymentId.includes("mobile_money") || paymentId.includes("Brainnel Pay")) {
-      // Handle mobile money (brainnelpay) - convert to user's local currency based on country
-      setIsPaypalExpanded(false);
-      setIsCreditCardExpanded(false);
+    // Perform currency conversion for convertible payment methods
+    if (isConvertiblePayment(paymentId)) {
       setIsConverting(true);
+      
+      const targetCurrency = getTargetCurrency(paymentId, selectedCurrency, userLocalCurrency, user.currency);
+      const fromCurrency = previewOrder?.currency || user.currency;
+      
+      // Special handling for mobile money and balance - use USD as source if previewOrder currency is not set
+      const sourceCurrency = (isMobileMoneyPayment(paymentId) || isBalancePayment(paymentId)) && !previewOrder?.currency 
+        ? "USD" 
+        : fromCurrency;
 
-      const targetCurrency = userLocalCurrency || user.currency;
-      const data = {
-        from_currency: previewOrder?.currency || "USD",
-        to_currency: targetCurrency,
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else if (paymentId === "balance" || paymentId === "soldes" || paymentId?.toLowerCase().includes("balance") || paymentId?.toLowerCase().includes("soldes")) {
-      // Handle balance payment - convert to user's local currency
-      setIsPaypalExpanded(false);
-      setIsCreditCardExpanded(false);
-      setIsConverting(true);
-
-      const targetCurrency = userLocalCurrency || user.currency;
-      const data = {
-        from_currency: previewOrder?.currency || "USD",
-        to_currency: targetCurrency,
-        amounts: {
-          total_amount: getActualProductTotalForConversion(),
-          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-          shipping_fee: createOrderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-      console.log("=== 余额支付货币转换请求数据 ===");
-      console.log("转换请求数据:", JSON.stringify(data, null, 2));
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
-    } else {
-      // Close expansion for other options
-      setIsPaypalExpanded(false);
-      setIsCreditCardExpanded(false);
+      try {
+        const convertedAmounts = await performCurrencyConversion(
+          sourceCurrency,
+          targetCurrency,
+          {
+            total_amount: getActualProductTotalForConversion(),
+            domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
+            shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
+          }
+        );
+        
+        setConvertedAmount(convertedAmounts);
+        setIsConverting(false);
+      } catch (error) {
+        setIsConverting(false);
+      }
     }
   };
 
-  const onSelectCurrency = (currency: string) => {
+  const onSelectCurrency = async (currency: string) => {
     setSelectedCurrency(currency);
     setIsConverting(true);
-    const data = {
-      from_currency: previewOrder?.currency || user.currency,
-      to_currency: currency,
-      amounts: {
-        total_amount: getActualProductTotalForConversion(),
-        domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
-        shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-      },
-    };
-
-
-    payApi
-      .convertCurrency(data)
-      .then((res) => {
-        setConvertedAmount(res.converted_amounts_list);
-        setIsConverting(false);
-      })
-      .catch((error) => {
-        console.error("Currency conversion failed:", error);
-        setIsConverting(false);
-      });
+    
+    try {
+      const convertedAmounts = await performCurrencyConversion(
+        previewOrder?.currency || user.currency,
+        currency,
+        {
+          total_amount: getActualProductTotalForConversion(),
+          domestic_shipping_fee: createOrderData?.domestic_shipping_fee || orderData?.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
+          shipping_fee: createOrderData?.shipping_fee || orderData?.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
+        }
+      );
+      
+      setConvertedAmount(convertedAmounts);
+      setIsConverting(false);
+    } catch (error) {
+      setIsConverting(false);
+    }
   };
 
   const getPaymentMethods = async () => {
@@ -822,28 +624,23 @@ export const PaymentMethod = () => {
 
   // 当用户本地货币设置后，如果当前选择的是mobile money，重新进行货币转换
   useEffect(() => {
-    if (userLocalCurrency && selectedPayment && (selectedPayment === "mobile_money" || selectedPayment.includes("mobile_money") || selectedPayment.includes("Brainnel Pay")) && previewOrder && createOrderData) {
+    if (userLocalCurrency && selectedPayment && isMobileMoneyPayment(selectedPayment) && previewOrder && createOrderData) {
       setIsConverting(true);
-      const data = {
-        from_currency: previewOrder.currency || "USD",
-        to_currency: userLocalCurrency,
-        amounts: {
+
+      performCurrencyConversion(
+        previewOrder.currency || "USD",
+        userLocalCurrency,
+        {
           total_amount: getActualProductTotalForConversion(),
           domestic_shipping_fee: createOrderData.domestic_shipping_fee || (previewOrder as any)?.domestic_shipping_fee || 0,
           shipping_fee: createOrderData.shipping_fee || (previewOrder as any)?.shipping_fee || 0,
-        },
-      };
-
-      payApi
-        .convertCurrency(data)
-        .then((res) => {
-          setConvertedAmount(res.converted_amounts_list);
-          setIsConverting(false);
-        })
-        .catch((error) => {
-          console.error("Currency conversion failed:", error);
-          setIsConverting(false);
-        });
+        }
+      ).then((convertedAmounts) => {
+        setConvertedAmount(convertedAmounts);
+        setIsConverting(false);
+      }).catch((error) => {
+        setIsConverting(false);
+      });
     }
   }, [userLocalCurrency]);
 
@@ -904,12 +701,9 @@ export const PaymentMethod = () => {
       const originalProductTotal = previewOrder.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
       
       // 如果需要货币转换
-      if (selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
-          ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) ||
-          ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)) {
-        
+      if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
         // 对于订单详情进入，直接返回转换后的商品总价
-        const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+        const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
         console.log("=== 商品总价货币转换显示 ===");
         console.log("原始商品总价:", originalProductTotal);
         console.log("转换后商品总价:", totalConvertedAmount);
@@ -920,11 +714,8 @@ export const PaymentMethod = () => {
     }
     
     // 正常下单流程
-    if (selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
-        ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) ||
-        ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)) {
-      const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
-      return totalConvertedAmount;
+    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      return getConvertedAmountByKey(convertedAmount, "total_amount");
     }
     return getProductTotalPrice();
   };
@@ -953,7 +744,7 @@ export const PaymentMethod = () => {
     
     // 检查余额支付时余额是否充足
     
-    if (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) {
+    if (isBalancePayment(selectedPayment)) {
       const totalAmount = getTotalForCalculation();
       
       // 直接使用数字比较，因为从日志看user.balance已经是数字
@@ -982,13 +773,9 @@ export const PaymentMethod = () => {
           let convertedTotalPrice = sku.price * sku.quantity;
           
           // 如果是需要货币转换的支付方式且有转换数据
-          if ((selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || 
-               (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) ||
-               (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))) 
-               && convertedAmount.length > 0) {
-            
+          if (isConvertiblePayment(selectedPayment) && convertedAmount.length > 0) {
             // 获取商品总额的转换比例
-            const totalConvertedAmount = convertedAmount.find((conv) => conv.item_key === "total_amount")?.converted_amount || 0;
+            const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
             const originalTotalAmount = previewOrder?.total_amount || 0;
             
             if (originalTotalAmount > 0) {
@@ -1027,76 +814,19 @@ export const PaymentMethod = () => {
     if (createOrderData) {
       createOrderData.items = items;
       createOrderData.payment_method = selectedPayment;
-      createOrderData.total_amount =
-        selectedPayment === "paypal"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "bank_card"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "wave"
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : getTotalForCalculation();
-      createOrderData.actual_amount =
-        selectedPayment === "paypal"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "bank_card"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "wave"
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : getTotalForCalculation();
-      createOrderData.currency =
-        selectedPayment === "paypal" 
-          ? selectedCurrency 
-          : selectedPayment === "bank_card"
-          ? selectedCurrency
-          : selectedPayment === "wave" 
-          ? "FCFA" 
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) 
-          ? (userLocalCurrency || user.currency) 
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-          ? (userLocalCurrency || user.currency)
-          : user.currency;
-      createOrderData.domestic_shipping_fee =
-        selectedPayment === "paypal"
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : selectedPayment === "bank_card"
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : selectedPayment === "wave"
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-          ? convertedAmount.find(
-              (item) => item.item_key === "domestic_shipping_fee"
-            )?.converted_amount || 0
-          : orderData?.domestic_shipping_fee;
-      createOrderData.shipping_fee =
-        selectedPayment === "paypal"
-          ? getConvertedShippingFeeForCalculation()
-          : selectedPayment === "bank_card"
-          ? getConvertedShippingFeeForCalculation()
-          : selectedPayment === "wave"
-          ? getConvertedShippingFeeForCalculation()
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-          ? getConvertedShippingFeeForCalculation()
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-          ? getConvertedShippingFeeForCalculation()
-          : getShippingFeeForCalculation();
+      createOrderData.total_amount = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+        ? getConvertedTotalForCalculation()
+        : getTotalForCalculation();
+      createOrderData.actual_amount = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+        ? getConvertedTotalForCalculation()
+        : getTotalForCalculation();
+      createOrderData.currency = getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
+      createOrderData.domestic_shipping_fee = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+        ? getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee")
+        : orderData?.domestic_shipping_fee || 0;
+      createOrderData.shipping_fee = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+        ? getConvertedShippingFeeForCalculation()
+        : getShippingFeeForCalculation();
       // 添加is_cod参数
       createOrderData.is_cod = isCOD;
     }
@@ -1106,29 +836,10 @@ export const PaymentMethod = () => {
     const paymentConfirmData = {
       pay_method: selectedPayment,
       offline_payment: currentTab === "offline" ? 0 : 1,
-      all_price:
-        selectedPayment === "paypal"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "bank_card"
-          ? getConvertedTotalForCalculation()
-          : selectedPayment === "wave"
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-          ? getConvertedTotalForCalculation()
-          : getTotalForCalculation(),
-      currency: selectedPayment === "paypal" 
-        ? selectedCurrency 
-        : selectedPayment === "bank_card"
-        ? selectedCurrency
-        : selectedPayment === "wave" 
-        ? "FCFA" 
-        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) 
-        ? (userLocalCurrency || user.currency) 
-        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-        ? (userLocalCurrency || user.currency)
-        : user.currency,
+      all_price: shouldShowConvertedAmount(selectedPayment, convertedAmount)
+        ? getConvertedTotalForCalculation()
+        : getTotalForCalculation(),
+      currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
       pay_product: JSON.stringify(
         getSelectedCartItems().map((item) => {
           return {
@@ -1137,7 +848,9 @@ export const PaymentMethod = () => {
             all_price:
               convertedAmount.find((conv) => conv.item_key === "total_amount")
                 ?.converted_amount || item.total_price,
-            currency: selectedPayment === "paypal" ? selectedCurrency : selectedPayment === "Bank Card Payment" ? selectedCurrency : selectedPayment === "wave" ? "FCFA" : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0 ? (userLocalCurrency || user.currency) : previewOrder?.currency,
+            currency: shouldShowConvertedAmount(selectedPayment, convertedAmount) 
+              ? getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency)
+              : previewOrder?.currency,
             sku: item.sku_attributes.map((sku) => {
               return {
                 sku_id: item.sku_id,
@@ -1172,28 +885,18 @@ export const PaymentMethod = () => {
       const paymentData = {
         order_id: route.params.orderId,
         payment_method: selectedPayment,
-        currency: selectedPayment === "paypal"
-          ? selectedCurrency
-          : selectedPayment === "bank_card"
-          ? selectedCurrency
-          : selectedPayment === "wave"
-          ? "FCFA"
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay"))
-          ? (userLocalCurrency || user.currency)
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-          ? (userLocalCurrency || user.currency)
-          : route.params.orderData.currency,
-        total_amount: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) || ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)
+        currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
+        total_amount: shouldShowConvertedAmount(selectedPayment, convertedAmount)
           ? getConvertedTotalForCalculation()
           : getTotalForCalculation(),
-        actual_amount: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) || ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)
+        actual_amount: shouldShowConvertedAmount(selectedPayment, convertedAmount)
           ? getConvertedTotalForCalculation()
           : getTotalForCalculation(),
-        shipping_fee: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) || ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)
+        shipping_fee: shouldShowConvertedAmount(selectedPayment, convertedAmount)
           ? getConvertedShippingFeeForCalculation()
           : getShippingFeeForCalculation(),
-        domestic_shipping_fee: selectedPayment === "paypal" || selectedPayment === "bank_card" || selectedPayment === "wave" || ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0) || ((selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0)
-          ? convertedAmount.find((item) => item.item_key === "domestic_shipping_fee")?.converted_amount || 0
+        domestic_shipping_fee: shouldShowConvertedAmount(selectedPayment, convertedAmount)
+          ? getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee")
           : route.params.orderData.domestic_shipping_fee || 0,
       };
 
@@ -1244,17 +947,7 @@ export const PaymentMethod = () => {
           navigation.navigate("PreviewOrder", {
             data: res,
             payMethod: selectedPayment,
-            currency: selectedPayment === "paypal" 
-          ? selectedCurrency 
-          : selectedPayment === "bank_card"
-          ? selectedCurrency
-          : selectedPayment === "wave" 
-          ? "FCFA" 
-          : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) 
-          ? (userLocalCurrency || user.currency) 
-          : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-          ? (userLocalCurrency || user.currency)
-          : user.currency,
+            currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
           });
         })
         .catch((error) => {
@@ -1434,42 +1127,8 @@ export const PaymentMethod = () => {
                   <Text>{t("order.shipping.domestic_fee")}</Text>
                   <View>
                     <Text>
-                      {selectedPayment === "paypal"
-                        ? convertedAmount.find(
-                            (item) => item.item_key === "domestic_shipping_fee"
-                          )?.converted_amount || 0
-                        : selectedPayment === "bank_card"
-                        ? convertedAmount.find(
-                            (item) => item.item_key === "domestic_shipping_fee"
-                          )?.converted_amount || 0
-                        : selectedPayment === "wave"
-                        ? convertedAmount.find(
-                            (item) => item.item_key === "domestic_shipping_fee"
-                          )?.converted_amount || 0
-                        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? convertedAmount.find(
-                            (item) => item.item_key === "domestic_shipping_fee"
-                          )?.converted_amount || 0
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-                        ? convertedAmount.find(
-                            (item) => item.item_key === "domestic_shipping_fee"
-                          )?.converted_amount || 0
-                        : orderData?.domestic_shipping_fee || 0}{" "}
-                      {selectedPayment === "paypal"
-                        ? selectedCurrency === "USD"
-                          ? "USD"
-                          : "EUR"
-                        : selectedPayment === "bank_card"
-                        ? selectedCurrency === "USD"
-                          ? "USD"
-                          : "EUR"
-                        : selectedPayment === "wave"
-                        ? "FCFA"
-                        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? (userLocalCurrency || user.currency)
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-                        ? (userLocalCurrency || user.currency)
-                        : previewOrder?.currency}
+                      {getDisplayAmount(selectedPayment, convertedAmount, orderData?.domestic_shipping_fee || 0, "domestic_shipping_fee")}{" "}
+                      {getDisplayCurrency()}
                     </Text>
                   </View>
                 </View>
@@ -1479,32 +1138,10 @@ export const PaymentMethod = () => {
                   </View>
                   <View style={styles.shippingPriceContainer}>
                     <Text style={styles.shippingPriceText}>
-                      {selectedPayment === "paypal"
-                        ? getConvertedShippingFee().toFixed(2)
-                        : selectedPayment === "bank_card"
-                        ? getConvertedShippingFee().toFixed(2)
-                        : selectedPayment === "wave"
-                        ? getConvertedShippingFee().toFixed(2)
-                        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? getConvertedShippingFee().toFixed(2)
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-                        ? getConvertedShippingFee().toFixed(2)
-                        : getShippingFee().toFixed(2)}{" "}
-                      {selectedPayment === "paypal"
-                        ? selectedCurrency === "USD"
-                          ? "USD"
-                          : "EUR"
-                        : selectedPayment === "bank_card"
-                        ? selectedCurrency === "USD"
-                          ? "USD"
-                          : "EUR"
-                        : selectedPayment === "wave"
-                        ? "FCFA"
-                        : (selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? (userLocalCurrency || user.currency)
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes"))
-                        ? (userLocalCurrency || user.currency)
-                        : previewOrder?.currency}
+                      {(shouldShowConvertedAmount(selectedPayment, convertedAmount) 
+                        ? getConvertedShippingFee() 
+                        : getShippingFee()).toFixed(2)}{" "}
+                      {getDisplayCurrency()}
                     </Text>
                     {isCOD === 1 && (
                       <View style={styles.cashOnDeliveryContainer}>
@@ -1528,68 +1165,19 @@ export const PaymentMethod = () => {
                   >
                     {t("payment.total")}
                   </Text>
-                  {selectedPayment === "paypal" && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text
-                          style={{
-                            fontSize: fontSize(18),
-                            fontWeight: "600",
-                            color: "#FF5100",
-                          }}
-                        >
-                          {getConvertedTotalForCalculation().toFixed(2)}{" "}
-                          {selectedCurrency === "USD" ? "USD" : "EUR"}
-                        </Text>
-                      </View>
-                    )}
-                  {selectedPayment === "bank_card" && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text
-                          style={{
-                            fontSize: fontSize(18),
-                            fontWeight: "600",
-                            color: "#FF5100",
-                          }}
-                        >
-                          {getConvertedTotalForCalculation().toFixed(2)}{" "}
-                          {selectedCurrency === "USD" ? "USD" : "EUR"}
-                        </Text>
-                      </View>
-                    )}
-                  {selectedPayment === "wave" && (
-                    <View style={{ flexDirection: "row" }}>
-                      <Text
-                        style={{
-                          fontSize: fontSize(18),
-                          fontWeight: "600",
-                          color: "#FF5100",
-                        }}
-                      >
-                        {getConvertedTotalForCalculation().toFixed(2)}{" "}
-                        FCFA
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPayment !== "paypal" && selectedPayment !== "bank_card" && selectedPayment !== "wave" && (
-                    <Text
-                      style={{
-                        fontSize: fontSize(18),
-                        fontWeight: "600",
-                        color: "#FF5100",
-                      }}
-                    >
-                      {(selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? getConvertedTotalForCalculation().toFixed(2)
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-                        ? getConvertedTotalForCalculation().toFixed(2)
-                        : originalTotalPrice.toFixed(2)}{" "}
-                      {(selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0
-                        ? (userLocalCurrency || user.currency)
-                        : (selectedPayment === "balance" || selectedPayment === "soldes" || selectedPayment?.toLowerCase().includes("balance") || selectedPayment?.toLowerCase().includes("soldes")) && convertedAmount.length > 0
-                        ? (userLocalCurrency || user.currency)
-                        : previewOrder?.currency}
-                    </Text>
-                  )}
+                  <Text
+                    style={{
+                      fontSize: fontSize(18),
+                      fontWeight: "600",
+                      color: "#FF5100",
+                    }}
+                  >
+                    {(shouldShowConvertedAmount(selectedPayment, convertedAmount)
+                      ? getConvertedTotalForCalculation()
+                      : originalTotalPrice
+                    ).toFixed(2)}{" "}
+                    {getDisplayCurrency()}
+                  </Text>
                 </View>
               </View>
             </ScrollView>
@@ -1599,18 +1187,14 @@ export const PaymentMethod = () => {
               style={[
                 styles.submitButton,
                 (!selectedPayment || createLoading || isConverting || 
-                 (selectedPayment === "paypal" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                 (selectedPayment === "Bank Card Payment" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                 (selectedPayment === "wave" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                 ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0 && !convertedAmount.find(item => item.item_key === "total_amount"))) &&
+                 (isConvertiblePayment(selectedPayment) && 
+                  (convertedAmount.length === 0 || !getConvertedAmountByKey(convertedAmount, "total_amount")))) &&
                   styles.disabledButton,
               ]}
               onPress={handleSubmit}
               disabled={!selectedPayment || createLoading || isConverting || 
-                       (selectedPayment === "paypal" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                       (selectedPayment === "Bank Card Payment" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                       (selectedPayment === "wave" && (convertedAmount.length === 0 || !convertedAmount.find(item => item.item_key === "total_amount"))) ||
-                       ((selectedPayment === "mobile_money" || selectedPayment?.includes("mobile_money") || selectedPayment?.includes("Brainnel Pay")) && convertedAmount.length > 0 && !convertedAmount.find(item => item.item_key === "total_amount"))}
+                       (isConvertiblePayment(selectedPayment) && 
+                        (convertedAmount.length === 0 || !getConvertedAmountByKey(convertedAmount, "total_amount")))}
             >
               {createLoading ? (
                 <ActivityIndicator size="small" color="#fff" />

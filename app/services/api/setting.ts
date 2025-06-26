@@ -87,20 +87,60 @@ export const settingApi = {
     // 获取运费信息
     getShippingFee: (data: ShippingFee) => apiService.post<ShippingFeeResponse>('/api/orders/calculate_manual_shipping_fee/', data),
     // 获取版本信息
-    getVersionInfo: () => {
-      return fetch('https://api.brainnel.com/admin/api/v1/app-versions/')
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          return data;
-        })
-        .catch(error => {
-          console.error('[API] 版本检查接口调用失败:', error);
-          throw error;
+    getVersionInfo: async (retryCount = 0, maxRetries = 2) => {
+      console.log('[版本API] 开始请求版本信息...');
+      console.log('[版本API] 请求地址: https://api.brainnel.com/admin/api/v1/app-versions/');
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+        
+        const res = await fetch('https://api.brainnel.com/admin/api/v1/app-versions/', {
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
+        
+        clearTimeout(timeoutId);
+        
+        console.log(`[版本API] 接收到响应: ${res.status} ${res.statusText}`);
+        console.log(`[版本API] 响应头:`, Object.fromEntries(res.headers.entries()));
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        
+        console.log('[版本API] 版本信息解析成功:', data);
+        console.log(`[版本API] 返回 ${data.length} 个平台版本信息`);
+        
+        // 打印每个平台的详细信息
+        data.forEach((versionInfo: any, index: number) => {
+          console.log(`[版本API] 平台 ${index + 1}: ${versionInfo.platform}`);
+          console.log(`[版本API] - 最新版本: ${versionInfo.latest_version}`);
+          console.log(`[版本API] - 最小强制版本: ${versionInfo.min_force_version}`);
+          console.log(`[版本API] - 下载链接: ${versionInfo.link_url}`);
+        });
+        
+        return data;
+      } catch (error) {
+        console.error('[版本API] 版本检查接口调用失败:', error);
+        console.error('[版本API] 错误详情:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        // 如果是网络错误且还有重试次数，则进行重试
+        if (retryCount < maxRetries) {
+          console.log(`[版本API] 准备重试 (${retryCount + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // 递增延迟
+          return settingApi.getVersionInfo(retryCount + 1, maxRetries);
+        }
+        
+        throw error;
+      }
     },
 }
