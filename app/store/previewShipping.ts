@@ -24,6 +24,8 @@ interface PreviewShippingStore {
   calculateShippingFee: (data: ShippingFeeData) => Promise<void>;
   // 计算国内物流价格
   calculateDomesticShippingFee: (data: ShippingFeeData) => Promise<void>;
+  // 计算所有运费（国际+国内）
+  calculateAllShippingFees: (data: ShippingFeeData) => Promise<void>;
   // 重置状态
   resetState: () => void;
   // 清空运费数据
@@ -93,7 +95,7 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
   
   calculateShippingFee: async (data: ShippingFeeData) => {
     set((state) => ({
-      state: { ...state.state, isLoading: false, error: null }
+      state: { ...state.state, isLoading: true, error: null }
     }));
     
     try {
@@ -137,7 +139,7 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
   
   calculateDomesticShippingFee: async (data: ShippingFeeData) => {
     set((state) => ({
-      state: { ...state.state, isLoading: false, error: null }
+      state: { ...state.state, isLoading: true, error: null }
     }));
     
     try {
@@ -200,6 +202,65 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
         domesticShippingFees: null,
       }
     }));
+  },
+  
+  calculateAllShippingFees: async (data: ShippingFeeData) => {
+    set((state) => ({
+      state: { ...state.state, isLoading: true, error: null }
+    }));
+    
+    try {
+      // 并行执行两个API调用
+      const [shippingResponse, domesticResponse] = await Promise.all([
+        ordersApi.calcShippingFee(data),
+        ordersApi.calcDomesticShippingFee(data)
+      ]);
+      
+      // 处理国际运费埋点
+      const shippingLogData = {
+        shipping_method: 1,
+        shipping_price_outside: shippingResponse.total_shipping_fee_air || 0,
+        shipping_price_within: shippingResponse.total_shipping_fee_sea || 0,
+        currency: shippingResponse.currency || "FCFA",
+        forwarder_name: "",
+        country_city: "",
+        timestamp: new Date().toISOString(),
+      };
+      
+      // 处理国内运费埋点
+      const domesticShippingLogData = {
+        shipping_method: 2,
+        shipping_price_outside: 0,
+        shipping_price_within: domesticResponse.total_shipping_fee || 0,
+        currency: domesticResponse.currency || "FCFA",
+        forwarder_name: "",
+        country_city: "",
+        timestamp: new Date().toISOString(),
+      };
+      
+      // 记录埋点
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.logShippingConfirm(shippingLogData, "address");
+      analyticsStore.logShippingConfirm(domesticShippingLogData, "address");
+      
+      // 更新状态
+      set((state) => ({
+        state: { 
+          ...state.state, 
+          shippingFees: shippingResponse,
+          domesticShippingFees: domesticResponse,
+          isLoading: false 
+        }
+      }));
+    } catch (error) {
+      set((state) => ({
+        state: { 
+          ...state.state, 
+          error: error instanceof Error ? error.message : i18n.t('shipping.errors.calculate_shipping_failed'), 
+          isLoading: false 
+        }
+      }));
+    }
   }
 }));
 

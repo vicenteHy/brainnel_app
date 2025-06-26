@@ -60,24 +60,15 @@ export const ShippingFee = () => {
   const {
     fetchFreightForwarderAddress,
     state,
-    calculateShippingFee,
-    calculateDomesticShippingFee,
+    calculateAllShippingFees,
     clearShippingFees,
   } = usePreviewShippingStore();
   const [shippingMethod, setShippingMethod] = useState("sea");
   const [warehouse, setWarehouse] = useState<string>();
-  const [freightForwarderAddress, setFreightForwarderAddress] =
-    useState<AddressDataItem>();
-
-  const [shippingFeeData, setShippingFeeData] = useState<CartShippingFeeData>();
-
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWarehouseLabel, setSelectedWarehouseLabel] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<Address>();
-  const [domesticShippingFeeData, setDomesticShippingFeeData] =
-    useState<DomesticShippingFeeData>();
-  const [isShippingFeeLoading, setIsShippingFeeLoading] = useState(false);
-  const [count, setCount] = useState<string>();
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const { setOrderData, orderData, items } = useCreateOrderStore();
   const [countryCode, setCountryCode] = useState<number>();
@@ -85,26 +76,29 @@ export const ShippingFee = () => {
   const { user } = useUserStore();
   const [loading, setLoading] = useState(false);
 
-  const getFreightForwarderAddress = async () => {
-    const transportMode = shippingMethod === "sea" ? 0 : 1;
+  // 统一处理地址获取和运费计算
+  const initializeShippingData = async (method: string) => {
+    const transportMode = method === "sea" ? 0 : 1;
+    const isToc = route.params?.isToc !== undefined ? route.params.isToc : 0;
     
-
-    
-    // 使用从CartScreen传递过来的isToc参数
-    let isToc = route.params?.isToc !== undefined ? route.params.isToc : 0;
-
+    // 获取地址
     await fetchFreightForwarderAddress(transportMode, isToc);
   };
 
   useEffect(() => {
-    getFreightForwarderAddress();
+    // 进入页面时先清空旧的运费数据
+    clearShippingFees();
+    initializeShippingData(shippingMethod);
+    
+    // 组件卸载时清空状态
+    return () => {
+      clearShippingFees();
+    };
   }, []);
 
+  // 处理地址数据更新并立即计算运费
   useEffect(() => {
     if (state.freightForwarderAddress) {
-      
-      setFreightForwarderAddress(state.freightForwarderAddress);
-      
       // 使用other_addresses（store已将所有地址合并到此数组中）
       let firstItem = null;
       if (
@@ -122,65 +116,40 @@ export const ShippingFee = () => {
           " | " +
           firstItem.city +
           (firstItem.detail_address ? (" | " + firstItem.detail_address) : "");
+        
         setWarehouse(label);
         setSelectedWarehouseLabel(label);
         setCountryCode(firstItem.country_code);
+        setSelectedWarehouse(firstItem);
+        
+        // 立即计算运费
+        if (items && firstItem.address_id) {
+          const data = {
+            items: items,
+            freight_forwarder_address_id: firstItem.address_id,
+          };
+          calculateAllShippingFees(data);
+        }
       }
+      
+      setIsInitializing(false);
     }
   }, [state.freightForwarderAddress]);
 
+  // 当运输方式改变时，重新获取地址和计算运费
   useEffect(() => {
-    if (state.shippingFees) {
-      setShippingFeeData(state.shippingFees);
+    if (!isInitializing && shippingMethod) {
+      clearShippingFees();
+      initializeShippingData(shippingMethod);
     }
-  }, [state.shippingFees]);
-
-  useEffect(() => {
-    if (state.domesticShippingFees) {
-      setDomesticShippingFeeData(state.domesticShippingFees);
-    }
-  }, [state.domesticShippingFees]);
-
-  // 统一处理loading状态
-  useEffect(() => {
-    if (
-      state.shippingFees &&
-      state.domesticShippingFees &&
-      isShippingFeeLoading
-    ) {
-      setIsShippingFeeLoading(false);
-    }
-  }, [state.shippingFees, state.domesticShippingFees, isShippingFeeLoading]);
-
-  // Call changeCountryHandel when warehouse changes
-  useEffect(() => {
-    if (warehouse && freightForwarderAddress?.other_addresses) {
-      changeCountryHandel(warehouse);
-    }
-  }, [warehouse, freightForwarderAddress]);
-
-  // 当运输方式改变时，重新获取对应的货代地址
-  useEffect(() => {
-    const transportMode = shippingMethod === "sea" ? 0 : 1;
-    
-
-    
-    // 判断is_toc：科特迪瓦用户且isCOD为0时为1
-    let isToc = 0;
-    if (userStore.user?.country_code === 225 && route.params.isCOD === 0) {
-      isToc = 1;
-    }
-    
-    fetchFreightForwarderAddress(transportMode, isToc);
   }, [shippingMethod]);
 
   const changeCountryHandel = async (value: string) => {
-    if (value && freightForwarderAddress) {
-      
+    if (value && state.freightForwarderAddress) {
       // 查找地址（store已将所有地址合并到other_addresses中）
-      const allAddresses = freightForwarderAddress.other_addresses || [];
+      const allAddresses = state.freightForwarderAddress.other_addresses || [];
       
-      const selectedWarehouse = allAddresses.find(
+      const selected = allAddresses.find(
         (item) =>
           ((getCurrentLanguage() === "fr"
             ? item.country_name
@@ -190,29 +159,19 @@ export const ShippingFee = () => {
             (item.detail_address ? (" | " + item.detail_address) : "")) === value
       );
 
-      setSelectedWarehouse(selectedWarehouse);
+      if (selected) {
+        setSelectedWarehouse(selected);
+        setWarehouse(value);
+        setSelectedWarehouseLabel(value);
+        setCountryCode(selected.country_code);
 
-      if (selectedWarehouse && items) {
-        const data = {
-          items: items,
-          freight_forwarder_address_id: selectedWarehouse.address_id,
-        };
-
-        // Only calculate if we have the necessary data
-        if (data.items && data.freight_forwarder_address_id) {
-          // 设置loading状态为true，开始计算
-          setIsShippingFeeLoading(true);
-          setCount(t("order.shipping.calculating"));
-
-          // 清空store中的旧数据，确保loading状态正确
-          clearShippingFees();
-
-          // 清空之前的运费数据，确保loading状态正确
-          setShippingFeeData(undefined);
-          setDomesticShippingFeeData(undefined);
-
-          calculateShippingFee(data);
-          calculateDomesticShippingFee(data);
+        if (items) {
+          const data = {
+            items: items,
+            freight_forwarder_address_id: selected.address_id,
+          };
+          // 使用统一的计算方法
+          calculateAllShippingFees(data);
         }
       }
     }
@@ -227,8 +186,8 @@ export const ShippingFee = () => {
 
   const handleSubmit = () => {
     if (
-      !isShippingFeeLoading &&
-      domesticShippingFeeData?.total_shipping_fee != null
+      !state.isLoading &&
+      state.domesticShippingFees?.total_shipping_fee != null
     ) {
       // 计算更新后的COD状态：科特迪瓦用户选择空运时需要预付
       let updatedIsCOD = route.params.isCOD || 0;
@@ -243,11 +202,11 @@ export const ShippingFee = () => {
       setOrderData({
         ...orderData,
         transport_type: shippingMethod === "sea" ? 0 : 1,
-        domestic_shipping_fee: domesticShippingFeeData?.total_shipping_fee,
+        domestic_shipping_fee: state.domesticShippingFees?.total_shipping_fee,
         shipping_fee:
           shippingMethod === "sea"
-            ? shippingFeeData?.total_shipping_fee_sea
-            : shippingFeeData?.total_shipping_fee_air,
+            ? state.shippingFees?.total_shipping_fee_sea
+            : state.shippingFees?.total_shipping_fee_air,
         receiver_address: selectedWarehouseLabel,
       });
 
@@ -256,9 +215,9 @@ export const ShippingFee = () => {
         shipping_method: shippingMethod === "sea" ? 0 : 1,
         shipping_price_outside:
           shippingMethod === "sea"
-            ? shippingFeeData?.total_shipping_fee_sea || 0
-            : shippingFeeData?.total_shipping_fee_air || 0,
-        shipping_price_within: domesticShippingFeeData?.total_shipping_fee || 0,
+            ? state.shippingFees?.total_shipping_fee_sea || 0
+            : state.shippingFees?.total_shipping_fee_air || 0,
+        shipping_price_within: state.domesticShippingFees?.total_shipping_fee || 0,
         currency: userStore.user?.currency || "FCFA",
         forwarder_name: selectedWarehouse?.forwarder_name || "",
         country_city: selectedWarehouseLabel || "",
@@ -432,10 +391,10 @@ export const ShippingFee = () => {
                         </Text>
                       </View>
                       <View style={styles.shippingInfo}>
-                        {isShippingFeeLoading ? (
+                        {state.isLoading ? (
                           // 统一显示一个加载状态
                           <View style={styles.loadingFeesContainer}>
-                            <Text style={styles.calculatingText}>{count}</Text>
+                            <Text style={styles.calculatingText}>{t("order.shipping.calculating")}</Text>
                             <ActivityIndicator
                               size="small"
                               color="#FF5100"
@@ -450,7 +409,7 @@ export const ShippingFee = () => {
                                 {t("order.shipping.domestic_fee_china") || "运费 (在中国)"}
                               </Text>
                               <Text style={styles.shippingInfoPrice}>
-                                {(domesticShippingFeeData?.total_shipping_fee || 0).toFixed(2)} {userStore.user?.currency}
+                                {(state.domesticShippingFees?.total_shipping_fee || 0).toFixed(2)} {userStore.user?.currency}
                               </Text>
                             </View>
                             <View style={styles.shippingInfoRow}>
@@ -459,28 +418,28 @@ export const ShippingFee = () => {
                               </Text>
                               <Text style={styles.shippingInfoPrice}>
                                 {(shippingMethod === "sea"
-                                  ? shippingFeeData?.total_shipping_fee_sea || 0
-                                  : shippingFeeData?.total_shipping_fee_air || 0).toFixed(2)} {userStore.user?.currency}
+                                  ? state.shippingFees?.total_shipping_fee_sea || 0
+                                  : state.shippingFees?.total_shipping_fee_air || 0).toFixed(2)} {userStore.user?.currency}
                               </Text>
                             </View>
-                            {userStore.user.country_code !== 225 ? (
-                              <View style={styles.delivery}>
-                                <Text style={styles.deliveryText}>
-                                  {t("order.preview.Cash_on_delivery")}
-                                </Text>
-                              </View>
-                            ) : (
-                              // 科特迪瓦用户的COD逻辑：空运需要预付，海运根据金额判断
-                              (shippingMethod === "sea" && route.params.isCOD === 1) ? (
-                                <View style={styles.delivery}>
-                                  <Text style={styles.deliveryText}>
-                                    {t("order.preview.Cash_on_delivery")}
-                                  </Text>
-                                </View>
-                              ) : (
-                                <View></View>
-                              )
-                            )}
+                        {userStore.user.country_code !== 225 ? (
+                          <View style={styles.delivery}>
+                            <Text style={styles.deliveryText}>
+                              {t("order.preview.Cash_on_delivery")}
+                            </Text>
+                          </View>
+                        ) : (
+                          // 科特迪瓦用户的COD逻辑：空运需要预付，海运根据金额判断
+                          (shippingMethod === "sea" && route.params.isCOD === 1) ? (
+                            <View style={styles.delivery}>
+                              <Text style={styles.deliveryText}>
+                                {t("order.preview.Cash_on_delivery")}
+                              </Text>
+                            </View>
+                          ) : (
+                            <View></View>
+                          )
+                        )}
                           </>
                         )}
                       </View>
@@ -493,15 +452,15 @@ export const ShippingFee = () => {
                 <TouchableOpacity
                   style={[
                     styles.primaryButtonStyle,
-                    isShippingFeeLoading ||
-                    domesticShippingFeeData?.total_shipping_fee == null
+                    state.isLoading ||
+                    state.domesticShippingFees?.total_shipping_fee == null
                       ? styles.disabledButtonStyle
                       : {},
                   ]}
                   onPress={handleSubmit}
                   disabled={
-                    isShippingFeeLoading ||
-                    domesticShippingFeeData?.total_shipping_fee == null
+                    state.isLoading ||
+                    state.domesticShippingFees?.total_shipping_fee == null
                   }
                   activeOpacity={1}
                 >
@@ -540,7 +499,7 @@ export const ShippingFee = () => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={freightForwarderAddress?.other_addresses || []}
+                  data={state.freightForwarderAddress?.other_addresses || []}
                   keyExtractor={(item, index) => index.toString()}
                   contentContainerStyle={styles.flatListContent}
                   showsVerticalScrollIndicator={false}
@@ -968,6 +927,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 100,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: fontSize(14),
+    color: "#666666",
+    fontFamily: 'System',
   },
   backIconContainer: {
     position: "absolute",
