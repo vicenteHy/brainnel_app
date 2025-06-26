@@ -98,6 +98,15 @@ export const PaymentMethod = () => {
   const [countryList, setCountryList] = useState<any[]>([]);
   const [userLocalCurrency, setUserLocalCurrency] = useState<string>("");
   const [hasInitializedCurrency, setHasInitializedCurrency] = useState(false);
+  
+  // 组件卸载时清理状态
+  useEffect(() => {
+    return () => {
+      // 清理转换金额状态
+      setConvertedAmount([]);
+      setHasInitializedCurrency(false);
+    };
+  }, []);
 
   // 自定义弹窗状态
   const [alertModal, setAlertModal] = useState<AlertModalState>({
@@ -184,21 +193,19 @@ export const PaymentMethod = () => {
       const originalItemPrice = item.total_price || 0;
       
       // 如果需要货币转换
-      if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      if (selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
         // 对于订单详情，基于商品总价计算转换比例
         const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
         const originalProductTotal = previewOrder?.items?.reduce((sum: number, i: any) => sum + (i.total_price || 0), 0) || 0;
         
-        console.log("=== 单个商品价格转换 ===");
-        console.log("商品原价:", originalItemPrice);
-        console.log("商品总价(原始):", originalProductTotal);
-        console.log("商品总价(转换后):", totalConvertedAmount);
-        
         if (originalProductTotal > 0 && totalConvertedAmount > 0) {
           const conversionRate = totalConvertedAmount / originalProductTotal;
           const convertedItemPrice = originalItemPrice * conversionRate;
-          console.log("转换比例:", conversionRate);
-          console.log("转换后商品价格:", convertedItemPrice);
+          
+          // 本地货币支付方式只显示整数
+          if (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) {
+            return Math.round(convertedItemPrice).toString();
+          }
           return convertedItemPrice.toFixed(2);
         }
       }
@@ -207,13 +214,19 @@ export const PaymentMethod = () => {
     }
     
     // 正常下单流程
-    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+    if (selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
       const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
       const totalQuantity = getSelectedCartItems().reduce((sum, i) => sum + i.quantity, 0);
       if (totalQuantity > 0) {
         // Calculate the item's proportion of the total based on its value
         const itemProportion = item.total_price / (previewOrder?.total_amount || 1);
-        return (totalConvertedAmount * itemProportion).toFixed(2);
+        const convertedPrice = totalConvertedAmount * itemProportion;
+        
+        // 本地货币支付方式只显示整数
+        if (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) {
+          return Math.round(convertedPrice).toString();
+        }
+        return convertedPrice.toFixed(2);
       }
     }
     return item?.total_price?.toFixed(2) || "0.00";
@@ -228,14 +241,12 @@ export const PaymentMethod = () => {
     // 对于订单详情进入的情况，使用实际的商品总价
     if (route.params?.orderData && previewOrder?.items) {
       const productTotal = previewOrder.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
-      console.log("=== 货币转换使用的商品总价 ===");
-      console.log("订单详情模式 - 商品总价:", productTotal);
+
       return productTotal;
     }
     // 正常下单流程使用原来的逻辑
     const normalTotal = previewOrder?.total_amount || 0;
-    console.log("=== 货币转换使用的商品总价 ===");
-    console.log("正常下单模式 - 商品总价:", normalTotal);
+
     return normalTotal;
   };
 
@@ -246,27 +257,31 @@ export const PaymentMethod = () => {
     }
 
     // Set expansion state based on payment type
+    let initialSelectedCurrency = selectedCurrency;
     if (isUSDPayment(paymentId)) {
       if (paymentId === "paypal") {
         setIsPaypalExpanded(true);
       } else if (paymentId === "bank_card") {
         setIsCreditCardExpanded(true);
       }
+      initialSelectedCurrency = "USD";
       setSelectedCurrency("USD");
     } else if (isWavePayment(paymentId)) {
-      setSelectedCurrency("FCFA");
+      initialSelectedCurrency = userLocalCurrency || "FCFA";
+      setSelectedCurrency(initialSelectedCurrency);
+    } else if (isMobileMoneyPayment(paymentId)) {
+      // Mobile Money 应该使用本地货币
+      initialSelectedCurrency = userLocalCurrency || user.currency;
+      setSelectedCurrency(initialSelectedCurrency);
     }
 
     // Perform currency conversion
     setIsConverting(true);
     
-    const targetCurrency = getTargetCurrency(paymentId, selectedCurrency, userLocalCurrency, user.currency);
-    const fromCurrency = previewOrder?.currency || user.currency;
-    
-    // Special handling for mobile money and balance - use USD as source if previewOrder currency is not set
-    const sourceCurrency = (isMobileMoneyPayment(paymentId) || isBalancePayment(paymentId)) && !previewOrder?.currency 
-      ? "USD" 
-      : fromCurrency;
+    // 使用新的 selectedCurrency 值，而不是旧的 state 值
+    const targetCurrency = getTargetCurrency(paymentId, initialSelectedCurrency, userLocalCurrency, user.currency);
+    // 统一使用订单货币作为源货币，如果没有订单货币则默认使用 USD
+    const sourceCurrency = previewOrder?.currency || 'USD';
 
     try {
       const convertedAmounts = await performCurrencyConversion(
@@ -304,28 +319,28 @@ export const PaymentMethod = () => {
     setIsCreditCardExpanded(false);
 
     // Handle expansion and currency setting based on payment type
+    let newSelectedCurrency = selectedCurrency;
     if (isUSDPayment(paymentId)) {
       if (paymentId === "paypal") {
         setIsPaypalExpanded(true);
       } else if (paymentId === "bank_card") {
         setIsCreditCardExpanded(true);
       }
+      newSelectedCurrency = "USD";
       setSelectedCurrency("USD");
     } else if (isWavePayment(paymentId)) {
-      setSelectedCurrency("FCFA");
+      newSelectedCurrency = userLocalCurrency || "FCFA";
+      setSelectedCurrency(newSelectedCurrency);
     }
 
     // Perform currency conversion for convertible payment methods
     if (isConvertiblePayment(paymentId)) {
       setIsConverting(true);
       
-      const targetCurrency = getTargetCurrency(paymentId, selectedCurrency, userLocalCurrency, user.currency);
-      const fromCurrency = previewOrder?.currency || user.currency;
-      
-      // Special handling for mobile money and balance - use USD as source if previewOrder currency is not set
-      const sourceCurrency = (isMobileMoneyPayment(paymentId) || isBalancePayment(paymentId)) && !previewOrder?.currency 
-        ? "USD" 
-        : fromCurrency;
+      // 使用新的 selectedCurrency 值，而不是旧的 state 值
+      const targetCurrency = getTargetCurrency(paymentId, newSelectedCurrency, userLocalCurrency, user.currency);
+      // 统一使用订单货币作为源货币，如果没有订单货币则默认使用 USD
+      const sourceCurrency = previewOrder?.currency || 'USD';
 
       try {
         const convertedAmounts = await performCurrencyConversion(
@@ -351,8 +366,11 @@ export const PaymentMethod = () => {
     setIsConverting(true);
     
     try {
+      // 统一使用订单货币作为源货币，如果没有订单货币则默认使用 USD
+      const sourceCurrency = previewOrder?.currency || 'USD';
+      
       const convertedAmounts = await performCurrencyConversion(
-        previewOrder?.currency || user.currency,
+        sourceCurrency,
         currency,
         {
           total_amount: getActualProductTotalForConversion(),
@@ -458,6 +476,11 @@ export const PaymentMethod = () => {
   };
 
   useEffect(() => {
+    // 重置关键状态，确保每次进入页面都从干净的状态开始
+    setConvertedAmount([]);
+    setHasInitializedCurrency(false);
+    setIsConverting(false);
+    
     getPaymentMethods();
     getCountryListAndSetLocalCurrency();
   }, []);
@@ -484,28 +507,6 @@ export const PaymentMethod = () => {
     if (route.params?.orderData) {
       const existingOrder = route.params.orderData;
       
-      console.log("=== 订单详情进入PaymentMethod调试日志 ===");
-      console.log("原始订单数据:", JSON.stringify(existingOrder, null, 2));
-      console.log("订单总金额字段 total_amount:", existingOrder.total_amount);
-      console.log("订单实际金额字段 actual_amount:", existingOrder.actual_amount);
-      console.log("订单国内运费字段 domestic_shipping_fee:", existingOrder.domestic_shipping_fee);
-      console.log("订单国际运费字段 shipping_fee:", existingOrder.shipping_fee);
-      console.log("订单商品列表 items:", existingOrder.items);
-      
-      if (existingOrder.items && existingOrder.items.length > 0) {
-        console.log("=== 商品详细信息 ===");
-        existingOrder.items.forEach((item: any, index: number) => {
-          console.log(`商品${index + 1}:`, {
-            offer_id: item.offer_id,
-            sku_id: item.sku_id,
-            product_name: item.product_name || getOrderTransLanguage(item),
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-            sku_attributes: item.sku_attributes
-          });
-        });
-      }
       
       // 将已存在的订单数据转换为PaymentMethod页面期望的格式
       const previewOrderData = {
@@ -542,14 +543,6 @@ export const PaymentMethod = () => {
         })) || []
       };
       
-      console.log("=== 转换后的预览订单数据 ===");
-      console.log("previewOrderData:", JSON.stringify(previewOrderData, null, 2));
-      console.log("转换后的商品总价计算:");
-      if (previewOrderData.items) {
-        const calculatedTotal = previewOrderData.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
-        console.log("通过items计算的商品总价:", calculatedTotal);
-        console.log("previewOrderData.total_amount:", previewOrderData.total_amount);
-      }
       
       setPreviewOrder(previewOrderData);
       
@@ -616,13 +609,29 @@ export const PaymentMethod = () => {
 
   // Trigger initial currency conversion when all data is loaded
   useEffect(() => {
-    if (selectedPayment && previewOrder && createOrderData && !hasInitializedCurrency) {
+    // 对于需要本地货币的支付方式，必须等待 userLocalCurrency 加载完成
+    const needsLocalCurrency = selectedPayment && (
+      isMobileMoneyPayment(selectedPayment) || 
+      isWavePayment(selectedPayment) || 
+      isBalancePayment(selectedPayment)
+    );
+    
+    const canInitialize = selectedPayment && 
+      previewOrder && 
+      createOrderData && 
+      !hasInitializedCurrency &&
+      (!needsLocalCurrency || userLocalCurrency); // 如果需要本地货币，必须等待它加载
+    
+    if (canInitialize) {
       handleInitialPaymentSelection(selectedPayment);
       setHasInitializedCurrency(true);
     }
   }, [selectedPayment, previewOrder, createOrderData, userLocalCurrency, hasInitializedCurrency]);
 
   // 当用户本地货币设置后，如果当前选择的是mobile money，重新进行货币转换
+  // 注释掉这个 useEffect，因为它可能导致重复的货币转换
+  // 现在统一由上面的 useEffect 处理
+  /*
   useEffect(() => {
     if (userLocalCurrency && selectedPayment && isMobileMoneyPayment(selectedPayment) && previewOrder && createOrderData) {
       setIsConverting(true);
@@ -643,13 +652,12 @@ export const PaymentMethod = () => {
       });
     }
   }, [userLocalCurrency]);
+  */
 
   // Helper function to get selected cart items for display
   const getSelectedCartItems = () => {
     // 对于订单详情进入的情况，直接使用 previewOrder.items
     if (route.params?.orderData && previewOrder?.items) {
-      console.log("=== 使用订单详情商品列表 ===");
-      console.log("商品数量:", previewOrder.items.length);
       return previewOrder.items.map((item: any) => ({
         offer_id: item.offer_id,
         sku_id: item.sku_id,
@@ -668,7 +676,6 @@ export const PaymentMethod = () => {
     }
     
     // 正常购物车流程
-    console.log("=== 使用购物车商品列表 ===");
     const selectedItems: any[] = [];
     cartData.forEach((cartItem) => {
       cartItem.skus.forEach((sku) => {
@@ -685,7 +692,6 @@ export const PaymentMethod = () => {
         }
       });
     });
-    console.log("购物车商品数量:", selectedItems.length);
     return selectedItems;
   };
 
@@ -701,12 +707,9 @@ export const PaymentMethod = () => {
       const originalProductTotal = previewOrder.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
       
       // 如果需要货币转换
-      if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      if (selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
         // 对于订单详情进入，直接返回转换后的商品总价
         const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
-        console.log("=== 商品总价货币转换显示 ===");
-        console.log("原始商品总价:", originalProductTotal);
-        console.log("转换后商品总价:", totalConvertedAmount);
         return totalConvertedAmount;
       }
       
@@ -714,10 +717,25 @@ export const PaymentMethod = () => {
     }
     
     // 正常下单流程
-    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+    if (selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
       return getConvertedAmountByKey(convertedAmount, "total_amount");
     }
     return getProductTotalPrice();
+  };
+  
+  // Helper function to format amount based on payment method
+  const formatAmount = (amount: number, includeDecimals: boolean = true) => {
+    // 本地货币支付方式只显示整数
+    if (selectedPayment && (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment))) {
+      return Math.round(amount).toString();
+    }
+    return includeDecimals ? amount.toFixed(2) : amount.toString();
+  };
+  
+  // Helper function to format display amount
+  const formatDisplayAmount = (paymentMethod: string, convertedAmount: ConvertedAmount[], originalAmount: number, amountKey?: string) => {
+    const amount = getDisplayAmount(paymentMethod, convertedAmount, originalAmount, amountKey);
+    return formatAmount(amount);
   };
 
   // Set original total price when both previewOrder and orderData are available
@@ -758,7 +776,7 @@ export const PaymentMethod = () => {
         setAlertModal({
           visible: true,
           title: t("payment.insufficient_balance") || "余额不足",
-          message: t("payment.insufficient_balance_message") || `当前余额: ${userBalance}${user.currency}\n需要支付: ${totalAmount.toFixed(2)}${user.currency}\n请选择其他支付方式或先充值。`
+          message: t("payment.insufficient_balance_message") || `当前余额: ${formatAmount(userBalance)}${user.currency}\n需要支付: ${formatAmount(totalAmount)}${user.currency}\n请选择其他支付方式或先充值。`
         });
         return;
       }
@@ -900,10 +918,6 @@ export const PaymentMethod = () => {
           : route.params.orderData.domestic_shipping_fee || 0,
       };
 
-      console.log("=== 更新订单支付方式参数 ===");
-      console.log("订单ID:", route.params.orderId);
-      console.log("支付数据:", JSON.stringify(paymentData, null, 2));
-
       ordersApi
         .updateOrderPaymentMethod(paymentData)
         .then(() => {
@@ -924,25 +938,14 @@ export const PaymentMethod = () => {
         })
         .catch((error) => {
           setCreateLoading(false);
-          console.error("更新订单支付方式失败:", error);
           Alert.alert("错误", "更新支付方式失败");
         });
     } else {
       // 原有的创建新订单逻辑
-      console.log("=== 创建新订单参数 ===");
-      console.log("选择的支付方式:", selectedPayment);
-      console.log("选择的货币:", selectedCurrency);
-      console.log("用户本地货币:", userLocalCurrency);
-      console.log("换算金额列表:", convertedAmount);
-      console.log("创建订单数据:", JSON.stringify(createOrderData, null, 2));
-
       ordersApi
         .createOrder(createOrderData as unknown as CreateOrderRequest)
         .then((res) => {
           setCreateLoading(false);
-          console.log("=== 创建订单成功 ===");
-          console.log("后端返回的订单数据:", JSON.stringify(res, null, 2));
-          
           // go to payment preview
           navigation.navigate("PreviewOrder", {
             data: res,
@@ -1118,7 +1121,7 @@ export const PaymentMethod = () => {
                   <Text>{t("payment.product_total")}</Text>
                   <View>
                     <Text>
-                      {getConvertedProductTotalPrice().toFixed(2)}{" "}
+                      {formatAmount(getConvertedProductTotalPrice())}{" "}
                       {getDisplayCurrency()}
                     </Text>
                   </View>
@@ -1127,7 +1130,7 @@ export const PaymentMethod = () => {
                   <Text>{t("order.shipping.domestic_fee")}</Text>
                   <View>
                     <Text>
-                      {getDisplayAmount(selectedPayment, convertedAmount, orderData?.domestic_shipping_fee || 0, "domestic_shipping_fee")}{" "}
+                      {selectedPayment ? formatDisplayAmount(selectedPayment, convertedAmount, orderData?.domestic_shipping_fee || 0, "domestic_shipping_fee") : formatAmount(orderData?.domestic_shipping_fee || 0)}{" "}
                       {getDisplayCurrency()}
                     </Text>
                   </View>
@@ -1138,9 +1141,9 @@ export const PaymentMethod = () => {
                   </View>
                   <View style={styles.shippingPriceContainer}>
                     <Text style={styles.shippingPriceText}>
-                      {(shouldShowConvertedAmount(selectedPayment, convertedAmount) 
+                      {formatAmount(selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount) 
                         ? getConvertedShippingFee() 
-                        : getShippingFee()).toFixed(2)}{" "}
+                        : getShippingFee())}{" "}
                       {getDisplayCurrency()}
                     </Text>
                     {isCOD === 1 && (
@@ -1172,10 +1175,9 @@ export const PaymentMethod = () => {
                       color: "#FF5100",
                     }}
                   >
-                    {(shouldShowConvertedAmount(selectedPayment, convertedAmount)
+                    {formatAmount(selectedPayment && shouldShowConvertedAmount(selectedPayment, convertedAmount)
                       ? getConvertedTotalForCalculation()
-                      : originalTotalPrice
-                    ).toFixed(2)}{" "}
+                      : originalTotalPrice)}{" "}
                     {getDisplayCurrency()}
                   </Text>
                 </View>

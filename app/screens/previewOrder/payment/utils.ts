@@ -63,7 +63,7 @@ export const getTargetCurrency = (
     return selectedCurrency;
   }
   if (isWavePayment(paymentMethod)) {
-    return "FCFA";
+    return userLocalCurrency;
   }
   if (isMobileMoneyPayment(paymentMethod) || isBalancePayment(paymentMethod)) {
     return userLocalCurrency || userCurrency;

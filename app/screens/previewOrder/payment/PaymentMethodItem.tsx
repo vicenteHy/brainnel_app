@@ -68,8 +68,9 @@ export const PaymentMethodItem: React.FC<PaymentMethodItemProps> = ({
                   
                   if (totalOriginal > 0) {
                     const conversionRate = totalConverted / totalOriginal;
-                    const convertedBalance = (user.balance * conversionRate).toFixed(2);
-                    return `${convertedBalance}${userLocalCurrency}`;
+                    const convertedBalance = user.balance * conversionRate;
+                    // 本地货币只显示整数
+                    return `${Math.round(convertedBalance)}${userLocalCurrency}`;
                   }
                   return `${user.balance}${user.currency}`;
                 })()
