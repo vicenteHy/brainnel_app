@@ -973,7 +973,27 @@ export const PaymentMethod = () => {
       <View style={styles.safeAreaContent}>
         <View style={styles.titleContainer}>
           <View style={styles.backIconContainer}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={() => {
+              // 如果是从订单详情进入的，返回到首页
+              if (route.params?.orderId && route.params?.orderData) {
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'MainTabs',
+                      state: {
+                        routes: [
+                          { name: 'Home' }
+                        ],
+                        index: 0
+                      }
+                    }
+                  ],
+                });
+              } else {
+                navigation.goBack();
+              }
+            }}>
               <BackIcon size={20} />
             </TouchableOpacity>
           </View>
