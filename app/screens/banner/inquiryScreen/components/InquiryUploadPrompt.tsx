@@ -136,16 +136,15 @@ const styles = StyleSheet.create({
   },
   photoUploadPromptContainer: {
     flexDirection: "column",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "center",
     height: "100%",
-    paddingRight: 20,
   },
   centerHeadingBoldWhite: {
     fontWeight: "700",
     fontSize: fontSize(16),
     lineHeight: 20,
     color: "#002FA7",
-    textAlign: "right",
+    textAlign: "center",
   },
 });
