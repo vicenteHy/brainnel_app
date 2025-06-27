@@ -89,7 +89,6 @@ export const PreviewAddress = () => {
         setValue(parsedData.name);
       }
     } catch (error) {
-      console.error("Error fetching selected country:", error);
     }
   };
 
@@ -277,7 +276,6 @@ export const PreviewAddress = () => {
           is_default: shouldBeDefault ? 1 : 0,
         };
         
-        console.log("地址数据:", addressData);
 
         // 检查是否已存在相同地址，避免重复保存
         const isDuplicateAddress = addresses.some(addr => 
@@ -292,7 +290,6 @@ export const PreviewAddress = () => {
         if (!isDuplicateAddress) {
           // 保存地址到用户地址列表
           await addAddress(addressData);
-          console.log("地址已保存到用户地址列表");
           
           // 重新获取地址列表以获取新创建的地址ID
           await fetchAddresses();
@@ -309,7 +306,6 @@ export const PreviewAddress = () => {
             newAddressId = currentState.addresses[currentState.addresses.length - 1].address_id;
           }
         } else {
-          console.log("地址已存在，跳过保存");
           // 如果地址已存在，找到匹配的地址ID
           const existingAddress = addresses.find(addr => 
             addr.receiver_first_name === addressData.receiver_first_name &&
@@ -320,7 +316,6 @@ export const PreviewAddress = () => {
           newAddressId = existingAddress?.address_id || defaultAddress?.address_id;
         }
 
-        console.log("设置地址ID:", newAddressId);
         
         setOrderData({
           ...orderData,
@@ -340,7 +335,6 @@ export const PreviewAddress = () => {
         const analyticsStore = useAnalyticsStore.getState();
         analyticsStore.logAddressInfo(logData, "cart");
         
-        console.log("地址信息埋点已记录:", logData);
         
         navigation.navigate("ShippingFee", {
           cart_item_id: route.params?.cart_item_id,
@@ -349,12 +343,10 @@ export const PreviewAddress = () => {
           isToc: route.params?.isToc,
         });
       } catch (error) {
-        console.error("保存地址失败:", error);
         // 即使保存地址失败，也继续进行下一步流程
         const fallbackAddressId = defaultAddress?.address_id || 
           (addresses.length > 0 ? addresses[0].address_id : 0);
         
-        console.log("使用回退地址ID:", fallbackAddressId);
         
         setOrderData({
           ...orderData,

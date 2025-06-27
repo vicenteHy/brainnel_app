@@ -108,9 +108,9 @@ export interface OrderCreateRequest {
      */
     total_amount?: number | null;
     /**
-     * Transport Type，运输方式 1-海运 2-空运
+     * Shipping Type，运输方式 0-海运 1-空运
      */
-    transport_type?: number | null;
+    shipping_type?: number | null;
     /**
      * Is COD，是否货到付款 (0=非COD，1=COD)
      */
@@ -145,7 +145,7 @@ const initialOrderData: OrderCreateRequest = {
     currency: '',
     receiver_address: '',
     total_amount: 0,
-    transport_type: null,
+    shipping_type: null,
     is_cod: 0
 };
 

@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     borderWidth: 1,
     borderColor: "#e5e5e5",
+    color: "#000",
   },
   sendButton: {
     backgroundColor: "#FF5100",

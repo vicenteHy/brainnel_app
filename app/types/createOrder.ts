@@ -51,9 +51,9 @@ export interface createOrderDataType {
      */
     total_amount?: number | null;
     /**
-     * Transport Type，运输方式 1-海运 2-空运
+     * Shipping Type，运输方式 0-海运 1-空运
      */
-    transport_type?: number | null;
+    shipping_type?: number | null;
     /**
      * Is COD，是否货到付款 (0=非COD，1=COD)
      */

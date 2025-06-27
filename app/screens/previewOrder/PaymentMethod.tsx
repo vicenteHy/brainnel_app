@@ -551,7 +551,7 @@ export const PaymentMethod = () => {
         address_id: existingOrder.address_id || 0,
         domestic_shipping_fee: existingOrder.domestic_shipping_fee || 0,
         shipping_fee: existingOrder.shipping_fee || 0,
-        transport_type: existingOrder.transport_type || 0,
+        shipping_type: existingOrder.shipping_type || 0, // 修改字段名
         currency: existingOrder.currency || 'USD',
         total_amount: existingOrder.total_amount || 0,
         actual_amount: existingOrder.actual_amount || existingOrder.total_amount || 0,
@@ -570,7 +570,7 @@ export const PaymentMethod = () => {
         address_id: existingOrder.address_id || 0,
         domestic_shipping_fee: existingOrder.domestic_shipping_fee || 0,
         shipping_fee: existingOrder.shipping_fee || 0,
-        transport_type: existingOrder.transport_type || 0,
+        shipping_type: existingOrder.shipping_type || 0, // 修改字段名
       };
       
       setOrderData(orderDataFormatted);
@@ -602,7 +602,7 @@ export const PaymentMethod = () => {
       address_id: orderData.address_id,
       domestic_shipping_fee: orderData.domestic_shipping_fee,
       shipping_fee: orderData.shipping_fee,
-      transport_type: orderData.transport_type,
+      shipping_type: orderData.shipping_type, // 修改字段名
       currency: user.currency,
     });
   }, [orderData]);
@@ -882,7 +882,7 @@ export const PaymentMethod = () => {
           };
         })
       ),
-      shipping_method: orderData?.transport_type || 0,
+      shipping_method: orderData?.shipping_type || 0, // 修改字段名
       shipping_price_outside: getShippingFeeForCalculation(),
       shipping_price_within: orderData?.domestic_shipping_fee || 0,
       timestamp: new Date().toISOString(),

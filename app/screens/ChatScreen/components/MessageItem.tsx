@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: fontSize(16),
+    color: "#000",
   },
   timestamp: {
     fontSize: fontSize(12),

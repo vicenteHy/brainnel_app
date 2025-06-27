@@ -153,6 +153,7 @@ export interface CreateOrderRequest {
   domestic_shipping_fee: number;
   currency: string;
   receiver_address: string;
+  shipping_type?: number; // 运输方式 0-海运 1-空运
   is_cod?: number;
 }
 
@@ -326,9 +327,8 @@ export interface OrderDetailsType {
   order_no: string;
   items: OrderItemDetails[];
   create_time: string; // or Date
-  transport_type: number;
+  shipping_type: number; // 运输方式 0-海运 1-空运
   payment_method: string;
-  shipping_type: number;
   pay_time: string | null; // or Date | null
   shipping_time: string | null; // or Date | null
   complete_time: string | null; // or Date | null

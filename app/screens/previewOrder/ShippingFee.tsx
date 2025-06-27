@@ -201,7 +201,7 @@ export const ShippingFee = () => {
 
       setOrderData({
         ...orderData,
-        transport_type: shippingMethod === "sea" ? 0 : 1,
+        shipping_type: shippingMethod === "sea" ? 0 : 1, // 修改字段名从 transport_type 到 shipping_type
         domestic_shipping_fee: state.domesticShippingFees?.total_shipping_fee,
         shipping_fee:
           shippingMethod === "sea"
