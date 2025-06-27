@@ -27,13 +27,6 @@ export const countries: Country[] = [
     phoneCode: '+225'
   },
   {
-    code: 'CN',
-    name: 'China',
-    flag: '🇨🇳',
-    userCount: 1050000,
-    phoneCode: '+86'
-  },
-  {
     code: 'CD',
     name: 'Democratic Republic of the Congo',
     flag: '🇨🇩',

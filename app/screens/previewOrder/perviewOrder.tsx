@@ -555,7 +555,7 @@ export const PreviewOrder = () => {
     if (selectedCountry?.country) {
       return getPhoneCodeFromCountry(selectedCountry.country);
     }
-    return "+86"; // 默认值
+    return "+225"; // 默认值改为科特迪瓦
   };
 
   // 获取翻译后的支付方式名称
