@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ImageBackground, TouchableOpacity } from 'react-native';
 import { getSubjectTransLanguage } from '../../../utils/languageUtils';
 import useUserStore from '../../../store/user';
 import { styles } from '../styles';
@@ -10,13 +10,23 @@ interface ProductInfoProps {
 
 export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
   const userStore = useUserStore();
+  const [isExpanded, setIsExpanded] = useState(false);
 
 
   return (
     <View style={styles.productInfoCard}>
-      <Text style={styles.productTitle}>
-        {getSubjectTransLanguage(product)}
-      </Text>
+      <TouchableOpacity 
+        onPress={() => setIsExpanded(!isExpanded)}
+        activeOpacity={1}
+      >
+        <Text 
+          style={styles.productTitle}
+          numberOfLines={isExpanded ? undefined : 3}
+          ellipsizeMode="tail"
+        >
+          {getSubjectTransLanguage(product)}
+        </Text>
+      </TouchableOpacity>
       <View style={styles.productPriceWrapper}>
         <View style={styles.productPriceContainer}>
           <View style={styles.salesInfoContainer}>

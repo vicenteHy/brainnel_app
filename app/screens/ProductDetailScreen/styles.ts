@@ -78,7 +78,7 @@ export const styles = StyleSheet.create({
   },
   productInfoCard: {
     width: "100%",
-    height: 130,
+    minHeight: 130,
     padding: 16,
     paddingHorizontal: 10,
     paddingBottom: 10,
