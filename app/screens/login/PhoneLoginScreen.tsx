@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: fontSize(16),
     paddingRight: 36, // 为清除按钮留出空间
-    color: '#000000',
+    color: "#000",
   },
   clearButton: {
     position: 'absolute',
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 16,
     fontSize: fontSize(16),
-    color: '#000000',
+    color: "#000",
   },
   verificationContainer: {
     marginBottom: 20,
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     textAlign: 'center',
     backgroundColor: '#ffffff',
-    color: '#000000',
+    color: "#000",
     minHeight: 64,
   },
   resendContainer: {
