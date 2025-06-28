@@ -53,7 +53,7 @@ export function useVersionCheck({
       
       // 找到当前平台的版本信息
       const platformVersionInfo = versionInfoList.find(
-        info => info.platform === currentPlatform
+        (info: VersionInfo) => info.platform === currentPlatform
       );
       
       if (!platformVersionInfo) {
