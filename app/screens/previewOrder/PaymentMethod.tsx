@@ -1220,18 +1220,18 @@ export const PaymentMethod = () => {
               </View>
               <View style={styles.priceBox}>
                 <View style={styles.priceBox1}>
-                  <Text>{t("payment.product_total")}</Text>
+                  <Text style={{color: '#000'}}>{t("payment.product_total")}</Text>
                   <View>
-                    <Text>
+                    <Text style={{color: '#000'}}>
                       {formatAmount(getConvertedProductTotalPrice())}{" "}
                       {getDisplayCurrency()}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.priceBox1}>
-                  <Text>{t("order.shipping.domestic_fee")}</Text>
+                  <Text style={{color: '#000'}}>{t("order.shipping.domestic_fee")}</Text>
                   <View>
-                    <Text>
+                    <Text style={{color: '#000'}}>
                       {selectedPayment ? formatDisplayAmount(selectedPayment, convertedAmount, orderData?.domestic_shipping_fee || 0, "domestic_shipping_fee") : formatAmount(orderData?.domestic_shipping_fee || 0)}{" "}
                       {getDisplayCurrency()}
                     </Text>

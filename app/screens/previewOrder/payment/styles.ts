@@ -187,7 +187,7 @@ export const styles = StyleSheet.create({
     fontWeight: "500",
   },
   noCouponsMessage: {
-    color: "#888",
+    color: "#000",
     fontSize: fontSize(13),
   },
   orderItems: {
@@ -226,6 +226,7 @@ export const styles = StyleSheet.create({
   itemName: {
     fontSize: fontSize(14),
     lineHeight: 18,
+    color: '#000',
   },
   itemVariant: {
     fontSize: fontSize(12),
@@ -669,7 +670,7 @@ export const styles = StyleSheet.create({
   },
   shippingLabel: {
     fontSize: fontSize(14),
-    color: "#333",
+    color: "#000",
     lineHeight: 20,
   },
   shippingPriceContainer: {
@@ -678,7 +679,7 @@ export const styles = StyleSheet.create({
   },
   shippingPriceText: {
     fontSize: fontSize(14),
-    color: "#333",
+    color: "#000",
     textAlign: "right",
     marginBottom: 2,
   },
