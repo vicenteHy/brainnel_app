@@ -87,7 +87,7 @@ export const settingApi = {
     // 获取运费信息
     getShippingFee: (data: ShippingFee) => apiService.post<ShippingFeeResponse>('/api/orders/calculate_manual_shipping_fee/', data),
     // 获取版本信息
-    getVersionInfo: async (retryCount = 0, maxRetries = 2) => {
+    getVersionInfo: async (retryCount = 0, maxRetries = 2): Promise<VersionInfo[]> => {
       console.log('[版本API] 开始请求版本信息...');
       console.log('[版本API] 请求地址: https://api.brainnel.com/admin/api/v1/app-versions/');
       
@@ -128,9 +128,9 @@ export const settingApi = {
       } catch (error) {
         console.error('[版本API] 版本检查接口调用失败:', error);
         console.error('[版本API] 错误详情:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+          name: (error as Error).name
         });
         
         // 如果是网络错误且还有重试次数，则进行重试
