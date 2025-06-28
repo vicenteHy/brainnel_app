@@ -15,3 +15,4 @@ export const sendAnalyticsData = async (data: any) => {
     throw error;
   }
 };
+

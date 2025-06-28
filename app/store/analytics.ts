@@ -258,7 +258,7 @@ const getEventKeyInfo = (event: any): string => {
 // 统一的埋点调试日志函数
 const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
   // 埋点调试开关 - 设置为 true 开启调试日志，false 关闭
-  const ANALYTICS_DEBUG = false;
+  const ANALYTICS_DEBUG = true;
   
   if (ANALYTICS_DEBUG) {
     if (eventName === 'data_sent') {
@@ -365,18 +365,30 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
     sendDataWithRetry: async (retryCount = 0) => {
       const state = get();
       
+      logAnalyticsDebug('send_attempt', { 
+        event_count: state.event_list.length,
+        sending_status: state.sendingStatus,
+        is_online: state.isOnline,
+        retry_count: retryCount
+      }, `尝试发送数据，事件数: ${state.event_list.length}`);
+      
       // 检查是否正在发送或无数据
       if (state.sendingStatus === 'sending' || state.event_list.length === 0) {
+        logAnalyticsDebug('send_skipped', { 
+          reason: state.sendingStatus === 'sending' ? '正在发送中' : '无数据' 
+        }, '跳过发送');
         return;
       }
 
       // 检查网络状态
       if (!state.isOnline) {
+        logAnalyticsDebug('send_offline', {}, '网络离线，数据已持久化');
         await get().persistData();
         return;
       }
 
       set({ sendingStatus: 'sending' });
+      logAnalyticsDebug('sending_data', { event_count: state.event_list.length }, '开始发送数据到服务器');
       
       try {
         const analyticsData = getAnalyticsData();
@@ -390,21 +402,30 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         set({ event_list: [], sendingStatus: 'idle' });
         await AsyncStorage.removeItem(ANALYTICS_STORAGE_KEY);
         
-        // 优化发送成功的调试日志，使用保存的事件列表副本
-        // logAnalyticsDebug('data_sent', {
-        //   event_count: eventListCopy.length,
-        //   user_id: analyticsData.user_id,
-        //   session_id: analyticsData.session_id,
-        //   event_list: eventListCopy,
-        //   full_payload: analyticsData // 完整的发送数据
-        // }, `数据发送成功 - 共${eventListCopy.length}个事件`);
+        // 发送成功的调试日志
+        logAnalyticsDebug('data_sent', {
+          event_count: eventListCopy.length,
+          user_id: analyticsData.user_id,
+          session_id: analyticsData.session_id,
+          event_list: eventListCopy,
+          full_payload: analyticsData // 完整的发送数据
+        }, `数据发送成功 - 共${eventListCopy.length}个事件`);
         
         
       } catch (error) {
+        logAnalyticsDebug('send_error', { 
+          error: error.message,
+          retry_count: retryCount 
+        }, `发送失败: ${error.message}`);
         
         if (retryCount < RETRY_DELAYS.length - 1) {
           // 重试
           const delay = RETRY_DELAYS[retryCount];
+          logAnalyticsDebug('send_retry', { 
+            delay, 
+            next_retry: retryCount + 1 
+          }, `将在${delay/1000}秒后重试`);
+          
           retryTimer = setTimeout(() => {
             get().sendDataWithRetry(retryCount + 1);
           }, delay);
@@ -412,6 +433,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
           set({ sendingStatus: 'failed' });
         } else {
           // 重试失败，持久化数据
+          logAnalyticsDebug('send_failed_final', {}, '重试次数已达上限，数据已持久化');
           set({ sendingStatus: 'failed' });
           await get().persistData();
         }
@@ -426,7 +448,9 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       
       // 30秒后发送数据（如果有的话）
       analyticsDataTimer = setTimeout(() => {
-        if (get().event_list.length > 0) {
+        const eventCount = get().event_list.length;
+        logAnalyticsDebug('timer_triggered', { event_count: eventCount }, `30秒定时器触发，准备发送${eventCount}个事件`);
+        if (eventCount > 0) {
           get().sendDataWithRetry();
         }
       }, 30000); // 30秒
@@ -448,10 +472,16 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
     addEvent: (event: AnalyticsEvent) => {
       set((state) => {
         const newEventList = [...state.event_list, event];
+        
+        logAnalyticsDebug('event_added', { 
+          event_name: event.event_name,
+          total_events: newEventList.length,
+          will_send_immediately: newEventList.length >= 10
+        }, `事件已添加到队列，当前总数: ${newEventList.length}`);
 
         // 立即发送：事件数 >= 10
         if (newEventList.length >= 10) {
-          // logAnalyticsDebug('batch_trigger', { event_count: newEventList.length }, '事件数达到阈值，触发批量发送');
+          logAnalyticsDebug('batch_trigger', { event_count: newEventList.length }, '事件数达到阈值，触发批量发送');
           // 使用异步发送避免阻塞
           setTimeout(() => get().sendDataWithRetry(), 0);
           return { event_list: newEventList };
@@ -459,6 +489,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         
         // 启动智能定时器（只在第一个事件时）
         if (newEventList.length === 1) {
+          logAnalyticsDebug('timer_started', {}, '启动30秒定时器');
           get().startTimer();
         }
 

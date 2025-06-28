@@ -36,7 +36,6 @@ import { ShippingFee } from "../screens/previewOrder/ShippingFee";
 import { PreviewOrder } from "../screens/previewOrder/perviewOrder";
 import { ForgotPhonePassword } from "../screens/loginList/ForgotPhonePassword";
 import { PhoneLoginScreen } from "../screens/login/PhoneLoginScreen";
-import { WhatsAppLoginScreen } from "../screens/login/WhatsAppLoginScreen";
 import { PayError } from '../screens/pay/PayError';
 import { OfflinePayment } from '../screens/pay/OfflinePayment';
 import RechargeScreen from '../screens/BalanceScreen/RechargeScreen';
@@ -95,7 +94,6 @@ export {
   PreviewOrder,
   ForgotPhonePassword,
   PhoneLoginScreen,
-  WhatsAppLoginScreen,
   PayError,
   OfflinePayment,
   RechargeScreen,

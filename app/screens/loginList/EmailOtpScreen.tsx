@@ -406,6 +406,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E1E1E1',
     borderRadius: 25,
+    color: "#000",
     height: 50,
     paddingHorizontal: 20,
     fontSize: fontSize(12),

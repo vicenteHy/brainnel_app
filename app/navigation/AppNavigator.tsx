@@ -217,10 +217,6 @@ export const AppNavigator = () => {
           component={Screens.PhoneLoginScreen}
         />
         <Stack.Screen
-          name="WhatsAppLoginScreen"
-          component={Screens.WhatsAppLoginScreen}
-        />
-        <Stack.Screen
           name="Info"
           component={Screens.Info}
         />

@@ -172,6 +172,7 @@ export const styles = StyleSheet.create({
     fontSize: fontSize(15),
     fontWeight: "500",
     flex: 1,
+    color: "#000",
   },
   setOrderContent: {
     flexDirection: "row",

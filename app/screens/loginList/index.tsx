@@ -25,6 +25,7 @@ import fontSize from "../../utils/fontsizeUtils";
 import { loginApi } from "../../services/api/login";
 import { userApi } from "../../services";
 import useUserStore from "../../store/user";
+import useAnalyticsStore from "../../store/analytics";
 import { settingApi } from "../../services/api/setting";
 import { changeLanguage } from "../../i18n";
 import { Country, countries } from "../../constants/countries";
@@ -61,6 +62,7 @@ type RootStackParamList = {
 
 export const LoginScreen = () => {
   const { setUser, setSettings } = useUserStore();
+  const analyticsStore = useAnalyticsStore();
   const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -221,7 +223,11 @@ export const LoginScreen = () => {
 
   // 验证WhatsApp验证码并登录
   const handleVerifyWhatsAppCode = async () => {
+    console.log("[WhatsApp] handleVerifyWhatsAppCode 开始执行");
+    console.log("[WhatsApp] 验证码:", verificationCode);
+    
     if (!verificationCode || verificationCode.length !== 4) {
+      console.log("[WhatsApp] 验证码格式错误，长度:", verificationCode?.length);
       Alert.alert(t("error"), "请输入4位验证码");
       return;
     }
@@ -257,12 +263,20 @@ export const LoginScreen = () => {
         setUser(user);
         setLoading(false);
 
+        // 记录登录成功埋点
+        console.log("[WhatsApp] 准备发送登录成功埋点");
+        analyticsStore.logLogin(true, "whatsapp");
+        console.log("[WhatsApp] 登录成功埋点已调用");
         navigation.replace("MainTabs", { screen: "Home" });
       }
     } catch (error) {
       console.error("[WhatsApp] 验证码验证失败:", error);
       Alert.alert(t("error"), t("whatsapp.code_error"));
       setLoading(false);
+      // 记录登录失败埋点
+      console.log("[WhatsApp] 准备发送登录失败埋点");
+      analyticsStore.logLogin(false, "whatsapp");
+      console.log("[WhatsApp] 登录失败埋点已调用");
     }
   };
 
@@ -1112,6 +1126,7 @@ const styles = StyleSheet.create({
   },
   codeInput: {
     height: 50,
+    color: "#000",
     borderWidth: 1,
     borderColor: "#E1E1E1",
     borderRadius: 25,
