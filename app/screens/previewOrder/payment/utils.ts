@@ -119,7 +119,6 @@ export const performCurrencyConversion = async (
     const response = await payApi.convertCurrency(data);
     return response.converted_amounts_list;
   } catch (error) {
-    console.error("Currency conversion failed:", error);
     throw error;
   }
 };
@@ -131,6 +130,8 @@ export const shouldShowConvertedAmount = (
   paymentMethod: string,
   convertedAmount: ConvertedAmount[]
 ): boolean => {
+
+  
   if (isUSDPayment(paymentMethod) || isWavePayment(paymentMethod)) {
     return true;
   }

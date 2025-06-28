@@ -189,7 +189,6 @@ export function Status() {
         status: route.params.status,
       };
       const res =  await inquiriesApi.getInquiries(data.page, data.page_size, 1);
-      console.log('📋 获取询价数据:', JSON.stringify(res, null, 2));
       setInquiries(res.items);
       setLoading(false);
     }else{
@@ -200,7 +199,6 @@ export function Status() {
           status: route.params.status,
         };
         await getAllOrders(data, page);
-        console.log('📋 获取订单数据完成，状态:', route.params.status, '页码:', page);
         setLoading(false);
       } finally {
         setLoading(false);
@@ -251,7 +249,6 @@ export function Status() {
       // 调用询价接口
       try {
         const res = await inquiriesApi.getInquiries(1, pageSize, 1);
-        console.log('📋 切换状态-获取询价数据:', JSON.stringify(res, null, 2));
         setInquiries(res.items);
       } finally {
         setLoading(false);
@@ -269,10 +266,8 @@ export function Status() {
         data.status = 0;
       }
 
-      console.log('📋 切换状态-请求订单数据参数:', JSON.stringify(data, null, 2));
       try {
         await getAllOrders(data, 1);
-        console.log('📋 切换状态-获取订单数据完成，状态:', selectedStatus);
       } finally {
         setLoading(false);
       }
@@ -361,7 +356,6 @@ export function Status() {
                           // 询价分页加载
                           try {
                             const res = await inquiriesApi.getInquiries(page + 1, pageSize, 1);
-                            console.log('📋 分页加载询价数据:', JSON.stringify(res, null, 2));
                             setInquiries(prev => [...prev, ...res.items]);
                           } finally {
                             setLoading(false);
@@ -373,7 +367,6 @@ export function Status() {
                             page_size: pageSize,
                             status: statusItem.status,
                           };
-                          console.log('📋 分页加载订单数据参数:', JSON.stringify(data, null, 2));
                           getAllOrders(data, page);
                         }
                       }
@@ -420,7 +413,6 @@ export function Status() {
                                 <TouchableOpacity
                                   style={styles.orderProductView}
                                   onPress={() => {
-                                    console.log("查看询价详情:", item.inquiry_id);
                                     navigation.navigate("InquiryScreen");
                                   }}
                                 >

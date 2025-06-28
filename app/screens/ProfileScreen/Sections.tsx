@@ -75,14 +75,12 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => {
   const fetchOrderStatusCounts = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      console.log('Token:', token ? 'exists' : 'not found');
+      // console.log('Token:', token ? 'exists' : 'not found');
       
       if (!token) {
-        console.log('No token found, skipping API call');
         return;
       }
 
-      console.log('Calling API: /api/orders/status-counts/');
       const response = await fetch('https://api.brainnel.com/backend/api/orders/status-counts/', {
         method: 'GET',
         headers: {
@@ -91,11 +89,10 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => {
         },
       });
 
-      console.log('API Response status:', response.status);
       
       if (response.ok) {
         const data: OrderStatusCounts = await response.json();
-        console.log('API Response data:', data);
+        // console.log('API Response data:', data);
         setStatusCounts(data);
       } else {
         console.error('API call failed with status:', response.status);
@@ -110,7 +107,7 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => {
   const getStatusCount = (apiKey: string | null): number => {
     if (!apiKey) return 0;
     const count = statusCounts[apiKey as keyof OrderStatusCounts] || 0;
-    console.log(`Status count for ${apiKey}:`, count);
+    // console.log(`Status count for ${apiKey}:`, count);
     return count;
   };
 

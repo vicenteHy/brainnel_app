@@ -353,6 +353,11 @@ export interface UpdateOrderPaymentMethod {
   actual_amount: number;
   shipping_fee: number;
   domestic_shipping_fee: number;
+  items?: {
+    order_item_id: string;
+    unit_price: number;
+    total_price: number;
+  }[];
 }
 
 interface OrderItemCancel {

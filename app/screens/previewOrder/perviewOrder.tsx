@@ -69,6 +69,7 @@ type RootStackParamList = {
     data: Order;
     payMethod: string;
     currency: string;
+    fromOrderDetails?: boolean; // 添加标记，标识是否从订单详情页进入
   };
   Pay: { payUrl: string; method: string; order_id: string };
   OrderDetails: { orderId?: number };
@@ -202,16 +203,21 @@ export const PreviewOrder = () => {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        // 重置导航栈并返回到首页
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: "MainTabs",
-              params: { screen: "Home" },
-            },
-          ],
-        });
+        // 如果是从订单详情页进入的，返回到订单详情页
+        if (route.params?.fromOrderDetails) {
+          navigation.goBack();
+        } else {
+          // 否则重置导航栈并返回到首页
+          navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: "MainTabs",
+                params: { screen: "Home" },
+              },
+            ],
+          });
+        }
         return true; // 返回true表示已处理返回事件
       };
 
@@ -221,7 +227,7 @@ export const PreviewOrder = () => {
       return () => {
         backHandler.remove();
       };
-    }, [navigation])
+    }, [navigation, route.params?.fromOrderDetails])
   );
 
   // 验证电话号码位数
@@ -615,15 +621,21 @@ export const PreviewOrder = () => {
             <View style={styles.backIconContainer}>
               <TouchableOpacity
                 onPress={() => {
-                  navigation.reset({
-                    index: 0,
-                    routes: [
-                      {
-                        name: "MainTabs",
-                        params: { screen: "Home" },
-                      },
-                    ],
-                  });
+                  // 如果是从订单详情页进入的，返回到订单详情页
+                  if (route.params?.fromOrderDetails) {
+                    navigation.goBack();
+                  } else {
+                    // 否则重置导航栈并返回到首页
+                    navigation.reset({
+                      index: 0,
+                      routes: [
+                        {
+                          name: "MainTabs",
+                          params: { screen: "Home" },
+                        },
+                      ],
+                    });
+                  }
                 }}
               >
                 <BackIcon size={fontSize(20)} />

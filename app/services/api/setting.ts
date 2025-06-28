@@ -104,8 +104,8 @@ export const settingApi = {
         
         clearTimeout(timeoutId);
         
-        console.log(`[版本API] 接收到响应: ${res.status} ${res.statusText}`);
-        console.log(`[版本API] 响应头:`, Object.fromEntries(res.headers.entries()));
+        // console.log(`[版本API] 接收到响应: ${res.status} ${res.statusText}`);
+        // console.log(`[版本API] 响应头:`, Object.fromEntries(res.headers.entries()));
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -113,15 +113,15 @@ export const settingApi = {
         
         const data = await res.json();
         
-        console.log('[版本API] 版本信息解析成功:', data);
-        console.log(`[版本API] 返回 ${data.length} 个平台版本信息`);
+        // console.log('[版本API] 版本信息解析成功:', data);
+        // console.log(`[版本API] 返回 ${data.length} 个平台版本信息`);
         
         // 打印每个平台的详细信息
         data.forEach((versionInfo: any, index: number) => {
-          console.log(`[版本API] 平台 ${index + 1}: ${versionInfo.platform}`);
-          console.log(`[版本API] - 最新版本: ${versionInfo.latest_version}`);
-          console.log(`[版本API] - 最小强制版本: ${versionInfo.min_force_version}`);
-          console.log(`[版本API] - 下载链接: ${versionInfo.link_url}`);
+          // console.log(`[版本API] 平台 ${index + 1}: ${versionInfo.platform}`);
+          // console.log(`[版本API] - 最新版本: ${versionInfo.latest_version}`);
+          // console.log(`[版本API] - 最小强制版本: ${versionInfo.min_force_version}`);
+          // console.log(`[版本API] - 下载链接: ${versionInfo.link_url}`);
         });
         
         return data;

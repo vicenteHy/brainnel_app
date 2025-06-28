@@ -35,7 +35,6 @@ export function useVersionCheck({
   const checkVersion = useCallback(async () => {
     // 防止重复检查
     if (state.isChecking) {
-      console.log(`[版本检查Hook] 跳过检查 - 正在进行中`);
       return;
     }
 
@@ -44,18 +43,13 @@ export function useVersionCheck({
       clearTimeout(debounceTimerRef.current);
     }
 
-    console.log(`[版本检查Hook] ===== 开始版本检查流程 =====`);
-    console.log(`[版本检查Hook] 当前版本: ${currentVersion}`);
     
     setState(prev => ({ ...prev, isChecking: true, error: null }));
     
     try {
-      console.log(`[版本检查Hook] 开始获取版本信息...`);
       const versionInfoList = await settingApi.getVersionInfo();
-      console.log(`[版本检查Hook] 获取到版本信息列表:`, versionInfoList);
       
       const currentPlatform = getCurrentPlatform();
-      console.log(`[版本检查Hook] 当前平台: ${currentPlatform}`);
       
       // 找到当前平台的版本信息
       const platformVersionInfo = versionInfoList.find(
@@ -63,7 +57,6 @@ export function useVersionCheck({
       );
       
       if (!platformVersionInfo) {
-        console.log(`[版本检查Hook] 错误: 未找到平台 ${currentPlatform} 的版本信息`);
         setState(prev => ({
           ...prev,
           isChecking: false,
@@ -72,7 +65,6 @@ export function useVersionCheck({
         return;
       }
 
-      console.log(`[版本检查Hook] 找到平台版本信息:`, platformVersionInfo);
 
       // 检查更新类型
       const updateType = checkUpdateType(
@@ -81,7 +73,6 @@ export function useVersionCheck({
         platformVersionInfo.latest_version
       );
 
-      console.log(`[版本检查Hook] 最终更新类型: ${updateType}`);
 
       setState(prev => ({
         ...prev,
@@ -90,7 +81,6 @@ export function useVersionCheck({
         isChecking: false,
       }));
 
-      console.log(`[版本检查Hook] ===== 版本检查完成 =====`);
 
     } catch (error) {
       console.error(`[版本检查Hook] 版本检查失败:`, error);

@@ -426,11 +426,40 @@ export const OrderDetails = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.bottomButton}
-                  onPress={() => navigation.navigate("PaymentMethod", {
-                    orderId: orderDetails.order_id,
-                    orderData: orderDetails,
-                    isCOD: orderDetails.is_cod || 0
-                  })}
+                  onPress={() => {
+                    console.log("=== 订单详情 - 点击支付按钮 ===");
+                    console.log("订单ID:", orderDetails.order_id);
+                    console.log("订单编号:", orderDetails.order_no);
+                    console.log("订单货币:", orderDetails.currency);
+                    console.log("订单总金额:", orderDetails.total_amount);
+                    console.log("实际金额:", orderDetails.actual_amount);
+                    console.log("运费:", orderDetails.shipping_fee);
+                    console.log("国内运费:", orderDetails.domestic_shipping_fee);
+                    console.log("支付方式:", orderDetails.payment_method);
+                    console.log("是否COD:", orderDetails.is_cod);
+                    console.log("商品数量:", orderDetails.items?.length || 0);
+                    
+                    if (orderDetails.items && orderDetails.items.length > 0) {
+                      console.log("\n商品列表:");
+                      orderDetails.items.forEach((item: any, index: number) => {
+                        console.log(`商品 ${index + 1}:`, {
+                          order_item_id: item.order_item_id,
+                          product_name: item.product_name,
+                          unit_price: item.unit_price,
+                          total_price: item.total_price,
+                          quantity: item.quantity,
+                        });
+                      });
+                    }
+                    
+                    // 直接跳转到预览订单页面，使用已有的支付方式
+                    navigation.navigate("PreviewOrder", {
+                      data: orderDetails,
+                      payMethod: orderDetails.payment_method,
+                      currency: orderDetails.currency,
+                      fromOrderDetails: true, // 标记是从订单详情页进入的
+                    });
+                  }}
                 >
                   <Text style={[styles.bottomButtonText, { color: '#ffffff' }]}>{t("order.pay")}</Text>
                 </TouchableOpacity>
