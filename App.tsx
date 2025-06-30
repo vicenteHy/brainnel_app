@@ -3,6 +3,8 @@ import React from "react";
 import { useEffect, useState, useRef } from "react";
 import { userApi } from "./app/services/api/userApi";
 import useUserStore from "./app/store/user";
+import { settingApi } from "./app/services/api/setting";
+import { checkAndCreateUserSettings } from "./app/utils/userSettingsUtils";
 import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
@@ -75,11 +77,16 @@ function AppContent() {
   const appStartTime = useRef(Date.now());
   const [splashDuration, setSplashDuration] = useState(0);
   
+
   // 获取用户资料的函数
   const fetchUserProfile = async () => {
     try {
       const user = await userApi.getProfile();
       setUser(user);
+      
+      // 获取用户资料成功后，检查并创建用户设置
+      await checkAndCreateUserSettings();
+      
       return true;
     } catch (error) {
       console.error('Failed to fetch user profile:', error);

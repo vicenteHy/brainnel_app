@@ -27,6 +27,7 @@ import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
+import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
 
 // 国家代码到Country对象的映射
 const countryCodeToCountry: { [key: number]: Country } = {
@@ -157,11 +158,8 @@ export const PhoneLoginScreen = () => {
         const token = res.token_type + " " + res.access_token;
         await AsyncStorage.setItem("token", token);
         
-        if (res.first_login) {
-          const countryCode = parseInt(selectedCountry?.phoneCode?.replace('+', '') || '225');
-          const data = await settingApi.postFirstLogin(countryCode);
-          setSettings(data);
-        }
+        // 无论是否首次登录都进行设置检查
+        await handleLoginSettingsCheck(res);
         
         const user = await userApi.getProfile();
         if (user.language) {
@@ -249,11 +247,8 @@ export const PhoneLoginScreen = () => {
         const token = res.token_type + " " + res.access_token;
         await AsyncStorage.setItem("token", token);
         
-        if (res.first_login) {
-          const countryCode = parseInt(selectedCountry?.phoneCode?.replace('+', '') || '225');
-          const data = await settingApi.postFirstLogin(countryCode);
-          setSettings(data);
-        }
+        // 无论是否首次登录都进行设置检查
+        await handleLoginSettingsCheck(res);
         
         const user = await userApi.getProfile();
         if (user.language) {

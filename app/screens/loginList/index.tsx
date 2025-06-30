@@ -31,6 +31,7 @@ import { changeLanguage } from "../../i18n";
 import { Country, countries } from "../../constants/countries";
 import { AppleLoginButton } from '../login/AppleLogin';
 import { GoogleLoginButton } from '../login/GoogleLogin';
+import { handleLoginSettingsCheck } from "../../utils/userSettingsUtils";
 
 
 // 国家代码到Country对象的映射
@@ -111,50 +112,9 @@ export const LoginScreen = () => {
     navigation.goBack();
   };
 
-  // 处理首次登录设置同步
+  // 处理首次登录设置同步（使用新的通用函数）
   const handleFirstLoginSettings = async (loginResponse: any) => {
-    try {
-      // 检查是否是首次登录
-      if (loginResponse.first_login) {
-        console.log("✅ 检测到首次登录，开始同步本地设置");
-
-        // 读取本地存储的国家设置
-        const savedCountry = await AsyncStorage.getItem("@selected_country");
-        let countryCode = 221; // 默认国家
-
-        if (savedCountry) {
-          try {
-            const parsedCountry = JSON.parse(savedCountry);
-            countryCode = parsedCountry.country;
-            console.log("✅ 读取到本地国家设置:", countryCode);
-          } catch (e) {
-            console.error("❌ 解析本地国家设置失败:", e);
-          }
-        }
-
-        // 调用首次登录API创建用户设置（包含国家对应的默认货币）
-        console.log("📡 调用首次登录API，国家代码:", countryCode);
-        const firstLoginData = await settingApi.postFirstLogin(countryCode);
-        console.log("✅ 首次登录设置创建成功:", firstLoginData);
-
-        // 读取本地存储的语言设置
-        const savedLanguage = await AsyncStorage.getItem("app_language");
-        if (savedLanguage && savedLanguage !== firstLoginData.language) {
-          console.log("🌐 同步本地语言设置:", savedLanguage);
-          try {
-            await settingApi.putSetting({ language: savedLanguage });
-            console.log("✅ 语言设置同步成功");
-          } catch (error) {
-            console.error("❌ 语言设置同步失败:", error);
-          }
-        }
-      } else {
-        console.log("ℹ️ 非首次登录，跳过设置同步");
-      }
-    } catch (error) {
-      console.error("❌ 处理首次登录设置失败:", error);
-      // 不阻断登录流程，只记录错误
-    }
+    await handleLoginSettingsCheck(loginResponse);
   };
 
 
@@ -249,11 +209,8 @@ export const LoginScreen = () => {
         const token = res.token_type + " " + res.access_token;
         await AsyncStorage.setItem("token", token);
 
-        if (res.first_login) {
-          const countryCodeStr = selectedCountry?.phoneCode?.replace("+", "") || "225";
-          const countryCode = parseInt(countryCodeStr);
-          await handleFirstLoginSettings(res);
-        }
+        // 无论是否首次登录都进行设置检查
+        await handleFirstLoginSettings(res);
 
         const user = await userApi.getProfile();
         if (user.language) {

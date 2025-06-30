@@ -19,6 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { userApi } from '../../services/api/userApi';
 import { settingApi } from '../../services/api/setting';
+import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
@@ -61,53 +62,9 @@ export const EmailOtpScreen = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 处理首次登录设置同步 - 使用与Google登录相同的逻辑
+  // 处理登录设置检查（使用新的通用函数）
   const handleFirstLoginSettings = async (loginResponse: any) => {
-    try {
-      // 检查是否是首次登录
-      if (loginResponse.first_login) {
-        console.log("✅ [邮箱登录] 检测到首次登录，开始同步本地设置");
-
-        // 读取本地存储的国家设置
-        const savedCountry = await AsyncStorage.getItem("@selected_country");
-        let countryCode = 221; // 默认国家
-
-        if (savedCountry) {
-          try {
-            const parsedCountry = JSON.parse(savedCountry);
-            countryCode = parsedCountry.country;
-            console.log("✅ [邮箱登录] 读取到本地国家设置:", countryCode);
-          } catch (e) {
-            console.error("❌ [邮箱登录] 解析本地国家设置失败:", e);
-          }
-        } else {
-          console.log("ℹ️ [邮箱登录] 未找到本地国家设置，使用默认国家:", countryCode);
-        }
-
-        // 调用首次登录API创建用户设置（包含国家对应的默认货币）
-        console.log("📡 [邮箱登录] 调用首次登录API，国家代码:", countryCode);
-        const firstLoginData = await settingApi.postFirstLogin(countryCode);
-        console.log("✅ [邮箱登录] 首次登录设置创建成功:", firstLoginData);
-        setSettings(firstLoginData);
-
-        // 读取本地存储的语言设置
-        const savedLanguage = await AsyncStorage.getItem("app_language");
-        if (savedLanguage && savedLanguage !== firstLoginData.language) {
-          console.log("🌐 [邮箱登录] 同步本地语言设置:", savedLanguage);
-          try {
-            await settingApi.putSetting({ language: savedLanguage });
-            console.log("✅ [邮箱登录] 语言设置同步成功");
-          } catch (error) {
-            console.error("❌ [邮箱登录] 语言设置同步失败:", error);
-          }
-        }
-      } else {
-        console.log("ℹ️ [邮箱登录] 非首次登录，跳过设置同步");
-      }
-    } catch (error) {
-      console.error("❌ [邮箱登录] 处理首次登录设置失败:", error);
-      // 不阻断登录流程，只记录错误
-    }
+    await handleLoginSettingsCheck(loginResponse);
   };
 
   // 检查并修复用户国家信息
@@ -156,8 +113,8 @@ export const EmailOtpScreen = () => {
               await settingApi.putSetting({ country: parsedCountry.country });
             } catch (error: any) {
               if (error.status === 404) {
-                console.log("📡 [邮箱登录] 用户设置不存在，创建首次登录设置");
-                await settingApi.postFirstLogin(parsedCountry.country);
+                console.log("⚠️ [邮箱登录] 用户设置不存在，但已在handleFirstLoginSettings中处理");
+                // 不再重复调用postFirstLogin，因为已经在handleFirstLoginSettings中处理过了
               } else {
                 throw error;
               }
