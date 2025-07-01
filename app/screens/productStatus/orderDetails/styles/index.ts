@@ -762,6 +762,24 @@ export const styles = StyleSheet.create<Styles>({
     color: "#FF5100",
     fontWeight: "600",
   },
+  cashOnDeliveryTagContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 4,
+  },
+  cashOnDeliveryTag: {
+    backgroundColor: "#FFF3E0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#FF5100",
+  },
+  cashOnDeliveryText: {
+    fontSize: fontSize(12),
+    color: "#FF6000",
+    fontWeight: "500",
+  },
   orderInfoItem: {
     flexDirection: "row",
     justifyContent: "space-between",

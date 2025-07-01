@@ -366,6 +366,15 @@ export const OrderDetails = () => {
                     <View style={styles.priceBreakdown}>
                       <View style={styles.priceItem}>
                         <Text style={[styles.priceLabel, { color: '#666666' }]}>
+                          {t("payment.product_total")}
+                        </Text>
+                        <Text style={[styles.priceValue, { color: '#000000' }]}>
+                          {orderDetails.items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}{" "}
+                          {orderDetails.currency}
+                        </Text>
+                      </View>
+                      <View style={styles.priceItem}>
+                        <Text style={[styles.priceLabel, { color: '#666666' }]}>
                           {t("order.platform_shipping")}
                         </Text>
                         <Text style={[styles.priceValue, { color: '#000000' }]}>
@@ -373,13 +382,24 @@ export const OrderDetails = () => {
                           {orderDetails.currency}
                         </Text>
                       </View>
-                      <View style={styles.priceItem}>
-                        <Text style={[styles.priceLabel, { color: '#666666' }]}>
-                          {t("order.international_shipping")}
-                        </Text>
-                        <Text style={[styles.priceValue, { color: '#000000' }]}>
-                          {orderDetails.shipping_fee} {orderDetails.currency}
-                        </Text>
+                      <View>
+                        <View style={styles.priceItem}>
+                          <Text style={[styles.priceLabel, { color: '#666666' }]}>
+                            {t("order.international_shipping")}
+                          </Text>
+                          <Text style={[styles.priceValue, { color: '#000000' }]}>
+                            {orderDetails.shipping_fee} {orderDetails.currency}
+                          </Text>
+                        </View>
+                        {orderDetails.is_cod === 1 && (
+                          <View style={styles.cashOnDeliveryTagContainer}>
+                            <View style={styles.cashOnDeliveryTag}>
+                              <Text style={styles.cashOnDeliveryText}>
+                                {t("order.preview.Cash_on_delivery") || "货到付款"}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
                       </View>
                     </View>
                     
