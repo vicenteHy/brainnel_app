@@ -2,7 +2,7 @@
   "expo": {
     "name": "brainnel",
     "slug": "brainnel",
-    "version": "5.0.7",
+    "version": "5.0.8",
     "orientation": "portrait",
     "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "applinks:api.brainnel.com",
         "applinks:brainnel.com"
       ],
-      "buildNumber": "509",
+      "buildNumber": "510",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "CFBundleURLTypes": [
