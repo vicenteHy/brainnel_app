@@ -8,6 +8,7 @@ import { cartApi } from "../../../services/api/cart";
 import useProductCartStore from "../../../store/productCart";
 import useUserStore from "../../../store/user";
 import useCartStore from "../../../store/cartStore";
+import useAnalyticsStore from "../../../store/analytics";
 import { t } from "../../../i18n";
 
 interface UseProductCardProps {
@@ -292,6 +293,34 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
       // 异步处理API调用
       cartApi(data)
         .then(() => {
+          // 记录添加购物车埋点
+          const analyticsStore = useAnalyticsStore.getState();
+          const sku = isSingleSku ? localProduct.skus[0] : null;
+          const skuImage = sku?.sku_image_url || localProduct.product_image_urls?.[0] || '';
+          const unitPrice = sku?.offer_price || sku?.price || localProduct.price || 0;
+          
+          // 构建事件数据
+          const eventData: any = {
+            offer_id: localProduct.offer_id,
+            category_id: localProduct.category_id || 0,
+            product_name: localProduct.subject || '',
+            currency: localProduct.currency || 'XOF',
+            total_price: unitPrice * mainProductQuantity,
+            total_quantity: mainProductQuantity,
+          };
+          
+          // 如果有SKU信息，添加sku_details数组
+          if (isSingleSku || isNoSku) {
+            eventData.sku_details = [{
+              sku_id: getSkuId(),
+              price: unitPrice,
+              quantity: mainProductQuantity,
+              sku_img: skuImage,
+            }];
+          }
+          
+          analyticsStore.logAddToCart(eventData, 'product_detail');
+          
           // 更新全局购物车数量
           updateCartItemCount();
           // 显示成功提示
@@ -359,6 +388,34 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
       // 异步处理API调用
       cartApi(data)
         .then(() => {
+          // 记录添加购物车埋点 - 多SKU的情况
+          const analyticsStore = useAnalyticsStore.getState();
+          
+          // 构建SKU详情数组，只包含差异化信息
+          const skuDetails = selectedSkus.map((sku: any) => ({
+            sku_id: sku.sku_id,
+            price: sku.offer_price || sku.price || 0,
+            quantity: sku.selected_quantity,
+            sku_img: sku.sku_image_url || localProduct.product_image_urls?.[0] || '',
+          }));
+          
+          // 计算总价和总数量
+          const totalQuantity = selectedSkus.reduce((sum: number, sku: any) => sum + sku.selected_quantity, 0);
+          const totalPrice = selectedSkus.reduce((sum: number, sku: any) => 
+            sum + (sku.offer_price || sku.price || 0) * sku.selected_quantity, 0
+          );
+          
+          // 创建事件数据
+          analyticsStore.logAddToCart({
+            offer_id: localProduct.offer_id,
+            category_id: localProduct.category_id || 0,
+            product_name: localProduct.subject || '',
+            currency: localProduct.currency || 'XOF',
+            total_price: totalPrice,
+            total_quantity: totalQuantity,
+            sku_details: skuDetails, // SKU详情数组
+          }, 'product_detail');
+          
           // 更新全局购物车数量
           updateCartItemCount();
           // 显示成功提示

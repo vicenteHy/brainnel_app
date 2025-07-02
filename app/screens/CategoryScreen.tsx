@@ -153,11 +153,6 @@ export const CategoryScreen = () => {
       activeOpacity={1}
       onPress={() => {
         setActiveMainCategory(item.category_id);
-        analyticsData.logCategory({
-          category_id: item.category_id,
-          level: item.level,
-          category_name: item.name,
-        }, "category");
       }}
     >
       <Text
@@ -182,9 +177,10 @@ export const CategoryScreen = () => {
         style={styles.subCategoryItem}
         activeOpacity={1}
         onPress={() => {
-          analyticsData.logSubCategory({
+          analyticsData.logCategory({
             category_id: item.category_id,
             category_name: item.name,
+            level: 2, // 二级分类
           }, "category");
           navigation.navigate("SearchResult", { category_id: item.category_id });
         }}

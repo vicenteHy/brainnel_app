@@ -60,6 +60,7 @@ import {
 
 export const PaymentMethod = () => {
   const { t } = useTranslation();
+  const analyticsStore = useAnalyticsStore();
   const [tabs, setTabs] = useState<PaymentTab[]>([
     {
       id: "online",
@@ -859,49 +860,6 @@ export const PaymentMethod = () => {
     }
     setOrderData(createOrderData || {});
 
-    // 收集支付方式确认埋点数据 - 按照指定的字段格式
-    const paymentConfirmData = {
-      pay_method: selectedPayment,
-      offline_payment: currentTab === "offline" ? 0 : 1,
-      all_price: shouldShowConvertedAmount(selectedPayment, convertedAmount)
-        ? getConvertedTotalForCalculation()
-        : getTotalForCalculation(),
-      currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
-      pay_product: JSON.stringify(
-        getSelectedCartItems().map((item) => {
-          return {
-            offer_id: item.offer_id,
-            price: item.total_price / item.quantity, // unit_price
-            all_price:
-              convertedAmount.find((conv) => conv.item_key === "total_amount")
-                ?.converted_amount || item.total_price,
-            currency: shouldShowConvertedAmount(selectedPayment, convertedAmount) 
-              ? getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency)
-              : previewOrder?.currency,
-            sku: item.sku_attributes.map((sku) => {
-              return {
-                sku_id: item.sku_id,
-                value: sku.value,
-              };
-            }),
-            quantity: item.quantity,
-            product_name: item.product_name,
-            timestamp: new Date().toISOString(),
-            product_img: item.sku_image_url,
-          };
-        })
-      ),
-      shipping_method: orderData?.shipping_type || 0, // 修改字段名
-      shipping_price_outside: getShippingFeeForCalculation(),
-      shipping_price_within: orderData?.domestic_shipping_fee || 0,
-      timestamp: new Date().toISOString(),
-    };
-
-
-
-    // 记录支付方式确认埋点事件
-    const analyticsStore = useAnalyticsStore.getState();
-    analyticsStore.logPaymentConfirm(paymentConfirmData, "shipping");
 
     setCreateLoading(true);
 
@@ -1009,6 +967,26 @@ export const PaymentMethod = () => {
           console.log("更新后的订单数据:", JSON.stringify(updatedOrderData, null, 2));
           console.log("\n=== 准备跳转到预览页面 ===");
           
+          // 准备结账事件数据
+          const checkoutEventData = {
+            order_id: route.params.orderId,
+            pay_method: selectedPayment,
+            offline_payment: currentTab === "offline" ? 1 : 0,
+            total_price: updatedOrderData.total_amount,
+            total_quantity: updatedOrderData.items.reduce((sum, item) => sum + item.quantity, 0),
+            currency: paymentData.currency,
+            sku_details: updatedOrderData.items.map(item => ({
+              sku_id: item.sku_id,
+              price: item.unit_price,
+              quantity: item.quantity,
+              sku_img: item.sku_image_url
+            })),
+            shipping_fee: paymentData.shipping_fee,
+            domestic_shipping_fee: paymentData.domestic_shipping_fee
+          };
+          
+          analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
+          
           // 跳转到支付预览页面
           navigation.navigate("PreviewOrder", {
             data: updatedOrderData,
@@ -1028,6 +1006,26 @@ export const PaymentMethod = () => {
         .createOrder(createOrderData as unknown as CreateOrderRequest)
         .then((res) => {
           setCreateLoading(false);
+          
+          // 准备结账事件数据
+          const checkoutEventData = {
+            pay_method: selectedPayment,
+            offline_payment: currentTab === "offline" ? 1 : 0,
+            total_price: createOrderData.total_amount,
+            total_quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+            currency: createOrderData.currency,
+            sku_details: items.map(item => ({
+              sku_id: item.sku_id,
+              price: item.unit_price,
+              quantity: item.quantity,
+              sku_img: item.sku_image_url
+            })),
+            shipping_fee: createOrderData.shipping_fee || 0,
+            domestic_shipping_fee: createOrderData.domestic_shipping_fee || 0
+          };
+          
+          analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
+          
           // go to payment preview
           navigation.navigate("PreviewOrder", {
             data: res,

@@ -407,12 +407,6 @@ export const PreviewOrder = () => {
       .getPayInfo(data)
       .then(async (res) => {
         if (res.success) {
-          // 支付成功的埋点数据收集
-          const checkoutSuccessData = prepareCheckoutData(1);
-          const analyticsStore = useAnalyticsStore.getState();
-          analyticsStore.logCheckout(checkoutSuccessData, "preview");
-          
-          console.log("支付结账成功埋点数据:");
 
           if (route.params.payMethod === "wave") {
             // Wave支付直接跳转到Pay页面，让Pay页面处理外部应用跳转和轮询
@@ -506,12 +500,6 @@ export const PreviewOrder = () => {
             return;
           }
         } else {
-          // API返回失败的埋点数据收集
-          const checkoutFailData = prepareCheckoutData(0);
-          const analyticsStore = useAnalyticsStore.getState();
-          analyticsStore.logCheckout(checkoutFailData, "preview");
-          
-          console.log("支付结账失败埋点数据:", checkoutFailData);
 
           setLoading(false);
           // API返回失败时，跳转到支付失败页面

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import useUserStore from "./user";
 import { sendAnalyticsData } from "../services/api/analyticsService";
+import appConfig from '../../app.json';
 
 // 定义事件属性类型为灵活的记录类型
 type EventProperty = Record<string, any>;
@@ -28,20 +29,24 @@ type ProductProperty = {
   product_img: string;
 };
 
+// 定义SKU详情类型
+type SkuDetail = {
+  sku_id: number;
+  price: number;
+  quantity: number;
+  sku_img: string;
+};
+
 // 定义购物车属性类型
 type CartProperty = {
   offer_id: number;
   category_id: number;
-  price: number;
-  all_price: number;
-  currency: string;
-  sku_id: number;
-  quantity: number;
   product_name: string;
+  currency: string;
+  total_price: number; // 总价
+  total_quantity: number; // 总数量
+  sku_details?: SkuDetail[]; // SKU详情数组
   timestamp: string;
-  sku_img: string;
-  all_quantity: number;
-  level?: number;
 };
 
 // 定义搜索属性类型
@@ -50,51 +55,21 @@ type SearchProperty = {
   timestamp: string;
 };
 
-// 定义地址信息属性类型
-type AddressProperty = {
-  last_name: string;
-  first_name: string;
-  country: string;
-  phone_number: number;
-  whatsApp_number: number;
-  timestamp: string;
-};
 
-// 定义物流信息属性类型
-type ShippingProperty = {
-  shipping_method: number;
-  shipping_price_outside: number;
-  shipping_price_within: number;
-  currency: string;
-  forwarder_name: string;
-  country_city: string;
-  timestamp: string;
-};
-
-// 定义支付方式属性类型
-type PaymentProperty = {
-  pay_method: string;
-  offline_payment: number;
-  all_price: number;
-  currency: string;
-  pay_product?: string;
-  shipping_method: number;
-  shipping_price_outside: number;
-  shipping_price_within: number;
-  timestamp: string;
-};
-
-// 定义支付结账属性类型
+// 定义结账属性类型
 type CheckoutProperty = {
-  is_suc: number;
-  all_price: number;
-  currency: string;
-  shipping_method: number;
-  shipping_price_outside: number;
-  shipping_price_within: number;
-  pay_product?: string;
+  order_id?: string; // 订单ID（如果是更新订单的情况）
+  pay_method: string; // 支付方式
+  offline_payment: number; // 0表示线上支付，1表示线下支付
+  total_price: number; // 订单总价
+  total_quantity: number; // 商品总数量
+  currency: string; // 货币类型
+  sku_details?: SkuDetail[]; // SKU详情数组
+  shipping_fee: number; // 运费
+  domestic_shipping_fee: number; // 国内运费
   timestamp: string;
 };
+
 
 // 定义页面浏览属性类型
 type PageViewProperty = {
@@ -138,6 +113,7 @@ const SESSION_ID = generateUniqueId();
 
 // 本地存储key
 const ANALYTICS_STORAGE_KEY = 'analytics_pending_events';
+const DEVICE_ID_STORAGE_KEY = 'analytics_device_id';
 
 // 重试配置
 const RETRY_DELAYS = [1000, 5000, 15000]; // 1秒、5秒、15秒
@@ -149,6 +125,7 @@ type SendingStatus = 'idle' | 'sending' | 'failed';
 // 定义分析数据store的状态
 type AnalyticsState = {
   device_id: string;
+  device_type: string;
   version: string;
   session_id: string;
   event_list: AnalyticsEvent[];
@@ -168,23 +145,6 @@ type AnalyticsState = {
   logRegister: (isSuccess: boolean, registerMethod: string) => void;
   logViewProduct: (productInfo: ProductProperty, fromPage?: string) => void;
   logSearch: (keyword: string, fromPage?: string) => void;
-  logAddressInfo: (
-    addressInfo: Omit<AddressProperty, "timestamp">,
-    fromPage?: string
-  ) => void;
-  logShippingConfirm: (
-    shippingInfo: Omit<ShippingProperty, "timestamp">,
-    fromPage?: string
-  ) => void;
-  logPaymentConfirm: (
-    paymentInfo: Omit<PaymentProperty, "timestamp">,
-    fromPage?: string
-  ) => void;
-  logPreviewOrder: (fromPage?: string) => void;
-  logCheckout: (
-    checkoutInfo: Omit<CheckoutProperty, "timestamp">,
-    fromPage?: string
-  ) => void;
   logAddToCart: (
     cartInfo: Omit<CartProperty, "timestamp">,
     fromPage?: string
@@ -192,17 +152,16 @@ type AnalyticsState = {
   clearData: () => void;
   logCategory: (
     categoryInfo: Omit<CategoryProperty, "timestamp">,
-    fromPage?: string,
-    isSubCategory?: boolean
-  ) => void;
-  logSubCategory: (
-    subCategoryInfo: Omit<CategoryProperty, "timestamp">,
     fromPage?: string
   ) => void;
   logPageView: (pageName: string, fromPage?: string) => void;
   logPageLeave: (pageName: string) => void;
   logError: (error: Error | string, context?: string) => void;
   logSessionEnd: () => void;
+  logInitiateCheckout: (
+    checkoutInfo: Omit<CheckoutProperty, "timestamp">,
+    fromPage?: string
+  ) => void;
 };
 
 // 获取当前格式化的时间字符串 YYYY-MM-DD HH:MM:SS
@@ -225,21 +184,9 @@ const getEventKeyInfo = (event: any): string => {
     case 'register':
       return `方式: ${props.register_method || 'N/A'}, 结果: ${props.is_register ? '成功' : '失败'}`;
     case 'category':
-      return `分类: ${props.category_name || 'N/A'} (${props.category_type || 'main_category'})`;
-    case 'sub_category':
-      return `子分类: ${props.category_name || 'N/A'}`;
+      return `分类: ${props.category_name || 'N/A'}`;
     case 'addToCart':
       return `商品: ${props.product_name || 'N/A'} x${props.quantity || 1}`;
-    case 'address':
-      return `地址: ${props.first_name} ${props.last_name} (${props.country})`;
-    case 'shipping':
-      return `物流: ${props.forwarder_name || 'N/A'} (${props.country_city || 'N/A'})`;
-    case 'payment':
-      return `支付: ${props.pay_method || 'N/A'}, 金额: ${props.all_price} ${props.currency}`;
-    case 'order':
-      return `订单预览`;
-    case 'checkout':
-      return `结账${props.is_suc ? '成功' : '失败'}, 金额: ${props.all_price} ${props.currency}`;
     case 'page_view':
       return `进入页面: ${event.page_name}`;
     case 'page_leave':
@@ -262,34 +209,19 @@ const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
   
   if (ANALYTICS_DEBUG) {
     if (eventName === 'data_sent') {
-      // 数据发送日志特殊处理，更简洁地显示事件摘要
-      console.log(`[Analytics Debug] ${eventName}:`, {
-        event: eventName,
-        timestamp: getCurrentFormattedTime(),
-        context,
-        event_count: data.event_count,
-        user_id: data.user_id,
-        session_id: data.session_id,
-      });
+      // 显示完整的发送数据
+      console.log(`[Analytics Debug] ${eventName} - 完整发送数据:`, JSON.stringify(data.full_payload, null, 2));
       
-      // 单独显示事件摘要
+      // 显示事件摘要
       console.log(`[Analytics Debug] Events Summary:`);
       if (data.event_list && Array.isArray(data.event_list)) {
         data.event_list.forEach((event: any, index: number) => {
           const keyInfo = getEventKeyInfo(event);
           console.log(`  ${index + 1}. ${event.event_name} (${event.page_name || 'null'}) - ${keyInfo}`);
-          
-          // 显示完整的事件属性
-          if (event.event_properties && event.event_properties.length > 0) {
-            console.log(`     Properties:`, JSON.stringify(event.event_properties[0], null, 2));
-          }
         });
       } else {
         console.log(`  事件列表为空或无效:`, data.event_list);
       }
-      
-      // 如果需要查看完整数据，可以取消下面这行的注释
-      // console.log(`[Analytics Debug] Full Payload:`, JSON.stringify(data.full_payload, null, 2));
     } else {
       // 普通事件日志 - 移除重复的timestamp，直接使用事件数据中的timestamp
       const logData = {
@@ -299,6 +231,21 @@ const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
       };
       console.log(`[Analytics Debug] ${eventName}:`, logData);
     }
+  }
+};
+
+// 获取或生成设备ID
+const getOrCreateDeviceId = async (): Promise<string> => {
+  try {
+    let deviceId = await AsyncStorage.getItem(DEVICE_ID_STORAGE_KEY);
+    if (!deviceId) {
+      deviceId = generateUniqueId();
+      await AsyncStorage.setItem(DEVICE_ID_STORAGE_KEY, deviceId);
+    }
+    return deviceId;
+  } catch (error) {
+    // 如果存储失败，返回临时ID
+    return generateUniqueId();
   }
 };
 
@@ -325,9 +272,15 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
     }
   });
 
+  // 初始化设备ID
+  getOrCreateDeviceId().then(deviceId => {
+    set({ device_id: deviceId });
+  });
+
   return {
-    device_id: Platform.OS,
-    version: generateUniqueId(),
+    device_id: '', // 初始为空，异步加载后更新
+    device_type: Platform.OS,
+    version: appConfig.expo.version || '1.0.0', // 从 app.json 获取版本号
     session_id: SESSION_ID,
     event_list: [],
     sendingStatus: 'idle' as SendingStatus,
@@ -446,14 +399,14 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         clearTimeout(analyticsDataTimer);
       }
       
-      // 30秒后发送数据（如果有的话）
+      // 10秒后发送数据（如果有的话）
       analyticsDataTimer = setTimeout(() => {
         const eventCount = get().event_list.length;
-        logAnalyticsDebug('timer_triggered', { event_count: eventCount }, `30秒定时器触发，准备发送${eventCount}个事件`);
+        logAnalyticsDebug('timer_triggered', { event_count: eventCount }, `10秒定时器触发，准备发送${eventCount}个事件`);
         if (eventCount > 0) {
           get().sendDataWithRetry();
         }
-      }, 30000); // 30秒
+      }, 10000); // 10秒
     },
 
     // 停止定时器
@@ -489,7 +442,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         
         // 启动智能定时器（只在第一个事件时）
         if (newEventList.length === 1) {
-          logAnalyticsDebug('timer_started', {}, '启动30秒定时器');
+          logAnalyticsDebug('timer_started', {}, '启动10秒定时器');
           get().startTimer();
         }
 
@@ -580,158 +533,46 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("search", eventProperties, `搜索关键词: "${keyword}" (来源: ${fromPage})`);
+      // 获取完整的分析数据用于调试
+      const fullAnalyticsData = getAnalyticsData();
+      const debugData = {
+        event_properties: eventProperties,
+        event_data: searchEvent,
+        user_id: fullAnalyticsData.user_id,
+        device_id: fullAnalyticsData.device_id,
+        device_type: fullAnalyticsData.device_type,
+        session_id: fullAnalyticsData.session_id,
+        version: fullAnalyticsData.version,
+        event_list_count: fullAnalyticsData.event_list.length + 1, // +1 因为当前事件还未添加
+      };
+
+      logAnalyticsDebug("search", debugData, `搜索关键词: "${keyword}" (来源: ${fromPage})`);
       get().addEvent(searchEvent);
     },
 
-    // 记录填写地址信息事件
-    logAddressInfo: (
-      addressInfo: Omit<AddressProperty, "timestamp">,
-      fromPage = "cart"
-    ) => {
-      const eventProperties = {
-        ...addressInfo,
-        timestamp: getCurrentFormattedTime(),
-      };
 
-      const addressEvent: AnalyticsEvent = {
-        event_name: "address",
-        page_name: "address",
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
 
-      logAnalyticsDebug("address", eventProperties, `填写地址信息 - ${addressInfo.first_name} ${addressInfo.last_name} (${addressInfo.country})`);
-      get().addEvent(addressEvent);
-    },
 
-    // 记录物流信息确认事件
-    logShippingConfirm: (
-      shippingInfo: Omit<ShippingProperty, "timestamp">,
-      fromPage = "address"
-    ) => {
-      const eventProperties = {
-        ...shippingInfo,
-        timestamp: getCurrentFormattedTime(),
-      };
 
-      const shippingEvent: AnalyticsEvent = {
-        event_name: "shipping",
-        page_name: "shipping",
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("shipping", eventProperties, `选择物流 - ${shippingInfo.forwarder_name} (${shippingInfo.country_city})`);
-      get().addEvent(shippingEvent);
-    },
-
-    // 记录支付方式确认事件
-    logPaymentConfirm: (
-      paymentInfo: Omit<PaymentProperty, "timestamp">,
-      fromPage = "shipping"
-    ) => {
-      const eventProperties = {
-        ...paymentInfo,
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const paymentEvent: AnalyticsEvent = {
-        event_name: "payment",
-        page_name: "payment",
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("payment", eventProperties, `选择支付方式 - ${paymentInfo.pay_method} (总价: ${paymentInfo.all_price} ${paymentInfo.currency})`);
-      get().addEvent(paymentEvent);
-    },
-
-    // 记录预览订单事件
-    logPreviewOrder: (fromPage = "pay_method") => {
-      const eventProperties = {
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const previewEvent: AnalyticsEvent = {
-        event_name: "order",
-        page_name: "order",
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("order", eventProperties, `预览订单 (来源: ${fromPage})`);
-      get().addEvent(previewEvent);
-    },
-
-    // 记录支付结账事件
-    logCheckout: (
-      checkoutInfo: Omit<CheckoutProperty, "timestamp">,
-      fromPage = "perview"
-    ) => {
-      const eventProperties = {
-        ...checkoutInfo,
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const checkoutEvent: AnalyticsEvent = {
-        event_name: "checkout",
-        page_name: "checkout",
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("checkout", eventProperties, `结账${checkoutInfo.is_suc ? '成功' : '失败'} - 总价: ${checkoutInfo.all_price} ${checkoutInfo.currency}`);
-      get().addEvent(checkoutEvent);
-    },
-
-    // 分类事件（统一处理主分类和子分类）
+    // 分类事件
     logCategory: (
       categoryInfo: Omit<CategoryProperty, "timestamp">,
-      fromPage?: string,
-      isSubCategory = false
+      fromPage = "home"
     ) => {
-      // 根据是否为子分类设置默认来源页面
-      const defaultFromPage = isSubCategory ? "category" : "home";
-      const finalFromPage = fromPage || defaultFromPage;
-      
       const eventProperties = {
         ...categoryInfo,
         timestamp: getCurrentFormattedTime(),
-        category_type: isSubCategory ? "sub_category" : "main_category", // 新增字段区分类型
       };
 
       const categoryEvent: AnalyticsEvent = {
         event_name: "category",
         page_name: "category",
-        referrer_page: finalFromPage,
-        event_properties: [eventProperties],
-      };
-
-      const categoryType = isSubCategory ? "子分类" : "主分类";
-      logAnalyticsDebug("category", eventProperties, `浏览${categoryType} - ${categoryInfo.category_name} (ID: ${categoryInfo.category_id})`);
-      get().addEvent(categoryEvent);
-    },
-
-    // 子分类事件（独立事件，区别于主分类）
-    logSubCategory: (
-      subCategoryInfo: Omit<CategoryProperty, "timestamp">,
-      fromPage = "category"
-    ) => {
-      const eventProperties = {
-        ...subCategoryInfo,
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const subCategoryEvent: AnalyticsEvent = {
-        event_name: "sub_category",
-        page_name: "sub_category",
         referrer_page: fromPage,
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("sub_category", eventProperties, `浏览子分类 - ${subCategoryInfo.category_name} (ID: ${subCategoryInfo.category_id})`);
-      get().addEvent(subCategoryEvent);
+      logAnalyticsDebug("category", eventProperties, `浏览分类 - ${categoryInfo.category_name} (ID: ${categoryInfo.category_id})`);
+      get().addEvent(categoryEvent);
     },
 
     // 记录添加购物车事件
@@ -751,7 +592,11 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("addToCart", eventProperties, `添加购物车 - ${cartInfo.product_name} x${cartInfo.quantity} (总价: ${cartInfo.all_price} ${cartInfo.currency})`);
+      const skuCount = cartInfo.sku_details ? cartInfo.sku_details.length : 0;
+      
+      logAnalyticsDebug("addToCart", eventProperties, 
+        `添加购物车 - ${cartInfo.product_name} (${skuCount}个SKU, 共${cartInfo.total_quantity}件, 总价: ${cartInfo.total_price} ${cartInfo.currency})`
+      );
       get().addEvent(addToCartEvent);
     },
 
@@ -863,6 +708,28 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       // 立即发送会话结束事件
       setTimeout(() => get().sendDataWithRetry(), 0);
     },
+
+    // 记录开始结账事件
+    logInitiateCheckout: (checkoutInfo, fromPage = "payment") => {
+      const eventProperties = {
+        ...checkoutInfo,
+        timestamp: getCurrentFormattedTime(),
+      };
+
+      const initiateCheckoutEvent: AnalyticsEvent = {
+        event_name: "initiate_checkout",
+        page_name: "checkout",
+        referrer_page: fromPage,
+        event_properties: [eventProperties],
+      };
+
+      const skuCount = checkoutInfo.sku_details ? checkoutInfo.sku_details.length : 0;
+      
+      logAnalyticsDebug("initiate_checkout", eventProperties, 
+        `开始结账 - 支付方式: ${checkoutInfo.pay_method}, 订单金额: ${checkoutInfo.total_price} ${checkoutInfo.currency}, 商品数: ${checkoutInfo.total_quantity}`
+      );
+      get().addEvent(initiateCheckoutEvent);
+    },
   };
 });
 
@@ -874,6 +741,7 @@ export const getAnalyticsData = () => {
   return {
     user_id: user?.user_id || null,
     device_id: analyticsState.device_id,
+    device_type: analyticsState.device_type,
     version: analyticsState.version,
     session_id: analyticsState.session_id,
     event_list: analyticsState.event_list,

@@ -169,8 +169,6 @@ function AppContent() {
     if (!checkingLanguage && languageSelected) {
       const initApp = async () => {
         try {
-          analyticsData.logAppLaunch(1);
-          
           // 直接使用本地用户ID开始预加载
           const localUserId = await getLocalUserId();
           
@@ -180,6 +178,9 @@ function AppContent() {
           
           // 并行获取用户资料（不影响预加载）
           fetchUserProfile().then(async (success) => {
+            // 在用户信息加载完成后发送 app_launch 事件
+            analyticsData.logAppLaunch(1);
+            
             if (success) {
               const store = useUserStore.getState();
               const networkUserId = store.user?.user_id?.toString();

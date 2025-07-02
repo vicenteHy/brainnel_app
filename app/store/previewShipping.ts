@@ -103,22 +103,6 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
       
 
 
-      // 准备物流信息埋点数据 - 按照指定的字段格式收集
-      const shippingLogData = {
-        shipping_method: 1, // 默认运输方式，可以根据实际情况调整
-        shipping_price_outside: response.total_shipping_fee_air || 0,
-        shipping_price_within: response.total_shipping_fee_sea || 0,
-        currency: response.currency || "FCFA",
-        forwarder_name: "", // CartShippingFeeData中没有这个字段
-        country_city: "", // CartShippingFeeData中没有这个字段
-        timestamp: new Date().toISOString(),
-      };
-
-      // 记录物流信息埋点事件
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logShippingConfirm(shippingLogData, "address");
-      
-      
       set((state) => ({
         state: { 
           ...state.state, 
@@ -144,25 +128,6 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     
     try {
       const response = await ordersApi.calcDomesticShippingFee(data);
-      
-      // 收集国内物流埋点数据
-
-
-      // 准备国内物流信息埋点数据
-      const domesticShippingLogData = {
-        shipping_method: 2, // 国内物流方式
-        shipping_price_outside: 0, // 国内物流没有境外价格
-        shipping_price_within: response.total_shipping_fee || 0,
-        currency: response.currency || "FCFA",
-        forwarder_name: "", // DomesticShippingFeeData中没有这个字段
-        country_city: "", // DomesticShippingFeeData中没有这个字段
-        timestamp: new Date().toISOString(),
-      };
-
-      // 记录国内物流信息埋点事件
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logShippingConfirm(domesticShippingLogData, "address");
-      
       
       set((state) => ({
         state: { 
@@ -215,33 +180,6 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
         ordersApi.calcShippingFee(data),
         ordersApi.calcDomesticShippingFee(data)
       ]);
-      
-      // 处理国际运费埋点
-      const shippingLogData = {
-        shipping_method: 1,
-        shipping_price_outside: shippingResponse.total_shipping_fee_air || 0,
-        shipping_price_within: shippingResponse.total_shipping_fee_sea || 0,
-        currency: shippingResponse.currency || "FCFA",
-        forwarder_name: "",
-        country_city: "",
-        timestamp: new Date().toISOString(),
-      };
-      
-      // 处理国内运费埋点
-      const domesticShippingLogData = {
-        shipping_method: 2,
-        shipping_price_outside: 0,
-        shipping_price_within: domesticResponse.total_shipping_fee || 0,
-        currency: domesticResponse.currency || "FCFA",
-        forwarder_name: "",
-        country_city: "",
-        timestamp: new Date().toISOString(),
-      };
-      
-      // 记录埋点
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logShippingConfirm(shippingLogData, "address");
-      analyticsStore.logShippingConfirm(domesticShippingLogData, "address");
       
       // 更新状态
       set((state) => ({

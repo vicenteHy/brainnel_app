@@ -210,24 +210,7 @@ export const ShippingFee = () => {
         receiver_address: selectedWarehouseLabel,
       });
 
-      // 收集物流确认埋点数据 - 按照指定的字段格式
-      const shippingConfirmData = {
-        shipping_method: shippingMethod === "sea" ? 0 : 1,
-        shipping_price_outside:
-          shippingMethod === "sea"
-            ? state.shippingFees?.total_shipping_fee_sea || 0
-            : state.shippingFees?.total_shipping_fee_air || 0,
-        shipping_price_within: state.domesticShippingFees?.total_shipping_fee || 0,
-        currency: userStore.user?.currency || "FCFA",
-        forwarder_name: selectedWarehouse?.forwarder_name || "",
-        country_city: selectedWarehouseLabel || "",
-        timestamp: new Date().toISOString(),
-      };
 
-      // 记录物流确认埋点事件
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.logShippingConfirm(shippingConfirmData, "shipping");
-      
       const isTocValue = route.params?.isToc !== undefined ? route.params.isToc : 0;
       
       navigation.navigate("PaymentMethod", {

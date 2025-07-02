@@ -31,6 +31,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import useUserStore from "../../store/user";
+import useAnalyticsStore from "../../store/analytics";
 import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { useGlobalStore } from "../../store/useGlobalStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -275,13 +276,25 @@ export const HomeScreen = () => {
   // 处理二级分类点击
   const handleSubcategoryPress = useCallback(
     (subcategoryId: number) => {
+      // 查找对应的子分类信息
+      const subcategory = subcategories.find(cat => cat.category_id === subcategoryId);
+      if (subcategory) {
+        // 记录分类浏览埋点
+        const analyticsStore = useAnalyticsStore.getState();
+        analyticsStore.logCategory({
+          category_id: subcategory.category_id,
+          category_name: getCategoryName(subcategory),
+          level: 2, // 二级分类
+        }, "home");
+      }
+      
       InteractionManager.runAfterInteractions(() => {
         navigation.navigate("SearchResult", {
           category_id: subcategoryId,
         });
       });
     },
-    [navigation],
+    [navigation, subcategories, getCategoryName],
   );
 
   // 处理查看全部二级分类

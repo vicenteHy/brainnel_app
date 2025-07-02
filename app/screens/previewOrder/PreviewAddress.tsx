@@ -29,7 +29,6 @@ import flagMap from "../../utils/flagMap";
 import useCreateOrderStore  from "../../store/createOrder";
 import { useTranslation } from "react-i18next";
 import fontSize from "../../utils/fontsizeUtils";
-import useAnalyticsStore from "../../store/analytics";
 import { RootStackParamList } from "../../navigation/types";
 
 type ShippingFeeNavParams = {
@@ -322,19 +321,6 @@ export const PreviewAddress = () => {
           address_id: newAddressId || 0,
         });
 
-        // 准备埋点数据
-        const logData = {
-          last_name: formData.receiver_last_name,
-          first_name: formData.receiver_first_name,
-          country: formData.country_code,
-          phone_number: Number(formData.receiver_phone),
-          whatsApp_number: Number(whatsappNumber),
-        }
-        
-        // 记录地址信息埋点事件
-        const analyticsStore = useAnalyticsStore.getState();
-        analyticsStore.logAddressInfo(logData, "cart");
-        
         
         navigation.navigate("ShippingFee", {
           cart_item_id: route.params?.cart_item_id,
