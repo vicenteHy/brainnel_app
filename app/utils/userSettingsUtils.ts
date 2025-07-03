@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { settingApi } from "../services/api/setting";
 import useUserStore from "../store/user";
+import { logCompleteRegistrationEvent } from "../services/facebook-events";
 
 /**
  * 检查用户设置是否存在，不存在就创建
@@ -66,7 +67,7 @@ export const checkAndCreateUserSettings = async (): Promise<boolean> => {
  * 增强版的首次登录设置处理
  * 会处理首次登录的设置同步，也会检查非首次登录的设置存在性
  */
-export const handleLoginSettingsCheck = async (loginResponse: any): Promise<void> => {
+export const handleLoginSettingsCheck = async (loginResponse: any, registrationMethod: string = 'unknown'): Promise<void> => {
   try {
     // 检查是否是首次登录
     if (loginResponse.first_login) {
@@ -105,6 +106,17 @@ export const handleLoginSettingsCheck = async (loginResponse: any): Promise<void
         } catch (error) {
           console.error("❌ 语言设置同步失败:", error);
         }
+      }
+
+      // 🎯 记录Facebook完成注册事件
+      try {
+        console.log("📊 记录Facebook完成注册事件");
+        const userInfo = loginResponse.user || {};
+        logCompleteRegistrationEvent(userInfo, registrationMethod);
+        console.log("✅ Facebook完成注册事件记录成功");
+      } catch (fbError) {
+        console.error("❌ Facebook完成注册事件记录失败:", fbError);
+        // 不阻断登录流程，只记录错误
       }
     } else {
       console.log("ℹ️ 非首次登录，检查用户设置是否存在...");

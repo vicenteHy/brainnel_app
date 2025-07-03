@@ -2,4 +2,6 @@
   <string name="app_name">brainnel</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">cover</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="facebook_app_id">1662120374497452</string>
+  <string name="facebook_client_token">05f78312f74e6490066ade883a896f56</string>
 </resources>

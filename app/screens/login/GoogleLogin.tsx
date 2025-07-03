@@ -61,7 +61,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   // 处理登录设置检查（使用新的通用函数）
   const handleFirstLoginSettingsInternal = async (loginResponse: any) => {
-    await handleLoginSettingsCheck(loginResponse);
+    await handleLoginSettingsCheck(loginResponse, 'google');
   };
 
   const signInWithGoogle = async () => {

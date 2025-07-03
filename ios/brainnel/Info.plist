@@ -31,7 +31,7 @@
 			<array>
 				<string>com.brainnel.app</string>
 				<string>myapp</string>
-				<string>fb995035562798467</string>
+				<string>fb1662120374497452</string>
 				<string>com.googleusercontent.apps.449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec</string>
 			</array>
 		</dict>
@@ -41,15 +41,15 @@
 	<key>FacebookAdvertiserIDCollectionEnabled</key>
 	<false/>
 	<key>FacebookAppID</key>
-	<string>995035562798467</string>
+	<string>1662120374497452</string>
 	<key>FacebookAutoInitEnabled</key>
-	<false/>
+	<true/>
 	<key>FacebookAutoLogAppEventsEnabled</key>
-	<false/>
+	<true/>
 	<key>FacebookClientToken</key>
-	<string>83c780425cf53d1e4529171beac9d450</string>
+	<string>05f78312f74e6490066ade883a896f56</string>
 	<key>FacebookDisplayName</key>
-	<string>brainnel-new</string>
+	<string>brainnel</string>
 	<key>GIDClientID</key>
 	<string>449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec.apps.googleusercontent.com</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -63,6 +63,10 @@
 		<string>com.paypal.ppclient</string>
 		<string>paypal-m</string>
 		<string>wave</string>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+		<string>fbauth2</string>
+		<string>fbshareextension</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.0</string>
@@ -92,6 +96,8 @@
 	<string>此应用程序需要访问您的相机以拍照。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>此应用程序需要访问您的照片库以上传图片。</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads to you.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

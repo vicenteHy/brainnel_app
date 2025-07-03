@@ -159,7 +159,7 @@ export const PhoneLoginScreen = () => {
         await AsyncStorage.setItem("token", token);
         
         // 无论是否首次登录都进行设置检查
-        await handleLoginSettingsCheck(res);
+        await handleLoginSettingsCheck(res, 'phone');
         
         const user = await userApi.getProfile();
         if (user.language) {
@@ -248,7 +248,7 @@ export const PhoneLoginScreen = () => {
         await AsyncStorage.setItem("token", token);
         
         // 无论是否首次登录都进行设置检查
-        await handleLoginSettingsCheck(res);
+        await handleLoginSettingsCheck(res, 'phone_otp');
         
         const user = await userApi.getProfile();
         if (user.language) {

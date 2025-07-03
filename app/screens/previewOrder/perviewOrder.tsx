@@ -421,7 +421,13 @@ export const PreviewOrder = () => {
 
           if (route.params.payMethod === "balance") {
             setLoading(false);
-            navigation.navigate("PaymentSuccessScreen", res);
+            // 确保传递订单ID信息给PaymentSuccessScreen
+            navigation.navigate("PaymentSuccessScreen", {
+              ...res,
+              order_id: route.params.data.order_id,
+              order_no: route.params.data.order_no,
+              payment_method: "balance"
+            });
             return;
           }
 

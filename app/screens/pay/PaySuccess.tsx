@@ -18,6 +18,9 @@ import fontSize from "../../utils/fontsizeUtils";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useRoute, RouteProp } from "@react-navigation/native";
+import { logPurchaseEvent } from "../../services/facebook-events";
+import { ordersApi } from "../../services/api/orders";
+import useUserStore from "../../store/user";
 // import { RootStackParamList } from "../../navigation/types";
 // import { payApi } from "../../services/api/payApi";
 
@@ -33,6 +36,7 @@ type RootStackParamList = {
 export const PaymentSuccessScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
+  const { user } = useUserStore();
   
   const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccessScreen'>>();
 
@@ -69,6 +73,86 @@ export const PaymentSuccessScreen = () => {
   //     });
   //   }
   // }, [paymentId, PayerID]);
+
+  // 获取订单详情并触发 Facebook Purchase 事件
+  useEffect(() => {
+    const fetchOrderAndLogPurchase = async () => {
+      // 只处理订单支付成功，不处理充值
+      if (route.params?.isRecharge) {
+        console.log('[PaymentSuccess] 充值支付成功，不触发 Purchase 事件');
+        return;
+      }
+
+      const { order_id, order_no, orderId, payment_method } = route.params || {};
+      const finalOrderId = order_id || order_no || orderId;
+      
+      console.log('[PaymentSuccess] 检查订单ID参数:', {
+        order_id,
+        order_no, 
+        orderId,
+        finalOrderId,
+        allParams: route.params
+      });
+      
+      if (!finalOrderId) {
+        console.log('[PaymentSuccess] 没有订单ID，无法触发 Purchase 事件');
+        console.log('[PaymentSuccess] 可用的路由参数:', Object.keys(route.params || {}));
+        return;
+      }
+
+      try {
+        console.log('[PaymentSuccess] 获取订单详情，订单ID:', finalOrderId);
+        
+        // 获取订单详情
+        const orderDetail = await ordersApi.getOrderDetails(finalOrderId);
+        
+        if (orderDetail && orderDetail.order_id) {
+          console.log('[PaymentSuccess] 订单详情获取成功:', {
+            orderId: orderDetail.order_id,
+            totalAmount: orderDetail.total_amount,
+            currency: orderDetail.currency,
+            itemCount: orderDetail.items?.length
+          });
+
+          // 构建 SKU 详情数组
+          const skuDetails = orderDetail.items?.map((item: any) => ({
+            sku_id: item.sku_id,
+            price: item.unit_price,
+            quantity: item.quantity,
+            sku_img: item.sku_image || item.sku_image_url
+          })) || [];
+
+          // 构建订单信息
+          const orderInfo = {
+            orderId: orderDetail.order_id,
+            orderNo: orderDetail.order_no,
+            totalPrice: orderDetail.total_amount,
+            totalQuantity: orderDetail.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0,
+            currency: orderDetail.currency || user.currency || 'USD'
+          };
+
+          // 触发 Facebook Purchase 事件
+          console.log('[PaymentSuccess] 触发 Facebook Purchase 事件');
+          logPurchaseEvent(
+            orderInfo,
+            skuDetails,
+            payment_method || orderDetail.payment_method || 'unknown'
+          );
+        } else {
+          console.log('[PaymentSuccess] 订单详情获取失败或数据不完整');
+        }
+      } catch (error) {
+        console.error('[PaymentSuccess] 获取订单详情失败:', error);
+      }
+    };
+
+    // 延迟一秒执行，确保页面已经完全加载
+    const timer = setTimeout(() => {
+      fetchOrderAndLogPurchase();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [route.params, user.currency]);
 
   // 处理系统返回，返回到首页
   useFocusEffect(

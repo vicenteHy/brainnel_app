@@ -21,6 +21,7 @@ import { useVersionCheck } from "./app/hooks/useVersionCheck";
 import { UpdateModal } from "./app/components/UpdateModal";
 import { UpdateType } from "./app/utils/versionUtils";
 import Constants from 'expo-constants';
+import { initializeFacebookSDK, extractAndSaveFbclid } from "./app/services/facebook-events";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -176,6 +177,20 @@ function AppContent() {
           preloadService.startPreloading(localUserId).catch(error => {
           });
           
+          // 初始化 Facebook SDK（Install 事件会自动上报）
+          initializeFacebookSDK()
+            .then(() => {
+              console.log('[App] Facebook SDK initialized successfully');
+              // 延迟 2 秒后检查 SDK 状态
+              setTimeout(async () => {
+                const { checkFacebookSDKStatus } = await import('./app/services/facebook-events');
+                await checkFacebookSDKStatus();
+              }, 2000);
+            })
+            .catch(error => {
+              console.error('[App] Failed to initialize Facebook SDK:', error);
+            });
+          
           // 并行获取用户资料（不影响预加载）
           fetchUserProfile().then(async (success) => {
             // 在用户信息加载完成后发送 app_launch 事件
@@ -262,6 +277,9 @@ function AppContent() {
     const handleDeepLink = ({ url }: { url: string }) => {
       console.log('Deep link received:', url);
       
+      // 提取并保存 fbclid（如果存在）
+      extractAndSaveFbclid(url);
+      
       // 处理 payment-polling 深度链接
       if (
         url.includes("com.brainnel.app://payment-polling") ||
@@ -343,7 +361,10 @@ function AppContent() {
     Linking.getInitialURL().then((url) => {
       console.log(url);
       if (url) {
-        // 延迟处理，确保导航器已准备好
+        // 立即提取 fbclid（不需要等待导航器）
+        extractAndSaveFbclid(url);
+        
+        // 延迟处理导航，确保导航器已准备好
         setTimeout(() => {
           handleDeepLink({ url });
         }, 500);

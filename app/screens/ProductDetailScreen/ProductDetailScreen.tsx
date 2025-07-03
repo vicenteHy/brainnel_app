@@ -34,6 +34,7 @@ import { useRoute } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import { styles } from "./styles";
 import widthUtils from "../../utils/widthUtils";
+import { logViewContentEvent } from "../../services/facebook-events";
 
 type ProductDetailRouteParams = {
   offer_id: string;
@@ -76,7 +77,7 @@ export default function ProductDetailScreen() {
     }
   }, [user?.user_id]);
 
-  // 添加浏览记录
+  // 添加浏览记录和 Facebook ViewContent 事件
   useEffect(() => {
     if (product && product.offer_id && product.subject_trans) {
       const browseItem = {
@@ -92,6 +93,20 @@ export default function ProductDetailScreen() {
       
       addBrowseItem(browseItem).catch(error => {
         console.warn('[ProductDetailScreen] 添加浏览记录失败:', error);
+      });
+      
+      // 触发 Facebook ViewContent 事件
+      // 使用页面实际显示的货币（与 ProductInfo 组件保持一致）
+      const displayCurrency = user.currency || 'FCFA';
+      logViewContentEvent({
+        offer_id: product.offer_id,
+        id: product.offer_id,
+        subject: product.subject,
+        subject_trans: product.subject_trans,
+        title: product.subject_trans,
+        price: browseItem.price,
+        currency: displayCurrency,
+        category: product.category_name || 'general'
       });
     }
   }, [product, addBrowseItem, user.currency]);

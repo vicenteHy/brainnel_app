@@ -75,8 +75,31 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   // 处理支付成功
   const handleSuccess = useCallback((response: any) => {
     setPaymentStatus('completed');
-    safeNavigate(config.successRoute, response);
-  }, [safeNavigate, config.successRoute]);
+    
+    // 确保传递正确的订单ID和支付方式信息
+    const successParams = {
+      ...response,
+      // 确保有订单ID字段（支持多种字段名）
+      order_id: response.order_id || response.id || paymentId,
+      orderId: response.order_id || response.id || paymentId,
+      payment_method: method,
+      // 如果是充值，确保标记
+      ...(paymentType === 'recharge' && { 
+        isRecharge: true,
+        recharge_id: response.recharge_id || response.id || paymentId 
+      })
+    };
+    
+    console.log('[PaymentFlow] 处理支付成功，传递参数:', {
+      paymentType,
+      paymentId,
+      method,
+      originalResponse: response,
+      finalParams: successParams
+    });
+    
+    safeNavigate(config.successRoute, successParams);
+  }, [safeNavigate, config.successRoute, paymentType, paymentId, method]);
 
   // 处理支付错误
   const handleError = useCallback((errorData: any) => {

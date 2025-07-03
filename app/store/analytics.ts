@@ -90,8 +90,6 @@ type ErrorProperty = {
 // 定义会话事件属性类型
 type SessionProperty = {
   session_duration: number; // 会话时长（秒）
-  page_count: number; // 访问页面数
-  event_count: number; // 事件总数
   timestamp: string;
 };
 
@@ -142,7 +140,6 @@ type AnalyticsState = {
   persistData: () => Promise<void>;
   logAppLaunch: (isSuccess?: number) => void;
   logLogin: (isSuccess: boolean, loginMethod: string) => void;
-  logRegister: (isSuccess: boolean, registerMethod: string) => void;
   logViewProduct: (productInfo: ProductProperty, fromPage?: string) => void;
   logSearch: (keyword: string, fromPage?: string) => void;
   logAddToCart: (
@@ -181,8 +178,6 @@ const getEventKeyInfo = (event: any): string => {
       return `关键词: "${props.key_word || 'N/A'}"`;
     case 'login':
       return `方式: ${props.login_method || 'N/A'}, 结果: ${props.is_login ? '成功' : '失败'}`;
-    case 'register':
-      return `方式: ${props.register_method || 'N/A'}, 结果: ${props.is_register ? '成功' : '失败'}`;
     case 'category':
       return `分类: ${props.category_name || 'N/A'}`;
     case 'addToCart':
@@ -192,7 +187,7 @@ const getEventKeyInfo = (event: any): string => {
     case 'page_leave':
       return `离开页面: ${event.page_name}, 停留: ${props.duration}秒`;
     case 'session_end':
-      return `会话结束: ${props.session_duration}秒, 页面: ${props.page_count}, 事件: ${props.event_count}`;
+      return `会话结束: ${props.session_duration}秒`;
     case 'error':
       return `错误: ${props.error_message}`;
     case 'batch_trigger':
@@ -487,24 +482,6 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       get().addEvent(loginEvent);
     },
 
-    // 记录注册事件
-    logRegister: (isSuccess = true, registerMethod = "phone") => {
-      const eventProperties = {
-        is_register: isSuccess ? 1 : 0, // 1表示成功，0表示失败
-        register_method: registerMethod, // 注册方式
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const registerEvent: AnalyticsEvent = {
-        event_name: "register",
-        page_name: "register",
-        referrer_page: null,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("register", eventProperties, `注册${isSuccess ? '成功' : '失败'} - ${registerMethod}`);
-      get().addEvent(registerEvent);
-    },
 
     // 记录浏览商品事件
     logViewProduct: (productInfo: ProductProperty, fromPage = "home") => {
@@ -690,8 +667,6 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       
       const eventProperties = {
         session_duration: sessionDuration,
-        page_count: state.visitedPageCount,
-        event_count: state.event_list.length,
         timestamp: getCurrentFormattedTime(),
       };
 
@@ -702,7 +677,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒, 页面数: ${state.visitedPageCount}, 事件数: ${state.event_list.length}`);
+      logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒`);
       get().addEvent(sessionEndEvent);
       
       // 立即发送会话结束事件

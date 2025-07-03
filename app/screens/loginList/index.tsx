@@ -114,7 +114,7 @@ export const LoginScreen = () => {
 
   // 处理首次登录设置同步（使用新的通用函数）
   const handleFirstLoginSettings = async (loginResponse: any) => {
-    await handleLoginSettingsCheck(loginResponse);
+    await handleLoginSettingsCheck(loginResponse, 'whatsapp');
   };
 
 

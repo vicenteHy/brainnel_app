@@ -31,6 +31,7 @@ import PaymentMethodIcon from "../../components/PaymentMethodIcon";
 import PaymentIcon from "../../components/PaymentIcon";
 import useAnalyticsStore from "../../store/analytics";
 import { settingApi } from "../../services/api/setting";
+import { logInitiateCheckoutEvent } from "../../services/facebook-events";
 import { getOrderTransLanguage } from "../../utils/languageUtils";
 import { PaymentMethodItem } from "./payment/PaymentMethodItem";
 import { 
@@ -987,6 +988,21 @@ export const PaymentMethod = () => {
           
           analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
           
+          // 记录 Facebook InitiateCheckout 事件
+          logInitiateCheckoutEvent(
+            {
+              orderId: route.params.orderId,
+              totalPrice: updatedOrderData.total_amount,
+              totalQuantity: updatedOrderData.items.reduce((sum, item) => sum + item.quantity, 0),
+              currency: paymentData.currency,
+              offlinePayment: currentTab === "offline",
+              shippingFee: paymentData.shipping_fee,
+              domesticShippingFee: paymentData.domestic_shipping_fee
+            },
+            checkoutEventData.sku_details,
+            selectedPayment
+          );
+          
           // 跳转到支付预览页面
           navigation.navigate("PreviewOrder", {
             data: updatedOrderData,
@@ -1025,6 +1041,21 @@ export const PaymentMethod = () => {
           };
           
           analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
+          
+          // 记录 Facebook InitiateCheckout 事件
+          logInitiateCheckoutEvent(
+            {
+              orderId: res.order_id, // 新创建的订单ID
+              totalPrice: createOrderData.total_amount,
+              totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+              currency: createOrderData.currency,
+              offlinePayment: currentTab === "offline",
+              shippingFee: createOrderData.shipping_fee || 0,
+              domesticShippingFee: createOrderData.domestic_shipping_fee || 0
+            },
+            checkoutEventData.sku_details,
+            selectedPayment
+          );
           
           // go to payment preview
           navigation.navigate("PreviewOrder", {

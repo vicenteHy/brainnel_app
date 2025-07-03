@@ -10,6 +10,7 @@ import useUserStore from "../../../store/user";
 import useCartStore from "../../../store/cartStore";
 import useAnalyticsStore from "../../../store/analytics";
 import { t } from "../../../i18n";
+import { logAddToCartEvent } from "../../../services/facebook-events";
 
 interface UseProductCardProps {
   localProduct: ProductDetailParams;
@@ -321,6 +322,22 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
           
           analyticsStore.logAddToCart(eventData, 'product_detail');
           
+          // 记录 Facebook AddToCart 事件
+          const displayCurrency = currency || 'FCFA';
+          logAddToCartEvent(
+            {
+              ...localProduct,
+              currency: displayCurrency // 使用显示货币
+            },
+            isSingleSku ? [{
+              sku_id: getSkuId(),
+              price: unitPrice,
+              quantity: mainProductQuantity
+            }] : null,
+            mainProductQuantity,
+            unitPrice * mainProductQuantity
+          );
+          
           // 更新全局购物车数量
           updateCartItemCount();
           // 显示成功提示
@@ -415,6 +432,18 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
             total_quantity: totalQuantity,
             sku_details: skuDetails, // SKU详情数组
           }, 'product_detail');
+          
+          // 记录 Facebook AddToCart 事件（多SKU）
+          const displayCurrency = currency || 'FCFA';
+          logAddToCartEvent(
+            {
+              ...localProduct,
+              currency: displayCurrency // 使用显示货币
+            },
+            skuDetails, // 传递SKU详情数组
+            totalQuantity,
+            totalPrice
+          );
           
           // 更新全局购物车数量
           updateCartItemCount();

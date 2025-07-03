@@ -64,7 +64,7 @@ export const EmailOtpScreen = () => {
 
   // 处理登录设置检查（使用新的通用函数）
   const handleFirstLoginSettings = async (loginResponse: any) => {
-    await handleLoginSettingsCheck(loginResponse);
+    await handleLoginSettingsCheck(loginResponse, 'email');
   };
 
   // 检查并修复用户国家信息

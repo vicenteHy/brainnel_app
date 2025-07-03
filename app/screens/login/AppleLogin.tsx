@@ -92,6 +92,10 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
         if (handleFirstLoginSettings) {
           console.log("⚙️ 检查是否需要同步本地设置...");
           await handleFirstLoginSettings(res);
+        } else {
+          // 如果没有传入自定义处理函数，使用默认的处理函数
+          const { handleLoginSettingsCheck } = await import('../../utils/userSettingsUtils');
+          await handleLoginSettingsCheck(res, 'apple');
         }
 
         console.log("👤 获取用户信息...");
