@@ -923,7 +923,7 @@ export const styles = StyleSheet.create<Styles>({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 8,
     width: "100%",
   },
   priceLabel: {
@@ -970,12 +970,7 @@ export const styles = StyleSheet.create<Styles>({
   
   // 运费险样式
   shippingInsuranceContainer: {
-    marginTop: 8,
-    borderWidth: 2,
-    borderColor: "#4CAF50",
-    borderRadius: 8,
-    backgroundColor: "#f8fff8",
-    padding: 12,
+    paddingVertical: 10,
   },
   shippingInsuranceContent: {
     flexDirection: "row",
@@ -986,7 +981,7 @@ export const styles = StyleSheet.create<Styles>({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#FF5722",
+    backgroundColor: "#FF5100",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
@@ -994,12 +989,14 @@ export const styles = StyleSheet.create<Styles>({
   shippingInsuranceText: {
     fontSize: fontSize(14),
     fontWeight: "500",
-    color: "#333",
+    color: "#666",
     flex: 1,
   },
   shippingInsuranceAmount: {
     fontSize: fontSize(14),
     fontWeight: "600",
-    color: "#333",
+    color: "#000000",
+    flexDirection: "row",
+    alignItems: "center",
   },
 }); 

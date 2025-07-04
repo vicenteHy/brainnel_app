@@ -56,6 +56,19 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
     try {
       setIsLoading(true);
       const response = await ordersApi.getOrderDetails(orderId);
+      
+      // 添加调试日志，打印订单详情数据
+      console.log("=== 订单详情API返回数据 ===");
+      console.log("订单ID:", orderId);
+      console.log("完整订单数据:", JSON.stringify(response, null, 2));
+      console.log("运费险相关字段:");
+      console.log("- is_protection:", response?.is_protection);
+      console.log("- protection_amount:", response?.protection_amount);
+      console.log("- shipping_fee:", response?.shipping_fee);
+      console.log("- domestic_shipping_fee:", response?.domestic_shipping_fee);
+      console.log("- currency:", response?.currency);
+      console.log("============================");
+      
       setOrderDetails(response);
     } catch (error) {
       console.error("Error fetching order details:", error);

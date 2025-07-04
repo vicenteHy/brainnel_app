@@ -33,6 +33,7 @@ import PowerIcon from "../../../components/PowerIcon";
 import CardIcon from "../../../components/ShoppingCartIcon";
 import WhatsAppIcon from "../../../components/WatchAppIcon";
 import IconComponent from "../../../components/IconComponent";
+import { InsuranceExplain } from "../../ShippingInsurance/InsuranceExplain";
 // PhoneNumberInputModal removed - using PaymentMethod page instead
 
 // Local components
@@ -109,6 +110,9 @@ export const OrderDetails = () => {
   });
 
   const { cancelOrder, confirmOrder } = useOrderListStore();
+  
+  // 运费险说明弹窗状态
+  const [showInsuranceExplain, setShowInsuranceExplain] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -369,13 +373,16 @@ export const OrderDetails = () => {
                           {t("payment.product_total")}
                         </Text>
                         <Text style={[styles.priceValue, { color: '#000000' }]}>
-                          {orderDetails.items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}{" "}
+                          {orderDetails.currency === 'USD' || orderDetails.currency === 'EUR' 
+                            ? orderDetails.items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)
+                            : Math.round(orderDetails.items.reduce((sum, item) => sum + item.total_price, 0))
+                          }{" "}
                           {orderDetails.currency}
                         </Text>
                       </View>
                       <View style={styles.priceItem}>
                         <Text style={[styles.priceLabel, { color: '#666666' }]}>
-                          {t("order.platform_shipping")}
+                          {t("order.shipping.domestic_fee")}
                         </Text>
                         <Text style={[styles.priceValue, { color: '#000000' }]}>
                           {orderDetails.domestic_shipping_fee}{" "}
@@ -392,19 +399,36 @@ export const OrderDetails = () => {
                           </Text>
                         </View>
                         {orderDetails.is_protection === 1 && (
-                          <View style={styles.shippingInsuranceContainer}>
-                            <View style={styles.shippingInsuranceContent}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                          <View style={styles.priceItem}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                              <Text style={[styles.priceLabel, { color: '#666666', flex: 0 }]}>
+                                {t("order.shipping_insurance")}
+                              </Text>
+                              <TouchableOpacity 
+                                onPress={() => setShowInsuranceExplain(true)}
+                              >
+                                <View style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: 8,
+                                  backgroundColor: '#f0f0f0',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  marginLeft: 0
+                                }}>
+                                  <Text style={{ fontSize: 11, color: '#666', fontWeight: 'bold' }}>?</Text>
+                                </View>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.priceValue}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
                                 <View style={styles.shippingInsuranceIcon}>
                                   <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>✓</Text>
                                 </View>
-                                <Text style={styles.shippingInsuranceText}>
-                                  {t("order.shipping_insurance") || "运费险"}
+                                <Text style={[{ color: '#000000', fontSize: 14, fontWeight: '600', marginLeft: 5 }]}>
+                                  {orderDetails.protection_amount} {orderDetails.currency}
                                 </Text>
                               </View>
-                              <Text style={styles.shippingInsuranceAmount}>
-                                {orderDetails.protection_amount} {orderDetails.currency}
-                              </Text>
                             </View>
                           </View>
                         )}
@@ -635,6 +659,12 @@ export const OrderDetails = () => {
           </View>
         </View>
       </Modal>
+
+      {/* 运费险说明弹窗 */}
+      <InsuranceExplain 
+        visible={showInsuranceExplain}
+        onClose={() => setShowInsuranceExplain(false)}
+      />
     </SafeAreaView>
   );
 }; 

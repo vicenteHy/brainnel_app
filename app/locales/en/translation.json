@@ -391,6 +391,7 @@
   "order.subtotal": "Subtotal",
   "order.platform_shipping": "Platform Shipping",
   "order.international_shipping": "International Shipping",
+  "order.shipping_insurance": "Shipping Insurance",
   "order.total": "Total",
   "order.estimated_shipping": "Estimated international shipping",
   "order.cancel": "Cancel Order",

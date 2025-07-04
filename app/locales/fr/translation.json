@@ -313,6 +313,7 @@
   "order.subtotal": "Sous-total",
   "order.platform_shipping": "Frais d'expédition plateforme",
   "order.international_shipping": "Frais de livraison internationale",
+  "order.shipping_insurance": "Assurance d'expédition",
   "order.total": "Total",
   "order.estimated_shipping": "Frais d'expédition internationaux estimés",
   "order.cancel": "Annuler la commande",
