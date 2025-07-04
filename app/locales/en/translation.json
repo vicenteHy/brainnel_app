@@ -1185,5 +1185,31 @@
     "copy_info": "Copy Information",
     "manual_copy": "Please copy this information manually",
     "ok": "OK"
+  },
+  "shipping_insurance": {
+    "title": "Secure Your Package",
+    "description": "Lost, damaged, or wrong item? We'll refund it.",
+    "learn_more": "Learn more",
+    "fee_prefix": "+ ",
+    "fee_suffix": " USD",
+    "modal": {
+      "title": "Is Package Protection Worth It?",
+      "without_protection": "Without Protection",
+      "with_protection": "With Protection",
+      "we_will_refund": "We will refund you!",
+      "scenarios": {
+        "lost_by_carrier": "Package lost by carrier",
+        "received_wrong_item": "Received wrong item",
+        "damaged_in_transit": "Damaged in transit",
+        "received_wrong_item_2": "Received wrong item"
+      },
+      "how_it_works": "How it works:",
+      "service_fee": "Service Fee is 1% of your item's value",
+      "file_claim": "File a claim in 'My Orders' within 7 days of delivery",
+      "important_label": "Important:",
+      "important_text": "For claims of damaged or incorrect items, you MUST provide a complete unboxing video that shows the package seal before it is opened.",
+      "refunds_wallet": "Refunds are issued to your in-app wallet.",
+      "shop_now": "Got it"
+    }
   }
 }

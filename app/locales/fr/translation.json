@@ -1303,5 +1303,31 @@
     "copy_info": "Informations à Copier",
     "manual_copy": "Veuillez copier ces informations manuellement",
     "ok": "OK"
+  },
+  "shipping_insurance": {
+    "title": "Sécurisez votre colis",
+    "description": "Colis perdu, endommagé ou incorrect ? Nous vous rembourserons.",
+    "learn_more": "En savoir plus",
+    "fee_prefix": "+ ",
+    "fee_suffix": " USD",
+    "modal": {
+      "title": "La protection des colis vaut-elle la peine ?",
+      "without_protection": "Sans protection",
+      "with_protection": "Avec protection",
+      "we_will_refund": "Nous vous rembourserons !",
+      "scenarios": {
+        "lost_by_carrier": "Colis perdu par le transporteur",
+        "received_wrong_item": "Article reçu incorrect",
+        "damaged_in_transit": "Endommagé en transit",
+        "received_wrong_item_2": "Article reçu incorrect"
+      },
+      "how_it_works": "Comment ça marche :",
+      "service_fee": "Les frais de service représentent 1% de la valeur de votre article",
+      "file_claim": "Déposez une réclamation dans 'Mes Commandes' dans les 7 jours suivant la livraison",
+      "important_label": "Important :",
+      "important_text": "Pour les réclamations d'articles endommagés ou incorrects, vous DEVEZ fournir une vidéo de déballage complète qui montre le sceau du colis avant son ouverture.",
+      "refunds_wallet": "Les remboursements sont crédités sur votre portefeuille dans l'application.",
+      "shop_now": "Compris"
+    }
   }
 } 
