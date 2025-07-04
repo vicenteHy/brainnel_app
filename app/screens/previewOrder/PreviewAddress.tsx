@@ -67,7 +67,7 @@ export const PreviewAddress = () => {
   const [formData, setFormData] = useState({
     receiver_first_name: "",
     receiver_last_name: "",
-    country_code: "225", // 默认科特迪瓦区号
+    country_code: "", // 动态获取区号
     receiver_phone: "",
     receiver_phone_again: "",
     whatsapp_phone: "",
@@ -78,7 +78,7 @@ export const PreviewAddress = () => {
   const [phoneNumbersMatch, setPhoneNumbersMatch] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Get selected country data
+  // Get selected country data and set country code
   const fetchSelectedCountry = async () => {
     try {
       const countryData = await AsyncStorage.getItem("@selected_country");
@@ -86,6 +86,13 @@ export const PreviewAddress = () => {
         const parsedData = JSON.parse(countryData);
         setSelectedCountry(parsedData);
         setValue(parsedData.name);
+        // 设置国家区号
+        if (parsedData.country_code) {
+          setFormData(prev => ({
+            ...prev,
+            country_code: parsedData.country_code
+          }));
+        }
       }
     } catch (error) {
     }
@@ -93,32 +100,44 @@ export const PreviewAddress = () => {
 
   // Initialize loading
   React.useEffect(() => {
-    fetchSelectedCountry();
-    fetchDefaultAddress();
-    fetchAddresses(); // 加载地址列表用于重复检查
+    const initializeData = async () => {
+      await fetchSelectedCountry();
+      await fetchDefaultAddress();
+      await fetchAddresses(); // 加载地址列表用于重复检查
 
-    // If there is an address in route params, use it first
-    if (route.params?.address) {
-      const address = route.params.address;
-      const phoneNumber = address.receiver_phone || "";
-      const whatsappPhone = address.whatsapp_phone || "";
-      
-      // Check if WhatsApp is same as phone with country code
-      const fullPhoneNumber = `225${phoneNumber}`;
-      const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
-      
-      setFormData({
-        receiver_first_name: address.receiver_first_name || "",
-        receiver_last_name: address.receiver_last_name || "",
-        country_code: "225", // 默认科特迪瓦区号
-        receiver_phone: phoneNumber,
-        receiver_phone_again: phoneNumber,
-        whatsapp_phone: whatsappPhone,
-        is_default: Boolean(address.is_default),
-      });
-      
-      setWhatsappSameAsPhone(isWhatsappSameAsPhone);
-    }
+      // If there is an address in route params, use it first
+      if (route.params?.address) {
+        const address = route.params.address;
+        const phoneNumber = address.receiver_phone || "";
+        const whatsappPhone = address.whatsapp_phone || "";
+        
+        // 先获取用户选择的国家区号
+        const selectedCountryData = await AsyncStorage.getItem("@selected_country");
+        let countryCode = "225"; // 默认区号
+        if (selectedCountryData) {
+          const parsedData = JSON.parse(selectedCountryData);
+          countryCode = parsedData.country_code || "225";
+        }
+        
+        // Check if WhatsApp is same as phone with country code
+        const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+        const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
+        
+        setFormData({
+          receiver_first_name: address.receiver_first_name || "",
+          receiver_last_name: address.receiver_last_name || "",
+          country_code: countryCode,
+          receiver_phone: phoneNumber,
+          receiver_phone_again: phoneNumber,
+          whatsapp_phone: whatsappPhone,
+          is_default: Boolean(address.is_default),
+        });
+        
+        setWhatsappSameAsPhone(isWhatsappSameAsPhone);
+      }
+    };
+    
+    initializeData();
   }, []);
 
   // When countryList loaded, set selected country label
@@ -181,42 +200,75 @@ export const PreviewAddress = () => {
 
   // Monitor defaultAddress changes
   React.useEffect(() => {
-    const addressToUse = defaultAddress || (addresses && addresses.length > 0 ? addresses[0] : null);
+    const updateDefaultAddress = async () => {
+      const addressToUse = defaultAddress || (addresses && addresses.length > 0 ? addresses[0] : null);
 
-    if (addressToUse && !route.params?.address) {
-      const phoneNumber = addressToUse.receiver_phone || "";
-      const whatsappPhone = addressToUse.whatsapp_phone || "";
-      
-      // Check if WhatsApp is same as phone with country code
-      const fullPhoneNumber = `225${phoneNumber}`;
-      const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
-      
-      setFormData({
-        receiver_first_name: addressToUse.receiver_first_name || "",
-        receiver_last_name: addressToUse.receiver_last_name || "",
-        country_code: "225", // 默认科特迪瓦区号
-        receiver_phone: phoneNumber,
-        receiver_phone_again: phoneNumber,
-        whatsapp_phone: whatsappPhone,
-        is_default: Boolean(addressToUse.is_default),
-      });
-      
-      setWhatsappSameAsPhone(isWhatsappSameAsPhone);
-    }
+      if (addressToUse && !route.params?.address) {
+        const phoneNumber = addressToUse.receiver_phone || "";
+        const whatsappPhone = addressToUse.whatsapp_phone || "";
+        
+        // 获取用户选择的国家区号
+        const selectedCountryData = await AsyncStorage.getItem("@selected_country");
+        let countryCode = "225"; // 默认区号
+        if (selectedCountryData) {
+          const parsedData = JSON.parse(selectedCountryData);
+          countryCode = parsedData.country_code || "225";
+        }
+        
+        // Check if WhatsApp is same as phone with country code
+        const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+        const isWhatsappSameAsPhone = whatsappPhone === fullPhoneNumber || whatsappPhone === phoneNumber;
+        
+        setFormData({
+          receiver_first_name: addressToUse.receiver_first_name || "",
+          receiver_last_name: addressToUse.receiver_last_name || "",
+          country_code: countryCode,
+          receiver_phone: phoneNumber,
+          receiver_phone_again: phoneNumber,
+          whatsapp_phone: whatsappPhone,
+          is_default: Boolean(addressToUse.is_default),
+        });
+        
+        setWhatsappSameAsPhone(isWhatsappSameAsPhone);
+      }
+    };
+    
+    updateDefaultAddress();
   }, [defaultAddress, addresses, route.params?.address]);
 
   React.useEffect(() => {
-    settingApi.getCountryList().then((res) => {
-      const formattedCountries = res.map((item) => ({
-        label: `${item.name_en} (${item.country})`,
-        value: item.name.toString(),
-        flag: flagMap.get(item.name_en),
-        name_en: item.name_en,
-        country: item.country
-      }));
-      setItems(formattedCountries);
-      setCountryList(formattedCountries);
-    });
+    const initializeCountryList = async () => {
+      try {
+        const res = await settingApi.getCountryList();
+        const formattedCountries = res.map((item) => ({
+          label: `${item.name_en} (${item.country})`,
+          value: item.name.toString(),
+          flag: flagMap.get(item.name_en),
+          name_en: item.name_en,
+          country: item.country
+        }));
+        setItems(formattedCountries);
+        setCountryList(formattedCountries);
+        
+        // 如果用户还没有设置国家代码，设置默认值
+        if (!formData.country_code) {
+          const selectedCountryData = await AsyncStorage.getItem("@selected_country");
+          let countryCode = "225"; // 默认区号
+          if (selectedCountryData) {
+            const parsedData = JSON.parse(selectedCountryData);
+            countryCode = parsedData.country_code || "225";
+          }
+          setFormData(prev => ({
+            ...prev,
+            country_code: countryCode
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching country list:', error);
+      }
+    };
+    
+    initializeCountryList();
   }, []);
 
   const validateForm = () => {

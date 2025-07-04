@@ -180,4 +180,11 @@ export type Styles = {
   totalLabel: TextStyle;
   totalPrice: TextStyle;
   shippingNote: TextStyle;
+  
+  // 运费险样式
+  shippingInsuranceContainer: ViewStyle;
+  shippingInsuranceContent: ViewStyle;
+  shippingInsuranceIcon: ViewStyle;
+  shippingInsuranceText: TextStyle;
+  shippingInsuranceAmount: TextStyle;
 }; 

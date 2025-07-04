@@ -1,8 +1,8 @@
 // API配置
-const DEV_API_URL = 'https://api.brainnel.com/backend';
+const DEV_API_URL = 'https://api.brainnel.com/test';
 const PROD_API_URL = 'https://api.brainnel.com/backend';
 
-export const API_BASE_URL = PROD_API_URL
+export const API_BASE_URL = DEV_API_URL
 
 // 环境变量配置
 export const ENV = {

@@ -122,7 +122,10 @@ export const InsuranceExplain: React.FC<InsuranceExplainProps> = ({
             </View>
 
             {/* How it works 部分 */}
-            <View style={styles.howItWorksContainer}>
+            <ScrollView 
+              style={styles.howItWorksContainer}
+              showsVerticalScrollIndicator={false}
+            >
               <Text style={styles.howItWorksTitle}>
                 {t('shipping_insurance.modal.how_it_works')}
               </Text>
@@ -159,7 +162,7 @@ export const InsuranceExplain: React.FC<InsuranceExplainProps> = ({
                   {t('shipping_insurance.modal.refunds_wallet')}
                 </Text>
               </View>
-            </View>
+            </ScrollView>
           </View>
 
           {/* 底部按钮 */}
@@ -179,7 +182,7 @@ export const InsuranceExplain: React.FC<InsuranceExplainProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -189,6 +192,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 16,
     overflow: 'visible',
+
   },
   header: {
     flexDirection: 'row',
@@ -200,8 +204,8 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F6F6F6',
     marginHorizontal: -16,
-    marginBottom: 20,
-  },
+    marginBottom: 10,
+    },
   title: {
     fontSize: fontSize(16),
     fontWeight: '600',
@@ -222,7 +226,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    overflow: 'visible',
+    paddingHorizontal: 0,
   },
   comparisonContainer: {
     marginBottom: 24,
@@ -239,11 +243,12 @@ const styles = StyleSheet.create({
     height: 180,
     position: 'relative',
     shadowColor: '#000000',
+    elevation: 3,
     shadowOffset: {
       width: 0,
       height: 0,
     },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
   }, 
   topCard: {
@@ -276,7 +281,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 0,
     },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
     // Android 阴影
     elevation: 3,
@@ -340,7 +345,6 @@ const styles = StyleSheet.create({
   },
   howItWorksContainer: {
     paddingTop: 10,
-    marginBottom: 20,
   },
   howItWorksTitle: {
     fontSize: 16,
@@ -384,13 +388,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  footer: {
-    paddingTop: 16,
-  },
+ 
   shopButton: {
     backgroundColor: '#FF5100',
     borderRadius: 25,
-    paddingVertical: 16,
+    height: 50,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   shopButtonText: {

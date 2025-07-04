@@ -34,6 +34,8 @@ import { settingApi } from "../../services/api/setting";
 import { logInitiateCheckoutEvent } from "../../services/facebook-events";
 import { getOrderTransLanguage } from "../../utils/languageUtils";
 import { PaymentMethodItem } from "./payment/PaymentMethodItem";
+import { ShippingInsurance } from "../ShippingInsurance";
+import { insuranceApi, InsuranceRateResponse } from "../../services/api/insuranceApi";
 import { 
   PaymentMethodRouteParams,
   RootStackParamList,
@@ -101,6 +103,11 @@ export const PaymentMethod = () => {
   const [userLocalCurrency, setUserLocalCurrency] = useState<string>("");
   const [hasInitializedCurrency, setHasInitializedCurrency] = useState(false);
   
+  // 运费险状态
+  const [isShippingInsuranceSelected, setIsShippingInsuranceSelected] = useState(true); // 默认勾选运费险
+  const [shippingInsuranceRate, setShippingInsuranceRate] = useState(0.01); // 运费险费率
+  const [insuranceRateLoading, setInsuranceRateLoading] = useState(false);
+  
   // 组件卸载时清理状态
   useEffect(() => {
     return () => {
@@ -146,8 +153,26 @@ export const PaymentMethod = () => {
 
   // Helper function to get converted total amount for calculation (excluding shipping fee if isCOD is 1)
   const getConvertedTotalForCalculation = () => {
-    const result = calculateConvertedTotal(convertedAmount, isCOD);
-    console.log("getConvertedTotalForCalculation:", result, "isCOD:", isCOD);
+    let result = calculateConvertedTotal(convertedAmount, isCOD);
+    
+    // 如果选择了运费险，计算运费险费用
+    if (isShippingInsuranceSelected) {
+      const insuranceFee = result * shippingInsuranceRate;
+      const displayCurrency = getDisplayCurrency();
+      
+      // 根据货币类型格式化运费险金额
+      let formattedInsuranceFee;
+      if (selectedPayment && (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) || displayCurrency === 'FCFA') {
+        // 本地货币四舍五入取整数
+        formattedInsuranceFee = Math.round(insuranceFee);
+      } else {
+        // 美金、欧元等保留两位小数
+        formattedInsuranceFee = Number(insuranceFee.toFixed(2));
+      }
+      
+      result = Number((result + formattedInsuranceFee).toFixed(2));
+    }
+    
     return result;
   };
 
@@ -171,21 +196,41 @@ export const PaymentMethod = () => {
         ).toFixed(2)
       );
     }
-    console.log("getTotalForCalculation:", result, "previewOrder?.total_amount:", previewOrder?.total_amount, "domestic_shipping_fee:", orderData?.domestic_shipping_fee || 0);
+    
+    // 如果选择了运费险，计算运费险费用
+    if (isShippingInsuranceSelected) {
+      const insuranceFee = result * shippingInsuranceRate;
+      const displayCurrency = getDisplayCurrency();
+      
+      // 根据货币类型格式化运费险金额
+      let formattedInsuranceFee;
+      if (selectedPayment && (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) || displayCurrency === 'FCFA') {
+        // 本地货币四舍五入取整数
+        formattedInsuranceFee = Math.round(insuranceFee);
+      } else {
+        // 美金、欧元等保留两位小数
+        formattedInsuranceFee = Number(insuranceFee.toFixed(2));
+      }
+      
+      result = Number((result + formattedInsuranceFee).toFixed(2));
+    }
+    
     return result;
   };
 
   // Helper function to get the current display currency
   const getDisplayCurrency = () => {
+    let currency;
     if (!selectedPayment) {
-      return previewOrder?.currency || user.currency;
+      currency = previewOrder?.currency || user.currency;
+    } else if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
+      currency = getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
+    } else {
+      currency = previewOrder?.currency || user.currency;
     }
     
-    if (shouldShowConvertedAmount(selectedPayment, convertedAmount)) {
-      return getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
-    }
     
-    return previewOrder?.currency || user.currency;
+    return currency;
   };
 
   // Helper function to get currency symbol
@@ -508,6 +553,24 @@ export const PaymentMethod = () => {
     }
   };
 
+  // 获取运费险费率
+  const getInsuranceRate = async (currency: string) => {
+    try {
+      setInsuranceRateLoading(true);
+      const response = await insuranceApi.getInsuranceRate(currency);
+      
+      if (response.success) {
+        setShippingInsuranceRate(response.data.rate);
+      } else {
+        setShippingInsuranceRate(response.data.rate);
+      }
+    } catch (error) {
+      console.error("获取运费险费率失败:", error);
+    } finally {
+      setInsuranceRateLoading(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     
@@ -633,8 +696,20 @@ export const PaymentMethod = () => {
     if (canInitialize) {
       handleInitialPaymentSelection(selectedPayment);
       setHasInitializedCurrency(true);
+      
+      // 获取运费险费率
+      const displayCurrency = getDisplayCurrency();
+      getInsuranceRate(displayCurrency);
     }
   }, [selectedPayment, previewOrder, createOrderData, userLocalCurrency, hasInitializedCurrency]);
+
+  // 当显示货币变化时，重新获取运费险费率
+  useEffect(() => {
+    if (selectedPayment && previewOrder) {
+      const displayCurrency = getDisplayCurrency();
+      getInsuranceRate(displayCurrency);
+    }
+  }, [selectedPayment, selectedCurrency, userLocalCurrency]);
 
   // 当用户本地货币设置后，如果当前选择的是mobile money，重新进行货币转换
   // 注释掉这个 useEffect，因为它可能导致重复的货币转换
@@ -749,13 +824,62 @@ export const PaymentMethod = () => {
   // Set original total price when both previewOrder and orderData are available
   useEffect(() => {
     if (previewOrder && orderData && originalTotalPrice === 0) {
-      const originalTotal = 
+      let originalTotal = 
         (previewOrder.total_amount || 0) + 
         (orderData.domestic_shipping_fee || 0) + 
         (isCOD === 1 ? 0 : (orderData.shipping_fee || 0));
+      
+      // 如果选择了运费险，加入运费险费用
+      if (isShippingInsuranceSelected) {
+        const insuranceFee = originalTotal * shippingInsuranceRate;
+        const displayCurrency = getDisplayCurrency();
+        
+        // 根据货币类型格式化运费险金额
+        let formattedInsuranceFee;
+        if (selectedPayment && (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) || displayCurrency === 'FCFA') {
+          // 本地货币四舍五入取整数
+          formattedInsuranceFee = Math.round(insuranceFee);
+        } else {
+          // 美金、欧元等保留两位小数
+          formattedInsuranceFee = Number(insuranceFee.toFixed(2));
+        }
+        
+        originalTotal = Number((originalTotal + formattedInsuranceFee).toFixed(2));
+      }
+      
       setOriginalTotalPrice(originalTotal);
     }
-  }, [previewOrder, orderData, originalTotalPrice, isCOD]);
+  }, [previewOrder, orderData, originalTotalPrice, isCOD, isShippingInsuranceSelected, shippingInsuranceRate]);
+
+  // 当运费险选择状态改变时，重新计算原始总价
+  useEffect(() => {
+    if (previewOrder && orderData) {
+      let originalTotal = 
+        (previewOrder.total_amount || 0) + 
+        (orderData.domestic_shipping_fee || 0) + 
+        (isCOD === 1 ? 0 : (orderData.shipping_fee || 0));
+      
+      // 如果选择了运费险，加入运费险费用
+      if (isShippingInsuranceSelected) {
+        const insuranceFee = originalTotal * shippingInsuranceRate;
+        const displayCurrency = getDisplayCurrency();
+        
+        // 根据货币类型格式化运费险金额
+        let formattedInsuranceFee;
+        if (selectedPayment && (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment)) || displayCurrency === 'FCFA') {
+          // 本地货币四舍五入取整数
+          formattedInsuranceFee = Math.round(insuranceFee);
+        } else {
+          // 美金、欧元等保留两位小数
+          formattedInsuranceFee = Number(insuranceFee.toFixed(2));
+        }
+        
+        originalTotal = Number((originalTotal + formattedInsuranceFee).toFixed(2));
+      }
+      
+      setOriginalTotalPrice(originalTotal);
+    }
+  }, [isShippingInsuranceSelected, shippingInsuranceRate]);
 
   const handleSubmit = async () => {
     if (!selectedPayment) {
@@ -792,55 +916,58 @@ export const PaymentMethod = () => {
         return;
       }
     }
-    // 从购物车数据构建订单商品信息，包含正确的翻译字段
-    const items = [];
-    cartData.forEach((cartItem) => {
-      cartItem.skus.forEach((sku) => {
-        if (sku.selected === 1) {
-          // 计算换算后的单价和总价
-          let convertedUnitPrice = sku.price;
-          let convertedTotalPrice = sku.price * sku.quantity;
-          
-          // 如果是需要货币转换的支付方式且有转换数据
-          if (isConvertiblePayment(selectedPayment) && convertedAmount.length > 0) {
-            // 获取商品总额的转换比例
-            const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
-            const originalTotalAmount = previewOrder?.total_amount || 0;
+    // 检查是否是从OrderDetails跳转过来的（已存在订单）还是创建新订单
+    if (!(route.params?.orderId && route.params?.orderData)) {
+      // 创建新订单：从购物车数据构建订单商品信息，包含正确的翻译字段
+      const items = [];
+      cartData.forEach((cartItem) => {
+        cartItem.skus.forEach((sku) => {
+          if (sku.selected === 1) {
+            // 计算换算后的单价和总价
+            let convertedUnitPrice = sku.price;
+            let convertedTotalPrice = sku.price * sku.quantity;
             
-            if (originalTotalAmount > 0) {
-              const conversionRate = totalConvertedAmount / originalTotalAmount;
-              convertedUnitPrice = Number((sku.price * conversionRate).toFixed(2));
-              convertedTotalPrice = Number((sku.price * sku.quantity * conversionRate).toFixed(2));
+            // 如果是需要货币转换的支付方式且有转换数据
+            if (isConvertiblePayment(selectedPayment) && convertedAmount.length > 0) {
+              // 获取商品总额的转换比例
+              const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
+              const originalTotalAmount = previewOrder?.total_amount || 0;
+              
+              if (originalTotalAmount > 0) {
+                const conversionRate = totalConvertedAmount / originalTotalAmount;
+                convertedUnitPrice = Number((sku.price * conversionRate).toFixed(2));
+                convertedTotalPrice = Number((sku.price * sku.quantity * conversionRate).toFixed(2));
+              }
             }
+            
+            items.push({
+              offer_id: String(cartItem.offer_id),
+              cart_item_id: sku.cart_item_id,
+              sku_id: String(sku.sku_id),
+              product_name: cartItem.subject_trans || cartItem.subject, // 使用翻译字段
+              product_name_en: cartItem.subject_trans_en || '',
+              product_name_ar: cartItem.subject_trans_ar || '',
+              product_name_fr: cartItem.subject_trans || cartItem.subject, // subject_trans是法语
+              sku_attributes: sku.attributes.map((attr) => ({
+                attribute_name: attr.attribute_name,
+                attribute_name_trans: attr.attribute_name_trans,
+                attribute_name_trans_en: attr.attribute_name_trans_en,
+                attribute_name_trans_ar: attr.attribute_name_trans_ar,
+                attribute_value: attr.value,
+                attribute_value_trans: attr.value_trans,
+                attribute_value_trans_en: attr.value_trans_en,
+                attribute_value_trans_ar: attr.value_trans_ar,
+              })),
+              sku_image: sku.attributes[0]?.sku_image_url || cartItem.product_image,
+              quantity: sku.quantity,
+              unit_price: convertedUnitPrice,
+              total_price: convertedTotalPrice,
+            });
           }
-          
-          items.push({
-            offer_id: String(cartItem.offer_id),
-            cart_item_id: sku.cart_item_id,
-            sku_id: String(sku.sku_id),
-            product_name: cartItem.subject_trans || cartItem.subject, // 使用翻译字段
-            product_name_en: cartItem.subject_trans_en || '',
-            product_name_ar: cartItem.subject_trans_ar || '',
-            product_name_fr: cartItem.subject_trans || cartItem.subject, // subject_trans是法语
-            sku_attributes: sku.attributes.map((attr) => ({
-              attribute_name: attr.attribute_name,
-              attribute_name_trans: attr.attribute_name_trans,
-              attribute_name_trans_en: attr.attribute_name_trans_en,
-              attribute_name_trans_ar: attr.attribute_name_trans_ar,
-              attribute_value: attr.value,
-              attribute_value_trans: attr.value_trans,
-              attribute_value_trans_en: attr.value_trans_en,
-              attribute_value_trans_ar: attr.value_trans_ar,
-            })),
-            sku_image: sku.attributes[0]?.sku_image_url || cartItem.product_image,
-            quantity: sku.quantity,
-            unit_price: convertedUnitPrice,
-            total_price: convertedTotalPrice,
-          });
-        }
+        });
       });
-    });
-    if (createOrderData) {
+      
+      if (createOrderData) {
       createOrderData.items = items;
       createOrderData.payment_method = selectedPayment;
       createOrderData.total_amount = shouldShowConvertedAmount(selectedPayment, convertedAmount)
@@ -858,34 +985,113 @@ export const PaymentMethod = () => {
         : getShippingFeeForCalculation();
       // 添加is_cod参数
       createOrderData.is_cod = isCOD;
+      // 添加运费险参数
+      createOrderData.is_protection = isShippingInsuranceSelected ? 1 : 0;
+      
+      // 计算运费险金额（基础金额不含运费险费用）
+      let baseAmountWithoutInsurance;
+      if (isCOD === 1) {
+        // COD情况：不计入国际运费
+        baseAmountWithoutInsurance = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+          ? (getConvertedAmountByKey(convertedAmount, "total_amount") + getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee"))
+          : ((previewOrder?.total_amount || 0) + (orderData?.domestic_shipping_fee || 0));
+      } else {
+        // 非COD情况：包含所有费用
+        baseAmountWithoutInsurance = shouldShowConvertedAmount(selectedPayment, convertedAmount)
+          ? (getConvertedAmountByKey(convertedAmount, "total_amount") + getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee") + getConvertedShippingFeeForCalculation())
+          : ((previewOrder?.total_amount || 0) + (orderData?.domestic_shipping_fee || 0) + getShippingFeeForCalculation());
+      }
+      
+      // 运费险金额 = 基础金额（不含运费险）* 费率
+      if (isShippingInsuranceSelected) {
+        const insuranceAmount = baseAmountWithoutInsurance * shippingInsuranceRate;
+        const targetCurrency = getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
+        
+        // 根据货币类型格式化运费险金额
+        if (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment) || targetCurrency === 'FCFA') {
+          // 本地货币（FCFA等）四舍五入取整数
+          createOrderData.protection_amount = Math.round(insuranceAmount);
+        } else {
+          // 美金、欧元等保留两位小数
+          createOrderData.protection_amount = Number(insuranceAmount.toFixed(2));
+        }
+      } else {
+        createOrderData.protection_amount = 0;
+      }
+      
     }
     setOrderData(createOrderData || {});
 
-
     setCreateLoading(true);
 
-    // 检查是否是从OrderDetails跳转过来的（已存在订单）
-    if (route.params?.orderId && route.params?.orderData) {
+    // 原有的创建新订单逻辑
+    ordersApi
+      .createOrder(createOrderData as unknown as CreateOrderRequest)
+      .then((res) => {
+        
+        setCreateLoading(false);
+        
+        // 准备结账事件数据
+        const checkoutEventData = {
+          pay_method: selectedPayment,
+          offline_payment: currentTab === "offline" ? 1 : 0,
+          total_price: createOrderData.total_amount,
+          total_quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+          currency: createOrderData.currency,
+          sku_details: items.map(item => ({
+            sku_id: item.sku_id,
+            price: item.unit_price,
+            quantity: item.quantity,
+            sku_img: item.sku_image_url
+          })),
+          shipping_fee: createOrderData.shipping_fee || 0,
+          domestic_shipping_fee: createOrderData.domestic_shipping_fee || 0
+        };
+        
+        analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
+        
+        // 记录 Facebook InitiateCheckout 事件
+        logInitiateCheckoutEvent(
+          {
+            orderId: res.order_id, // 新创建的订单ID
+            totalPrice: createOrderData.total_amount,
+            totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+            currency: createOrderData.currency,
+            offlinePayment: currentTab === "offline",
+            shippingFee: createOrderData.shipping_fee || 0,
+            domesticShippingFee: createOrderData.domestic_shipping_fee || 0
+          },
+          checkoutEventData.sku_details,
+          selectedPayment
+        );
+        
+        // go to payment preview
+        navigation.navigate("PreviewOrder", {
+          data: res,
+          payMethod: selectedPayment,
+          currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
+        });
+      })
+      .catch((error) => {
+        setCreateLoading(false);
+        console.error("=== 创建订单失败 ===");
+        console.error("错误详情:", error);
+        
+        let errorMessage = "创建订单失败";
+        if (error.status === 422) {
+          errorMessage = "数据验证失败，请检查订单信息";
+        }
+        
+        Alert.alert("错误", errorMessage);
+      });
+    
+    } else {
       // 更新现有订单的支付方式
-      console.log("=== 订单更新调试日志 ===");
-      console.log("订单ID:", route.params.orderId);
-      console.log("原始订单数据:", JSON.stringify(route.params.orderData, null, 2));
-      console.log("选择的支付方式:", selectedPayment);
-      console.log("选择的货币:", selectedCurrency);
-      console.log("用户本地货币:", userLocalCurrency);
-      console.log("用户货币:", user.currency);
-      console.log("是否需要货币转换:", isConvertiblePayment(selectedPayment));
-      console.log("转换金额数据:", JSON.stringify(convertedAmount, null, 2));
       
       // 准备更新的商品价格数据
       const updatedItems = route.params.orderData.items?.map((item: any, index: number) => {
         let convertedUnitPrice = item.unit_price;
         let convertedTotalPrice = item.total_price;
-        
-        console.log(`\n--- 商品 ${index + 1} ---`);
-        console.log("商品ID:", item.order_item_id);
-        console.log("原始单价:", item.unit_price);
-        console.log("原始总价:", item.total_price);
         
         // 如果是需要货币转换的支付方式且有转换数据
         if (isConvertiblePayment(selectedPayment) && convertedAmount.length > 0) {
@@ -893,18 +1099,11 @@ export const PaymentMethod = () => {
           const totalConvertedAmount = getConvertedAmountByKey(convertedAmount, "total_amount");
           const originalTotalAmount = previewOrder?.total_amount || 0;
           
-          console.log("转换后的总金额:", totalConvertedAmount);
-          console.log("原始总金额:", originalTotalAmount);
-          
           if (originalTotalAmount > 0) {
             const conversionRate = totalConvertedAmount / originalTotalAmount;
-            console.log("转换比率:", conversionRate);
             
             convertedUnitPrice = Number((item.unit_price * conversionRate).toFixed(2));
             convertedTotalPrice = Number((item.total_price * conversionRate).toFixed(2));
-            
-            console.log("转换后单价:", convertedUnitPrice);
-            console.log("转换后总价:", convertedTotalPrice);
           }
         }
         
@@ -918,10 +1117,40 @@ export const PaymentMethod = () => {
       const targetCurrency = getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency);
       const shouldShowConverted = shouldShowConvertedAmount(selectedPayment, convertedAmount);
       
-      console.log("\n=== 支付数据构建 ===");
-      console.log("目标货币:", targetCurrency);
-      console.log("是否显示转换金额:", shouldShowConverted);
       
+      // 计算运费险参数
+      
+      const is_protection = isShippingInsuranceSelected ? 1 : 0;
+      let protection_amount = 0;
+      
+      if (isShippingInsuranceSelected) {
+        // 计算基础金额（不含运费险）
+        let baseAmountWithoutInsurance;
+        if (isCOD === 1) {
+          // COD情况：不计入国际运费
+          baseAmountWithoutInsurance = shouldShowConverted
+            ? (getConvertedAmountByKey(convertedAmount, "total_amount") + getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee"))
+            : ((previewOrder?.total_amount || 0) + (route.params.orderData.domestic_shipping_fee || 0));
+        } else {
+          // 非COD情况：包含所有费用
+          baseAmountWithoutInsurance = shouldShowConverted
+            ? (getConvertedAmountByKey(convertedAmount, "total_amount") + getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee") + getConvertedShippingFeeForCalculation())
+            : ((previewOrder?.total_amount || 0) + (route.params.orderData.domestic_shipping_fee || 0) + getShippingFeeForCalculation());
+        }
+        
+        const insuranceAmount = baseAmountWithoutInsurance * shippingInsuranceRate;
+        
+        // 根据货币类型格式化运费险金额
+        if (isMobileMoneyPayment(selectedPayment) || isWavePayment(selectedPayment) || isBalancePayment(selectedPayment) || targetCurrency === 'FCFA') {
+          // 本地货币（FCFA等）四舍五入取整数
+          protection_amount = Math.round(insuranceAmount);
+        } else {
+          // 美金、欧元等保留两位小数
+          protection_amount = Number(insuranceAmount.toFixed(2));
+        }
+      }
+      
+
       const paymentData = {
         order_id: route.params.orderId,
         payment_method: selectedPayment,
@@ -938,15 +1167,15 @@ export const PaymentMethod = () => {
         domestic_shipping_fee: shouldShowConverted
           ? getConvertedAmountByKey(convertedAmount, "domestic_shipping_fee")
           : route.params.orderData.domestic_shipping_fee || 0,
+        is_protection: is_protection,
+        protection_amount: protection_amount,
         items: updatedItems,
       };
       
-      console.log("最终支付数据:", JSON.stringify(paymentData, null, 2));
 
       ordersApi
         .updateOrderPaymentMethod(paymentData)
         .then(() => {
-          console.log("\n=== 订单更新成功 ===");
           setCreateLoading(false);
           
           // 更新订单数据中的商品价格
@@ -965,8 +1194,6 @@ export const PaymentMethod = () => {
             })),
           };
           
-          console.log("更新后的订单数据:", JSON.stringify(updatedOrderData, null, 2));
-          console.log("\n=== 准备跳转到预览页面 ===");
           
           // 准备结账事件数据
           const checkoutEventData = {
@@ -1011,70 +1238,9 @@ export const PaymentMethod = () => {
           });
         })
         .catch((error) => {
-          console.error("=== 订单更新失败 ===");
-          console.error("错误信息:", error);
+          console.error("订单更新失败:", error);
           setCreateLoading(false);
           Alert.alert("错误", "更新支付方式失败");
-        });
-    } else {
-      // 原有的创建新订单逻辑
-      ordersApi
-        .createOrder(createOrderData as unknown as CreateOrderRequest)
-        .then((res) => {
-          setCreateLoading(false);
-          
-          // 准备结账事件数据
-          const checkoutEventData = {
-            pay_method: selectedPayment,
-            offline_payment: currentTab === "offline" ? 1 : 0,
-            total_price: createOrderData.total_amount,
-            total_quantity: items.reduce((sum, item) => sum + item.quantity, 0),
-            currency: createOrderData.currency,
-            sku_details: items.map(item => ({
-              sku_id: item.sku_id,
-              price: item.unit_price,
-              quantity: item.quantity,
-              sku_img: item.sku_image_url
-            })),
-            shipping_fee: createOrderData.shipping_fee || 0,
-            domestic_shipping_fee: createOrderData.domestic_shipping_fee || 0
-          };
-          
-          analyticsStore.logInitiateCheckout(checkoutEventData, "payment");
-          
-          // 记录 Facebook InitiateCheckout 事件
-          logInitiateCheckoutEvent(
-            {
-              orderId: res.order_id, // 新创建的订单ID
-              totalPrice: createOrderData.total_amount,
-              totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
-              currency: createOrderData.currency,
-              offlinePayment: currentTab === "offline",
-              shippingFee: createOrderData.shipping_fee || 0,
-              domesticShippingFee: createOrderData.domestic_shipping_fee || 0
-            },
-            checkoutEventData.sku_details,
-            selectedPayment
-          );
-          
-          // go to payment preview
-          navigation.navigate("PreviewOrder", {
-            data: res,
-            payMethod: selectedPayment,
-            currency: getTargetCurrency(selectedPayment, selectedCurrency, userLocalCurrency, user.currency),
-          });
-        })
-        .catch((error) => {
-          setCreateLoading(false);
-          console.error("=== 创建订单失败 ===");
-          console.error("错误详情:", error);
-          
-          let errorMessage = "创建订单失败";
-          if (error.status === 422) {
-            errorMessage = "数据验证失败，请检查订单信息";
-          }
-          
-          Alert.alert("错误", errorMessage);
         });
     }
   };
@@ -1286,6 +1452,14 @@ export const PaymentMethod = () => {
                     )}
                   </View>
                 </View>
+                
+                {/* 运费险组件 */}
+                <ShippingInsurance
+                  isSelected={isShippingInsuranceSelected}
+                  onToggle={setIsShippingInsuranceSelected}
+                  fee={shippingInsuranceRate}
+                  currency={getDisplayCurrency()}
+                />
               </View>
               {/* 实际支付金额 */}
               <View style={styles.actualPaymentBox}>

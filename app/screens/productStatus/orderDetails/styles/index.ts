@@ -967,4 +967,39 @@ export const styles = StyleSheet.create<Styles>({
     color: "#999",
     lineHeight: fontSize(18),
   },
+  
+  // 运费险样式
+  shippingInsuranceContainer: {
+    marginTop: 8,
+    borderWidth: 2,
+    borderColor: "#4CAF50",
+    borderRadius: 8,
+    backgroundColor: "#f8fff8",
+    padding: 12,
+  },
+  shippingInsuranceContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  shippingInsuranceIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FF5722",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  shippingInsuranceText: {
+    fontSize: fontSize(14),
+    fontWeight: "500",
+    color: "#333",
+    flex: 1,
+  },
+  shippingInsuranceAmount: {
+    fontSize: fontSize(14),
+    fontWeight: "600",
+    color: "#333",
+  },
 }); 

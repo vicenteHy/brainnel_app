@@ -391,6 +391,23 @@ export const OrderDetails = () => {
                             {orderDetails.shipping_fee} {orderDetails.currency}
                           </Text>
                         </View>
+                        {orderDetails.is_protection === 1 && (
+                          <View style={styles.shippingInsuranceContainer}>
+                            <View style={styles.shippingInsuranceContent}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <View style={styles.shippingInsuranceIcon}>
+                                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                                </View>
+                                <Text style={styles.shippingInsuranceText}>
+                                  {t("order.shipping_insurance") || "运费险"}
+                                </Text>
+                              </View>
+                              <Text style={styles.shippingInsuranceAmount}>
+                                {orderDetails.protection_amount} {orderDetails.currency}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
                         {orderDetails.is_cod === 1 && (
                           <View style={styles.cashOnDeliveryTagContainer}>
                             <View style={styles.cashOnDeliveryTag}>

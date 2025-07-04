@@ -20,22 +20,22 @@ export const ShippingInsurance: React.FC<ShippingInsuranceProps> = ({
   const [showExplainModal, setShowExplainModal] = useState(false);
 
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={() => onToggle(!isSelected)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.checkboxContainer}>
+    <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.checkboxContainer}
+        onPress={() => onToggle(!isSelected)}
+        activeOpacity={0.7}
+      >
         <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
         </View>
-      </View>
+      </TouchableOpacity>
       
       <View style={styles.contentContainer}>
         <View style={styles.titleRow}>
           <Text style={styles.title}>{t('shipping_insurance.title')}</Text>
           <Text style={styles.fee}>
-            {t('shipping_insurance.fee_prefix')}{fee.toFixed(2)} {t('shipping_insurance.fee_suffix')}
+            +{(fee * 100).toFixed(0)}% {currency}
           </Text>
         </View>
         
@@ -55,7 +55,7 @@ export const ShippingInsurance: React.FC<ShippingInsuranceProps> = ({
         visible={showExplainModal}
         onClose={() => setShowExplainModal(false)}
       />
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   learnMoreButton: {
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   learnMoreText: {
     fontSize: 14,

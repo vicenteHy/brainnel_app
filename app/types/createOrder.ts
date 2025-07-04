@@ -58,6 +58,14 @@ export interface createOrderDataType {
      * Is COD，是否货到付款 (0=非COD，1=COD)
      */
     is_cod?: number | null;
+    /**
+     * Is Protection，是否选择运费险 (0=未选择，1=已选择)
+     */
+    is_protection?: number | null;
+    /**
+     * Protection Amount，运费险金额
+     */
+    protection_amount?: number | null;
     [property: string]: any;
 }
 

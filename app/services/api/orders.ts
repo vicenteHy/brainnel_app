@@ -155,6 +155,8 @@ export interface CreateOrderRequest {
   receiver_address: string;
   shipping_type?: number; // 运输方式 0-海运 1-空运
   is_cod?: number;
+  is_protection?: number; // 是否选择运费险 0-未选择 1-已选择
+  protection_amount?: number; // 运费险金额
 }
 
 // 创建订单响应类型
@@ -336,6 +338,8 @@ export interface OrderDetailsType {
   verification_code?: string; // 取件码
   location_code?: string; // 货架号
   is_cod?: number; // COD标记，0=非COD，1=COD
+  is_protection?: number; // 是否选择运费险 0-未选择 1-已选择
+  protection_amount?: number; // 运费险金额
 }
 export interface UpdateOrderShippingInfo {
   shipping_status: number;
@@ -353,6 +357,8 @@ export interface UpdateOrderPaymentMethod {
   actual_amount: number;
   shipping_fee: number;
   domestic_shipping_fee: number;
+  is_protection?: number; // 是否选择运费险 0-未选择 1-已选择
+  protection_amount?: number; // 运费险金额
   items?: {
     order_item_id: string;
     unit_price: number;
