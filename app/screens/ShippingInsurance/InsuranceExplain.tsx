@@ -388,7 +388,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
- 
+  footer: {
+    paddingTop: 0,
+  },
   shopButton: {
     backgroundColor: '#FF5100',
     borderRadius: 25,
