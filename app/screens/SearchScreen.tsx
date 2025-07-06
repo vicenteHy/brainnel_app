@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -111,6 +111,16 @@ export const SearchScreen = () => {
       loadHotTerms();
     }, [loadHotTerms])
   );
+
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('search', 'home');
+    
+    return () => {
+      analyticsStore.logPageLeave('search');
+    };
+  }, []);
 
   // 从AsyncStorage加载搜索历史 - 优化异步操作
   const loadSearchHistory = async () => {

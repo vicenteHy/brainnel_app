@@ -610,6 +610,16 @@ export const ImageSearchResultScreen = ({
     return <View style={styles.footerSpace} />;
   }, [loadingMore, hasMore, t]);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('image_search_result', 'home');
+    
+    return () => {
+      analyticsStore.logPageLeave('image_search_result');
+    };
+  }, []);
+
   // 只在组件加载时执行一次搜索
   useEffect(() => {
     console.log("useEffect: imageUri", imageUri);

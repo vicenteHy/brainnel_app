@@ -1315,7 +1315,7 @@
       "title": "La protection des colis vaut-elle la peine ?",
       "without_protection": "Sans protection",
       "with_protection": "Avec protection",
-      "we_will_refund": "Nous vous rembourserons !",
+      "we_will_refund": "Remboursement !",
       "scenarios": {
         "lost_by_carrier": "Colis perdu par le transporteur",
         "received_wrong_item": "Article reçu incorrect",

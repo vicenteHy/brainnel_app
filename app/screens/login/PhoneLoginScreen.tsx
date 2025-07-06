@@ -105,6 +105,16 @@ export const PhoneLoginScreen = () => {
     return () => clearTimeout(timer);
   }, [resendCountdown, canResend]);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('phone_login', 'login_list');
+    
+    return () => {
+      analyticsStore.logPageLeave('phone_login');
+    };
+  }, []);
+
   const handleBack = () => {
     navigation.goBack();
   };

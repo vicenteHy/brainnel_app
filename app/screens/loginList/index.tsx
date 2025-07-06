@@ -107,6 +107,16 @@ export const LoginScreen = () => {
     loadSavedCountry();
   }, []);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('login_list', 'app');
+    
+    return () => {
+      analyticsStore.logPageLeave('login_list');
+    };
+  }, []);
+
   // 关闭主屏幕
   const handleClose = () => {
     navigation.goBack();

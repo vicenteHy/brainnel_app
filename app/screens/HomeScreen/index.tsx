@@ -95,10 +95,15 @@ export const HomeScreen = () => {
   const categoryPositionsRef = useRef<Map<number, number>>(new Map());
   const isScrollingRef = useRef(false); // 防止重复滚动的标志位
 
-  // 组件挂载日志
+  // 组件挂载日志和页面访问记录
   useEffect(() => {
+    // 记录页面访问
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('home', 'app_launch');
     
     return () => {
+      // 记录页面离开
+      analyticsStore.logPageLeave('home');
     };
   }, []);
 

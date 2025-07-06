@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from 'react-i18next';
 import useCartStore from "../../store/cartStore";
 import useUserStore from "../../store/user";
+import useAnalyticsStore from "../../store/analytics";
 import {
   ProductHeader,
   ProductImageCarousel,
@@ -76,6 +77,17 @@ export default function ProductDetailScreen() {
       updateCartItemCount();
     }
   }, [user?.user_id]);
+
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    const fromPage = route.params?.searchKeyword ? 'search' : 'home';
+    analyticsStore.logPageView('product_detail', fromPage);
+    
+    return () => {
+      analyticsStore.logPageLeave('product_detail');
+    };
+  }, []);
 
   // 添加浏览记录和 Facebook ViewContent 事件
   useEffect(() => {

@@ -84,6 +84,16 @@ export const CartScreen = () => {
     }, [user_id])
   );
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('cart', 'home');
+    
+    return () => {
+      analyticsStore.logPageLeave('cart');
+    };
+  }, []);
+
   // 监听设置变更事件，刷新购物车数据以更新价格和货币
   useEffect(() => {
     const handleSettingsChanged = () => {

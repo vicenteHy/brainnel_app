@@ -54,6 +54,17 @@ export const CategoryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [subLoading, setSubLoading] = useState(false);
   const analyticsData = useAnalyticsStore.getState();
+  
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('category', 'home');
+    
+    return () => {
+      analyticsStore.logPageLeave('category');
+    };
+  }, []);
+  
   useEffect(() => {
     fetchMainCategories();
   }, []);

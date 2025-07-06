@@ -78,6 +78,17 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     handleRefresh,
   } = useSearchProducts();
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    const fromPage = route.params?.keyword ? 'search' : 'category';
+    analyticsStore.logPageView('search_result', fromPage);
+    
+    return () => {
+      analyticsStore.logPageLeave('search_result');
+    };
+  }, []);
+
   useEffect(() => {
     if (route.params?.keyword) {
       setSearchText(route.params.keyword);

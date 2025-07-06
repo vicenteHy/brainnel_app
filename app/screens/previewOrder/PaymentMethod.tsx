@@ -117,6 +117,16 @@ export const PaymentMethod = () => {
     };
   }, []);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('payment_method', 'cart');
+    
+    return () => {
+      analyticsStore.logPageLeave('payment_method');
+    };
+  }, []);
+
   // 自定义弹窗状态
   const [alertModal, setAlertModal] = useState<AlertModalState>({
     visible: false,

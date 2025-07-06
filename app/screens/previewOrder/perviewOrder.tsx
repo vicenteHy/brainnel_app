@@ -111,6 +111,17 @@ export const PreviewOrder = () => {
     }
   }, [route.params.payMethod, user.user_id, t]);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    const fromPage = route.params.fromOrderDetails ? 'order_details' : 'cart';
+    analyticsStore.logPageView('preview_order', fromPage);
+    
+    return () => {
+      analyticsStore.logPageLeave('preview_order');
+    };
+  }, []);
+
   // 重新验证电话号码（当国家数据加载完成后调用）
   const revalidatePhoneNumber = () => {
     if (phoneNumber && phoneNumber.length > 0) {

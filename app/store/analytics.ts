@@ -73,8 +73,8 @@ type CheckoutProperty = {
 
 // 定义页面浏览属性类型
 type PageViewProperty = {
-  page_name: string;
   duration?: number; // 页面停留时长（秒）
+  referrer_page?: string; // 来源页面
   timestamp: string;
 };
 
@@ -90,6 +90,7 @@ type ErrorProperty = {
 // 定义会话事件属性类型
 type SessionProperty = {
   session_duration: number; // 会话时长（秒）
+  page_count: number; // 访问的页面数
   timestamp: string;
 };
 
@@ -131,6 +132,7 @@ type AnalyticsState = {
   isOnline: boolean;
   sessionStartTime: number;
   pageStartTimes: Map<string, number>;
+  pageReferrers: Map<string, string>; // 存储每个页面的来源页面
   visitedPageCount: number;
   addEvent: (event: AnalyticsEvent) => void;
   startTimer: () => void;
@@ -183,9 +185,9 @@ const getEventKeyInfo = (event: any): string => {
     case 'addToCart':
       return `商品: ${props.product_name || 'N/A'} x${props.quantity || 1}`;
     case 'page_view':
-      return `进入页面: ${event.page_name}`;
-    case 'page_leave':
-      return `离开页面: ${event.page_name}, 停留: ${props.duration}秒`;
+      return props.duration 
+        ? `页面访问: ${event.page_name}, 停留: ${props.duration}秒`
+        : `进入页面: ${event.page_name}`;
     case 'session_end':
       return `会话结束: ${props.session_duration}秒`;
     case 'error':
@@ -200,7 +202,7 @@ const getEventKeyInfo = (event: any): string => {
 // 统一的埋点调试日志函数
 const logAnalyticsDebug = (eventName: string, data: any, context?: string) => {
   // 埋点调试开关 - 设置为 true 开启调试日志，false 关闭
-  const ANALYTICS_DEBUG = false;
+  const ANALYTICS_DEBUG = true;
   
   if (ANALYTICS_DEBUG) {
     if (eventName === 'data_sent') {
@@ -282,6 +284,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
     isOnline: true,
     sessionStartTime: Date.now(),
     pageStartTimes: new Map<string, number>(),
+    pageReferrers: new Map<string, string>(),
     visitedPageCount: 0,
 
     // 加载持久化数据
@@ -583,56 +586,56 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       set({ event_list: [] });
     },
 
-    // 记录页面浏览开始
+    // 记录页面浏览开始（不立即发送事件）
     logPageView: (pageName: string, fromPage = "unknown") => {
       const startTime = Date.now();
-      set(state => ({
-        pageStartTimes: new Map(state.pageStartTimes).set(pageName, startTime),
-        visitedPageCount: state.visitedPageCount + 1,
-      }));
+      set(state => {
+        const newPageStartTimes = new Map(state.pageStartTimes).set(pageName, startTime);
+        const newPageReferrers = new Map(state.pageReferrers).set(pageName, fromPage);
+        return {
+          pageStartTimes: newPageStartTimes,
+          pageReferrers: newPageReferrers,
+          visitedPageCount: state.visitedPageCount + 1,
+        };
+      });
 
-      const eventProperties = {
-        timestamp: getCurrentFormattedTime(),
-      };
-
-      const pageViewEvent: AnalyticsEvent = {
-        event_name: "page_view",
-        page_name: pageName,
-        referrer_page: fromPage,
-        event_properties: [eventProperties],
-      };
-
-      logAnalyticsDebug("page_view", eventProperties, `进入页面 - ${pageName} (来源: ${fromPage})`);
-      get().addEvent(pageViewEvent);
+      logAnalyticsDebug("page_view_start", { page_name: pageName, referrer_page: fromPage }, `开始访问页面 - ${pageName} (来源: ${fromPage})`);
     },
 
-    // 记录页面离开（计算停留时长）
+    // 记录页面离开（发送包含停留时长的page_view事件）
     logPageLeave: (pageName: string) => {
       const state = get();
       const startTime = state.pageStartTimes.get(pageName);
+      const referrerPage = state.pageReferrers.get(pageName);
       
       if (startTime) {
         const duration = Math.round((Date.now() - startTime) / 1000); // 转换为秒
         
-        const eventProperties = {
+        const eventProperties: PageViewProperty = {
           duration,
+          referrer_page: referrerPage,
           timestamp: getCurrentFormattedTime(),
         };
 
-        const pageLeaveEvent: AnalyticsEvent = {
-          event_name: "page_leave",
+        const pageViewEvent: AnalyticsEvent = {
+          event_name: "page_view",
           page_name: pageName,
-          referrer_page: null,
+          referrer_page: referrerPage || null,
           event_properties: [eventProperties],
         };
 
-        logAnalyticsDebug("page_leave", eventProperties, `离开页面 - ${pageName} (停留时长: ${duration}秒)`);
-        get().addEvent(pageLeaveEvent);
+        logAnalyticsDebug("page_view", eventProperties, `页面访问完成 - ${pageName} (来源: ${referrerPage}, 停留时长: ${duration}秒)`);
+        get().addEvent(pageViewEvent);
         
-        // 清除页面开始时间
+        // 清除页面开始时间和来源页面
         const newPageStartTimes = new Map(state.pageStartTimes);
+        const newPageReferrers = new Map(state.pageReferrers);
         newPageStartTimes.delete(pageName);
-        set({ pageStartTimes: newPageStartTimes });
+        newPageReferrers.delete(pageName);
+        set({ 
+          pageStartTimes: newPageStartTimes,
+          pageReferrers: newPageReferrers
+        });
       }
     },
 
@@ -667,6 +670,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       
       const eventProperties = {
         session_duration: sessionDuration,
+        page_count: state.visitedPageCount,
         timestamp: getCurrentFormattedTime(),
       };
 
@@ -677,7 +681,7 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
         event_properties: [eventProperties],
       };
 
-      logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒`);
+      logAnalyticsDebug("session_end", eventProperties, `会话结束 - 时长: ${sessionDuration}秒, 访问页面数: ${state.visitedPageCount}`);
       get().addEvent(sessionEndEvent);
       
       // 立即发送会话结束事件

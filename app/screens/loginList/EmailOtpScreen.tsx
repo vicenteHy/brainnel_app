@@ -62,6 +62,16 @@ export const EmailOtpScreen = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 页面访问统计
+  useEffect(() => {
+    const analyticsStore = useAnalyticsStore.getState();
+    analyticsStore.logPageView('email_otp', 'login_list');
+    
+    return () => {
+      analyticsStore.logPageLeave('email_otp');
+    };
+  }, []);
+
   // 处理登录设置检查（使用新的通用函数）
   const handleFirstLoginSettings = async (loginResponse: any) => {
     await handleLoginSettingsCheck(loginResponse, 'email');
