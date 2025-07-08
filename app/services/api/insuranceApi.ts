@@ -1,4 +1,3 @@
-import { apiClient } from './apiClient';
 import { API_BASE_URL } from '../../constants/config';
 
 export interface InsuranceRateResponse {

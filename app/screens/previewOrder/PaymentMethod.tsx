@@ -954,10 +954,10 @@ export const PaymentMethod = () => {
               offer_id: String(cartItem.offer_id),
               cart_item_id: sku.cart_item_id,
               sku_id: String(sku.sku_id),
-              product_name: cartItem.subject_trans || cartItem.subject, // 使用翻译字段
+              product_name: cartItem.subject, // 使用中文原始名称
               product_name_en: cartItem.subject_trans_en || '',
               product_name_ar: cartItem.subject_trans_ar || '',
-              product_name_fr: cartItem.subject_trans || cartItem.subject, // subject_trans是法语
+              product_name_fr: cartItem.subject_trans || '', // 只传递法语翻译
               sku_attributes: sku.attributes.map((attr) => ({
                 attribute_name: attr.attribute_name,
                 attribute_name_trans: attr.attribute_name_trans,

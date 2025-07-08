@@ -127,6 +127,7 @@ export const ShippingFee = () => {
           const data = {
             items: items,
             freight_forwarder_address_id: firstItem.address_id,
+            is_cod: route.params?.isCOD,
           };
           calculateAllShippingFees(data);
         }
@@ -169,6 +170,7 @@ export const ShippingFee = () => {
           const data = {
             items: items,
             freight_forwarder_address_id: selected.address_id,
+            is_cod: route.params?.isCOD,
           };
           // 使用统一的计算方法
           calculateAllShippingFees(data);

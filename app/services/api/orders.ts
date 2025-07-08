@@ -105,6 +105,7 @@ export interface ShippingFeeData {
     cart_item_id: number;
   }[];
   freight_forwarder_address_id: number;
+  is_cod?: number;
 }
 
 interface CartShippingFeeItem {
