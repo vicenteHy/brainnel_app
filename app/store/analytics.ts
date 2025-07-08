@@ -194,6 +194,8 @@ const getEventKeyInfo = (event: any): string => {
       return `错误: ${props.error_message}`;
     case 'batch_trigger':
       return `批量发送触发: ${props.event_count}个事件`;
+    case 'initiate_checkout':
+      return `开始结账 - 支付方式: ${props.pay_method || 'N/A'}, 金额: ${props.total_price || 0} ${props.currency || 'N/A'}`;
     default:
       return `事件类型: ${event.event_name}`;
   }
@@ -262,11 +264,17 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
   });
   
   // 监听应用状态变化
+  let appState = AppState.currentState;
   AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-    if (nextAppState === 'background') {
+    if (appState.match(/active/) && nextAppState === 'background') {
       // 应用进入后台时记录会话结束并发送数据
       get().logSessionEnd();
+    } else if (appState === 'background' && nextAppState === 'active') {
+      // 应用从后台回到前台时，会话相关状态已在 logSessionEnd 中重置
+      // 新会话会自动开始，无需额外处理
+      logAnalyticsDebug('session_resumed', {}, '应用回到前台，新会话开始');
     }
+    appState = nextAppState;
   });
 
   // 初始化设备ID
@@ -686,6 +694,14 @@ const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       
       // 立即发送会话结束事件
       setTimeout(() => get().sendDataWithRetry(), 0);
+      
+      // 重置会话相关状态，为下次会话做准备
+      set({
+        sessionStartTime: Date.now(),
+        visitedPageCount: 0,
+        pageStartTimes: new Map<string, number>(),
+        pageReferrers: new Map<string, string>()
+      });
     },
 
     // 记录开始结账事件

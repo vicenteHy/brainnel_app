@@ -388,29 +388,6 @@ export const PreviewOrder = () => {
         }),
     };
 
-    // 准备支付结账埋点数据的基础信息
-    const prepareCheckoutData = (success: number) => ({
-      is_suc: success,
-      all_price: route.params.data.actual_amount,
-      currency: route.params.currency ? route.params.currency : route.params.data.currency,
-      shipping_method: orderData?.transport_type || 0,
-      shipping_price_outside: route.params.data.shipping_fee || 0,
-      shipping_price_within: route.params.data.domestic_shipping_fee || 0,
-      pay_product: JSON.stringify({
-        order_id: route.params.data.order_id,
-        payment_method: route.params.payMethod,
-        items: route.params.data.items?.map(item => ({
-          offer_id: item.offer_id,
-          sku_id: item.sku_id,
-          product_name: item.product_name,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-        })) || [],
-        phone_number: formattedPhone || undefined,
-      }),
-      timestamp: new Date().toISOString(),
-    });
 
     setLoading(true);
 
@@ -532,12 +509,6 @@ export const PreviewOrder = () => {
       .catch((err) => {
         setLoading(false);
         
-        // 支付请求失败的埋点数据收集
-        const checkoutErrorData = prepareCheckoutData(0);
-        const analyticsStore = useAnalyticsStore.getState();
-        analyticsStore.logCheckout(checkoutErrorData, "preview");
-        
-        console.log("支付结账错误埋点数据:", checkoutErrorData);
 
         // 网络请求失败时，跳转到支付失败页面
         navigation.navigate("PayError", { 
