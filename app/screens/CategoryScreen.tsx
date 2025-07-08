@@ -190,7 +190,7 @@ export const CategoryScreen = () => {
         onPress={() => {
           analyticsData.logCategory({
             category_id: item.category_id,
-            category_name: item.name,
+            category_name: item.name_cn,
             level: 2, // 二级分类
           }, "category");
           navigation.navigate("SearchResult", { category_id: item.category_id });

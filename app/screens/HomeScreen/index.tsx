@@ -288,7 +288,7 @@ export const HomeScreen = () => {
         const analyticsStore = useAnalyticsStore.getState();
         analyticsStore.logCategory({
           category_id: subcategory.category_id,
-          category_name: getCategoryName(subcategory),
+          category_name: subcategory.name_cn,
           level: 2, // 二级分类
         }, "home");
       }
