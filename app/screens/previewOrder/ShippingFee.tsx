@@ -13,6 +13,7 @@ import {
   StatusBar,
   Image,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import { useState, useEffect } from "react";
 import fontSize from "../../utils/fontsizeUtils";
@@ -464,82 +465,89 @@ export const ShippingFee = () => {
           transparent={true}
           animationType="slide"
           onRequestClose={() => setModalVisible(false)}
+          statusBarTranslucent={true}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setModalVisible(false)}
-          >
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity
+              style={styles.modalOverlayTouch}
+              activeOpacity={1}
+              onPress={() => setModalVisible(false)}
+            />
             <View style={styles.modalContainer}>
-              <SafeAreaView style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>
-                    {t("order.shipping.select_warehouse")}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setModalVisible(false)}
-                    activeOpacity={1}
-                  >
-                    <Text style={styles.closeButton}>×</Text>
-                  </TouchableOpacity>
-                </View>
-                <FlatList
-                  data={state.freightForwarderAddress?.other_addresses || []}
-                  keyExtractor={(item, index) => index.toString()}
-                  contentContainerStyle={styles.flatListContent}
-                  showsVerticalScrollIndicator={false}
-                  renderItem={({ item }) => {
-                    const label =
-                      (getCurrentLanguage() === "fr"
-                        ? item.country_name
-                        : item.country_name_en) +
-                      " | " +
-                      item.city +
-                      (item.detail_address ? (" | " + item.detail_address) : "");
-                    const countryName = getCurrentLanguage() === "fr" ? item.country_name : item.country_name_en;
-                    const flagSource = flagMap.get(countryName);
-                    
-                    return (
-                      <TouchableOpacity
-                        style={[
-                          styles.optionItem,
-                          warehouse === label && styles.selectedOption,
-                        ]}
-                        onPress={() =>
-                          handleSelectWarehouse(
-                            item.country_code,
-                            label
-                          )
-                        }
-                        activeOpacity={1}
-                      >
-                        <View style={styles.warehouseItemContainer}>
-                          <View style={styles.warehouseItemHeader}>
-                            {flagSource && (
-                              <Image source={flagSource} style={styles.countryFlag} />
-                            )}
-                            <Text style={styles.countryNameText}>{countryName}</Text>
-                            {warehouse === label && (
-                              <Text style={styles.checkmark}>✓</Text>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {t("order.shipping.select_warehouse")}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  activeOpacity={1}
+                >
+                  <Text style={styles.closeButton}>×</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView
+                style={styles.modalScrollView}
+                contentContainerStyle={styles.flatListContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
+                removeClippedSubviews={false}
+                scrollEventThrottle={16}
+              >
+                {(state.freightForwarderAddress?.other_addresses || []).map((item, index) => {
+                      const label =
+                        (getCurrentLanguage() === "fr"
+                          ? item.country_name
+                          : item.country_name_en) +
+                        " | " +
+                        item.city +
+                        (item.detail_address ? (" | " + item.detail_address) : "");
+                      const countryName = getCurrentLanguage() === "fr" ? item.country_name : item.country_name_en;
+                      const flagSource = flagMap.get(countryName);
+                      
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.optionItem,
+                            warehouse === label && styles.selectedOption,
+                          ]}
+                          onPress={() =>
+                            handleSelectWarehouse(
+                              item.country_code,
+                              label
+                            )
+                          }
+                          activeOpacity={1}
+                        >
+                          <View style={styles.warehouseItemContainer}>
+                            <View style={styles.warehouseItemHeader}>
+                              {flagSource && (
+                                <Image source={flagSource} style={styles.countryFlag} />
+                              )}
+                              <Text style={styles.countryNameText}>{countryName}</Text>
+                              {warehouse === label && (
+                                <Text style={styles.checkmark}>✓</Text>
+                              )}
+                            </View>
+                            <Text style={styles.cityText}>{item.city}</Text>
+                            {item.detail_address && (
+                              <Text style={styles.addressDetailText}>{item.detail_address}</Text>
                             )}
                           </View>
-                          <Text style={styles.cityText}>{item.city}</Text>
-                          {item.detail_address && (
-                            <Text style={styles.addressDetailText}>{item.detail_address}</Text>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-              </SafeAreaView>
+                        </TouchableOpacity>
+                      );
+                })}
+              </ScrollView>
             </View>
-          </TouchableOpacity>
+          </View>
         </Modal>
       </View>
     </SafeAreaView>
   );
 };
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -783,11 +791,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#00000080",
     justifyContent: "flex-end",
   },
+  modalOverlayTouch: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   modalContainer: {
     backgroundColor: "white",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: "80%",
+    height: screenHeight * 0.7,
+    maxHeight: screenHeight * 0.7,
+  },
+  modalScrollView: {
+    flex: 1,
   },
   modalContent: {
     width: "100%",
@@ -801,6 +820,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#e8e8e8",
+    backgroundColor: "white",
+    zIndex: 10,
   },
   modalTitle: {
     fontSize: fontSize(18),
