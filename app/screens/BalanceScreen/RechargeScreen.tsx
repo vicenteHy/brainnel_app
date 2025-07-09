@@ -71,6 +71,8 @@ const RechargeScreen = () => {
     payment_method: string;
     selectedPriceLabel: string;
   } | null>(null);
+  // 添加请求版本控制
+  const conversionRequestVersionRef = useRef(0);
   // 添加PayPal展开视图的状态
   const [isPaypalExpanded, setIsPaypalExpanded] = useState(false);
   // 添加Wave展开视图的状态
@@ -175,6 +177,10 @@ const RechargeScreen = () => {
   };
 
   const handleOperatorSelect = (operator: string) => {
+    // 立即清理转换结果和货币状态，避免显示错误数据
+    setConvertedAmount([]);
+    setIsConverting(false);
+    
     // 保存当前选中的操作符以便后续比较
     const previousOperator = selectedOperator;
     
@@ -478,6 +484,9 @@ const RechargeScreen = () => {
   // 提取一个专门用于货币转换的函数
   const handleCurrencyConversion = (price: string, currency: string) => {
     setIsConverting(true);
+    
+    // 增加请求版本号
+    const currentVersion = ++conversionRequestVersionRef.current;
 
     // 格式化金额，去除逗号
     const amount = parseFloat(price.replace(/,/g, ""));
@@ -490,14 +499,17 @@ const RechargeScreen = () => {
 
     // 如果源货币和目标货币相同，直接返回原金额
     if (user?.currency === currency) {
-      setConvertedAmount([
-        {
-          converted_amount: amount,
-          item_key: "total_amount",
-          original_amount: amount,
-        },
-      ]);
-      setIsConverting(false);
+      // 只有当前版本号匹配时才更新状态
+      if (currentVersion === conversionRequestVersionRef.current) {
+        setConvertedAmount([
+          {
+            converted_amount: amount,
+            item_key: "total_amount",
+            original_amount: amount,
+          },
+        ]);
+        setIsConverting(false);
+      }
       return;
     }
 
@@ -516,15 +528,34 @@ const RechargeScreen = () => {
     payApi
       .convertCurrency(data)
       .then((res) => {
-        if (
-          res &&
-          res.converted_amounts_list &&
-          res.converted_amounts_list.length > 0
-        ) {
-          setConvertedAmount(res.converted_amounts_list);
-        } else {
+        // 只有当前版本号匹配时才更新状态
+        if (currentVersion === conversionRequestVersionRef.current) {
+          if (
+            res &&
+            res.converted_amounts_list &&
+            res.converted_amounts_list.length > 0
+          ) {
+            setConvertedAmount(res.converted_amounts_list);
+          } else {
+            // 使用近似汇率作为备用
+            const fallbackRate = currency === "USD" ? 580.0 : 655.96; // 1 USD = 580 FCFA, 1 EUR = 655.96 FCFA
+            const convertedValue = amount / fallbackRate;
+
+            setConvertedAmount([
+              {
+                converted_amount: convertedValue,
+                item_key: "total_amount",
+                original_amount: amount,
+              },
+            ]);
+          }
+        }
+      })
+      .catch((error) => {
+        // 只有当前版本号匹配时才更新状态
+        if (currentVersion === conversionRequestVersionRef.current) {
           // 使用近似汇率作为备用
-          const fallbackRate = currency === "USD" ? 580.0 : 655.96; // 1 USD = 580 FCFA, 1 EUR = 655.96 FCFA
+          const fallbackRate = currency === "USD" ? 580.0 : 655.96;
           const convertedValue = amount / fallbackRate;
 
           setConvertedAmount([
@@ -536,22 +567,11 @@ const RechargeScreen = () => {
           ]);
         }
       })
-      .catch((error) => {
-
-        // 使用近似汇率作为备用
-        const fallbackRate = currency === "USD" ? 580.0 : 655.96;
-        const convertedValue = amount / fallbackRate;
-
-        setConvertedAmount([
-          {
-            converted_amount: convertedValue,
-            item_key: "total_amount",
-            original_amount: amount,
-          },
-        ]);
-      })
       .finally(() => {
-        setIsConverting(false);
+        // 只有当前版本号匹配时才更新状态
+        if (currentVersion === conversionRequestVersionRef.current) {
+          setIsConverting(false);
+        }
       });
   };
 
