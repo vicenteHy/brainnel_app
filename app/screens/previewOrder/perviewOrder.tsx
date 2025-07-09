@@ -98,6 +98,13 @@ export const PreviewOrder = () => {
   const { user } = useUserStore();
   const { t } = useTranslation();
 
+  // 禁用左滑返回手势
+  useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false,
+    });
+  }, [navigation]);
+
   useEffect(() => {
     if (!user.user_id) {
       return Alert.alert(t("order.preview.login_required"));
