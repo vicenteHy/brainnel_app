@@ -127,7 +127,7 @@ export const ProductItem = React.memo(
         </Text>
         <View style={styles.beautyProductInfoRow}>
           <View style={styles.flexRowCentered}>
-            {userStore.user?.user_id && (
+            {userStore.user?.user_id && userStore.user?.vip_level > 0 && (
               <Text style={styles.priceLabel1}>
                 {formatPrice(Number(item.original_min_price || 0), item.currency || "FCFA")}
                 {item.currency || "FCFA"}

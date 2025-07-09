@@ -36,10 +36,12 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
             <Text style={styles.currencyText}>
               {userStore.user?.currency || "FCFA"}
             </Text>
-            <Text style={styles.priceLabel}>
-              {product?.original_price}
-              {userStore.user?.currency}
-            </Text>
+            {userStore.user?.vip_level > 0 && (
+              <Text style={styles.priceLabel}>
+                {product?.original_price}
+                {userStore.user?.currency}
+              </Text>
+            )}
           </View>
           <Text style={styles.salesCountLabel}>
             {/* {product?.sold_out} {t("sales")} */}

@@ -213,11 +213,13 @@ export const CartItem: React.FC<CartItemProps> = ({
                     <View style={styles.priceColumnContainer}>
                       {/* Discount price */}
                       <View style={styles.productInfoContainer1}>
-                        <View style={styles.priceInfoContainer1}>
-                          <Text style={styles.discountPriceLabel}>
-                            {formatPrice(Number(sku.original_price), sku.currency)} {sku.currency}
-                          </Text>
-                        </View>
+                        {vip_level > 0 && (
+                          <View style={styles.priceInfoContainer1}>
+                            <Text style={styles.discountPriceLabel}>
+                              {formatPrice(Number(sku.original_price), sku.currency)} {sku.currency}
+                            </Text>
+                          </View>
+                        )}
                         {vip_level > 0 && (
                           <View style={styles.vipContainer}>
                             <Image
