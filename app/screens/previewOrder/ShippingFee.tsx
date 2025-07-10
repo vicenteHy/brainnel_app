@@ -147,6 +147,7 @@ export const ShippingFee = () => {
   }, [shippingMethod]);
 
   const changeCountryHandel = async (value: string) => {
+    console.log('切换国家/仓库:', value);
     if (value && state.freightForwarderAddress) {
       // 查找地址（store已将所有地址合并到other_addresses中）
       const allAddresses = state.freightForwarderAddress.other_addresses || [];
@@ -162,6 +163,7 @@ export const ShippingFee = () => {
       );
 
       if (selected) {
+        console.log('选中的仓库地址:', selected);
         setSelectedWarehouse(selected);
         setWarehouse(value);
         setSelectedWarehouseLabel(value);
@@ -173,6 +175,7 @@ export const ShippingFee = () => {
             freight_forwarder_address_id: selected.address_id,
             is_cod: route.params?.isCOD,
           };
+          console.log('准备计算运费，请求数据:', data);
           // 使用统一的计算方法
           calculateAllShippingFees(data);
         }
@@ -512,12 +515,13 @@ export const ShippingFee = () => {
                             styles.optionItem,
                             warehouse === label && styles.selectedOption,
                           ]}
-                          onPress={() =>
+                          onPress={() => {
                             handleSelectWarehouse(
                               item.country_code,
                               label
-                            )
-                          }
+                            );
+                            changeCountryHandel(label);
+                          }}
                           activeOpacity={1}
                         >
                           <View style={styles.warehouseItemContainer}>

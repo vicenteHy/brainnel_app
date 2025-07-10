@@ -99,8 +99,9 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     }));
     
     try {
+      console.log('计算国际运费请求数据:', data);
       const response = await ordersApi.calcShippingFee(data);
-      
+      console.log('计算国际运费返回数据:', response);
 
 
       set((state) => ({
@@ -127,7 +128,9 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     }));
     
     try {
+      console.log('计算国内运费请求数据:', data);
       const response = await ordersApi.calcDomesticShippingFee(data);
+      console.log('计算国内运费返回数据:', response);
       
       set((state) => ({
         state: { 
@@ -175,11 +178,14 @@ const usePreviewShippingStore = create<PreviewShippingStore>((set) => ({
     }));
     
     try {
+      console.log('计算全部运费请求数据:', data);
       // 并行执行两个API调用
       const [shippingResponse, domesticResponse] = await Promise.all([
         ordersApi.calcShippingFee(data),
         ordersApi.calcDomesticShippingFee(data)
       ]);
+      console.log('计算全部运费返回数据 - 国际运费:', shippingResponse);
+      console.log('计算全部运费返回数据 - 国内运费:', domesticResponse);
       
       // 更新状态
       set((state) => ({
