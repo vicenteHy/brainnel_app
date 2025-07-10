@@ -100,11 +100,8 @@ export const initializeFacebookSDK = async () => {
   try {
     console.log('[Facebook SDK] Starting initialization...');
     
-    // 初始化设置
-    Settings.initializeSDK();
-    
-    // 启用自动事件记录（包括 Install 和 App Launch）
-    Settings.setAutoLogAppEventsEnabled(true);
+    // SDK 已经通过 app.json 中的 isAutoInitEnabled: true 自动初始化
+    // 自动事件记录也已通过 app.json 中的 autoLogAppEventsEnabled: true 启用
     
     console.log('[Facebook SDK] Initialized with App ID:', '1662120374497452');
     
@@ -349,22 +346,14 @@ export const logAddToCartEvent = (product, skuDetails = null, totalQuantity = 1,
       parameters: parameters
     });
     
-    // 使用 SDK 直接上报 - 同时尝试两种方式
-    // 方式1：使用预定义的事件常量
+    // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
       AppEventsLogger.AppEvents.AddedToCart,
       value,  // valueToSum
       parameters
     );
     
-    // 方式2：使用字符串事件名（作为备份）
-    AppEventsLogger.logEvent(
-      'fb_mobile_add_to_cart',
-      value,
-      parameters
-    );
-    
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] AddToCart event logged successfully with both methods:`, {
+    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] AddToCart event logged successfully:`, {
       productId: productId,
       productName: productName,
       totalQuantity: totalQuantity,
@@ -415,22 +404,14 @@ export const logViewContentEvent = (product) => {
       parameters: parameters
     });
     
-    // 使用 SDK 直接上报 - 同时尝试两种方式
-    // 方式1：使用预定义的事件常量
+    // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
       AppEventsLogger.AppEvents.ViewedContent,
       productPrice,  // valueToSum
       parameters
     );
     
-    // 方式2：使用字符串事件名（作为备份）
-    AppEventsLogger.logEvent(
-      'fb_mobile_content_view',
-      productPrice,
-      parameters
-    );
-    
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] ViewContent event logged successfully with both methods:`, {
+    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] ViewContent event logged successfully:`, {
       productId: productId,
       productName: productName,
       price: productPrice,
@@ -511,22 +492,14 @@ export const logInitiateCheckoutEvent = (orderInfo, skuDetails = [], paymentMeth
       parameters: parameters
     });
     
-    // 使用 SDK 直接上报 - 同时尝试两种方式
-    // 方式1：使用预定义的事件常量
+    // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
       AppEventsLogger.AppEvents.InitiatedCheckout,
       totalPrice,  // valueToSum - 订单总价值
       parameters
     );
     
-    // 方式2：使用字符串事件名（作为备份）
-    AppEventsLogger.logEvent(
-      'fb_mobile_initiated_checkout',
-      totalPrice,
-      parameters
-    );
-    
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] InitiateCheckout event logged successfully with both methods:`, {
+    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] InitiateCheckout event logged successfully:`, {
       orderId: orderInfo.orderId,
       totalPrice: totalPrice,
       currency: orderInfo.currency || 'USD',
@@ -613,22 +586,14 @@ export const logPurchaseEvent = (orderInfo, skuDetails = [], paymentMethod = '')
       parameters: parameters
     });
     
-    // 使用 SDK 直接上报 - 同时尝试两种方式
-    // 方式1：使用预定义的事件常量（Facebook SDK 推荐的方式）
+    // 使用 SDK 直接上报（Facebook SDK 推荐的方式）
     AppEventsLogger.logPurchase(
       totalPrice,  // valueToSum - 订单总价值
       orderInfo.currency || 'USD',  // 货币
       parameters  // 额外参数
     );
     
-    // 方式2：使用标准事件名（作为备份）
-    AppEventsLogger.logEvent(
-      AppEventsLogger.AppEvents.Purchased,
-      totalPrice,
-      parameters
-    );
-    
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Purchase event logged successfully with both methods:`, {
+    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Purchase event logged successfully:`, {
       orderId: orderInfo.orderId,
       orderNo: orderInfo.orderNo,
       totalPrice: totalPrice,
@@ -683,20 +648,13 @@ export const logCompleteRegistrationEvent = (userInfo = {}, registrationMethod =
       parameters: parameters
     });
     
-    // 使用 SDK 直接上报 - 同时尝试两种方式
-    // 方式1：使用预定义的事件常量（Facebook SDK 推荐的方式）
+    // 使用 SDK 直接上报（Facebook SDK 推荐的方式）
     AppEventsLogger.logEvent(
       AppEventsLogger.AppEvents.CompletedRegistration,
       parameters
     );
     
-    // 方式2：使用字符串事件名（作为备份）
-    AppEventsLogger.logEvent(
-      'fb_mobile_complete_registration',
-      parameters
-    );
-    
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] CompleteRegistration event logged successfully with both methods:`, {
+    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] CompleteRegistration event logged successfully:`, {
       userId: userInfo.user_id,
       registrationMethod: registrationMethod,
       email: userInfo.email,
