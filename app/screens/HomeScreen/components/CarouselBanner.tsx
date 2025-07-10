@@ -15,7 +15,7 @@ export const CarouselBanner = React.memo(
     
     const bannerData = useMemo(
       () => ({
-        imgUrl: require("../../../../assets/img/activity.png"),
+        imgUrl: require("../../../../assets/img/Group_1994.png"),
         add: "TikTokScreen",
       }),
       [],
@@ -48,7 +48,7 @@ export const CarouselBanner = React.memo(
             source={bannerData.imgUrl}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
-            defaultSource={require("../../../../assets/img/activity.png")}
+            defaultSource={require("../../../../assets/img/Group_1994.png")}
           />
         </TouchableOpacity>
       </View>
