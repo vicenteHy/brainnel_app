@@ -151,10 +151,15 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
       });
     });
 
-    const result = Object.values(groupedData)[0];
+    const results = Object.values(groupedData);
     try {
       setIsLoading(true);
-      await cartApi(result);
+      
+      // 逐个添加每个商品到购物车
+      for (const result of results) {
+        await cartApi(result);
+      }
+      
       setIsLoading(false);
 
       Toast.show({
