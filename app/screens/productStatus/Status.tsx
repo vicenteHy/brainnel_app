@@ -440,7 +440,7 @@ export function Status() {
                                   {item.order_no}
                                 </Text>
                                 <Text style={styles.orderStatusText}>
-                                  {getStatus(item.order_status)}
+                                  {getStatus(item.status)}
                                 </Text>
                               </View>
                               <View style={styles.orderProductList}>
@@ -477,7 +477,7 @@ export function Status() {
                                 </View>
                                 <TouchableOpacity
                                   style={styles.orderProductView}
-                                  onPress={() => handleOrderDetailsPress(item.order_id, item.order_status)}
+                                  onPress={() => handleOrderDetailsPress(item.order_id, item.status)}
                                 >
                                   <Text style={styles.orderProductViewText}>
                                     {t("order.view_details")}
