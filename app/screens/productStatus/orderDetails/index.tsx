@@ -76,6 +76,20 @@ export const OrderDetails = () => {
     >
   >();
 
+  // 打印订单状态
+  console.log("=== 订单详情页 - 路由参数 ===");
+  console.log("订单ID:", route.params.orderId);
+  console.log("订单状态:", route.params.status);
+  console.log("状态说明:", 
+    route.params.status === 0 ? "待付款" :
+    route.params.status === 1 ? "待发货" :
+    route.params.status === 2 ? "运输中" :
+    route.params.status === 3 ? "已完成" :
+    route.params.status === 4 ? "已取消" :
+    route.params.status === 5 ? "退款中" :
+    route.params.status === 6 ? "已退款" : "未知状态"
+  );
+
   const {
     // 状态
     orderDetails,
@@ -460,6 +474,7 @@ export const OrderDetails = () => {
             </ScrollView>
 
             {/* 底部按钮 */}
+            {console.log("=== 渲染底部按钮区域 ===", "当前状态:", route.params.status, "是否显示付款按钮:", route.params.status === 0)}
             {route.params.status === 0 && (
               <View style={styles.bottomButtons}>
                 <TouchableOpacity
