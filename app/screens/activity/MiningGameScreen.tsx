@@ -10,7 +10,6 @@ import {
   Share,
   Alert,
   Dimensions,
-  StatusBar,
   ImageBackground,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Linking, Clipboard } from 'react-native';
 import useMiningStore from '../../store/miningStore';
 import useUserStore from '../../store/user';
+import GiftModal from './GiftModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -39,6 +39,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   
   const [isDigging, setIsDigging] = useState(false);
   const [showReward, setShowReward] = useState(0);
+  const [giftModalVisible, setGiftModalVisible] = useState(false);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const rewardAnimation = useRef(new Animated.Value(0)).current;
@@ -48,6 +49,12 @@ const MiningGameScreen = ({ navigation }: any) => {
   useEffect(() => {
     rechargeDigs();
     const interval = setInterval(rechargeDigs, 60000);
+    
+    // 页面加载完成后显示礼品弹窗
+    setTimeout(() => {
+      setGiftModalVisible(true);
+    }, 500);
+    
     return () => clearInterval(interval);
   }, []);
 
@@ -165,6 +172,24 @@ const MiningGameScreen = ({ navigation }: any) => {
     Linking.openURL(`whatsapp://send?text=${message}`);
   };
 
+  const handleOpenGift = () => {
+    setGiftModalVisible(false);
+    // 打开礼品后的奖励逻辑
+    Alert.alert(
+      t('恭喜！'),
+      t('您获得了 500 FCFA 奖励！'),
+      [
+        { 
+          text: t('确定'), 
+          onPress: () => {
+            // 这里可以添加增加余额的逻辑
+            console.log('领取奖励成功');
+          } 
+        }
+      ]
+    );
+  };
+
   const digTransform = {
     translateY: digAnimation.interpolate({
       inputRange: [0, 1],
@@ -176,52 +201,34 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
       {/* 背景图片 */}
       <Image 
         source={require('../../../assets/img/img_6271.svg')} 
         style={styles.backgroundImage}
       />
-      
-      {/* 顶部状态栏 */}
-      <View style={styles.statusBar}>
-        <Text style={styles.time}>14:19</Text>
-        <View style={styles.statusIcons}>
-          <Ionicons name="cellular" size={13} color="#000" />
-          <Ionicons name="wifi" size={13} color="#000" style={{ marginLeft: 6 }} />
-          <View style={styles.battery}>
-            <View style={styles.batteryFill} />
-          </View>
-        </View>
-      </View>
-
-      {/* 导航栏 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={22} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cash Gratuit</Text>
-        <View style={styles.headerRight}>
-          <Text style={styles.rulesText}>Règles</Text>
-          <Text style={styles.separator}> ｜ </Text>
-          <Text style={styles.detailsText}>Détails</Text>
-        </View>
-      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.contentWrapper}>
-          {/* 顶部余额卡片 */}
+          {/* 顶部余额卡片包含导航栏 */}
           <ImageBackground 
             source={require('../../../assets/img/mask_group_2x.png')}
             style={styles.topCard}
             resizeMode="cover"
           >
+            {/* 导航栏 */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="chevron-back" size={22} color="#000" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Cash Gratuit</Text>
+              <View style={styles.headerRight}>
+                <Text style={styles.rulesText}>Règles</Text>
+                <Text style={styles.separator}> ｜ </Text>
+                <Text style={styles.detailsText}>Détails</Text>
+              </View>
+            </View>
+            
             <View style={styles.balanceContainer}>
-              <Image 
-                source={require('../../../assets/img/group_737.png')}
-                style={styles.balanceCoin}
-              />
               <Text style={styles.balanceAmount}>{balance.toLocaleString()} FCFA</Text>
             </View>
           </ImageBackground>
@@ -243,11 +250,13 @@ const MiningGameScreen = ({ navigation }: any) => {
             <Image 
               source={require('../../../assets/img/rectangle_103_2x.png')}
               style={styles.progressBarBg}
+              resizeMode="stretch"
             />
             <View style={[styles.progressBar, { width: `${progressWidth}%` }]} />
             <Image 
               source={require('../../../assets/img/group_737.png')}
               style={[styles.progressCoin, { left: `${progressWidth}%` }]}
+              resizeMode="contain"
             />
           </View>
 
@@ -263,7 +272,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           <ImageBackground 
           source={require('../../../assets/img/mask_group_2x1.png')}
           style={styles.gameArea}
-          resizeMode="cover"
+          resizeMode="contain"
         >
           <TouchableOpacity 
             style={styles.digButton} 
@@ -304,6 +313,8 @@ const MiningGameScreen = ({ navigation }: any) => {
             </Animated.View>
           )}
 
+          </ImageBackground>
+
           {/* 金币图标 - 任务中心按钮 */}
           <TouchableOpacity 
             style={styles.bottomGold}
@@ -314,13 +325,12 @@ const MiningGameScreen = ({ navigation }: any) => {
               style={{ width: '100%', height: '100%' }}
             />
           </TouchableOpacity>
-          </ImageBackground>
 
           {/* 邀请好友区域 */}
           <ImageBackground 
           source={require('../../../assets/img/group_138_2x.png')}
           style={styles.inviteSection}
-          resizeMode="cover"
+          resizeMode="contain"
         >
           <View style={styles.inviteButtons}>
             <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
@@ -333,6 +343,13 @@ const MiningGameScreen = ({ navigation }: any) => {
           </ImageBackground>
         </View>
       </ScrollView>
+
+      {/* 礼品弹窗 */}
+      <GiftModal
+        visible={giftModalVisible}
+        onClose={() => setGiftModalVisible(false)}
+        onOpen={handleOpenGift}
+      />
     </View>
   );
 };
@@ -345,50 +362,25 @@ const styles = StyleSheet.create({
   backgroundImage: {
     position: 'absolute',
     width: screenWidth,
-    height: 980 ,
+    height: 980,
     top: 0,
     left: 0,
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 36,
-    paddingTop: 16,
-    height: 30,
-  },
-  time: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-    letterSpacing: 1,
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  battery: {
-    width: 26,
-    height: 13,
-    borderWidth: 1,
-    borderColor: '#000',
-    borderRadius: 2,
-    marginLeft: 6,
-    padding: 2,
-  },
-  batteryFill: {
-    flex: 1,
-    backgroundColor: '#000',
-    borderRadius: 1,
+  headerWrapper: {
+    backgroundColor: 'transparent',
+    paddingTop: 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    height: 56,
+    paddingTop: 80,
+    paddingBottom: 10,
   },
   headerTitle: {
+    alignItems: 'center',
+    marginLeft: 80,
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
@@ -398,15 +390,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rulesText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#AE8623',
   },
   separator: {
     color: '#AE8623',
-    fontSize: 14,
+    fontSize: 12,
   },
   detailsText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#AE8623',
   },
   content: {
@@ -417,37 +409,28 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   topCard: {
-    width: screenWidth - 34,
-    height: 191,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: screenWidth,
+    height: 220,
   },
   balanceContainer: {
-    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 45,
-  },
-  balanceCoin: {
-    width: 35,
-    height: 35,
-    marginRight: 10,
+    marginLeft: 20,
+    marginTop: -40,
   },
   balanceAmount: {
+    marginTop: 10,
     fontSize: 33,
     fontWeight: '600',
     color: '#FF5100',
   },
   progressCard: {
-    width: screenWidth - 34,
-    marginTop: -18,
-    backgroundColor: '#FFF',
+    width: screenWidth - 30,
+    backgroundColor: '#FFF5DB',
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+
   },
   progressHeader: {
     flexDirection: 'row',
@@ -465,20 +448,19 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   progressBarWrapper: {
-    height: 18,
+    height: 25,
     position: 'relative',
     marginBottom: 20,
   },
   progressBarBg: {
     position: 'absolute',
     width: '100%',
-    height: 18,
-    borderRadius: 9,
+    height: 25,
   },
   progressBar: {
     position: 'absolute',
-    left: 4,
-    top: 4,
+    left: 6,
+    top: 8,
     height: 10,
     backgroundColor: '#FF5100',
     borderRadius: 5,
@@ -487,7 +469,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 33,
     height: 35,
-    top: -8,
+    top: -5,
     marginLeft: -16,
   },
   progressFooter: {
@@ -515,7 +497,7 @@ const styles = StyleSheet.create({
     color: '#FF5100',
   },
   gameArea: {
-    width: screenWidth - 34,
+    width: screenWidth,
     height: 455,
     marginTop: 16,
     borderRadius: 20,
@@ -567,15 +549,17 @@ const styles = StyleSheet.create({
   },
   bottomGold: {
     position: 'absolute',
-    bottom: 73,
+    bottom: 160,
     right: 3,
     width: 108,
     height: 107,
+    zIndex: 999,
   },
   inviteSection: {
-    width: screenWidth - 34,
+    width: screenWidth,
     height: 152,
-    marginTop: 7,
+    marginRight: 10,
+    marginTop: 10,
     position: 'relative',
   },
   inviteButtons: {

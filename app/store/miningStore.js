@@ -8,7 +8,7 @@ const useMiningStore = create(
       // 游戏状态
       balance: 4000,
       currentDepth: 0,
-      digCount: 2,
+      digCount: 999,
       lastDigTime: null,
       totalDigs: 0,
       
@@ -103,7 +103,7 @@ const useMiningStore = create(
       resetGame: () => set({
         balance: 0,
         currentDepth: 0,
-        digCount: 2,
+        digCount: 999,
         lastDigTime: null,
         totalDigs: 0,
       }),
