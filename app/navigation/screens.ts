@@ -52,6 +52,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { LoginPromptScreen } from '../screens/LoginPromptScreen';
 import { EmailOtpScreen } from '../screens/loginList/EmailOtpScreen';
+import MiningGameScreen from '../screens/activity/MiningGameScreen';
 
 export {
   CountrySelect,
@@ -108,4 +109,5 @@ export {
   CategoryScreen,
   LoginPromptScreen,
   EmailOtpScreen,
+  MiningGameScreen,
 }; 

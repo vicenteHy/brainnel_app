@@ -236,6 +236,10 @@ export const AppNavigator = () => {
           name="LoginPromptScreen"
           component={Screens.LoginPromptScreen}
         />
+        <Stack.Screen
+          name="MiningGameScreen"
+          component={Screens.MiningGameScreen}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

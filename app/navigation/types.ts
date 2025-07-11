@@ -78,4 +78,5 @@ export type RootStackParamList = {
   TermsOfUseScreen: undefined;
   LoginPromptScreen: { title?: string; message?: string; icon?: string };
   EmailOtp: { email: string };
+  MiningGameScreen: undefined;
 };
