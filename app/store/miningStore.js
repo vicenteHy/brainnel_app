@@ -93,6 +93,12 @@ const useMiningStore = create(
       // 设置推荐码
       setReferralCode: (code) => set({ referralCode: code }),
 
+      // 添加奖励金额
+      addReward: (amount) => {
+        const state = get();
+        set({ balance: state.balance + amount });
+      },
+
       // 获取游戏进度百分比
       getProgress: () => {
         const state = get();

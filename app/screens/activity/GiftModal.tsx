@@ -128,7 +128,7 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
           ) : (
             <Animated.View style={[styles.openedContainer, openedContentAnimatedStyle]}>
               <Image
-                source={require('../../assets/giftModal/giftBox.png')}
+                source={require('../../assets/giftModal/opened_gift.png')}
                 style={styles.openedGiftImage}
                 resizeMode="contain"
               />
@@ -136,15 +136,18 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
               <Text style={styles.jackpotTitle}>JACKPOT!</Text>
               
               <Text style={styles.congratsText}>
-                Félicitations ! Votre chance de débutant vous a fait gagner le grand prix !
+                Félicitations ! Votre chance de débutant{'\n'}vous a fait gagner le grand prix !
               </Text>
               
               <TouchableOpacity
-                style={styles.claimButton}
                 onPress={handleClaim}
                 activeOpacity={0.8}
               >
-                <Text style={styles.claimButtonText}>Réclamer la récompense</Text>
+                <Image
+                  source={require('../../assets/giftModal/claim_button.png')}
+                  style={styles.claimButtonImage}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -189,42 +192,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   openedGiftImage: {
-    width: screenWidth * 0.8,
-    height: 300,
-    marginBottom: 20,
+    width: screenWidth,
+    height: 522,
+    marginTop: -60,
+    marginBottom: -120,
   },
   jackpotTitle: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 15,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    fontFamily: 'SF Pro Display',
   },
   congratsText: {
     fontSize: 16,
-    color: '#ffffff',
+    fontWeight: '400',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginHorizontal: 40,
     marginBottom: 30,
-    lineHeight: 24,
+    lineHeight: 20,
+    width: 276,
+    fontFamily: 'SF Pro Display',
   },
-  claimButton: {
-    backgroundColor: '#FF6B00',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  claimButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  claimButtonImage: {
+    width: 224,
+    height: 54,
   },
 });
 

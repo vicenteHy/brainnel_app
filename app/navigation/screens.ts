@@ -53,6 +53,7 @@ import { CategoryScreen } from '../screens/CategoryScreen';
 import { LoginPromptScreen } from '../screens/LoginPromptScreen';
 import { EmailOtpScreen } from '../screens/loginList/EmailOtpScreen';
 import MiningGameScreen from '../screens/activity/MiningGameScreen';
+import TaskCenterScreen from '../screens/activity/TaskCenterScreen';
 
 export {
   CountrySelect,
@@ -110,4 +111,5 @@ export {
   LoginPromptScreen,
   EmailOtpScreen,
   MiningGameScreen,
+  TaskCenterScreen,
 }; 

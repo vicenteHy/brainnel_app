@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { enterActivity, updateRewardAmount } from '../../services/api/activity';
 
 interface SpinWheelModalProps {
   visible: boolean;
@@ -44,6 +45,40 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
 }) => {
   const rotateValue = useRef(new Animated.Value(0)).current;
   const [isSpinning, setIsSpinning] = useState(false);
+  const [activityData, setActivityData] = useState<any>(null);
+  const [currentTotalReward, setCurrentTotalReward] = useState(0);
+
+  // 当弹窗打开时调用进入活动接口
+  useEffect(() => {
+    if (visible) {
+      const initActivity = async () => {
+        try {
+          console.log('调用进入活动接口...');
+          const data = await enterActivity(0);
+          console.log('活动数据返回:', data);
+          setActivityData(data);
+          
+          // 保存当前累积金额
+          const currentAmount = parseFloat(data.current_reward_amount) || 0;
+          setCurrentTotalReward(currentAmount);
+          
+          // 打印具体的返回数据
+          console.log('用户ID:', data.user_id);
+          console.log('当前奖励金额:', data.current_reward_amount);
+          console.log('目标奖励金额:', data.target_reward_amount);
+          console.log('金币面具数量:', data.gold_masks_count);
+          console.log('目标金币面具数量:', data.target_gole_masks_count);
+          console.log('总邀请数:', data.total_invite_count);
+          console.log('有效邀请数:', data.effective_invite_count);
+          console.log('推荐人ID:', data.referrer_id);
+        } catch (error) {
+          console.error('进入活动接口失败:', error);
+        }
+      };
+      
+      initActivity();
+    }
+  }, [visible]);
 
   // 转盘奖品区域数据（8个扇区，每个45度）
   const wheelSections = [
@@ -66,28 +101,72 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
     // 重置旋转值
     rotateValue.setValue(0);
     
-    // 随机选择一个奖品
-    const randomIndex = Math.floor(Math.random() * wheelSections.length);
-    const targetAngle = wheelSections[randomIndex].angle;
-    const prize = wheelSections[randomIndex].value;
+    // 固定选择 4000 FCFA（索引为 0）
+    const targetIndex = 0; // 4000 FCFA 的位置
+    const targetAngle = wheelSections[targetIndex].angle;
+    const prize = wheelSections[targetIndex].value;
     
-    // 计算总旋转角度：多转几圈 + 最终角度
-    const totalRotation = 360 * 5 + (360 - targetAngle); // 5圈 + 最终位置
+    // 计算总旋转角度：多转几圈 + 最终角度 + 额外20度
+    const mainRotation = 360 * 5 + (360 - targetAngle); // 5圈 + 最终位置
+    const finalRotation = mainRotation + 20; // 再加20度
     
     // 执行旋转动画
-    Animated.timing(rotateValue, {
-      toValue: totalRotation,
-      duration: 4000, // 4秒
-      easing: Easing.out(Easing.cubic), // 缓出效果
-      useNativeDriver: true,
-    }).start(() => {
+    Animated.sequence([
+      // 第一阶段：快速旋转到接近目标位置
+      Animated.timing(rotateValue, {
+        toValue: mainRotation,
+        duration: 3500, // 3.5秒
+        easing: Easing.out(Easing.cubic), // 缓出效果
+        useNativeDriver: true,
+      }),
+      // 第二阶段：缓慢转20度
+      Animated.timing(rotateValue, {
+        toValue: finalRotation,
+        duration: 500, // 0.5秒
+        easing: Easing.linear, // 线性匀速
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       // 动画结束后
       console.log('动画结束，中奖金额:', prize);
       setIsSpinning(false);
       
       // 显示中奖结果
-      setTimeout(() => {
+      setTimeout(async () => {
         console.log('通知父组件中奖金额:', prize);
+        
+        // 调用更新奖励金额接口（累加当前金额）
+        try {
+          const newTotalAmount = currentTotalReward + prize;
+          console.log('当前累积金额:', currentTotalReward);
+          console.log('本次中奖金额:', prize);
+          console.log('调用更新奖励金额接口，新的总金额:', newTotalAmount);
+          
+          const updatedData = await updateRewardAmount(newTotalAmount);
+          console.log('更新奖励金额接口返回:', updatedData);
+          
+          // 更新本地累积金额
+          const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
+          setCurrentTotalReward(updatedAmount);
+          
+          // 打印详细的返回数据
+          console.log('=== 更新后的活动数据 ===');
+          console.log('用户ID:', updatedData.user_id);
+          console.log('当前奖励金额:', updatedData.current_reward_amount);
+          console.log('目标奖励金额:', updatedData.target_reward_amount);
+          console.log('金币面具数量:', updatedData.gold_masks_count);
+          console.log('目标金币面具数量:', updatedData.target_gole_masks_count);
+          console.log('总邀请数:', updatedData.total_invite_count);
+          console.log('有效邀请数:', updatedData.effective_invite_count);
+          console.log('推荐人ID:', updatedData.referrer_id);
+          console.log('========================');
+          
+          // 更新本地状态
+          setActivityData(updatedData);
+        } catch (error) {
+          console.error('更新奖励金额失败:', error);
+        }
+        
         if (onWin) {
           onWin(prize);
         }

@@ -15,9 +15,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Linking, Clipboard } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import useMiningStore from '../../store/miningStore';
 import useUserStore from '../../store/user';
 import GiftModal from './GiftModal';
+import MiningRewardModal from './MiningRewardModal';
+import { enterActivity, updateRewardAmount } from '../../services/api/activity';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -35,20 +38,45 @@ const MiningGameScreen = ({ navigation }: any) => {
     getProgress,
     withdraw,
     referralCode,
+    addReward,
   } = useMiningStore();
   
   const [isDigging, setIsDigging] = useState(false);
-  const [showReward, setShowReward] = useState(0);
   const [giftModalVisible, setGiftModalVisible] = useState(false);
+  const [miningRewardVisible, setMiningRewardVisible] = useState(false);
+  const [currentReward, setCurrentReward] = useState(0);
+  const [showDigEffect, setShowDigEffect] = useState(false);
+  const [currentTotalReward, setCurrentTotalReward] = useState(0);
+  const [isActivityInitialized, setIsActivityInitialized] = useState(false);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
-  const rewardAnimation = useRef(new Animated.Value(0)).current;
 
   const progress = getProgress();
 
   useEffect(() => {
     rechargeDigs();
     const interval = setInterval(rechargeDigs, 60000);
+    
+    // 获取当前活动数据
+    const initActivity = async () => {
+      try {
+        console.log('挖矿游戏 - 获取当前活动数据...');
+        const data = await enterActivity(0);
+        console.log('挖矿游戏 - 活动数据返回:', data);
+        
+        // 保存当前累积金额
+        const currentAmount = parseFloat(data.current_reward_amount) || 0;
+        setCurrentTotalReward(currentAmount);
+        setIsActivityInitialized(true);
+        
+        console.log('挖矿游戏 - 当前累积奖励金额:', currentAmount);
+      } catch (error) {
+        console.error('挖矿游戏 - 获取活动数据失败:', error);
+        setIsActivityInitialized(true); // 即使失败也标记为已初始化
+      }
+    };
+    
+    initActivity();
     
     // 页面加载完成后显示礼品弹窗
     setTimeout(() => {
@@ -59,10 +87,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   }, []);
 
   const handleDig = () => {
-    if (isDigging || digCount <= 0) {
-      if (digCount <= 0) {
-        Alert.alert(t('提示'), t('挖矿次数已用完，请稍后再试或邀请好友获得更多次数'));
-      }
+    if (isDigging) {
       return;
     }
 
@@ -72,53 +97,50 @@ const MiningGameScreen = ({ navigation }: any) => {
       Animated.sequence([
         Animated.timing(digAnimation, {
           toValue: 1,
-          duration: 300,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.timing(digAnimation, {
           toValue: 0,
-          duration: 300,
+          duration: 600,
           useNativeDriver: true,
         }),
       ]),
       Animated.sequence([
-        Animated.timing(shakeAnimation, {
-          toValue: 10,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shakeAnimation, {
-          toValue: -10,
-          duration: 100,
-          useNativeDriver: true,
-        }),
+        // 左右震动10次
+        ...Array(10).fill(null).flatMap(() => [
+          Animated.timing(shakeAnimation, {
+            toValue: 3,
+            duration: 30,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnimation, {
+            toValue: -3,
+            duration: 30,
+            useNativeDriver: true,
+          }),
+        ]),
+        // 最后回到中心
         Animated.timing(shakeAnimation, {
           toValue: 0,
-          duration: 100,
+          duration: 30,
           useNativeDriver: true,
         }),
       ]),
     ]).start(() => {
-      const reward = dig();
-      if (reward) {
-        setShowReward(reward);
-        Animated.sequence([
-          Animated.timing(rewardAnimation, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rewardAnimation, {
-            toValue: 0,
-            duration: 300,
-            delay: 1000,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          setShowReward(0);
-        });
-      }
-      setIsDigging(false);
+      // 显示挖掘效果
+      setShowDigEffect(true);
+      
+      // 1秒后恢复初始状态
+      setTimeout(() => {
+        setShowDigEffect(false);
+        const reward = dig();
+        if (reward) {
+          setCurrentReward(reward);
+          setMiningRewardVisible(true);
+        }
+        setIsDigging(false);
+      }, 1000);
     });
   };
 
@@ -172,17 +194,49 @@ const MiningGameScreen = ({ navigation }: any) => {
     Linking.openURL(`whatsapp://send?text=${message}`);
   };
 
-  const handleOpenGift = () => {
+  const handleOpenGift = async () => {
     setGiftModalVisible(false);
-    // 打开礼品后的奖励逻辑
+    // 添加 500 FCFA 到余额
+    const giftAmount = 500;
+    addReward(giftAmount);
+    
+    // 调用更新奖励金额接口（累加当前金额）
+    try {
+      const newTotalAmount = currentTotalReward + giftAmount;
+      console.log('宝箱奖励 - 当前累积金额:', currentTotalReward);
+      console.log('宝箱奖励 - 本次奖励金额:', giftAmount);
+      console.log('宝箱奖励 - 调用更新奖励金额接口，新的总金额:', newTotalAmount);
+      
+      const updatedData = await updateRewardAmount(newTotalAmount);
+      console.log('宝箱奖励 - 更新奖励金额接口返回:', updatedData);
+      
+      // 更新本地累积金额
+      const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
+      setCurrentTotalReward(updatedAmount);
+      
+      // 打印详细的返回数据
+      console.log('=== 宝箱奖励更新后的活动数据 ===');
+      console.log('用户ID:', updatedData.user_id);
+      console.log('当前奖励金额:', updatedData.current_reward_amount);
+      console.log('目标奖励金额:', updatedData.target_reward_amount);
+      console.log('金币面具数量:', updatedData.gold_masks_count);
+      console.log('目标金币面具数量:', updatedData.target_gole_masks_count);
+      console.log('总邀请数:', updatedData.total_invite_count);
+      console.log('有效邀请数:', updatedData.effective_invite_count);
+      console.log('推荐人ID:', updatedData.referrer_id);
+      console.log('===========================');
+    } catch (error) {
+      console.error('宝箱奖励 - 更新奖励金额失败:', error);
+    }
+    
+    // 显示成功提示
     Alert.alert(
-      t('恭喜！'),
-      t('您获得了 500 FCFA 奖励！'),
+      t('Félicitations !'),
+      t('Vous avez reçu 500 FCFA !'),
       [
         { 
-          text: t('确定'), 
+          text: t('OK'), 
           onPress: () => {
-            // 这里可以添加增加余额的逻辑
             console.log('领取奖励成功');
           } 
         }
@@ -252,7 +306,12 @@ const MiningGameScreen = ({ navigation }: any) => {
               style={styles.progressBarBg}
               resizeMode="stretch"
             />
-            <View style={[styles.progressBar, { width: `${progressWidth}%` }]} />
+            <LinearGradient
+              colors={['#FF5100', '#FFDD9E']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressBar, { width: `${progressWidth}%` }]}
+            />
             <Image 
               source={require('../../../assets/img/group_737.png')}
               style={[styles.progressCoin, { left: `${progressWidth}%` }]}
@@ -279,46 +338,54 @@ const MiningGameScreen = ({ navigation }: any) => {
             onPress={handleDig}
             disabled={isDigging}
           >
-            <Text style={styles.digButtonText}>Forer maintenant({digCount})</Text>
+            <Text style={styles.digButtonText}>Forer maintenant</Text>
           </TouchableOpacity>
 
-          <Animated.View 
-            style={[
-              styles.minerContainer,
-              { transform: [digTransform, { translateX: shakeAnimation }] }
-            ]}
-          >
-            <Image 
-              source={require('../../../assets/img/group_86_2x.png')} 
-              style={styles.minerImage}
-            />
-          </Animated.View>
+          <View style={styles.minerContainer}>
+            {showDigEffect ? (
+              <>
+                {/* 挖掘通道 */}
+                <Image 
+                  source={require('../../../assets/img/Vector 87 1.png')} 
+                  style={{ position: 'absolute', top: 0, left: -40, transform: [{ scale: 0.52  }] }}
+                />
+                {/* 在通道尽头的阴影 */}
+                <Image 
+                  source={require('../../../assets/img/Ellipse 164 2.png')} 
+                  style={{ position: 'absolute', top: 80, left: -45, transform: [{ scale: 0.55 }] }}
+                />
+                {/* 在通道尽头的小人 */}
+                <Image 
+                  source={require('../../../assets/img/Group 125 1.png')} 
+                  style={{ position: 'absolute', top: 150, left: -35, transform: [{ scale: 0.52  }] }}
+                />
+              </>
+            ) : (
+              <>
+                {/* 阴影保持静止 */}
+                <Image 
+                  source={require('../../../assets/img/Ellipse 164 2.png')} 
+                  style={{ position: 'absolute', top: 80, left: -45, transform: [{ scale: 0.55 }] }}
+                />
+                {/* 只有小人移动 */}
+                <Animated.Image 
+                  source={require('../../../assets/img/group_86_2x.png')} 
+                  style={[
+                    styles.minerImage,
+                    { transform: [digTransform, { translateX: shakeAnimation }] }
+                  ]}
+                />
+              </>
+            )}
+          </View>
 
-          {showReward > 0 && (
-            <Animated.View 
-              style={[
-                styles.rewardContainer,
-                {
-                  opacity: rewardAnimation,
-                  transform: [{
-                    translateY: rewardAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20, -50],
-                    }),
-                  }],
-                },
-              ]}
-            >
-              <Text style={styles.rewardText}>+{showReward} FCFA</Text>
-            </Animated.View>
-          )}
 
           </ImageBackground>
 
           {/* 金币图标 - 任务中心按钮 */}
           <TouchableOpacity 
             style={styles.bottomGold}
-            onPress={() => Alert.alert('任务中心', '任务中心功能即将开放')}
+            onPress={() => navigation.navigate('TaskCenter')}
           >
             <Image 
               source={require('../../../assets/img/group_139_1.png')}
@@ -349,6 +416,13 @@ const MiningGameScreen = ({ navigation }: any) => {
         visible={giftModalVisible}
         onClose={() => setGiftModalVisible(false)}
         onOpen={handleOpenGift}
+      />
+      
+      {/* 挖矿奖励弹窗 */}
+      <MiningRewardModal
+        visible={miningRewardVisible}
+        onClose={() => setMiningRewardVisible(false)}
+        rewardAmount={currentReward}
       />
     </View>
   );
@@ -460,9 +534,8 @@ const styles = StyleSheet.create({
   progressBar: {
     position: 'absolute',
     left: 6,
-    top: 8,
+    top: 6,
     height: 10,
-    backgroundColor: '#FF5100',
     borderRadius: 5,
   },
   progressCoin: {

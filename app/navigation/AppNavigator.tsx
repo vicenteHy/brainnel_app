@@ -240,6 +240,10 @@ export const AppNavigator = () => {
           name="MiningGameScreen"
           component={Screens.MiningGameScreen}
         />
+        <Stack.Screen
+          name="TaskCenter"
+          component={Screens.TaskCenterScreen}
+        />
       </Stack.Navigator>
       <Toast 
         config={{
