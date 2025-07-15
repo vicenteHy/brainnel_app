@@ -28,6 +28,7 @@ import Toast from "react-native-toast-message";
 import { getCurrentLanguage } from "../i18n";
 import useAnalyticsStore from "../store/analytics";
 import { eventBus } from "../utils/eventBus";
+import useActivityStore from "../store/activityStore";
 
 import { IconComponent, ProductSkeleton, ProductItem } from "./SearchResultScreen/components";
 import { useSearchProducts } from "./SearchResultScreen/hooks";
@@ -193,6 +194,10 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     if (searchText.trim()) {
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logSearch(searchText.trim(), "search");
+      
+      // 上报文本搜索任务完成（任务2）
+      const activityStore = useActivityStore.getState();
+      activityStore.reportTaskComplete(2);
       
       setShowSkeleton(true);
       const newParams = {

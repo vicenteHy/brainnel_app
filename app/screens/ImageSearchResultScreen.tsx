@@ -41,6 +41,7 @@ import { getSubjectTransLanguage } from "../utils/languageUtils";
 import Toast from "react-native-toast-message";
 import * as FileSystem from 'expo-file-system';
 import useAnalyticsStore from "../store/analytics";
+import useActivityStore from "../store/activityStore";
 
 
 
@@ -391,6 +392,10 @@ export const ImageSearchResultScreen = ({
       } else {
         setProducts(productList);
         setOriginalProducts(productList);
+        
+        // 上报图片搜索任务完成（任务1）- 只在首次搜索时上报，加载更多不上报
+        const activityStore = useActivityStore.getState();
+        activityStore.reportTaskComplete(1);
       }
 
       setHasMore(productList.length === 20);

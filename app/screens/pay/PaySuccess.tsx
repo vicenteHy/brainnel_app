@@ -21,6 +21,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { logPurchaseEvent } from "../../services/facebook-events";
 import { ordersApi } from "../../services/api/orders";
 import useUserStore from "../../store/user";
+import useActivityStore from "../../store/activityStore";
 // import { RootStackParamList } from "../../navigation/types";
 // import { payApi } from "../../services/api/payApi";
 
@@ -138,6 +139,13 @@ export const PaymentSuccessScreen = () => {
             skuDetails,
             payment_method || orderDetail.payment_method || 'unknown'
           );
+          
+          // 上报下单任务完成（任务5）- 只在订单金额大于等于50000时上报
+          if (orderDetail.total_amount >= 50000) {
+            console.log('[PaymentSuccess] 订单金额大于等于50000，上报任务5完成');
+            const activityStore = useActivityStore.getState();
+            activityStore.reportTaskComplete(5);
+          }
         } else {
           console.log('[PaymentSuccess] 订单详情获取失败或数据不完整');
         }

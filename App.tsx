@@ -5,10 +5,12 @@ import { userApi } from "./app/services/api/userApi";
 import useUserStore from "./app/store/user";
 import { settingApi } from "./app/services/api/setting";
 import { checkAndCreateUserSettings } from "./app/utils/userSettingsUtils";
+import useActivityStore from "./app/store/activityStore";
 import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
 import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
+import { BoostSuccessModal } from "./app/screens/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
 import * as Linking from "expo-linking";
@@ -22,6 +24,8 @@ import { UpdateModal } from "./app/components/UpdateModal";
 import { UpdateType } from "./app/utils/versionUtils";
 import Constants from 'expo-constants';
 import { initializeFacebookSDK, extractAndSaveFbclid } from "./app/services/facebook-events";
+import websocketService from "./app/services/websocketService";
+import DeviceInfoCollector from "./app/utils/deviceInfoCollector";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -47,6 +51,9 @@ function AppContent() {
   const analyticsData = useAnalyticsStore();
   const userStore = useUserStore();
   const { setUser } = userStore;
+  const [boostModalVisible, setBoostModalVisible] = useState(false);
+  const [boostedUserId, setBoostedUserId] = useState<string>('');
+  const [isAlreadyBoosted, setIsAlreadyBoosted] = useState(false);
   const { login, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [languageSelected, setLanguageSelected] = useState<boolean>(false);
@@ -87,6 +94,11 @@ function AppContent() {
       
       // 获取用户资料成功后，检查并创建用户设置
       await checkAndCreateUserSettings();
+      
+      // 获取活动任务状态
+      const activityStore = useActivityStore.getState();
+      await activityStore.fetchTasks();
+      console.log('[App] 活动任务状态已加载');
       
       return true;
     } catch (error) {
@@ -191,6 +203,30 @@ function AppContent() {
               console.error('[App] Failed to initialize Facebook SDK:', error);
             });
           
+          // 初始化 WebSocket 连接
+          websocketService.connect().catch(error => {
+            console.error('[App] Failed to establish WebSocket connection:', error);
+          });
+          
+          // 采集设备信息
+          // 延迟执行，避免启动时的模块加载问题
+          setTimeout(() => {
+            DeviceInfoCollector.collectDeviceInfo()
+              .then(deviceInfo => {
+                console.log('[App] 设备信息采集成功');
+                // 可以在这里将设备信息发送到服务器或保存到本地
+                // 例如：await AsyncStorage.setItem('device_fingerprint', JSON.stringify(deviceInfo));
+                
+                // 生成设备指纹哈希
+                const fingerprintHash = DeviceInfoCollector.generateFingerprintHash(deviceInfo);
+                console.log(`[App] 设备指纹哈希: ${fingerprintHash}`);
+              })
+              .catch(error => {
+                console.error('[App] 设备信息采集失败:', error);
+                // 不影响应用正常运行
+              });
+          }, 3000); // 延迟3秒执行
+          
           // 并行获取用户资料（不影响预加载）
           fetchUserProfile().then(async (success) => {
             // 在用户信息加载完成后发送 app_launch 事件
@@ -206,6 +242,32 @@ function AppContent() {
                   await AsyncStorage.setItem('user_id', networkUserId);
                 } catch (error) {
                 }
+              }
+              
+              // 检查是否有待处理的助力（应用初始化时）
+              try {
+                const referrerId = await AsyncStorage.getItem('referrer_id');
+                if (referrerId) {
+                  console.log('应用初始化时发现待处理的referrer_id:', referrerId);
+                  
+                  try {
+                    const { assist } = await import('./app/services/api/activity');
+                    const result = await assist(parseInt(referrerId));
+                    
+                    // 根据返回结果显示不同的弹窗内容
+                    setBoostedUserId(referrerId);
+                    setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
+                    setBoostModalVisible(true);
+                    
+                    // 助力成功后清除referrer_id
+                    await AsyncStorage.removeItem('referrer_id');
+                  } catch (error) {
+                    console.error('助力失败:', error);
+                    Alert.alert('失败', '助力失败，请稍后重试');
+                  }
+                }
+              } catch (error) {
+                console.error('检查待处理助力失败:', error);
               }
             }
           }).catch(error => {
@@ -246,6 +308,12 @@ function AppContent() {
   useEffect(() => {
     const handleLoginSuccess = async () => {
       const success = await fetchUserProfile();
+      
+      // 登录成功后，获取任务状态
+      const activityStore = useActivityStore.getState();
+      await activityStore.fetchTasks();
+      console.log('[App] 登录成功后，活动任务状态已更新');
+      
       // 登录成功后，重新预加载推荐产品（使用用户ID）
       if (success && userStore.user?.user_id) {
         const userId = userStore.user.user_id.toString();
@@ -259,6 +327,38 @@ function AppContent() {
         preloadService.clearCache().then(() => {
           preloadService.startPreloading(userId);
         });
+        
+        // 重新连接 WebSocket
+        websocketService.disconnect();
+        websocketService.connect().catch(error => {
+          console.error('[App] Failed to reconnect WebSocket after login:', error);
+        });
+      }
+      
+      // 检查是否有待处理的助力
+      try {
+        const referrerId = await AsyncStorage.getItem('referrer_id');
+        if (referrerId) {
+          console.log('登录成功，处理待助力的referrer_id:', referrerId);
+          
+          try {
+            const { assist } = await import('./app/services/api/activity');
+            const result = await assist(parseInt(referrerId));
+            
+            // 根据返回结果显示不同的弹窗内容
+            setBoostedUserId(referrerId);
+            setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
+            setBoostModalVisible(true);
+            
+            // 助力成功后清除referrer_id
+            await AsyncStorage.removeItem('referrer_id');
+          } catch (error) {
+            console.error('助力失败:', error);
+            Alert.alert('失败', '助力失败，请稍后重试');
+          }
+        }
+      } catch (error) {
+        console.error('检查待处理助力失败:', error);
       }
     };
 
@@ -279,6 +379,54 @@ function AppContent() {
       
       // 提取并保存 fbclid（如果存在）
       extractAndSaveFbclid(url);
+      
+      // 处理活动邀请深度链接
+      if (url.includes("/activity/invite")) {
+        console.log('Activity invite deep link detected:', url);
+        
+        // 解析URL参数
+        const urlParts = url.split('?');
+        const queryParams = new URLSearchParams(urlParts[1] || '');
+        const userId = queryParams.get('user_id');
+        
+        if (userId) {
+          console.log('Invite from user_id:', userId);
+          
+          // 保存邀请者ID到AsyncStorage
+          AsyncStorage.setItem('referrer_id', userId).then(async () => {
+            console.log('Saved referrer_id:', userId);
+            
+            // 检查用户是否已登录
+            const authToken = await AsyncStorage.getItem('auth_token');
+            const currentUser = useUserStore.getState().user;
+            
+            if (authToken && currentUser) {
+              // 用户已登录，直接调用助力接口
+              try {
+                const { assist } = await import('./app/services/api/activity');
+                const result = await assist(parseInt(userId));
+                
+                // 根据返回结果显示不同的弹窗内容
+                setBoostedUserId(userId);
+                setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
+                setBoostModalVisible(true);
+                
+                // 助力成功后清除referrer_id
+                await AsyncStorage.removeItem('referrer_id');
+              } catch (error) {
+                console.error('助力失败:', error);
+                Alert.alert('失败', '助力失败，请稍后重试');
+              }
+            } else {
+              // 用户未登录，保存referrer_id等待登录后处理
+              console.log('用户未登录，等待登录后助力');
+            }
+          }).catch(error => {
+            console.error('Failed to save referrer_id:', error);
+          });
+        }
+        return;
+      }
       
       // 处理 payment-polling 深度链接
       if (
@@ -381,11 +529,26 @@ function AppContent() {
 
   // 监听应用状态变化，确保强制更新弹窗持久显示
   useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
+    const handleAppStateChange = async (nextAppState: string) => {
       
       // 如果应用重新激活且存在强制更新
       if (nextAppState === 'active' && hasForceUpdate) {
         setShowUpdateModal(true);
+      }
+      
+      // 处理 WebSocket 连接
+      if (nextAppState === 'active') {
+        // 应用回到前台，检查并重新连接 WebSocket
+        if (!websocketService.isConnected()) {
+          console.log('[App] 应用回到前台，重新连接 WebSocket');
+          websocketService.connect().catch(error => {
+            console.error('[App] Failed to reconnect WebSocket on app active:', error);
+          });
+        }
+      } else if (nextAppState === 'background') {
+        // 应用进入后台，断开 WebSocket 连接
+        console.log('[App] 应用进入后台，断开 WebSocket');
+        websocketService.disconnect();
       }
     };
 
@@ -462,6 +625,17 @@ function AppContent() {
           onClose={updateType !== UpdateType.FORCE_UPDATE ? handleCloseUpdate : undefined}
         />
       )}
+      <BoostSuccessModal
+        visible={boostModalVisible}
+        onClose={() => setBoostModalVisible(false)}
+        userId={boostedUserId}
+        isAlreadyBoosted={isAlreadyBoosted}
+        onJouerPress={() => {
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('MiningGameScreen');
+          }
+        }}
+      />
     </>
   );
 }

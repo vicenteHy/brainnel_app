@@ -80,4 +80,5 @@ export type RootStackParamList = {
   EmailOtp: { email: string };
   MiningGameScreen: undefined;
   TaskCenter: undefined;
+  WithdrawalScreen: undefined;
 };

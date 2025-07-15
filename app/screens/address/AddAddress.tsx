@@ -188,6 +188,11 @@ export const AddAddress = () => {
       setLoading(true);
       await addAddress(addressData);
       setLoading(false);
+      
+      // 上报添加地址任务完成（任务4）
+      const activityStore = useActivityStore.getState();
+      activityStore.reportTaskComplete(4);
+      
       navigation.goBack();
     }
   };

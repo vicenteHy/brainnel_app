@@ -25,6 +25,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { userApi } from "../../services/api/userApi";
 
 import { avatarCacheService } from "../../services/avatarCacheService";
+import useActivityStore from "../../store/activityStore";
 
 export const SettingList = () => {
   const { t } = useTranslation();
@@ -90,6 +91,14 @@ export const SettingList = () => {
       // 清除所有头像缓存
       await avatarCacheService.clearAllCache();
       console.log("Avatar cache cleared");
+      
+      // 清除活动任务数据
+      const activityStore = useActivityStore.getState();
+      activityStore.clearTasks();
+      
+      // 清除邀请链接
+      await AsyncStorage.removeItem('user_invitation_link');
+      console.log("Activity tasks cleared");
 
       // 清除所有AsyncStorage数据
       await AsyncStorage.clear();
@@ -126,6 +135,14 @@ export const SettingList = () => {
       clearUser();
       await logout();
       await avatarCacheService.clearAllCache();
+      
+      // 清除活动任务数据
+      const activityStore = useActivityStore.getState();
+      activityStore.clearTasks();
+      
+      // 清除邀请链接
+      await AsyncStorage.removeItem('user_invitation_link');
+      
       await AsyncStorage.clear();
       
       // 恢复国家设置

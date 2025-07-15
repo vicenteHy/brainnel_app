@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EventEmitter } from 'events';
+import websocketService from '../services/websocketService';
 
 // Declare global event emitter type
 declare global {
@@ -59,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.removeItem('auth_token');
       await AsyncStorage.removeItem('refresh_token');
       await AsyncStorage.removeItem('user_id'); // 清除用户ID
+      
+      // 断开 WebSocket 连接
+      websocketService.disconnect();
       
       setIsLoggedIn(false);
     } catch (error) {

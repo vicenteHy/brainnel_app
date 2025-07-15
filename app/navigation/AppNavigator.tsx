@@ -244,6 +244,10 @@ export const AppNavigator = () => {
           name="TaskCenter"
           component={Screens.TaskCenterScreen}
         />
+        <Stack.Screen
+          name="WithdrawalScreen"
+          component={Screens.WithdrawalScreen}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

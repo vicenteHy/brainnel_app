@@ -16,11 +16,14 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Linking, Clipboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import useMiningStore from '../../store/miningStore';
 import useUserStore from '../../store/user';
 import GiftModal from './GiftModal';
 import MiningRewardModal from './MiningRewardModal';
-import { enterActivity, updateRewardAmount } from '../../services/api/activity';
+import { enterActivity, updateRewardAmount, playGame, getInvitationLink } from '../../services/api/activity';
+import useActivityStore from '../../store/activityStore';
+import Toast from 'react-native-toast-message';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -47,9 +50,13 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [currentReward, setCurrentReward] = useState(0);
   const [showDigEffect, setShowDigEffect] = useState(false);
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
+  const [userInvitationLink, setUserInvitationLink] = useState<string | null>(null);
+  const [targetRewardAmount, setTargetRewardAmount] = useState(0);
   const [isActivityInitialized, setIsActivityInitialized] = useState(false);
+  const [showTaskCenterBubble, setShowTaskCenterBubble] = useState(true);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
+  const bubbleAnimation = useRef(new Animated.Value(0)).current;
 
   const progress = getProgress();
 
@@ -64,12 +71,20 @@ const MiningGameScreen = ({ navigation }: any) => {
         const data = await enterActivity(0);
         console.log('挖矿游戏 - 活动数据返回:', data);
         
-        // 保存当前累积金额
+        // 保存当前累积金额和目标金额
         const currentAmount = parseFloat(data.current_reward_amount) || 0;
+        const targetAmount = parseFloat(data.target_reward_amount) || 0;
         setCurrentTotalReward(currentAmount);
+        setTargetRewardAmount(targetAmount);
         setIsActivityInitialized(true);
         
         console.log('挖矿游戏 - 当前累积奖励金额:', currentAmount);
+        console.log('挖矿游戏 - 目标奖励金额:', targetAmount);
+        
+        // 同时刷新任务状态
+        const activityStore = useActivityStore.getState();
+        await activityStore.fetchTasks();
+        console.log('挖矿游戏 - 任务状态已刷新');
       } catch (error) {
         console.error('挖矿游戏 - 获取活动数据失败:', error);
         setIsActivityInitialized(true); // 即使失败也标记为已初始化
@@ -82,6 +97,22 @@ const MiningGameScreen = ({ navigation }: any) => {
     setTimeout(() => {
       setGiftModalVisible(true);
     }, 500);
+    
+    // 气泡动画
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bubbleAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bubbleAnimation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
     
     return () => clearInterval(interval);
   }, []);
@@ -132,13 +163,51 @@ const MiningGameScreen = ({ navigation }: any) => {
       setShowDigEffect(true);
       
       // 1秒后恢复初始状态
-      setTimeout(() => {
+      setTimeout(async () => {
         setShowDigEffect(false);
-        const reward = dig();
-        if (reward) {
-          setCurrentReward(reward);
-          setMiningRewardVisible(true);
+        
+        try {
+          // 调用游戏API获取奖励
+          console.log('挖矿游戏 - 调用游戏API...');
+          const gameResult = await playGame();
+          console.log('挖矿游戏 - 游戏结果:', gameResult);
+          
+          // 只处理现金奖励 (reward_type = 0)
+          if (gameResult.reward_type === 0) {
+            const rewardAmount = parseFloat(gameResult.reward_amount) || 0;
+            if (rewardAmount > 0) {
+              setCurrentReward(rewardAmount);
+              setMiningRewardVisible(true);
+              
+              // 重新获取最新的活动数据
+              try {
+                console.log('挖矿游戏 - 重新获取活动数据...');
+                const latestData = await enterActivity(0);
+                console.log('挖矿游戏 - 最新活动数据返回:', latestData);
+                
+                // 使用API返回的最新累积金额和目标金额
+                const updatedAmount = parseFloat(latestData.current_reward_amount) || 0;
+                const updatedTarget = parseFloat(latestData.target_reward_amount) || 0;
+                setCurrentTotalReward(updatedAmount);
+                setTargetRewardAmount(updatedTarget);
+                
+                console.log('挖矿游戏 - 更新后的累积金额:', updatedAmount);
+                console.log('挖矿游戏 - 更新后的目标金额:', updatedTarget);
+              } catch (updateError) {
+                console.error('挖矿游戏 - 获取最新活动数据失败:', updateError);
+              }
+            }
+          }
+          
+          // 如果有消息，可以显示给用户
+          if (gameResult.message) {
+            console.log('游戏消息:', gameResult.message);
+          }
+        } catch (error) {
+          console.error('挖矿游戏 - 调用游戏API失败:', error);
+          Alert.alert(t('错误'), t('游戏失败，请重试'));
         }
+        
         setIsDigging(false);
       }, 1000);
     });
@@ -150,48 +219,96 @@ const MiningGameScreen = ({ navigation }: any) => {
       return;
     }
     
-    Alert.alert(
-      t('确认提现'),
-      t(`确定要提现 ${balance} FCFA 吗？`),
-      [
-        { text: t('取消'), style: 'cancel' },
-        {
-          text: t('确定'),
-          onPress: async () => {
-            const success = withdraw(balance);
-            if (success) {
-              Alert.alert(t('成功'), t('提现申请已提交，请等待处理'));
-            }
-          },
-        },
-      ]
-    );
+    // 直接跳转到提现页面
+    navigation.navigate('WithdrawalScreen');
+  };
+
+  // 获取邀请链接（先从本地获取，没有则调用API）
+  const getOrFetchInvitationLink = async (): Promise<string> => {
+    try {
+      // 先检查内存中是否有链接
+      if (userInvitationLink) {
+        return userInvitationLink;
+      }
+
+      // 检查本地存储
+      const storedLink = await AsyncStorage.getItem('user_invitation_link');
+      if (storedLink) {
+        setUserInvitationLink(storedLink);
+        return storedLink;
+      }
+
+      // 调用API获取链接
+      const response = await getInvitationLink();
+      const invitationLink = response.invitation_link;
+      
+      // 保存到本地存储和内存
+      await AsyncStorage.setItem('user_invitation_link', invitationLink);
+      setUserInvitationLink(invitationLink);
+      
+      return invitationLink;
+    } catch (error) {
+      console.error('获取邀请链接失败:', error);
+      // 如果失败，返回默认链接
+      const inviteCode = referralCode || user?.id || 'default';
+      return `https://brainnel.com/invite?ref=${inviteCode}`;
+    }
   };
 
   const handleInvite = async () => {
     try {
-      const inviteCode = referralCode || user?.id || 'default';
-      const shareUrl = `https://brainnel.com/invite?ref=${inviteCode}`;
+      const shareUrl = await getOrFetchInvitationLink();
+      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
       await Share.share({
-        message: t('Invitez des amis, recevez plus de forages ! Chaque ami qui rejoint vous donne 1 chance de forage en plus.') + '\n\n' + shareUrl,
+        message: shareText + '\n\n' + shareUrl,
       });
     } catch (error) {
       console.error('分享失败:', error);
     }
   };
 
-  const handleCopyLink = () => {
-    const inviteCode = referralCode || user?.id || 'default';
-    const shareUrl = `https://brainnel.com/invite?ref=${inviteCode}`;
-    Clipboard.setString(shareUrl);
-    Alert.alert(t('成功'), t('链接已复制'));
+  const handleCopyLink = async () => {
+    try {
+      const shareUrl = await getOrFetchInvitationLink();
+      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      await Clipboard.setString(shareText + '\n\n' + shareUrl);
+      Toast.show({
+        type: 'success',
+        text1: t('链接已复制'),
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('复制链接失败:', error);
+      Alert.alert(t('错误'), t('复制链接失败，请重试'));
+    }
   };
 
-  const handleWhatsApp = () => {
-    const inviteCode = referralCode || user?.id || 'default';
-    const shareUrl = `https://brainnel.com/invite?ref=${inviteCode}`;
-    const message = encodeURIComponent(t('Invitez des amis, recevez plus de forages !') + '\n' + shareUrl);
-    Linking.openURL(`whatsapp://send?text=${message}`);
+  const handleWhatsApp = async () => {
+    try {
+      const shareUrl = await getOrFetchInvitationLink();
+      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      
+      // 先复制链接
+      await Clipboard.setString(shareText + '\n\n' + shareUrl);
+      
+      // 显示复制成功提示
+      Toast.show({
+        type: 'success',
+        text1: t('链接已复制'),
+        position: 'top',
+        visibilityTime: 2000,
+      });
+      
+      // 延迟一下再打开WhatsApp
+      setTimeout(() => {
+        const message = encodeURIComponent(shareText + '\n\n' + shareUrl);
+        Linking.openURL(`whatsapp://send?text=${message}`);
+      }, 500);
+    } catch (error) {
+      console.error('分享到WhatsApp失败:', error);
+      Alert.alert(t('错误'), t('分享失败，请重试'));
+    }
   };
 
   const handleOpenGift = async () => {
@@ -210,9 +327,11 @@ const MiningGameScreen = ({ navigation }: any) => {
       const updatedData = await updateRewardAmount(newTotalAmount);
       console.log('宝箱奖励 - 更新奖励金额接口返回:', updatedData);
       
-      // 更新本地累积金额
+      // 更新本地累积金额和目标金额
       const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
+      const updatedTarget = parseFloat(updatedData.target_reward_amount) || 0;
       setCurrentTotalReward(updatedAmount);
+      setTargetRewardAmount(updatedTarget);
       
       // 打印详细的返回数据
       console.log('=== 宝箱奖励更新后的活动数据 ===');
@@ -251,7 +370,12 @@ const MiningGameScreen = ({ navigation }: any) => {
     }),
   };
 
-  const progressWidth = (balance / targetAmount) * 100;
+  const progressWidth = targetRewardAmount > 0 ? (currentTotalReward / targetRewardAmount) * 100 : 0;
+
+  const bubbleScale = bubbleAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.1],
+  });
 
   return (
     <View style={styles.container}>
@@ -283,7 +407,7 @@ const MiningGameScreen = ({ navigation }: any) => {
             </View>
             
             <View style={styles.balanceContainer}>
-              <Text style={styles.balanceAmount}>{balance.toLocaleString()} FCFA</Text>
+              <Text style={styles.balanceAmount}>{currentTotalReward.toLocaleString()} FCFA</Text>
             </View>
           </ImageBackground>
 
@@ -291,12 +415,12 @@ const MiningGameScreen = ({ navigation }: any) => {
           <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
             <View>
-              <Text style={styles.progressLabel}>Requis</Text>
-              <Text style={styles.progressAmount}>{requiredAmount.toLocaleString()} FCFA</Text>
+              <Text style={styles.progressLabel}>Reste</Text>
+              <Text style={styles.progressAmount}>{Math.max(0, targetRewardAmount - currentTotalReward).toLocaleString()} FCFA</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={styles.progressLabel}>Objectif</Text>
-              <Text style={styles.progressAmount}>{targetAmount.toLocaleString()} FCFA</Text>
+              <Text style={styles.progressAmount}>{targetRewardAmount.toLocaleString()} FCFA</Text>
             </View>
           </View>
 
@@ -383,15 +507,35 @@ const MiningGameScreen = ({ navigation }: any) => {
           </ImageBackground>
 
           {/* 金币图标 - 任务中心按钮 */}
-          <TouchableOpacity 
-            style={styles.bottomGold}
-            onPress={() => navigation.navigate('TaskCenter')}
-          >
-            <Image 
-              source={require('../../../assets/img/group_139_1.png')}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </TouchableOpacity>
+          <View style={styles.taskCenterContainer}>
+            <TouchableOpacity 
+              style={styles.bottomGold}
+              onPress={() => {
+                setShowTaskCenterBubble(false);
+                navigation.navigate('TaskCenter');
+              }}
+            >
+              <Image 
+                source={require('../../../assets/img/group_139_1.png')}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </TouchableOpacity>
+            
+            {/* 引导气泡 */}
+            {showTaskCenterBubble && (
+              <Animated.View 
+                style={[
+                  styles.guideBubble,
+                  { transform: [{ scale: bubbleScale }] }
+                ]}
+              >
+                <View style={styles.bubbleArrow} />
+                <Text style={styles.bubbleText}>
+                  Complétez des tâches pour{'\n'}accumuler du cash plus vite !
+                </Text>
+              </Animated.View>
+            )}
+          </View>
 
           {/* 邀请好友区域 */}
           <ImageBackground 
@@ -620,13 +764,52 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
-  bottomGold: {
+  taskCenterContainer: {
     position: 'absolute',
     bottom: 160,
     right: 3,
     width: 108,
     height: 107,
     zIndex: 999,
+  },
+  bottomGold: {
+    width: 108,
+    height: 107,
+  },
+  guideBubble: {
+    position: 'absolute',
+    bottom: 120,
+    right: 40,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    minWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  bubbleArrow: {
+    position: 'absolute',
+    bottom: -8,
+    right: 20,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#FFF',
+  },
+  bubbleText: {
+    color: '#000',
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   inviteSection: {
     width: screenWidth,

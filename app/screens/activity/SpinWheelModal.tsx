@@ -11,7 +11,8 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { enterActivity, updateRewardAmount } from '../../services/api/activity';
+import { LinearGradient } from 'expo-linear-gradient';
+import { enterActivity, updateRewardAmount, getActivityStatus } from '../../services/api/activity';
 
 interface SpinWheelModalProps {
   visible: boolean;
@@ -47,32 +48,68 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
   const [isSpinning, setIsSpinning] = useState(false);
   const [activityData, setActivityData] = useState<any>(null);
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
+  const [targetRewardAmount, setTargetRewardAmount] = useState(5000);
 
-  // 当弹窗打开时调用进入活动接口
+  // 当弹窗打开时先检查活动状态
   useEffect(() => {
     if (visible) {
       const initActivity = async () => {
         try {
-          console.log('调用进入活动接口...');
-          const data = await enterActivity(0);
-          console.log('活动数据返回:', data);
-          setActivityData(data);
+          // 先尝试获取活动状态
+          console.log('调用活动状态接口...');
+          const statusData = await getActivityStatus();
+          console.log('活动状态返回:', statusData);
           
-          // 保存当前累积金额
-          const currentAmount = parseFloat(data.current_reward_amount) || 0;
+          // 如果成功获取状态，说明用户已经参加过活动
+          setActivityData(statusData);
+          
+          // 保存当前累积金额和目标金额
+          const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
+          const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
           setCurrentTotalReward(currentAmount);
+          setTargetRewardAmount(targetAmount);
           
           // 打印具体的返回数据
-          console.log('用户ID:', data.user_id);
-          console.log('当前奖励金额:', data.current_reward_amount);
-          console.log('目标奖励金额:', data.target_reward_amount);
-          console.log('金币面具数量:', data.gold_masks_count);
-          console.log('目标金币面具数量:', data.target_gole_masks_count);
-          console.log('总邀请数:', data.total_invite_count);
-          console.log('有效邀请数:', data.effective_invite_count);
-          console.log('推荐人ID:', data.referrer_id);
-        } catch (error) {
-          console.error('进入活动接口失败:', error);
+          console.log('用户已参加活动，活动数据:');
+          console.log('用户ID:', statusData.user_id);
+          console.log('当前奖励金额:', statusData.current_reward_amount);
+          console.log('目标奖励金额:', statusData.target_reward_amount);
+          console.log('金币面具数量:', statusData.gold_masks_count);
+          console.log('目标金币面具数量:', statusData.target_gole_masks_count);
+          console.log('总邀请数:', statusData.total_invite_count);
+          console.log('有效邀请数:', statusData.effective_invite_count);
+          console.log('推荐人ID:', statusData.referrer_id);
+        } catch (error: any) {
+          // 如果返回404，说明用户未参加活动，需要初始化
+          if (error?.response?.status === 404 || error?.status === 404) {
+            console.log('用户未参加活动，调用初始化接口...');
+            try {
+              const data = await enterActivity(0);
+              console.log('活动初始化成功:', data);
+              setActivityData(data);
+              
+              // 保存当前累积金额和目标金额
+              const currentAmount = parseFloat(data.current_reward_amount) || 0;
+              const targetAmount = parseFloat(data.target_reward_amount) || 0;
+              setCurrentTotalReward(currentAmount);
+              setTargetRewardAmount(targetAmount);
+              
+              // 打印具体的返回数据
+              console.log('初始化后的活动数据:');
+              console.log('用户ID:', data.user_id);
+              console.log('当前奖励金额:', data.current_reward_amount);
+              console.log('目标奖励金额:', data.target_reward_amount);
+              console.log('金币面具数量:', data.gold_masks_count);
+              console.log('目标金币面具数量:', data.target_gole_masks_count);
+              console.log('总邀请数:', data.total_invite_count);
+              console.log('有效邀请数:', data.effective_invite_count);
+              console.log('推荐人ID:', data.referrer_id);
+            } catch (enterError) {
+              console.error('初始化活动失败:', enterError);
+            }
+          } else {
+            console.error('获取活动状态失败:', error);
+          }
         }
       };
       
@@ -145,9 +182,11 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
           const updatedData = await updateRewardAmount(newTotalAmount);
           console.log('更新奖励金额接口返回:', updatedData);
           
-          // 更新本地累积金额
+          // 更新本地累积金额和目标金额
           const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
+          const updatedTarget = parseFloat(updatedData.target_reward_amount) || 0;
           setCurrentTotalReward(updatedAmount);
+          setTargetRewardAmount(updatedTarget);
           
           // 打印详细的返回数据
           console.log('=== 更新后的活动数据 ===');
@@ -265,7 +304,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                 style={[
                   styles.progressSection,
                   {
-                    left: 45 * scale,
+                    left: 42 * scale,
                     top: 529 * scale,
                     width: 286 * scale,
                     height: 35 * scale,
@@ -290,25 +329,27 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                   style={[
                     styles.progressBar,
                     {
-                      width: 227 * scale,
-                      height: 8 * scale,
+                      width: 280 * scale,
+                      height: 10 * scale,
                       left: 3 * scale,
                       top: 3 * scale,
                     },
                   ]}
                 >
-                  <View
+                  <LinearGradient
+                    colors={['#FF5100', '#FFDD9E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={[
                       styles.progressFill,
                       {
-                        width: `${(currentCoins / totalCoins) * 100}%`,
-                        backgroundColor: '#FF5100',
+                        width: `${targetRewardAmount > 0 ? (currentTotalReward / targetRewardAmount) * 100 : 0}%`,
                       },
                     ]}
                   />
                 </View>
 
-                {/* 金币图标 */}
+                {/* 金币图标 - 根据进度动态调整位置 */}
                 <Image
                   source={require('../../../assets/img/group_737.png')}
                   style={[
@@ -316,8 +357,9 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                     {
                       width: 33 * scale,
                       height: 35 * scale,
-                      left: 213 * scale,
+                      left: `${targetRewardAmount > 0 ? Math.max(0, Math.min(100, (currentTotalReward / targetRewardAmount) * 100)) : 0}%`,
                       top: -8 * scale,
+                      marginLeft: -16.5 * scale, // 金币宽度的一半，使其居中对齐
                     },
                   ]}
                   resizeMode="contain"
@@ -335,10 +377,10 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                 ]}
               >
                 <Text style={[styles.currentCoinsText, { fontSize: 12 * scale }]}>
-                  {currentCoins} FCFA
+                  {currentTotalReward.toLocaleString()} FCFA
                 </Text>
                 <Text style={[styles.totalCoinsText, { fontSize: 12 * scale }]}>
-                  {' '}/{totalCoins} FCFA
+                  {' '}/{targetRewardAmount.toLocaleString()} FCFA
                 </Text>
               </View>
 

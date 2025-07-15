@@ -1,0 +1,27 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 252 53" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Rectangle 81" filter="url(#filter0_dii_162_50)">
+<path d="M2 25C2 12.2975 12.2975 2 25 2H227C239.703 2 250 12.2975 250 25V25C250 37.7025 239.703 48 227 48H25C12.2974 48 2 37.7025 2 25V25Z" fill="var(--fill-0, #FFF4D8)"/>
+<path d="M227 1C240.255 1 251 11.7452 251 25C251 38.2548 240.255 49 227 49H25C11.7452 49 1 38.2548 1 25C1 11.7452 11.7452 1 25 1H227Z" stroke="var(--stroke-0, #A14E1E)" stroke-width="2"/>
+</g>
+<defs>
+<filter id="filter0_dii_162_50" x="0" y="0" width="252" height="53" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.597255 0 0 0 0 0.267308 0 0 0 0 0.0764946 0 0 0 1 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_162_50"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_162_50" result="shape"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="-7"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.866338 0 0 0 0 0.569781 0 0 0 0 0.398278 0 0 0 1 0"/>
+<feBlend mode="normal" in2="shape" result="effect2_innerShadow_162_50"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="6"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.907177 0 0 0 0 0.6709 0 0 0 1 0"/>
+<feBlend mode="normal" in2="effect2_innerShadow_162_50" result="effect3_innerShadow_162_50"/>
+</filter>
+</defs>
+</svg>

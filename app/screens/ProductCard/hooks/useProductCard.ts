@@ -11,6 +11,7 @@ import useCartStore from "../../../store/cartStore";
 import useAnalyticsStore from "../../../store/analytics";
 import { t } from "../../../i18n";
 import { logAddToCartEvent } from "../../../services/facebook-events";
+import useActivityStore from "../../../store/activityStore";
 
 interface UseProductCardProps {
   localProduct: ProductDetailParams;
@@ -347,6 +348,11 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
             position: "top",
             visibilityTime: 2000,
           });
+          
+          // 上报加购任务完成（任务3）
+          const activityStore = useActivityStore.getState();
+          activityStore.reportTaskComplete(3);
+          
           // 加购成功后关闭弹窗
           if (onClose) {
             onClose();
@@ -454,6 +460,11 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
             position: "top",
             visibilityTime: 2000,
           });
+          
+          // 上报加购任务完成（任务3）
+          const activityStore = useActivityStore.getState();
+          activityStore.reportTaskComplete(3);
+          
           // 加购成功后关闭弹窗
           if (onClose) {
             onClose();
@@ -521,6 +532,11 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
             position: "top",
             visibilityTime: 2000,
           });
+          
+          // 上报加购任务完成（任务3）
+          const activityStore = useActivityStore.getState();
+          activityStore.reportTaskComplete(3);
+          
           // 加购成功后关闭弹窗
           if (onClose) {
             onClose();
@@ -562,6 +578,11 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
             position: "top",
             visibilityTime: 2000,
           });
+          
+          // 上报加购任务完成（任务3）
+          const activityStore = useActivityStore.getState();
+          activityStore.reportTaskComplete(3);
+          
           // 加购成功后关闭弹窗
           if (onClose) {
             onClose();

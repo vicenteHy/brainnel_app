@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { signIn, getSignInStatus, TaskItem as TaskData } from '../../services/api/activity';
+import useActivityStore from '../../store/activityStore';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -23,24 +25,48 @@ interface DayCheckInItemProps {
   isCompleted: boolean;
   isActive: boolean;
   onPress: () => void;
+  currentDay: number;
 }
 
-const DayCheckInItem: React.FC<DayCheckInItemProps> = ({ day, amount, isCompleted, isActive, onPress }) => {
+const DayCheckInItem: React.FC<DayCheckInItemProps> = ({ day, amount, isCompleted, isActive, onPress, currentDay }) => {
   const getBackgroundImage = () => {
-    if (isCompleted) return require('../../../assets/img/dayBgCompleted.png');
-    if (isActive) return require('../../../assets/img/dayBgActive.png');
-    return require('../../../assets/img/dayBgGray.png');
+    // 当天未完成签到
+    if (day === currentDay && !isCompleted) {
+      return require('../../../assets/img/sign1.png');
+    }
+    // 当天完成签到
+    if (day === currentDay && isCompleted) {
+      return require('../../../assets/img/sign2.png');
+    }
+    // 未来的签到
+    if (day > currentDay) {
+      return require('../../../assets/img/sign3.png');
+    }
+    // 过期的签到
+    if (day < currentDay) {
+      // 过期但已完成签到（灰色有打勾）
+      if (isCompleted) {
+        return require('../../../assets/img/sign5.png');
+      }
+      // 过期且未签到（灰色没有打勾）
+      return require('../../../assets/img/sign4.png');
+    }
+    return require('../../../assets/img/sign3.png');
   };
 
   const getTextColor = () => {
-    if (isCompleted) return '#B6B6B6';
-    if (isActive) return '#FFFFFF';
+    // 当天（无论是否完成）显示白色
+    if (day === currentDay) return '#FFFFFF';
+    // 其他情况显示灰色
     return '#B6B6B6';
   };
 
   const getRewardTextColor = () => {
-    if (isCompleted) return '#B6B6B6';
-    if (isActive) return '#FF5100';
+    // 当天未完成显示橙色
+    if (day === currentDay && !isCompleted) return '#FF5100';
+    // 当天已完成显示白色
+    if (day === currentDay && isCompleted) return '#FFFFFF';
+    // 其他情况显示灰色
     return '#B6B6B6';
   };
 
@@ -52,10 +78,11 @@ const DayCheckInItem: React.FC<DayCheckInItemProps> = ({ day, amount, isComplete
         resizeMode="contain"
       >
         <Text style={[styles.dayText, { color: getTextColor() }]}>Jour {day}</Text>
-        <View style={styles.dayDivider}>
+        {/* 分隔线可能不需要了，但先保留以防万一 */}
+        {/* <View style={styles.dayDivider}>
           <View style={styles.dayDividerLeft} />
           <View style={styles.dayDividerRight} />
-        </View>
+        </View> */}
         <Text style={[styles.dayReward, { color: getRewardTextColor() }]}>+{amount} FCFA</Text>
       </ImageBackground>
     </TouchableOpacity>
@@ -69,7 +96,7 @@ interface TaskItemProps {
   reward: number;
   buttonText: string;
   onPress: () => void;
-  isCompleted?: boolean;
+  status?: number; // 0: 待完成, 1: 已完成待领取, 2: 已完成已领取
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -79,9 +106,46 @@ const TaskItem: React.FC<TaskItemProps> = ({
   reward,
   buttonText,
   onPress,
-  isCompleted = false,
+  status = 0,
 }) => {
-  const isLoginButton = buttonText === "Se connecter";
+  const getButtonStyle = () => {
+    switch (status) {
+      case 0: // 待完成
+        return styles.taskButton;
+      case 1: // 已完成待领取
+        return [styles.taskButton, styles.taskButtonReadyToClaim];
+      case 2: // 已完成已领取
+        return [styles.taskButton, styles.taskButtonClaimed];
+      default:
+        return styles.taskButton;
+    }
+  };
+
+  const getButtonTextStyle = () => {
+    switch (status) {
+      case 0: // 待完成
+        return styles.taskButtonText;
+      case 1: // 已完成待领取
+        return [styles.taskButtonText, styles.taskButtonTextReadyToClaim];
+      case 2: // 已完成已领取
+        return [styles.taskButtonText, styles.taskButtonTextClaimed];
+      default:
+        return styles.taskButtonText;
+    }
+  };
+
+  const getButtonText = () => {
+    switch (status) {
+      case 0: // 待完成
+        return 'Compléter';
+      case 1: // 已完成待领取
+        return 'Réclamer';
+      case 2: // 已完成已领取
+        return 'Réclamé';
+      default:
+        return buttonText;
+    }
+  };
   
   return (
     <ImageBackground
@@ -91,19 +155,12 @@ const TaskItem: React.FC<TaskItemProps> = ({
     >
       <View style={styles.taskContent}>
         <TouchableOpacity
-          style={[
-            styles.taskButton,
-            isLoginButton && styles.taskButtonLogin,
-            isCompleted && styles.taskButtonCompleted
-          ]}
+          style={getButtonStyle()}
           onPress={onPress}
+          disabled={status === 2}
         >
-          <Text style={[
-            styles.taskButtonText,
-            isLoginButton && styles.taskButtonTextLogin,
-            isCompleted && styles.taskButtonTextCompleted
-          ]}>
-            {buttonText}
+          <Text style={getButtonTextStyle()}>
+            {getButtonText()}
           </Text>
         </TouchableOpacity>
       </View>
@@ -114,35 +171,120 @@ const TaskItem: React.FC<TaskItemProps> = ({
 const TaskCenterScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const [checkInDays, setCheckInDays] = useState([
-    { day: 1, completed: true },
-    { day: 2, completed: true },
-    { day: 3, completed: true },
+    { day: 1, completed: false },
+    { day: 2, completed: false },
+    { day: 3, completed: false },
     { day: 4, completed: false },
     { day: 5, completed: false },
   ]);
-  const [currentDay, setCurrentDay] = useState(3);
+  const [currentDay, setCurrentDay] = useState(1);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // 使用 activity store
+  const { tasks, fetchTasks, getTaskStatus: getTaskStatusFromStore, reportTaskClaimed } = useActivityStore();
 
-  const handleCheckIn = () => {
-    if (currentDay >= 5) {
-      Alert.alert(t('提示'), t('已完成所有签到'));
+  // 加载签到状态
+  const loadSignInStatus = async () => {
+    try {
+      const status = await getSignInStatus();
+      console.log('签到状态:', status);
+      
+      // 更新签到天数
+      if (status.sign_ins && status.sign_ins.length > 0) {
+        const updatedDays = status.sign_ins.map((item, index) => ({
+          day: index + 1,
+          completed: item.is_check_in
+        }));
+        setCheckInDays(updatedDays);
+        
+        // 计算当前应该签到的天数
+        const today = new Date(status.today);
+        const firstDay = new Date(status.sign_ins[0].sign_in_date);
+        const dayDiff = Math.floor((today.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // 找到今天对应的签到日期
+        const todayIndex = status.sign_ins.findIndex(item => item.sign_in_date === status.today);
+        if (todayIndex !== -1) {
+          // 设置当前天数为今天（无论是否已签到）
+          setCurrentDay(todayIndex + 1);
+        } else {
+          // 如果找不到今天，则设置为第一个未签到的天数
+          const nextUncheckedIndex = status.sign_ins.findIndex(item => !item.is_check_in);
+          setCurrentDay(nextUncheckedIndex === -1 ? 5 : nextUncheckedIndex + 1);
+        }
+      }
+    } catch (error) {
+      console.error('加载签到状态失败:', error);
+    }
+  };
+
+  // 加载任务列表
+  const loadTasks = async () => {
+    try {
+      await fetchTasks();
+    } catch (error) {
+      console.error('加载任务列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSignInStatus();
+    loadTasks();
+  }, []);
+
+  const handleCheckIn = async () => {
+    // 检查当天是否已签到
+    if (checkInDays[currentDay - 1].completed) {
+      Alert.alert(t('提示'), t('今日已签到'));
       return;
     }
 
-    const nextDay = currentDay + 1;
-    const newCheckInDays = [...checkInDays];
-    newCheckInDays[nextDay - 1].completed = true;
-    setCheckInDays(newCheckInDays);
-    setCurrentDay(nextDay);
-
-    Alert.alert(t('签到成功'), t(`您已获得 2 FCFA！`));
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      // 调用签到API
+      await signIn();
+      
+      // 重新加载签到状态
+      await loadSignInStatus();
+      
+      Alert.alert(t('签到成功'), t(`您已获得 2 FCFA！`));
+    } catch (error) {
+      console.error('签到失败:', error);
+      Alert.alert(t('错误'), t('签到失败，请重试'));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleTaskAction = (taskName: string) => {
-    Alert.alert(t('提示'), t(`${taskName} 功能即将开放`));
+  const handleTaskAction = (taskId: number) => {
+    switch (taskId) {
+      case 1: // 图搜
+      case 2: // 文本搜索
+        navigation.navigate('SearchResult' as any);
+        break;
+      case 3: // 加购
+        navigation.navigate('Home' as any);
+        break;
+      case 4: // 添加地址
+        navigation.navigate('AddAddress' as any);
+        break;
+      case 5: // 下单
+        navigation.navigate('Home' as any);
+        break;
+      default:
+        Alert.alert(t('提示'), t('功能即将开放'));
+    }
   };
 
   const isSignedInToday = checkInDays[currentDay - 1]?.completed || false;
+
+  // 根据task_id获取任务状态
+  const getTaskStatus = (taskId: number): number => {
+    return getTaskStatusFromStore(taskId);
+  };
 
   return (
     <View style={styles.container}>
@@ -194,8 +336,13 @@ const TaskCenterScreen = ({ navigation }: any) => {
                 day={item.day}
                 amount={2}
                 isCompleted={item.completed}
-                isActive={item.day === currentDay + 1 && !item.completed}
-                onPress={() => {}}
+                isActive={item.day === currentDay && !item.completed}
+                onPress={() => {
+                  if (item.day === currentDay && !item.completed && !loading) {
+                    handleCheckIn();
+                  }
+                }}
+                currentDay={currentDay}
               />
             ))}
           </View>
@@ -203,16 +350,22 @@ const TaskCenterScreen = ({ navigation }: any) => {
           {/* 签到进度和按钮 */}
           <View style={styles.checkInFooter}>
             <Text style={styles.checkInProgress}>
-              <Text style={styles.checkInProgressHighlight}>{currentDay}</Text>
+              <Text style={styles.checkInProgressHighlight}>{checkInDays.filter(d => d.completed).length}</Text>
               <Text style={styles.checkInProgressText}>/5 complété</Text>
             </Text>
             <TouchableOpacity
-              style={styles.checkInButtonCompleted}
+              style={[
+                styles.checkInButton,
+                isSignedInToday && styles.checkInButtonCompleted
+              ]}
               onPress={handleCheckIn}
-              disabled={true}
+              disabled={isSignedInToday || currentDay > 5 || loading}
             >
-              <Text style={styles.checkInButtonTextCompleted}>
-                Complété
+              <Text style={[
+                styles.checkInButtonText,
+                isSignedInToday && styles.checkInButtonTextCompleted
+              ]}>
+                {loading ? 'Chargement...' : (isSignedInToday ? 'Complété' : 'Se connecter')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -227,6 +380,9 @@ const TaskCenterScreen = ({ navigation }: any) => {
             />
             <Text style={styles.sectionTitle}>Tâches de grande valeur</Text>
           </View>
+          
+          {/* 横线分隔 */}
+          <View style={styles.divider} />
 
           <View style={styles.tasksList}>
             <TaskItem
@@ -234,15 +390,18 @@ const TaskCenterScreen = ({ navigation }: any) => {
               title="Recherche par image"
               description="Search for products using images to discover what you want"
               reward={20}
-              buttonText={isLoggedIn ? "Compléter" : "Se connecter"}
-              onPress={() => {
-                if (!isLoggedIn) {
-                  Alert.alert(t('提示'), t('请先登录'));
-                } else {
-                  handleTaskAction('Recherche par image');
+              buttonText=""
+              status={getTaskStatus(1)}
+              onPress={async () => {
+                const status = getTaskStatus(1);
+                if (status === 1) {
+                  // 领取奖励
+                  await reportTaskClaimed(1);
+                  Alert.alert(t('成功'), t('奖励领取成功'));
+                } else if (status === 0) {
+                  handleTaskAction(1);
                 }
               }}
-              isCompleted={false}
             />
 
             <TaskItem
@@ -250,9 +409,18 @@ const TaskCenterScreen = ({ navigation }: any) => {
               title="Recherche par texte"
               description="Search for any product using keywords"
               reward={20}
-              buttonText="Compléter"
-              onPress={() => handleTaskAction('Recherche par texte')}
-              isCompleted={false}
+              buttonText=""
+              status={getTaskStatus(2)}
+              onPress={async () => {
+                const status = getTaskStatus(2);
+                if (status === 1) {
+                  // 领取奖励
+                  await reportTaskClaimed(2);
+                  Alert.alert(t('成功'), t('奖励领取成功'));
+                } else if (status === 0) {
+                  handleTaskAction(2);
+                }
+              }}
             />
 
             <TaskItem
@@ -260,9 +428,18 @@ const TaskCenterScreen = ({ navigation }: any) => {
               title="Ajouter au panier"
               description="Add any product to your shopping cart"
               reward={50}
-              buttonText="Compléter"
-              onPress={() => handleTaskAction('Ajouter au panier')}
-              isCompleted={false}
+              buttonText=""
+              status={getTaskStatus(3)}
+              onPress={async () => {
+                const status = getTaskStatus(3);
+                if (status === 1) {
+                  // 领取奖励
+                  await reportTaskClaimed(3);
+                  Alert.alert(t('成功'), t('奖励领取成功'));
+                } else if (status === 0) {
+                  handleTaskAction(3);
+                }
+              }}
             />
 
             <TaskItem
@@ -270,9 +447,18 @@ const TaskCenterScreen = ({ navigation }: any) => {
               title="Enregistrer l'adresse de livraison"
               description="Fill in and save your delivery address"
               reward={30}
-              buttonText="Compléter"
-              onPress={() => handleTaskAction('Enregistrer l\'adresse')}
-              isCompleted={false}
+              buttonText=""
+              status={getTaskStatus(4)}
+              onPress={async () => {
+                const status = getTaskStatus(4);
+                if (status === 1) {
+                  // 领取奖励
+                  await reportTaskClaimed(4);
+                  Alert.alert(t('成功'), t('奖励领取成功'));
+                } else if (status === 0) {
+                  handleTaskAction(4);
+                }
+              }}
             />
 
             <TaskItem
@@ -280,19 +466,22 @@ const TaskCenterScreen = ({ navigation }: any) => {
               title="Passer une commande"
               description="Complete your first order (50,000 FCFA)"
               reward={100}
-              buttonText="Compléter"
-              onPress={() => handleTaskAction('Passer une commande')}
-              isCompleted={false}
+              buttonText=""
+              status={getTaskStatus(5)}
+              onPress={async () => {
+                const status = getTaskStatus(5);
+                if (status === 1) {
+                  // 领取奖励
+                  await reportTaskClaimed(5);
+                  Alert.alert(t('成功'), t('奖励领取成功'));
+                } else if (status === 0) {
+                  handleTaskAction(5);
+                }
+              }}
             />
           </View>
         </View>
 
-        {/* 底部大奖励卡片 */}
-        <Image
-          source={require('../../../assets/img/rewardBgLarge.png')}
-          style={styles.rewardCard}
-          resizeMode="contain"
-        />
       </ScrollView>
     </View>
   );
@@ -349,7 +538,7 @@ const styles = StyleSheet.create({
   checkInCard: {
     marginHorizontal: 17,
     marginTop: -81,
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFF5DB',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingTop: 20,
@@ -497,6 +686,7 @@ const styles = StyleSheet.create({
   taskItem: {
     height: 92,
     marginBottom: 16,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   taskContent: {
@@ -509,8 +699,10 @@ const styles = StyleSheet.create({
   taskButton: {
     width: 104,
     height: 32,
-    backgroundColor: '#FF5100',
+    backgroundColor: '#FFEDE5',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FF5100',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -522,7 +714,7 @@ const styles = StyleSheet.create({
   taskButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFF',
+    color: '#FF5100',
   },
   taskButtonTextCompleted: {
     color: '#FF5100',
@@ -535,12 +727,24 @@ const styles = StyleSheet.create({
   taskButtonTextLogin: {
     color: '#FF5100',
   },
-  rewardCard: {
-    width: screenWidth - 34,
-    height: 107,
-    marginHorizontal: 17,
-    marginTop: 16,
-    marginBottom: 30,
+  divider: {
+    height: 1,
+    backgroundColor: '#F6F6F6',
+    marginBottom: 16,
+  },
+  taskButtonClaimed: {
+    backgroundColor: '#B6B6B6',
+    borderColor: '#B6B6B6',
+  },
+  taskButtonTextClaimed: {
+    color: '#FFF',
+  },
+  taskButtonReadyToClaim: {
+    backgroundColor: '#FF5100',
+    borderColor: '#FF5100',
+  },
+  taskButtonTextReadyToClaim: {
+    color: '#FFF',
   },
 });
 
