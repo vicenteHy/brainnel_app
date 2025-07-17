@@ -44,6 +44,7 @@ interface CategoryPageProps {
   onRefresh: (categoryId: number) => void;
   onProductPress: (item: Product) => void;
   onCameraPress: () => void;
+  onLoginRequired: () => void; // 新增：需要登录时的回调
   userStore: any;
   t: (key: string) => string;
   isActive: boolean; // 是否为当前活跃页面
@@ -63,6 +64,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   onRefresh,
   onProductPress,
   onCameraPress,
+  onLoginRequired,
   userStore,
   t,
   isActive,
@@ -355,7 +357,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           // 推荐页面显示功能导航和轮播图
           <>
             <FeatureNavigationBar />
-            <CarouselBanner onCameraPress={onCameraPress} />
+            <CarouselBanner onCameraPress={onCameraPress} onLoginRequired={onLoginRequired} />
           </>
         ) : (
           // 分类页面显示二级分类

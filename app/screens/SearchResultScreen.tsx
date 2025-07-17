@@ -29,6 +29,7 @@ import { getCurrentLanguage } from "../i18n";
 import useAnalyticsStore from "../store/analytics";
 import { eventBus } from "../utils/eventBus";
 import useActivityStore from "../store/activityStore";
+import { TaskCompleteModal } from './activity';
 
 import { IconComponent, ProductSkeleton, ProductItem } from "./SearchResultScreen/components";
 import { useSearchProducts } from "./SearchResultScreen/hooks";
@@ -48,6 +49,8 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState("");
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showTaskCompleteModal, setShowTaskCompleteModal] = useState(false);
+  const [taskInfo, setTaskInfo] = useState({ taskName: '', reward: '' });
   const flatListRef = useRef<FlatList>(null);
   const userStore = useUserStore();
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -190,14 +193,23 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     };
   }, [searchText, searchParams, route.params?.category_id, searchProducts]);
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (searchText.trim()) {
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logSearch(searchText.trim(), "search");
       
       // 上报文本搜索任务完成（任务2）
       const activityStore = useActivityStore.getState();
-      activityStore.reportTaskComplete(2);
+      const taskData = await activityStore.reportTaskComplete(2);
+      
+      // 根据API返回的任务信息显示弹窗
+      if (taskData && taskData.status === 2) {
+        setTaskInfo({
+          taskName: taskData.task_name,
+          reward: `+${taskData.reward_value} FCFA`
+        });
+        setShowTaskCompleteModal(true);
+      }
       
       setShowSkeleton(true);
       const newParams = {
@@ -480,6 +492,14 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
           </View>
         </View>
       </View>
+
+      {/* 任务完成弹窗 */}
+      <TaskCompleteModal
+        visible={showTaskCompleteModal}
+        onClose={() => setShowTaskCompleteModal(false)}
+        taskTitle={taskInfo.taskName}
+        reward={taskInfo.reward}
+      />
     </SafeAreaView>
   );
 };

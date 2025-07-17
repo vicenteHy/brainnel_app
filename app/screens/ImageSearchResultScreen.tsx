@@ -42,6 +42,7 @@ import Toast from "react-native-toast-message";
 import * as FileSystem from 'expo-file-system';
 import useAnalyticsStore from "../store/analytics";
 import useActivityStore from "../store/activityStore";
+import { TaskCompleteModal } from './activity';
 
 
 
@@ -314,6 +315,8 @@ export const ImageSearchResultScreen = ({
   const [isImageSearch, setIsImageSearch] = useState(false);
   const searchImageInProgress = useRef(false);
   const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
+  const [showTaskCompleteModal, setShowTaskCompleteModal] = useState(false);
+  const [taskInfo, setTaskInfo] = useState({ taskName: '', reward: '' });
 
   // 获取初始图片URI
   const imageUri = useMemo(() => {
@@ -395,7 +398,16 @@ export const ImageSearchResultScreen = ({
         
         // 上报图片搜索任务完成（任务1）- 只在首次搜索时上报，加载更多不上报
         const activityStore = useActivityStore.getState();
-        activityStore.reportTaskComplete(1);
+        const taskData = await activityStore.reportTaskComplete(1);
+        
+        // 根据API返回的任务信息显示弹窗
+        if (taskData && taskData.status === 2) {
+          setTaskInfo({
+            taskName: taskData.task_name,
+            reward: `+${taskData.reward_value} FCFA`
+          });
+          setShowTaskCompleteModal(true);
+        }
       }
 
       setHasMore(productList.length === 20);
@@ -739,6 +751,14 @@ export const ImageSearchResultScreen = ({
         </View>
         
       </View>
+
+      {/* 任务完成弹窗 */}
+      <TaskCompleteModal
+        visible={showTaskCompleteModal}
+        onClose={() => setShowTaskCompleteModal(false)}
+        taskTitle={taskInfo.taskName}
+        reward={taskInfo.reward}
+      />
     </SafeAreaView>
   );
 };

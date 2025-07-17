@@ -28,6 +28,7 @@ import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
+import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
 
 // 国家代码到Country对象的映射
 const countryCodeToCountry: { [key: number]: Country } = {
@@ -147,6 +148,19 @@ export const PhoneLoginScreen = () => {
 
     try {
       setLoading(true);
+      
+      // 获取设备指纹
+      let fingerprintHash = '';
+      try {
+        console.log('[PhoneLogin] 开始收集设备指纹...');
+        const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+        fingerprintHash = deviceInfo.fingerprintHash;
+        console.log('[PhoneLogin] 设备指纹哈希:', fingerprintHash);
+      } catch (error) {
+        console.error('[PhoneLogin] 获取设备指纹失败:', error);
+        // 继续登录流程，不阻塞
+      }
+      
       const fullPhoneNumber = `${selectedCountry?.phoneCode || '+225'}${phoneNumber}`;
       console.log('[PhoneLogin] 密码登录完整手机号:', fullPhoneNumber);
 
@@ -157,6 +171,7 @@ export const PhoneLoginScreen = () => {
         client_id: "2",
         client_secret: "",
         scope: "",
+        fingerprint_hash: fingerprintHash
       };
       console.log('[PhoneLogin] 密码登录请求参数:', params);
 
@@ -245,11 +260,24 @@ export const PhoneLoginScreen = () => {
 
     try {
       setLoading(true);
+      
+      // 获取设备指纹
+      let fingerprintHash = '';
+      try {
+        console.log('[PhoneLogin] 开始收集设备指纹...');
+        const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+        fingerprintHash = deviceInfo.fingerprintHash;
+        console.log('[PhoneLogin] 设备指纹哈希:', fingerprintHash);
+      } catch (error) {
+        console.error('[PhoneLogin] 获取设备指纹失败:', error);
+        // 继续登录流程，不阻塞
+      }
+      
       const fullPhoneNumber = `${selectedCountry?.phoneCode || '+225'}${phoneNumber}`;
       console.log('[PhoneLogin] 验证OTP完整手机号:', fullPhoneNumber);
       console.log('[PhoneLogin] 开始调用验证OTP API');
 
-      const res = await userApi.verifyOtp(fullPhoneNumber, verificationCode);
+      const res = await userApi.verifyOtp(fullPhoneNumber, verificationCode, fingerprintHash);
       console.log('[PhoneLogin] 验证OTP API响应:', res);
 
       if (res.access_token) {

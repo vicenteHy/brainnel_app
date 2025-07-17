@@ -10,12 +10,16 @@ import {
   StatusBar,
   SafeAreaView,
   Dimensions,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import WithdrawalSuccessModal from './WithdrawalSuccessModal';
 import WaveWithdrawalModal from './WaveWithdrawalModal';
+import WavePendingModal from './WavePendingModal';
+import { initiateWithdrawal } from '../../services/api/activity';
 const { width: screenWidth } = Dimensions.get('window');
 
 const WithdrawalScreen = () => {
@@ -24,6 +28,78 @@ const WithdrawalScreen = () => {
   const [selectedMethod, setSelectedMethod] = useState<'brainnel' | 'wave' | null>('brainnel');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showWaveModal, setShowWaveModal] = useState(false);
+  const [showWavePendingModal, setShowWavePendingModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [withdrawalData, setWithdrawalData] = useState({
+    amount: '3000 FCFA',
+    transactionFee: '2000 FCFA',
+    phoneNumber: ''
+  });
+
+  // 处理提现请求
+  const handleWithdrawal = async (withdrawalAccount: string) => {
+    console.log('=== handleWithdrawal 被调用了 ===', withdrawalAccount);
+    setIsLoading(true);
+    try {
+      const response = await initiateWithdrawal({
+        amount: 5000, // 固定金额
+        withdrawal_method: selectedMethod === 'brainnel' ? 'balance' : 'wave',
+        withdrawal_account: withdrawalAccount,
+      });
+
+      console.log('提现响应:', response);
+
+      // 根据不同的状态处理
+      switch (response.status) {
+        case 'paid':
+          // 已支付，显示成功弹窗
+          setShowSuccessModal(true);
+          break;
+        case 'pending':
+          // 对于Wave提现，显示pending弹窗
+          if (selectedMethod === 'wave') {
+            console.log('=== 准备显示 WavePendingModal ===');
+            setWithdrawalData(prev => ({
+              ...prev,
+              phoneNumber: '+' + withdrawalAccount
+            }));
+            setShowWavePendingModal(true);
+          } else {
+            Alert.alert(
+              t('提现处理中'),
+              t('您的提现申请正在处理中，请稍后查看状态。'),
+              [{ text: t('确定'), onPress: () => navigation.goBack() }]
+            );
+          }
+          break;
+        case 'approved':
+          Alert.alert(
+            t('提现已批准'),
+            t('您的提现申请已批准，正在处理付款。'),
+            [{ text: t('确定'), onPress: () => navigation.goBack() }]
+          );
+          break;
+        case 'rejected':
+          Alert.alert(
+            t('提现失败'),
+            t('您的提现申请被拒绝，请联系客服了解详情。'),
+            [{ text: t('确定') }]
+          );
+          break;
+        default:
+          Alert.alert(t('错误'), t('未知的提现状态'));
+      }
+    } catch (error) {
+      console.error('提现失败:', error);
+      Alert.alert(
+        t('提现失败'),
+        t('提现请求失败，请稍后重试。'),
+        [{ text: t('确定') }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -92,18 +168,24 @@ const WithdrawalScreen = () => {
       {/* 底部按钮 */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity 
-          style={[styles.confirmButton, !selectedMethod && styles.confirmButtonDisabled]}
-          disabled={!selectedMethod}
+          style={[styles.confirmButton, (!selectedMethod || isLoading) && styles.confirmButtonDisabled]}
+          disabled={!selectedMethod || isLoading}
           onPress={() => {
             // 处理提现确认
             if (selectedMethod === 'brainnel') {
-              setShowSuccessModal(true);
+              // balance支付，直接调用API
+              handleWithdrawal('string');
             } else if (selectedMethod === 'wave') {
+              // Wave支付，先显示输入电话号码的弹窗
               setShowWaveModal(true);
             }
           }}
         >
-          <Text style={styles.confirmButtonText}>Confirmer le retrait</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.confirmButtonText}>Confirmer le retrait</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -123,12 +205,33 @@ const WithdrawalScreen = () => {
         visible={showWaveModal}
         onClose={() => setShowWaveModal(false)}
         onConfirm={(phoneNumber) => {
-          console.log('Wave提现电话号码:', phoneNumber);
+          console.log('=== WaveWithdrawalModal onConfirm 被调用 ===', phoneNumber);
+          // 保存电话号码到状态
+          const cleanPhoneNumber = phoneNumber.replace('+', '');
+          setWithdrawalData(prev => ({
+            ...prev,
+            phoneNumber: phoneNumber
+          }));
+          
+          // 关闭Wave输入弹窗
           setShowWaveModal(false);
-          // 这里可以添加提交Wave提现请求的逻辑
-          // 提交成功后可以显示成功弹窗
-          setShowSuccessModal(true);
+          
+          // 调用handleWithdrawal发起支付请求
+          handleWithdrawal(cleanPhoneNumber);
         }}
+      />
+
+      {/* Wave Pending弹窗 */}
+      <WavePendingModal
+        visible={showWavePendingModal}
+        onClose={() => {
+          setShowWavePendingModal(false);
+          // 跳转到首页
+          navigation.navigate('MainTabs', { screen: 'Home' });
+        }}
+        amount={withdrawalData.amount}
+        transactionFee={withdrawalData.transactionFee}
+        phoneNumber={withdrawalData.phoneNumber}
       />
     </SafeAreaView>
   );

@@ -15,7 +15,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import WaveWithdrawalSubmitModal from './WaveWithdrawalSubmitModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -32,7 +31,6 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showCountryList, setShowCountryList] = useState(false);
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState({
     name: "Côte d'Ivoire",
     code: '+225',
@@ -64,13 +62,9 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
 
   const handleConfirm = () => {
     if (phoneNumber.trim()) {
-      setShowSubmitModal(true);
+      const fullPhoneNumber = `${selectedCountry.code}${phoneNumber}`;
+      onConfirm(fullPhoneNumber);
     }
-  };
-  
-  const handleSubmitConfirm = () => {
-    setShowSubmitModal(false);
-    onConfirm(phoneNumber);
   };
 
   const selectCountry = (country: typeof countries[0]) => {
@@ -82,7 +76,7 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="slide"
+      animationType="none"
       statusBarTranslucent={true}
     >
       <StatusBar backgroundColor="rgba(0,0,0,0.6)" barStyle="light-content" />
@@ -169,7 +163,7 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
       <Modal
         visible={showCountryList}
         transparent={true}
-        animationType="slide"
+        animationType="none"
       >
         <TouchableWithoutFeedback onPress={() => setShowCountryList(false)}>
           <View style={styles.countryModalOverlay}>
@@ -210,15 +204,6 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
         </TouchableWithoutFeedback>
       </Modal>
       
-      {/* Wave提现提交确认弹窗 */}
-      <WaveWithdrawalSubmitModal
-        visible={showSubmitModal}
-        onClose={() => setShowSubmitModal(false)}
-        onConfirm={handleSubmitConfirm}
-        amount="5,000 FCFA"
-        phoneNumber={`${selectedCountry.code} ${phoneNumber}`}
-        transactionFee="2000 FCFA"
-      />
     </Modal>
   );
 };

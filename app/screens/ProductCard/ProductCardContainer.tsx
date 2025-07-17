@@ -12,6 +12,7 @@ import {
 } from "./components";
 import { useProductCard } from "./hooks/useProductCard";
 import widthUtils from "../../utils/widthUtils";
+import { TaskCompleteModal } from '../activity';
 
 interface ProductCardContainerProps {
   onClose: () => void;
@@ -33,6 +34,7 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
     quantityInput,
     mainProductQuantity,
     skuQuantities,
+    taskCompleteInfo,
     
     // Store 数据
     imgTitle,
@@ -57,6 +59,7 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
     setQuantityInputVisible,
     setEditingItem,
     setAlertModalVisible,
+    setTaskCompleteInfo,
   } = useProductCard({ localProduct, localGroupList, onClose });
 
   // 渲染SKU选择器
@@ -121,6 +124,20 @@ const ProductCardContainer: React.FC<ProductCardContainerProps> = ({
           setQuantityInput("");
         }}
         onQuantityInputChange={setQuantityInput}
+      />
+
+      {/* 任务完成弹窗 */}
+      <TaskCompleteModal
+        visible={taskCompleteInfo.show}
+        onClose={() => {
+          setTaskCompleteInfo({ ...taskCompleteInfo, show: false });
+          // 任务完成弹窗关闭后，也关闭产品卡片
+          if (onClose) {
+            onClose();
+          }
+        }}
+        taskTitle={taskCompleteInfo.taskName}
+        reward={taskCompleteInfo.reward}
       />
     </View>
   );

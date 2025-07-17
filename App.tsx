@@ -25,7 +25,7 @@ import { UpdateType } from "./app/utils/versionUtils";
 import Constants from 'expo-constants';
 import { initializeFacebookSDK, extractAndSaveFbclid } from "./app/services/facebook-events";
 import websocketService from "./app/services/websocketService";
-import DeviceInfoCollector from "./app/utils/deviceInfoCollector";
+import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -211,15 +211,13 @@ function AppContent() {
           // 采集设备信息
           // 延迟执行，避免启动时的模块加载问题
           setTimeout(() => {
-            DeviceInfoCollector.collectDeviceInfo()
+            // 采集简化的设备信息
+            DeviceFingerprintCollector.collectSimpleDeviceInfo()
               .then(deviceInfo => {
-                console.log('[App] 设备信息采集成功');
-                // 可以在这里将设备信息发送到服务器或保存到本地
-                // 例如：await AsyncStorage.setItem('device_fingerprint', JSON.stringify(deviceInfo));
+                console.log('[App] 设备信息采集成功:');
                 
-                // 生成设备指纹哈希
-                const fingerprintHash = DeviceInfoCollector.generateFingerprintHash(deviceInfo);
-                console.log(`[App] 设备指纹哈希: ${fingerprintHash}`);
+                // 打印简化的设备信息
+                DeviceFingerprintCollector.printSimpleDeviceInfo(deviceInfo);
               })
               .catch(error => {
                 console.error('[App] 设备信息采集失败:', error);

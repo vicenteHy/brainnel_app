@@ -24,6 +24,7 @@ interface MultiPageContainerProps {
   onRefresh: (categoryId: number) => void;
   onProductPress: (item: Product) => void;
   onCameraPress: () => void;
+  onLoginRequired: () => void; // 新增：需要登录时的回调
   userStore: any;
   t: (key: string) => string;
   subcategories?: any[];
@@ -41,6 +42,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
   onRefresh,
   onProductPress,
   onCameraPress,
+  onLoginRequired,
   userStore,
   t,
   subcategories = [],
@@ -134,6 +136,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
           onRefresh={onRefresh}
           onProductPress={onProductPress}
           onCameraPress={onCameraPress}
+          onLoginRequired={onLoginRequired}
           userStore={userStore}
           t={t}
           isActive={true}
@@ -178,6 +181,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
               onRefresh={onRefresh}
               onProductPress={onProductPress}
               onCameraPress={onCameraPress}
+              onLoginRequired={onLoginRequired}
               userStore={userStore}
               t={t}
               isActive={isActive}

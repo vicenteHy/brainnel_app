@@ -262,8 +262,10 @@ const TaskCenterScreen = ({ navigation }: any) => {
   const handleTaskAction = (taskId: number) => {
     switch (taskId) {
       case 1: // 图搜
+        navigation.navigate('Search' as any);
+        break;
       case 2: // 文本搜索
-        navigation.navigate('SearchResult' as any);
+        navigation.navigate('Search' as any);
         break;
       case 3: // 加购
         navigation.navigate('Home' as any);
@@ -305,7 +307,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
         >
           {/* 导航栏 */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={() => navigation.navigate('MiningGameScreen')}>
               <Ionicons name="chevron-back" size={22} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Centre des Missions</Text>
@@ -399,6 +401,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
                   await reportTaskClaimed(1);
                   Alert.alert(t('成功'), t('奖励领取成功'));
                 } else if (status === 0) {
+                  // 跳转到对应页面完成任务
                   handleTaskAction(1);
                 }
               }}
@@ -418,6 +421,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
                   await reportTaskClaimed(2);
                   Alert.alert(t('成功'), t('奖励领取成功'));
                 } else if (status === 0) {
+                  // 跳转到对应页面完成任务
                   handleTaskAction(2);
                 }
               }}
@@ -437,6 +441,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
                   await reportTaskClaimed(3);
                   Alert.alert(t('成功'), t('奖励领取成功'));
                 } else if (status === 0) {
+                  // 跳转到对应页面完成任务
                   handleTaskAction(3);
                 }
               }}
@@ -456,6 +461,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
                   await reportTaskClaimed(4);
                   Alert.alert(t('成功'), t('奖励领取成功'));
                 } else if (status === 0) {
+                  // 跳转到对应页面完成任务
                   handleTaskAction(4);
                 }
               }}
@@ -475,6 +481,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
                   await reportTaskClaimed(5);
                   Alert.alert(t('成功'), t('奖励领取成功'));
                 } else if (status === 0) {
+                  // 跳转到对应页面完成任务
                   handleTaskAction(5);
                 }
               }}

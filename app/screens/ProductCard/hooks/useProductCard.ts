@@ -35,6 +35,17 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
   const [alertConfirmCallback, setAlertConfirmCallback] = useState<
     (() => void) | null
   >(null);
+  
+  // 任务完成状态
+  const [taskCompleteInfo, setTaskCompleteInfo] = useState<{
+    show: boolean;
+    taskName: string;
+    reward: string;
+  }>({
+    show: false,
+    taskName: '',
+    reward: ''
+  });
 
   // 数量输入弹窗相关状态
   const [quantityInputVisible, setQuantityInputVisible] = useState(false);
@@ -294,7 +305,7 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
       
       // 异步处理API调用
       cartApi(data)
-        .then(() => {
+        .then(async () => {
           // 记录添加购物车埋点
           const analyticsStore = useAnalyticsStore.getState();
           const sku = isSingleSku ? localProduct.skus[0] : null;
@@ -351,11 +362,25 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
           
           // 上报加购任务完成（任务3）
           const activityStore = useActivityStore.getState();
-          activityStore.reportTaskComplete(3);
+          const taskData = await activityStore.reportTaskComplete(3);
           
-          // 加购成功后关闭弹窗
-          if (onClose) {
-            onClose();
+          console.log('[useProductCard] 收到的任务数据:', taskData);
+          
+          // 根据API返回的任务信息显示弹窗
+          if (taskData && taskData.status === 2) {
+            console.log('[useProductCard] 设置弹窗显示');
+            setTaskCompleteInfo({
+              show: true,
+              taskName: taskData.task_name,
+              reward: `+${taskData.reward_value} FCFA`
+            });
+            // 如果有任务完成弹窗，不立即关闭产品卡片
+          } else {
+            console.log('[useProductCard] 不满足显示弹窗条件', taskData);
+            // 没有任务完成弹窗时，直接关闭产品卡片
+            if (onClose) {
+              onClose();
+            }
           }
         })
         .catch(() => {
@@ -410,7 +435,7 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
 
       // 异步处理API调用
       cartApi(data)
-        .then(() => {
+        .then(async () => {
           // 记录添加购物车埋点 - 多SKU的情况
           const analyticsStore = useAnalyticsStore.getState();
           
@@ -463,11 +488,25 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
           
           // 上报加购任务完成（任务3）
           const activityStore = useActivityStore.getState();
-          activityStore.reportTaskComplete(3);
+          const taskData = await activityStore.reportTaskComplete(3);
           
-          // 加购成功后关闭弹窗
-          if (onClose) {
-            onClose();
+          console.log('[useProductCard] 收到的任务数据:', taskData);
+          
+          // 根据API返回的任务信息显示弹窗
+          if (taskData && taskData.status === 2) {
+            console.log('[useProductCard] 设置弹窗显示');
+            setTaskCompleteInfo({
+              show: true,
+              taskName: taskData.task_name,
+              reward: `+${taskData.reward_value} FCFA`
+            });
+            // 如果有任务完成弹窗，不立即关闭产品卡片
+          } else {
+            console.log('[useProductCard] 不满足显示弹窗条件', taskData);
+            // 没有任务完成弹窗时，直接关闭产品卡片
+            if (onClose) {
+              onClose();
+            }
           }
         })
         .catch(() => {
@@ -521,7 +560,7 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
 
       // 异步处理API调用
       cartApi(data)
-        .then((res) => {
+        .then(async (res) => {
           // ... existing code ...
           // 更新全局购物车数量
           updateCartItemCount();
@@ -535,11 +574,25 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
           
           // 上报加购任务完成（任务3）
           const activityStore = useActivityStore.getState();
-          activityStore.reportTaskComplete(3);
+          const taskData = await activityStore.reportTaskComplete(3);
           
-          // 加购成功后关闭弹窗
-          if (onClose) {
-            onClose();
+          console.log('[useProductCard] 收到的任务数据:', taskData);
+          
+          // 根据API返回的任务信息显示弹窗
+          if (taskData && taskData.status === 2) {
+            console.log('[useProductCard] 设置弹窗显示');
+            setTaskCompleteInfo({
+              show: true,
+              taskName: taskData.task_name,
+              reward: `+${taskData.reward_value} FCFA`
+            });
+            // 如果有任务完成弹窗，不立即关闭产品卡片
+          } else {
+            console.log('[useProductCard] 不满足显示弹窗条件', taskData);
+            // 没有任务完成弹窗时，直接关闭产品卡片
+            if (onClose) {
+              onClose();
+            }
           }
         })
         .catch((err) => {
@@ -568,7 +621,7 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
       
       // 异步处理API调用
       cartApi(data)
-        .then((res) => {
+        .then(async (res) => {
           // 更新全局购物车数量
           updateCartItemCount();
           // 显示成功提示
@@ -581,11 +634,25 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
           
           // 上报加购任务完成（任务3）
           const activityStore = useActivityStore.getState();
-          activityStore.reportTaskComplete(3);
+          const taskData = await activityStore.reportTaskComplete(3);
           
-          // 加购成功后关闭弹窗
-          if (onClose) {
-            onClose();
+          console.log('[useProductCard] 收到的任务数据:', taskData);
+          
+          // 根据API返回的任务信息显示弹窗
+          if (taskData && taskData.status === 2) {
+            console.log('[useProductCard] 设置弹窗显示');
+            setTaskCompleteInfo({
+              show: true,
+              taskName: taskData.task_name,
+              reward: `+${taskData.reward_value} FCFA`
+            });
+            // 如果有任务完成弹窗，不立即关闭产品卡片
+          } else {
+            console.log('[useProductCard] 不满足显示弹窗条件', taskData);
+            // 没有任务完成弹窗时，直接关闭产品卡片
+            if (onClose) {
+              onClose();
+            }
           }
         })
         .catch((err) => {
@@ -635,6 +702,7 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
     quantityInput,
     mainProductQuantity,
     skuQuantities,
+    taskCompleteInfo,
     
     // Store 数据
     imgTitle,
@@ -659,5 +727,6 @@ export const useProductCard = ({ localProduct, localGroupList, onClose }: UsePro
     setQuantityInputVisible,
     setEditingItem,
     setAlertModalVisible,
+    setTaskCompleteInfo,
   };
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { styles } from './styles';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +20,47 @@ interface BalanceCardProps {
 export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency, onRechargePress }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
+  const [displayedBalance, setDisplayedBalance] = useState(parseFloat(balance) || 0);
+  const animationRef = useRef<any>(null);
+
+  // 数字滚动动画函数
+  const animateValue = (start: number, end: number, duration: number) => {
+    if (animationRef.current) {
+      clearInterval(animationRef.current);
+    }
+    
+    const startTime = Date.now();
+    const diff = end - start;
+    
+    animationRef.current = setInterval(() => {
+      const currentTime = Date.now();
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      
+      // 使用缓动函数
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentValue = start + (diff * easeProgress);
+      
+      setDisplayedBalance(currentValue);
+      
+      if (progress >= 1) {
+        clearInterval(animationRef.current);
+        setDisplayedBalance(end);
+      }
+    }, 16); // 约60fps
+  };
+
+  useEffect(() => {
+    const newBalance = parseFloat(balance) || 0;
+    if (newBalance !== displayedBalance) {
+      animateValue(displayedBalance, newBalance, 1000);
+    }
+    
+    return () => {
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+      }
+    };
+  }, [balance]);
 
   return (
     <View style={styles.balanceCard}>
@@ -28,7 +69,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency, onR
         <Text style={styles.balanceCardTitle}>{t('profile.balance.title')}</Text>
       </View>
       <View style={styles.balanceAmountContainer}>
-        <Text style={styles.balanceAmount}>{balance}</Text>
+        <Text style={styles.balanceAmount}>{Math.floor(displayedBalance).toLocaleString()}</Text>
         <Text style={styles.balanceCurrency}>{currency}</Text>
       </View>
       <View style={styles.balanceActions}>

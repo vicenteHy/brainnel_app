@@ -25,6 +25,7 @@ import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
+import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -159,7 +160,19 @@ export const EmailOtpScreen = () => {
     setIsVerifying(true);
     setError(null);
     try {
-      const response = await userApi.verifyEmailOtp(email, otp);
+      // 获取设备指纹
+      let fingerprintHash = '';
+      try {
+        console.log('[EmailOtp] 开始收集设备指纹...');
+        const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+        fingerprintHash = deviceInfo.fingerprintHash;
+        console.log('[EmailOtp] 设备指纹哈希:', fingerprintHash);
+      } catch (error) {
+        console.error('[EmailOtp] 获取设备指纹失败:', error);
+        // 继续登录流程，不阻塞
+      }
+      
+      const response = await userApi.verifyEmailOtp(email, otp, fingerprintHash);
 
       if (response.access_token) {
         // 保存token

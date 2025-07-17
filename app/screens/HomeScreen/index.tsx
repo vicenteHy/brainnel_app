@@ -25,6 +25,7 @@ import {
   type Product,
   type Category,
 } from "../../services/api/productApi";
+import { getActivityStatus } from "../../services/api/activity";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -43,6 +44,7 @@ import fontSize from "../../utils/fontsizeUtils";
 import {
   SearchBar,
   MultiPageContainer,
+  CarouselBanner,
 } from "./components";
 
 // 导入样式
@@ -129,6 +131,7 @@ export const HomeScreen = () => {
   const [galleryUsed, setGalleryUsed] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false); // 不依赖userStore初始化，在useEffect中处理
   const [hasUserDismissedLoginModal, setHasUserDismissedLoginModal] = useState(false); // 用户是否已关闭过登录弹窗
+  const [hasCheckedActivity, setHasCheckedActivity] = useState(false); // 是否已检查过活动状态
 
   // 调试selectedCategoryId变化
   useEffect(() => {
@@ -331,6 +334,44 @@ export const HomeScreen = () => {
     }
   }, []);
 
+  // 处理需要登录时的回调
+  const handleLoginRequired = useCallback(() => {
+    setShowLoginModal(true);
+  }, []);
+
+  // 检查活动状态（不再自动弹出转盘）
+  const checkActivityStatus = useCallback(async () => {
+    console.log('checkActivityStatus called', {
+      userId: userStore.user?.user_id,
+      hasCheckedActivity
+    });
+    
+    if (!userStore.user?.user_id) {
+      console.log('Skipping activity check - No user');
+      return;
+    }
+
+    // 使用ref检查是否已经检查过，避免依赖问题
+    if (hasCheckedActivityRef.current) {
+      console.log('Skipping activity check - Already checked');
+      return;
+    }
+
+    hasCheckedActivityRef.current = true;
+    setHasCheckedActivity(true);
+
+    try {
+      console.log('Calling getActivityStatus API...');
+      // 调用活动状态接口
+      const response = await getActivityStatus();
+      console.log('Activity status response:', response);
+      // 不再自动弹出转盘，只记录状态
+    } catch (error: any) {
+      console.log('Activity status error:', error);
+      // 不再自动弹出转盘
+    }
+  }, [userStore.user?.user_id]);
+
   // 图片选择器相关函数
   const cleanupImagePickerCache = async () => {
     try {
@@ -478,6 +519,8 @@ export const HomeScreen = () => {
 
   // 监听登录状态变化
   const lastUserIdRef = useRef<number | undefined>(undefined);
+  const hasCheckedActivityRef = useRef<boolean>(false);
+  
   useEffect(() => {
     const currentUserId = userStore.user?.user_id;
     
@@ -490,6 +533,9 @@ export const HomeScreen = () => {
       // 只有当用户ID真正发生变化时才处理数据更新（避免重复刷新）
       if (lastUserIdRef.current !== currentUserId) {
         lastUserIdRef.current = currentUserId;
+        
+        // 用户登录后检查活动状态（仅记录，不弹窗）
+        checkActivityStatus();
         
         // 用户登录后，如果当前在推荐页面，优先尝试使用预加载数据，而不是立即刷新
         if (selectedCategoryId === -1) {
@@ -508,6 +554,9 @@ export const HomeScreen = () => {
       // 用户退出登录时也更新ref
       if (lastUserIdRef.current !== undefined) {
         lastUserIdRef.current = undefined;
+        // 重置活动检查标志
+        hasCheckedActivityRef.current = false;
+        setHasCheckedActivity(false);
       }
       
       // 用户未登录且未关闭过弹窗时才显示登录弹窗
@@ -515,7 +564,25 @@ export const HomeScreen = () => {
         setShowLoginModal(true);
       }
     }
-  }, [userStore.user?.user_id, selectedCategoryId, refreshPageData, hasUserDismissedLoginModal]);
+  }, [userStore.user?.user_id, selectedCategoryId, refreshPageData, hasUserDismissedLoginModal, checkActivityStatus]);
+
+  // 组件初始化时检查活动状态（仅记录状态，不弹窗）
+  useEffect(() => {
+    console.log('Init effect - checking if should call checkActivityStatus', {
+      userId: userStore.user?.user_id,
+      hasCheckedActivity: hasCheckedActivityRef.current
+    });
+    
+    // 只在组件挂载时执行一次，如果用户已登录但lastUserIdRef还没有值
+    // 说明是初次加载，需要检查活动状态
+    if (userStore.user?.user_id && !hasCheckedActivityRef.current && lastUserIdRef.current === undefined) {
+      // 延迟一下执行，确保组件完全加载
+      setTimeout(() => {
+        console.log('Calling checkActivityStatus from init effect');
+        checkActivityStatus();
+      }, 1000);
+    }
+  }, []); // 只在组件挂载时执行一次
 
   // 监听设置变更事件，强制刷新首页数据
   useEffect(() => {
@@ -881,6 +948,7 @@ export const HomeScreen = () => {
               onRefresh={refreshPageData}
               onProductPress={handleProductPress}
               onCameraPress={handleCameraPress}
+              onLoginRequired={handleLoginRequired}
               userStore={memoizedUserStore}
               t={t}
               subcategories={subcategories}
@@ -1118,6 +1186,8 @@ export const HomeScreen = () => {
               </View>
             </>
           )}
+
+          {/* 转盘弹窗 - 已移除，现在只在CarouselBanner中使用 */}
         </View>
       </View>
     </SafeAreaView>

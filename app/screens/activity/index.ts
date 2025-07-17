@@ -7,6 +7,7 @@ export { default as SpinWheelModal } from './SpinWheelModal';
 export { default as WinningModal } from './WinningModal';
 export { default as WithdrawalSuccessModal } from './WithdrawalSuccessModal';
 export { default as WaveWithdrawalModal } from './WaveWithdrawalModal';
-export { default as WaveWithdrawalSubmitModal } from './WaveWithdrawalSubmitModal';
+export { default as WavePendingModal } from './WavePendingModal';
 export { default as BoostSuccessModal } from './BoostSuccessModal';
 export { default as BoostedSuccessModal } from './BoostedSuccessModal';
+export { default as TaskCompleteModal } from './TaskCompleteModal';

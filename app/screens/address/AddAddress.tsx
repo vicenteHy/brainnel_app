@@ -28,6 +28,8 @@ import flagMap from "../../utils/flagMap";
 import { useTranslation } from "react-i18next";
 import useUserStore from "../../store/user";
 import fontSize from "../../utils/fontsizeUtils";
+import useActivityStore from "../../store/activityStore";
+import { TaskCompleteModal } from '../activity';
 type RootStackParamList = {
   AddRess: { address?: AddressItem };
   AddressList: undefined;
@@ -48,6 +50,8 @@ export const AddAddress = () => {
   const route = useRoute<AddRessRouteProp>();
   const { t } = useTranslation();
   const { user } = useUserStore();
+  const [showTaskCompleteModal, setShowTaskCompleteModal] = useState(false);
+  const [taskInfo, setTaskInfo] = useState({ taskName: '', reward: '' });
   const [open, setOpen] = useState(false);
   const [countryList, setCountryList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -191,9 +195,26 @@ export const AddAddress = () => {
       
       // 上报添加地址任务完成（任务4）
       const activityStore = useActivityStore.getState();
-      activityStore.reportTaskComplete(4);
+      const taskData = await activityStore.reportTaskComplete(4);
       
-      navigation.goBack();
+      console.log('[AddAddress] 收到的任务数据:', taskData);
+      
+      // 根据API返回的任务信息显示弹窗
+      if (taskData && taskData.status === 2) {
+        console.log('[AddAddress] 设置弹窗显示');
+        setTaskInfo({
+          taskName: taskData.task_name,
+          reward: `+${taskData.reward_value} FCFA`
+        });
+        setShowTaskCompleteModal(true);
+        // 延迟返回，等待用户看到弹窗
+        setTimeout(() => {
+          navigation.goBack();
+        }, 2000);
+      } else {
+        console.log('[AddAddress] 不满足显示弹窗条件', taskData);
+        navigation.goBack();
+      }
     }
   };
   const handleCountrySelect = (item: any) => {
@@ -482,6 +503,17 @@ export const AddAddress = () => {
           </Modal>
         </KeyboardAvoidingView>
       </View>
+
+      {/* 任务完成弹窗 */}
+      <TaskCompleteModal
+        visible={showTaskCompleteModal}
+        onClose={() => {
+          setShowTaskCompleteModal(false);
+          navigation.goBack();
+        }}
+        taskTitle={taskInfo.taskName}
+        reward={taskInfo.reward}
+      />
     </SafeAreaView>
   );
 };

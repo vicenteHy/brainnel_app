@@ -16,7 +16,7 @@ interface ActivityStore {
   fetchTasks: () => Promise<void>;
   getTaskStatus: (taskId: number) => number;
   updateTaskStatusLocal: (taskId: number, status: number) => void;
-  reportTaskComplete: (taskId: number) => Promise<void>;
+  reportTaskComplete: (taskId: number) => Promise<TaskItem | null>;
   reportTaskClaimed: (taskId: number) => Promise<void>;
   clearTasks: () => void;
 }
@@ -88,20 +88,27 @@ const useActivityStore = create<ActivityStore>()(
         // 只有状态为0（待完成）的任务才能报告完成
         if (currentStatus !== 0) {
           console.log(`[ActivityStore] 任务 ${taskId} 状态为 ${currentStatus}，无需上报完成`);
-          return;
+          return null;
         }
 
         try {
-          console.log(`[ActivityStore] 上报任务完成 - taskId: ${taskId}`);
-          await updateTaskStatus({ task_id: taskId, status: 1 });
+          console.log(`[ActivityStore] 上报任务完成并自动领取 - taskId: ${taskId}`);
+          // 直接将状态更新为2（已完成已领取）
+          const taskData = await updateTaskStatus({ task_id: taskId, status: 2 });
           
-          // 更新本地状态为已完成待领取
-          updateTaskStatusLocal(taskId, 1);
+          console.log(`[ActivityStore] API返回的任务数据:`, taskData);
+          
+          // 更新本地状态为已完成已领取
+          updateTaskStatusLocal(taskId, 2);
           
           // 可选：重新获取任务列表以确保数据同步
           await get().fetchTasks();
+          
+          // 返回任务数据，用于显示弹窗
+          return taskData;
         } catch (error) {
           console.error(`[ActivityStore] 上报任务完成失败 - taskId: ${taskId}`, error);
+          return null;
         }
       },
 
@@ -109,14 +116,14 @@ const useActivityStore = create<ActivityStore>()(
         const { getTaskStatus, updateTaskStatusLocal } = get();
         const currentStatus = getTaskStatus(taskId);
         
-        // 只有状态为1（已完成待领取）的任务才能领取奖励
-        if (currentStatus !== 1) {
-          console.log(`[ActivityStore] 任务 ${taskId} 状态为 ${currentStatus}，无法领取奖励`);
+        // 可以从状态0或1领取奖励
+        if (currentStatus === 2) {
+          console.log(`[ActivityStore] 任务 ${taskId} 已经领取过奖励`);
           return;
         }
 
         try {
-          console.log(`[ActivityStore] 上报任务已领取 - taskId: ${taskId}`);
+          console.log(`[ActivityStore] 上报任务已领取 - taskId: ${taskId}, 当前状态: ${currentStatus}`);
           await updateTaskStatus({ task_id: taskId, status: 2 });
           
           // 更新本地状态为已领取

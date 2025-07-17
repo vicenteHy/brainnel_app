@@ -54,6 +54,7 @@ export interface LoginParams {
   client_id: string;
   client_secret: string;
   scope: string;
+  fingerprint_hash?: string; // 设备指纹哈希
 }
 
 // 注册参数
@@ -141,11 +142,12 @@ export const userApi = {
   },
 
   // 验证OTP验证码
-  verifyOtp: (phoneNumber: string, code: string) => {
+  verifyOtp: (phoneNumber: string, code: string, fingerprintHash?: string) => {
     console.log('[UserAPI] 验证OTP请求，手机号:', phoneNumber, '验证码:', code);
     const requestData = {
       phone_number: phoneNumber,
-      code: code
+      code: code,
+      ...(fingerprintHash && { fingerprint_hash: fingerprintHash })
     };
     console.log('[UserAPI] 验证OTP请求数据:', requestData);
     return apiService.post<AuthResponse>('/api/users/verify-otp/', requestData);
@@ -159,9 +161,13 @@ export const userApi = {
   },
 
   // 验证邮箱OTP验证码
-  verifyEmailOtp: (email: string, code: string) => {
+  verifyEmailOtp: (email: string, code: string, fingerprintHash?: string) => {
     console.log('[UserAPI] 验证Email OTP请求, 邮箱:', email, '验证码:', code);
-    const requestData = { email, code };
+    const requestData = { 
+      email, 
+      code,
+      ...(fingerprintHash && { fingerprint_hash: fingerprintHash })
+    };
     return apiService.post<AuthResponse>('/api/users/verify-email-otp/', requestData);
   }
 

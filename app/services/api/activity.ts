@@ -10,6 +10,7 @@ export interface ActivityData {
   total_invite_count: number;
   effective_invite_count: number;
   referrer_id: number;
+  available_game_attempts?: number; // 可用游戏次数
 }
 
 // 游戏结果接口返回类型
@@ -122,9 +123,9 @@ export interface UpdateTaskStatusRequest {
   status: number;
 }
 
-export const updateTaskStatus = async (request: UpdateTaskStatusRequest): Promise<any> => {
+export const updateTaskStatus = async (request: UpdateTaskStatusRequest): Promise<TaskItem> => {
   try {
-    const data = await apiService.post('/api/activity/tasks/update-status', request);
+    const data = await apiService.post<TaskItem>('/api/activity/tasks/update-status', request);
     console.log(`[Activity] 任务状态更新成功 - task_id: ${request.task_id}, status: ${request.status}`);
     return data;
   } catch (error) {
@@ -175,6 +176,35 @@ export const getActivityStatus = async (): Promise<ActivityData> => {
     return data;
   } catch (error) {
     console.error('获取活动状态失败:', error);
+    throw error;
+  }
+};
+
+// 发起提现请求接口
+export interface WithdrawalRequest {
+  amount: number;
+  withdrawal_method: 'balance' | 'wave';
+  withdrawal_account: string;
+}
+
+export interface WithdrawalResponse {
+  withdrawal_id: number;
+  user_id: number;
+  amount: string;
+  request_date: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  completion_date: string;
+  withdrawal_method: 'balance' | 'wave';
+  withdrawal_account: string;
+}
+
+export const initiateWithdrawal = async (request: WithdrawalRequest): Promise<WithdrawalResponse> => {
+  try {
+    const data = await apiService.post<WithdrawalResponse>('/api/activity/withdrawals/initiate', request);
+    console.log('[Activity] 发起提现成功:', data);
+    return data;
+  } catch (error) {
+    console.error('发起提现失败:', error);
     throw error;
   }
 };

@@ -17,11 +17,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Linking, Clipboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import useMiningStore from '../../store/miningStore';
 import useUserStore from '../../store/user';
 import GiftModal from './GiftModal';
 import MiningRewardModal from './MiningRewardModal';
-import { enterActivity, updateRewardAmount, playGame, getInvitationLink } from '../../services/api/activity';
+import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
 
@@ -50,75 +51,209 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [currentReward, setCurrentReward] = useState(0);
   const [showDigEffect, setShowDigEffect] = useState(false);
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
+  const [displayedReward, setDisplayedReward] = useState(0);
   const [userInvitationLink, setUserInvitationLink] = useState<string | null>(null);
   const [targetRewardAmount, setTargetRewardAmount] = useState(0);
   const [isActivityInitialized, setIsActivityInitialized] = useState(false);
   const [showTaskCenterBubble, setShowTaskCenterBubble] = useState(true);
+  const [availableGameAttempts, setAvailableGameAttempts] = useState(0);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const bubbleAnimation = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef<any>(null);
+  const fingerAnimation = useRef(new Animated.Value(0)).current;
+  const rippleAnimation = useRef(new Animated.Value(0)).current;
+  const rippleOpacity = useRef(new Animated.Value(0)).current;
+  const taskCenterAnimation = useRef(new Animated.Value(1)).current;
 
   const progress = getProgress();
+
+  // 数字滚动动画函数
+  const animateValue = (start: number, end: number, duration: number) => {
+    if (animationRef.current) {
+      clearInterval(animationRef.current);
+    }
+    
+    const startTime = Date.now();
+    const diff = end - start;
+    
+    animationRef.current = setInterval(() => {
+      const currentTime = Date.now();
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      
+      // 使用缓动函数
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentValue = start + (diff * easeProgress);
+      
+      setDisplayedReward(Math.floor(currentValue));
+      
+      if (progress >= 1) {
+        clearInterval(animationRef.current);
+        setDisplayedReward(end);
+      }
+    }, 16); // 约60fps
+  };
 
   useEffect(() => {
     rechargeDigs();
     const interval = setInterval(rechargeDigs, 60000);
     
-    // 获取当前活动数据
-    const initActivity = async () => {
+    // 获取活动状态数据
+    const fetchActivityStatus = async () => {
       try {
-        console.log('挖矿游戏 - 获取当前活动数据...');
-        const data = await enterActivity(0);
-        console.log('挖矿游戏 - 活动数据返回:', data);
+        console.log('挖矿游戏 - 获取活动状态数据...');
+        const data = await getActivityStatus();
+        console.log('挖矿游戏 - 活动状态返回:', data);
         
         // 保存当前累积金额和目标金额
         const currentAmount = parseFloat(data.current_reward_amount) || 0;
         const targetAmount = parseFloat(data.target_reward_amount) || 0;
+        const gameAttempts = data.available_game_attempts || 0;
         setCurrentTotalReward(currentAmount);
+        setDisplayedReward(currentAmount);
         setTargetRewardAmount(targetAmount);
+        setAvailableGameAttempts(gameAttempts);
         setIsActivityInitialized(true);
         
         console.log('挖矿游戏 - 当前累积奖励金额:', currentAmount);
         console.log('挖矿游戏 - 目标奖励金额:', targetAmount);
+        console.log('挖矿游戏 - 可用游戏次数:', gameAttempts);
+        
+        // 如果金额小于4500，显示礼品弹窗
+        if (currentAmount < 4500 && !giftModalVisible) {
+          setTimeout(() => {
+            setGiftModalVisible(true);
+          }, 500);
+        }
         
         // 同时刷新任务状态
         const activityStore = useActivityStore.getState();
         await activityStore.fetchTasks();
         console.log('挖矿游戏 - 任务状态已刷新');
       } catch (error) {
-        console.error('挖矿游戏 - 获取活动数据失败:', error);
+        console.error('挖矿游戏 - 获取活动状态失败:', error);
         setIsActivityInitialized(true); // 即使失败也标记为已初始化
       }
     };
     
-    initActivity();
+    fetchActivityStatus();
     
-    // 页面加载完成后显示礼品弹窗
-    setTimeout(() => {
-      setGiftModalVisible(true);
-    }, 500);
-    
-    // 气泡动画
+    // 任务中心按钮动画
     Animated.loop(
       Animated.sequence([
-        Animated.timing(bubbleAnimation, {
-          toValue: 1,
-          duration: 1000,
+        Animated.timing(taskCenterAnimation, {
+          toValue: 1.1,
+          duration: 600,
           useNativeDriver: true,
         }),
-        Animated.timing(bubbleAnimation, {
-          toValue: 0,
-          duration: 1000,
+        Animated.timing(taskCenterAnimation, {
+          toValue: 1,
+          duration: 600,
           useNativeDriver: true,
         }),
       ])
     ).start();
     
-    return () => clearInterval(interval);
+    // 手指动画
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fingerAnimation, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fingerAnimation, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+    
+    // 涟漪动画 - 持续循环
+    Animated.loop(
+      Animated.sequence([
+        // 重置到初始状态
+        Animated.parallel([
+          Animated.timing(rippleAnimation, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.timing(rippleOpacity, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+        // 开始动画
+        Animated.parallel([
+          Animated.timing(rippleAnimation, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.sequence([
+            Animated.timing(rippleOpacity, {
+              toValue: 0.5,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rippleOpacity, {
+              toValue: 0,
+              duration: 1300,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]),
+      ])
+    ).start();
+    
+    return () => {
+      clearInterval(interval);
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+      }
+    };
   }, []);
+
+  // 监听页面聚焦事件，从其他页面返回时刷新数据
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('挖矿页面获得焦点，刷新活动状态...');
+      const fetchActivityStatusOnFocus = async () => {
+        try {
+          const data = await getActivityStatus();
+          console.log('页面聚焦 - 活动状态返回:', data);
+          
+          // 更新状态
+          const currentAmount = parseFloat(data.current_reward_amount) || 0;
+          const targetAmount = parseFloat(data.target_reward_amount) || 0;
+          const gameAttempts = data.available_game_attempts || 0;
+          
+          // 使用动画更新金额
+          animateValue(currentTotalReward, currentAmount, 800);
+          setCurrentTotalReward(currentAmount);
+          setTargetRewardAmount(targetAmount);
+          setAvailableGameAttempts(gameAttempts);
+          
+          console.log('页面聚焦 - 更新金额:', currentAmount);
+        } catch (error) {
+          console.error('页面聚焦 - 获取活动状态失败:', error);
+        }
+      };
+      
+      fetchActivityStatusOnFocus();
+    }, [])
+  );
 
   const handleDig = () => {
     if (isDigging) {
+      return;
+    }
+
+    if (availableGameAttempts <= 0) {
+      Alert.alert(t('提示'), t('游戏次数已用完'));
       return;
     }
 
@@ -178,25 +313,31 @@ const MiningGameScreen = ({ navigation }: any) => {
             if (rewardAmount > 0) {
               setCurrentReward(rewardAmount);
               setMiningRewardVisible(true);
-              
-              // 重新获取最新的活动数据
-              try {
-                console.log('挖矿游戏 - 重新获取活动数据...');
-                const latestData = await enterActivity(0);
-                console.log('挖矿游戏 - 最新活动数据返回:', latestData);
-                
-                // 使用API返回的最新累积金额和目标金额
-                const updatedAmount = parseFloat(latestData.current_reward_amount) || 0;
-                const updatedTarget = parseFloat(latestData.target_reward_amount) || 0;
-                setCurrentTotalReward(updatedAmount);
-                setTargetRewardAmount(updatedTarget);
-                
-                console.log('挖矿游戏 - 更新后的累积金额:', updatedAmount);
-                console.log('挖矿游戏 - 更新后的目标金额:', updatedTarget);
-              } catch (updateError) {
-                console.error('挖矿游戏 - 获取最新活动数据失败:', updateError);
-              }
             }
+          }
+          
+          // 无论是否获得奖励，都调用 getActivityStatus 获取最新的活动数据
+          try {
+            console.log('挖矿游戏 - 调用 getActivityStatus 获取最新数据...');
+            const statusData = await getActivityStatus();
+            console.log('挖矿游戏 - 状态数据返回:', statusData);
+            
+            // 使用API返回的最新累积金额、目标金额和游戏次数
+            const updatedAmount = parseFloat(statusData.current_reward_amount) || 0;
+            const updatedTarget = parseFloat(statusData.target_reward_amount) || 0;
+            const updatedAttempts = statusData.available_game_attempts || 0;
+            
+            // 滚动动画
+            animateValue(currentTotalReward, updatedAmount, 1000);
+            setCurrentTotalReward(updatedAmount);
+            setTargetRewardAmount(updatedTarget);
+            setAvailableGameAttempts(updatedAttempts);
+            
+            console.log('挖矿游戏 - 更新后的累积金额:', updatedAmount);
+            console.log('挖矿游戏 - 更新后的目标金额:', updatedTarget);
+            console.log('挖矿游戏 - 更新后的游戏次数:', updatedAttempts);
+          } catch (updateError) {
+            console.error('挖矿游戏 - 获取最新状态失败:', updateError);
           }
           
           // 如果有消息，可以显示给用户
@@ -330,6 +471,9 @@ const MiningGameScreen = ({ navigation }: any) => {
       // 更新本地累积金额和目标金额
       const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
       const updatedTarget = parseFloat(updatedData.target_reward_amount) || 0;
+      
+      // 滚动动画
+      animateValue(currentTotalReward, updatedAmount, 1000);
       setCurrentTotalReward(updatedAmount);
       setTargetRewardAmount(updatedTarget);
       
@@ -348,19 +492,8 @@ const MiningGameScreen = ({ navigation }: any) => {
       console.error('宝箱奖励 - 更新奖励金额失败:', error);
     }
     
-    // 显示成功提示
-    Alert.alert(
-      t('Félicitations !'),
-      t('Vous avez reçu 500 FCFA !'),
-      [
-        { 
-          text: t('OK'), 
-          onPress: () => {
-            console.log('领取奖励成功');
-          } 
-        }
-      ]
-    );
+    // 已经有礼物弹窗了，不需要额外的Alert
+    console.log('领取奖励成功');
   };
 
   const digTransform = {
@@ -372,9 +505,15 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   const progressWidth = targetRewardAmount > 0 ? (currentTotalReward / targetRewardAmount) * 100 : 0;
 
-  const bubbleScale = bubbleAnimation.interpolate({
+
+  const fingerTranslate = fingerAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.1],
+    outputRange: [0, -7.5],
+  });
+
+  const rippleScale = rippleAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 1.5],
   });
 
   return (
@@ -407,7 +546,7 @@ const MiningGameScreen = ({ navigation }: any) => {
             </View>
             
             <View style={styles.balanceContainer}>
-              <Text style={styles.balanceAmount}>{currentTotalReward.toLocaleString()} FCFA</Text>
+              <Text style={styles.balanceAmount}>{displayedReward.toLocaleString()} FCFA</Text>
             </View>
           </ImageBackground>
 
@@ -460,9 +599,9 @@ const MiningGameScreen = ({ navigation }: any) => {
           <TouchableOpacity 
             style={styles.digButton} 
             onPress={handleDig}
-            disabled={isDigging}
+            disabled={isDigging || availableGameAttempts <= 0}
           >
-            <Text style={styles.digButtonText}>Forer maintenant</Text>
+            <Text style={styles.digButtonText}>Forer maintenant ({availableGameAttempts})</Text>
           </TouchableOpacity>
 
           <View style={styles.minerContainer}>
@@ -508,33 +647,23 @@ const MiningGameScreen = ({ navigation }: any) => {
 
           {/* 金币图标 - 任务中心按钮 */}
           <View style={styles.taskCenterContainer}>
-            <TouchableOpacity 
-              style={styles.bottomGold}
-              onPress={() => {
-                setShowTaskCenterBubble(false);
-                navigation.navigate('TaskCenter');
+            <Animated.View
+              style={{
+                transform: [{ scale: taskCenterAnimation }]
               }}
             >
-              <Image 
-                source={require('../../../assets/img/group_139_1.png')}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </TouchableOpacity>
-            
-            {/* 引导气泡 */}
-            {showTaskCenterBubble && (
-              <Animated.View 
-                style={[
-                  styles.guideBubble,
-                  { transform: [{ scale: bubbleScale }] }
-                ]}
+              <TouchableOpacity 
+                style={styles.bottomGold}
+                onPress={() => {
+                  navigation.navigate('TaskCenter');
+                }}
               >
-                <View style={styles.bubbleArrow} />
-                <Text style={styles.bubbleText}>
-                  Complétez des tâches pour{'\n'}accumuler du cash plus vite !
-                </Text>
-              </Animated.View>
-            )}
+                <Image 
+                  source={require('../../../assets/img/group_139_1.png')}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
 
           {/* 邀请好友区域 */}
@@ -544,9 +673,38 @@ const MiningGameScreen = ({ navigation }: any) => {
           resizeMode="contain"
         >
           <View style={styles.inviteButtons}>
-            <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
-              <Text style={styles.whatsappText}>WhatsApp</Text>
-            </TouchableOpacity>
+            <View style={{ position: 'relative' }}>
+              <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
+                <Text style={styles.whatsappText}>WhatsApp</Text>
+              </TouchableOpacity>
+              
+              {/* 手指图标和涟漪效果 - 在按钮外部 */}
+              <Animated.View
+                style={[
+                  styles.fingerContainer,
+                  {
+                    transform: [{ translateY: fingerTranslate }]
+                  }
+                ]}
+                pointerEvents="none"
+              >
+                {/* 涟漪效果跟随手指 */}
+                <Animated.View 
+                  style={[
+                    styles.fingerRipple,
+                    {
+                      opacity: rippleOpacity,
+                      transform: [{ scale: rippleScale }]
+                    }
+                  ]}
+                />
+                {/* 手指图标 */}
+                <Image 
+                  source={require('../../../assets/img/finger.png')}
+                  style={styles.fingerImage}
+                />
+              </Animated.View>
+            </View>
             <TouchableOpacity style={styles.copyButton} onPress={handleCopyLink}>
               <Text style={styles.copyText}>Copier le lien</Text>
             </TouchableOpacity>
@@ -833,6 +991,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
   },
   whatsappText: {
     fontSize: 16,
@@ -853,6 +1013,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FF5100',
+  },
+  fingerIcon: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    bottom: -35,
+    left: -20,
+  },
+  rippleEffect: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    top: '50%',
+    left: '50%',
+    marginTop: -100,
+    marginLeft: -100,
+    zIndex: -1,
+  },
+  fingerContainer: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    bottom: -35,
+    left: -20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fingerImage: {
+    width: 60,
+    height: 60,
+    top: 10,
+    position: 'absolute',
+  },
+  fingerRipple: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    backgroundColor: 'green',
+    top: -0,  // 向上偏移，让涟漪中心在指尖
+    left: 30,   // 向右偏移，对准指尖位置
   },
 });
 
