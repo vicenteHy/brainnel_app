@@ -11,6 +11,7 @@ export interface ActivityData {
   effective_invite_count: number;
   referrer_id: number;
   available_game_attempts?: number; // 可用游戏次数
+  is_finished?: number; // 活动是否已完成，1表示已完成，0表示未完成
 }
 
 // 游戏结果接口返回类型
@@ -205,6 +206,23 @@ export const initiateWithdrawal = async (request: WithdrawalRequest): Promise<Wi
     return data;
   } catch (error) {
     console.error('发起提现失败:', error);
+    throw error;
+  }
+};
+
+// 兑换面具接口
+export interface ExchangeMasksResponse {
+  message: string;
+  updated_rewards: ActivityData;
+}
+
+export const exchangeMasks = async (): Promise<ExchangeMasksResponse> => {
+  try {
+    const data = await apiService.post<ExchangeMasksResponse>('/api/activity/game/exchange-masks', {});
+    console.log('[Activity] 兑换面具成功:', data);
+    return data;
+  } catch (error) {
+    console.error('兑换面具失败:', error);
     throw error;
   }
 };

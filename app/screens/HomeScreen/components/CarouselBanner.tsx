@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { styles } from "../styles";
 import { SpinWheelModal } from "../../activity/SpinWheelModal";
 import { WinningModal } from "../../activity/WinningModal";
+import { ActivityCompletedModal } from "../../activity/ActivityCompletedModal";
 import useUserStore from "../../../store/user";
 import { getActivityStatus } from "../../../services/api/activity";
 
@@ -19,7 +20,9 @@ export const CarouselBanner = React.memo(
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
     const [showSpinWheel, setShowSpinWheel] = useState(false);
     const [showWinningModal, setShowWinningModal] = useState(false);
+    const [showActivityCompletedModal, setShowActivityCompletedModal] = useState(false);
     const [currentRewardAmount, setCurrentRewardAmount] = useState(0);
+    const [isActivityFinished, setIsActivityFinished] = useState(false);
     const userStore = useUserStore();
     
     const bannerData = useMemo(
@@ -37,8 +40,11 @@ export const CarouselBanner = React.memo(
           try {
             const status = await getActivityStatus();
             const amount = parseFloat(status.current_reward_amount) || 0;
+            const finished = status.is_finished === 1;
             console.log('[CarouselBanner] 获取到的活动金额:', amount);
+            console.log('[CarouselBanner] 活动是否已完成:', finished);
             setCurrentRewardAmount(amount);
+            setIsActivityFinished(finished);
           } catch (error) {
             console.log('获取活动状态失败:', error);
           }
@@ -53,17 +59,23 @@ export const CarouselBanner = React.memo(
         // 用户未登录，显示登录弹窗
         onLoginRequired();
       } else {
-        // 用户已登录，检查金额
-        console.log('[CarouselBanner] 点击时的金额:', currentRewardAmount);
-        if (currentRewardAmount >= 4000) {
-          // 金额大于等于4000，直接跳转到挖矿游戏
-          navigation.navigate('MiningGameScreen');
+        // 用户已登录，先检查活动是否已完成
+        if (isActivityFinished) {
+          // 活动已完成，显示提示弹窗
+          setShowActivityCompletedModal(true);
         } else {
-          // 金额小于4000，显示转盘弹窗
-          setShowSpinWheel(true);
+          // 活动未完成，检查金额
+          console.log('[CarouselBanner] 点击时的金额:', currentRewardAmount);
+          if (currentRewardAmount >= 4000) {
+            // 金额大于等于4000，直接跳转到挖矿游戏
+            navigation.navigate('MiningGameScreen');
+          } else {
+            // 金额小于4000，显示转盘弹窗
+            setShowSpinWheel(true);
+          }
         }
       }
-    }, [userStore.user, onLoginRequired, currentRewardAmount, navigation]);
+    }, [userStore.user, onLoginRequired, currentRewardAmount, isActivityFinished, navigation]);
     
     const handleSpinPress = useCallback(() => {
       // 处理转盘旋转逻辑
@@ -115,6 +127,11 @@ export const CarouselBanner = React.memo(
             // 跳转到挖矿游戏
             navigation.navigate('MiningGameScreen');
           }}
+        />
+        
+        <ActivityCompletedModal
+          visible={showActivityCompletedModal}
+          onClose={() => setShowActivityCompletedModal(false)}
         />
       </View>
     );

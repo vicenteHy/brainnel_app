@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   ImageBackground,
+  Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,9 +23,12 @@ import useMiningStore from '../../store/miningStore';
 import useUserStore from '../../store/user';
 import GiftModal from './GiftModal';
 import MiningRewardModal from './MiningRewardModal';
-import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus } from '../../services/api/activity';
+import MaskGameModal from './MaskGameModal';
+import MaskRewardModal from './MaskRewardModal';
+import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus, exchangeMasks } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
+import fontSize from '../../utils/fontsizeUtils';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -48,7 +52,9 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [isDigging, setIsDigging] = useState(false);
   const [giftModalVisible, setGiftModalVisible] = useState(false);
   const [miningRewardVisible, setMiningRewardVisible] = useState(false);
+  const [maskRewardVisible, setMaskRewardVisible] = useState(false);
   const [currentReward, setCurrentReward] = useState(0);
+  const [currentRewardType, setCurrentRewardType] = useState(0); // 0: 现金, 1: 面具
   const [showDigEffect, setShowDigEffect] = useState(false);
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
   const [displayedReward, setDisplayedReward] = useState(0);
@@ -57,6 +63,12 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [isActivityInitialized, setIsActivityInitialized] = useState(false);
   const [showTaskCenterBubble, setShowTaskCenterBubble] = useState(true);
   const [availableGameAttempts, setAvailableGameAttempts] = useState(0);
+  const [showTaskGuide, setShowTaskGuide] = useState(false);
+  const [showInviteGuide, setShowInviteGuide] = useState(false);
+  const [maskGameModalVisible, setMaskGameModalVisible] = useState(false);
+  const [isMaskGameMode, setIsMaskGameMode] = useState(false);
+  const [goldMasksCount, setGoldMasksCount] = useState(0);
+  const [targetGoldMasksCount, setTargetGoldMasksCount] = useState(20);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const bubbleAnimation = useRef(new Animated.Value(0)).current;
@@ -109,10 +121,14 @@ const MiningGameScreen = ({ navigation }: any) => {
         const currentAmount = parseFloat(data.current_reward_amount) || 0;
         const targetAmount = parseFloat(data.target_reward_amount) || 0;
         const gameAttempts = data.available_game_attempts || 0;
+        const goldMasks = data.gold_masks_count || 0;
+        const targetMasks = data.target_gole_masks_count || 20;
         setCurrentTotalReward(currentAmount);
         setDisplayedReward(currentAmount);
         setTargetRewardAmount(targetAmount);
         setAvailableGameAttempts(gameAttempts);
+        setGoldMasksCount(goldMasks);
+        setTargetGoldMasksCount(targetMasks);
         setIsActivityInitialized(true);
         
         console.log('挖矿游戏 - 当前累积奖励金额:', currentAmount);
@@ -123,6 +139,12 @@ const MiningGameScreen = ({ navigation }: any) => {
         if (currentAmount < 4500 && !giftModalVisible) {
           setTimeout(() => {
             setGiftModalVisible(true);
+          }, 500);
+        }
+        // 如果金额等于4999，显示面具游戏弹窗（只在没有其他弹窗时显示）
+        else if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
+          setTimeout(() => {
+            setMaskGameModalVisible(true);
           }, 500);
         }
         
@@ -154,56 +176,58 @@ const MiningGameScreen = ({ navigation }: any) => {
       ])
     ).start();
     
-    // 手指动画
+    // 手指和涟漪同步动画
     Animated.loop(
       Animated.sequence([
+        // 手指下移
         Animated.timing(fingerAnimation, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
-        Animated.timing(fingerAnimation, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-    
-    // 涟漪动画 - 持续循环
-    Animated.loop(
-      Animated.sequence([
-        // 重置到初始状态
+        // 手指到达最低点时触发涟漪
         Animated.parallel([
-          Animated.timing(rippleAnimation, {
+          // 手指上移
+          Animated.timing(fingerAnimation, {
             toValue: 0,
-            duration: 0,
+            duration: 800,
             useNativeDriver: true,
           }),
-          Animated.timing(rippleOpacity, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        // 开始动画
-        Animated.parallel([
-          Animated.timing(rippleAnimation, {
-            toValue: 1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
+          // 涟漪效果
           Animated.sequence([
-            Animated.timing(rippleOpacity, {
-              toValue: 0.5,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.timing(rippleOpacity, {
-              toValue: 0,
-              duration: 1300,
-              useNativeDriver: true,
-            }),
+            // 重置涟漪
+            Animated.parallel([
+              Animated.timing(rippleAnimation, {
+                toValue: 0,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+              Animated.timing(rippleOpacity, {
+                toValue: 0,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            // 涟漪扩散
+            Animated.parallel([
+              Animated.timing(rippleAnimation, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              }),
+              Animated.sequence([
+                Animated.timing(rippleOpacity, {
+                  toValue: 0.5,
+                  duration: 100,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(rippleOpacity, {
+                  toValue: 0,
+                  duration: 700,
+                  useNativeDriver: true,
+                }),
+              ]),
+            ]),
           ]),
         ]),
       ])
@@ -230,14 +254,25 @@ const MiningGameScreen = ({ navigation }: any) => {
           const currentAmount = parseFloat(data.current_reward_amount) || 0;
           const targetAmount = parseFloat(data.target_reward_amount) || 0;
           const gameAttempts = data.available_game_attempts || 0;
+          const goldMasks = data.gold_masks_count || 0;
+          const targetMasks = data.target_gole_masks_count || 20;
           
           // 使用动画更新金额
           animateValue(currentTotalReward, currentAmount, 800);
           setCurrentTotalReward(currentAmount);
           setTargetRewardAmount(targetAmount);
           setAvailableGameAttempts(gameAttempts);
+          setGoldMasksCount(goldMasks);
+          setTargetGoldMasksCount(targetMasks);
           
           console.log('页面聚焦 - 更新金额:', currentAmount);
+          
+          // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
+          if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
+            setTimeout(() => {
+              setMaskGameModalVisible(true);
+            }, 500);
+          }
         } catch (error) {
           console.error('页面聚焦 - 获取活动状态失败:', error);
         }
@@ -253,7 +288,8 @@ const MiningGameScreen = ({ navigation }: any) => {
     }
 
     if (availableGameAttempts <= 0) {
-      Alert.alert(t('提示'), t('游戏次数已用完'));
+      // 显示任务引导
+      setShowTaskGuide(true);
       return;
     }
 
@@ -307,12 +343,16 @@ const MiningGameScreen = ({ navigation }: any) => {
           const gameResult = await playGame();
           console.log('挖矿游戏 - 游戏结果:', gameResult);
           
-          // 只处理现金奖励 (reward_type = 0)
-          if (gameResult.reward_type === 0) {
-            const rewardAmount = parseFloat(gameResult.reward_amount) || 0;
-            if (rewardAmount > 0) {
-              setCurrentReward(rewardAmount);
+          // 处理奖励 (reward_type = 0: 现金, 1: 面具)
+          const rewardAmount = parseFloat(gameResult.reward_amount) || 0;
+          if (rewardAmount > 0) {
+            setCurrentReward(rewardAmount);
+            setCurrentRewardType(gameResult.reward_type);
+            
+            if (gameResult.reward_type === 0) {
               setMiningRewardVisible(true);
+            } else {
+              setMaskRewardVisible(true);
             }
           }
           
@@ -326,12 +366,16 @@ const MiningGameScreen = ({ navigation }: any) => {
             const updatedAmount = parseFloat(statusData.current_reward_amount) || 0;
             const updatedTarget = parseFloat(statusData.target_reward_amount) || 0;
             const updatedAttempts = statusData.available_game_attempts || 0;
+            const updatedMasks = statusData.gold_masks_count || 0;
+            const updatedTargetMasks = statusData.target_gole_masks_count || 20;
             
             // 滚动动画
             animateValue(currentTotalReward, updatedAmount, 1000);
             setCurrentTotalReward(updatedAmount);
             setTargetRewardAmount(updatedTarget);
             setAvailableGameAttempts(updatedAttempts);
+            setGoldMasksCount(updatedMasks);
+            setTargetGoldMasksCount(updatedTargetMasks);
             
             console.log('挖矿游戏 - 更新后的累积金额:', updatedAmount);
             console.log('挖矿游戏 - 更新后的目标金额:', updatedTarget);
@@ -362,6 +406,50 @@ const MiningGameScreen = ({ navigation }: any) => {
     
     // 直接跳转到提现页面
     navigation.navigate('WithdrawalScreen');
+  };
+  
+  // 兑换面具函数
+  const handleExchangeMasks = async () => {
+    if (goldMasksCount < targetGoldMasksCount) {
+      Alert.alert(t('提示'), t('面具数量不足'));
+      return;
+    }
+    
+    try {
+      console.log('开始兑换面具...');
+      const response = await exchangeMasks();
+      console.log('兑换面具结果:', response);
+      
+      // 更新状态
+      const updatedData = response.updated_rewards;
+      const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
+      const updatedTarget = parseFloat(updatedData.target_reward_amount) || 0;
+      const updatedMasks = updatedData.gold_masks_count || 0;
+      const updatedTargetMasks = updatedData.target_gole_masks_count || 20;
+      
+      // 更新所有状态
+      animateValue(currentTotalReward, updatedAmount, 1000);
+      setCurrentTotalReward(updatedAmount);
+      setTargetRewardAmount(updatedTarget);
+      setGoldMasksCount(updatedMasks);
+      setTargetGoldMasksCount(updatedTargetMasks);
+      
+      // 如果金额达到 5000，切换回挖现金模式
+      if (updatedAmount >= 5000) {
+        setIsMaskGameMode(false);
+        Alert.alert(t('恭喜'), t('已解锁 5000 FCFA！现在可以提现了。'));
+      }
+      
+      Toast.show({
+        type: 'success',
+        text1: response.message || t('兑换成功'),
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('兑换面具失败:', error);
+      Alert.alert(t('错误'), t('兑换失败，请重试'));
+    }
   };
 
   // 获取邀请链接（先从本地获取，没有则调用API）
@@ -415,7 +503,7 @@ const MiningGameScreen = ({ navigation }: any) => {
       await Clipboard.setString(shareText + '\n\n' + shareUrl);
       Toast.show({
         type: 'success',
-        text1: t('链接已复制'),
+        text1: 'Lien copié',
         position: 'top',
         visibilityTime: 2000,
       });
@@ -433,19 +521,9 @@ const MiningGameScreen = ({ navigation }: any) => {
       // 先复制链接
       await Clipboard.setString(shareText + '\n\n' + shareUrl);
       
-      // 显示复制成功提示
-      Toast.show({
-        type: 'success',
-        text1: t('链接已复制'),
-        position: 'top',
-        visibilityTime: 2000,
-      });
-      
-      // 延迟一下再打开WhatsApp
-      setTimeout(() => {
-        const message = encodeURIComponent(shareText + '\n\n' + shareUrl);
-        Linking.openURL(`whatsapp://send?text=${message}`);
-      }, 500);
+      // 直接打开WhatsApp，不显示提示
+      const message = encodeURIComponent(shareText + '\n\n' + shareUrl);
+      Linking.openURL(`whatsapp://send?text=${message}`);
     } catch (error) {
       console.error('分享到WhatsApp失败:', error);
       Alert.alert(t('错误'), t('分享失败，请重试'));
@@ -471,11 +549,15 @@ const MiningGameScreen = ({ navigation }: any) => {
       // 更新本地累积金额和目标金额
       const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
       const updatedTarget = parseFloat(updatedData.target_reward_amount) || 0;
+      const updatedMasks = updatedData.gold_masks_count || 0;
+      const updatedTargetMasks = updatedData.target_gole_masks_count || 20;
       
       // 滚动动画
       animateValue(currentTotalReward, updatedAmount, 1000);
       setCurrentTotalReward(updatedAmount);
       setTargetRewardAmount(updatedTarget);
+      setGoldMasksCount(updatedMasks);
+      setTargetGoldMasksCount(updatedTargetMasks);
       
       // 打印详细的返回数据
       console.log('=== 宝箱奖励更新后的活动数据 ===');
@@ -488,6 +570,13 @@ const MiningGameScreen = ({ navigation }: any) => {
       console.log('有效邀请数:', updatedData.effective_invite_count);
       console.log('推荐人ID:', updatedData.referrer_id);
       console.log('===========================');
+      
+      // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
+      if (Math.floor(updatedAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
+        setTimeout(() => {
+          setMaskGameModalVisible(true);
+        }, 500);
+      }
     } catch (error) {
       console.error('宝箱奖励 - 更新奖励金额失败:', error);
     }
@@ -552,42 +641,80 @@ const MiningGameScreen = ({ navigation }: any) => {
 
           {/* 进度条卡片 */}
           <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <View>
-              <Text style={styles.progressLabel}>Reste</Text>
-              <Text style={styles.progressAmount}>{Math.max(0, targetRewardAmount - currentTotalReward).toLocaleString()} FCFA</Text>
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.progressLabel}>Objectif</Text>
-              <Text style={styles.progressAmount}>{targetRewardAmount.toLocaleString()} FCFA</Text>
-            </View>
-          </View>
+            {!isMaskGameMode ? (
+              <>
+                {/* 挖现金进度条 */}
+                <View style={styles.progressHeader}>
+                  <View>
+                    <Text style={styles.progressLabel}>Reste</Text>
+                    <Text style={styles.progressAmount}>{Math.max(0, targetRewardAmount - currentTotalReward).toLocaleString()} FCFA</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.progressLabel}>Objectif</Text>
+                    <Text style={styles.progressAmount}>{targetRewardAmount.toLocaleString()} FCFA</Text>
+                  </View>
+                </View>
 
-          <View style={styles.progressBarWrapper}>
-            <Image 
-              source={require('../../../assets/img/rectangle_103_2x.png')}
-              style={styles.progressBarBg}
-              resizeMode="stretch"
-            />
-            <LinearGradient
-              colors={['#FF5100', '#FFDD9E']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressBar, { width: `${progressWidth}%` }]}
-            />
-            <Image 
-              source={require('../../../assets/img/group_737.png')}
-              style={[styles.progressCoin, { left: `${progressWidth}%` }]}
-              resizeMode="contain"
-            />
-          </View>
+                <View style={styles.progressBarWrapper}>
+                  <Image 
+                    source={require('../../../assets/img/rectangle_103_2x.png')}
+                    style={styles.progressBarBg}
+                    resizeMode="stretch"
+                  />
+                  <LinearGradient
+                    colors={['#FF5100', '#FFDD9E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.progressBar, { width: `${progressWidth}%` }]}
+                  />
+                  <Image 
+                    source={require('../../../assets/img/group_737.png')}
+                    style={[styles.progressCoin, { left: `${progressWidth}%` }]}
+                    resizeMode="contain"
+                  />
+                </View>
 
-          <View style={styles.progressFooter}>
-            <Text style={styles.reminderText}>On y est presque !</Text>
-            <TouchableOpacity style={styles.withdrawButton} onPress={handleWithdraw}>
-              <Text style={styles.withdrawText}>Retirer</Text>
-            </TouchableOpacity>
-          </View>
+                <View style={styles.progressFooter}>
+                  <Text style={styles.reminderText}>On y est presque !</Text>
+                  <TouchableOpacity style={styles.withdrawButton} onPress={handleWithdraw}>
+                    <Text style={styles.withdrawText}>Retirer</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                {/* 面具游戏进度条 */}
+                <View style={styles.maskGameHeader}>
+                  <Text style={styles.maskGameTitle}>Presque prêt à retirer 5,000 FCFA</Text>
+                  <Text style={styles.maskGameSubtitle}>Utilisez 20 Masques Dorés pour débloquer le dernier FCFA</Text>
+                </View>
+                
+                <View style={styles.maskStats}>
+                  <View style={styles.maskStatItem}>
+                    <Text style={styles.maskStatLabel}>MASQUES GAGNÉS</Text>
+                    <Text style={styles.maskStatValue}>{currentTotalReward.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.maskStatItem}>
+                    <Text style={styles.maskStatLabel}>MASQUES REÇUS</Text>
+                    <Text style={styles.maskStatValueOrange}>{goldMasksCount}</Text>
+                  </View>
+                  <View style={styles.maskStatItem}>
+                    <Text style={styles.maskStatLabel}>MASQUES REQUIS</Text>
+                    <Text style={styles.maskStatValueGray}>{targetGoldMasksCount}</Text>
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={[styles.exchangeButton, goldMasksCount < targetGoldMasksCount && styles.exchangeButtonDisabled]} 
+                  onPress={handleExchangeMasks}
+                  disabled={goldMasksCount < targetGoldMasksCount}
+                >
+                  <Text style={[styles.exchangeButtonText, goldMasksCount < targetGoldMasksCount && styles.exchangeButtonTextDisabled]}>
+                    Retirer maintenant
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
           {/* 挖矿游戏区域 */}
@@ -599,7 +726,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           <TouchableOpacity 
             style={styles.digButton} 
             onPress={handleDig}
-            disabled={isDigging || availableGameAttempts <= 0}
+            disabled={isDigging}
           >
             <Text style={styles.digButtonText}>Forer maintenant ({availableGameAttempts})</Text>
           </TouchableOpacity>
@@ -668,47 +795,47 @@ const MiningGameScreen = ({ navigation }: any) => {
 
           {/* 邀请好友区域 */}
           <ImageBackground 
-          source={require('../../../assets/img/group_138_2x.png')}
-          style={styles.inviteSection}
-          resizeMode="contain"
-        >
-          <View style={styles.inviteButtons}>
-            <View style={{ position: 'relative' }}>
-              <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
-                <Text style={styles.whatsappText}>WhatsApp</Text>
-              </TouchableOpacity>
-              
-              {/* 手指图标和涟漪效果 - 在按钮外部 */}
-              <Animated.View
-                style={[
-                  styles.fingerContainer,
-                  {
-                    transform: [{ translateY: fingerTranslate }]
-                  }
-                ]}
-                pointerEvents="none"
-              >
-                {/* 涟漪效果跟随手指 */}
-                <Animated.View 
+            source={require('../../../assets/img/group_138_2x.png')}
+            style={styles.inviteSection}
+            resizeMode="contain"
+          >
+            <View style={styles.inviteButtons}>
+              <View style={{ position: 'relative' }}>
+                <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
+                  <Text style={styles.whatsappText}>WhatsApp</Text>
+                </TouchableOpacity>
+                
+                {/* 手指图标和涟漪效果 - 在按钮外部 */}
+                <Animated.View
                   style={[
-                    styles.fingerRipple,
+                    styles.fingerContainer,
                     {
-                      opacity: rippleOpacity,
-                      transform: [{ scale: rippleScale }]
+                      transform: [{ translateY: fingerTranslate }]
                     }
                   ]}
-                />
-                {/* 手指图标 */}
-                <Image 
-                  source={require('../../../assets/img/finger.png')}
-                  style={styles.fingerImage}
-                />
-              </Animated.View>
+                  pointerEvents="none"
+                >
+                  {/* 涟漪效果跟随手指 */}
+                  <Animated.View 
+                    style={[
+                      styles.fingerRipple,
+                      {
+                        opacity: rippleOpacity,
+                        transform: [{ scale: rippleScale }]
+                      }
+                    ]}
+                  />
+                  {/* 手指图标 */}
+                  <Image 
+                    source={require('../../../assets/img/finger.png')}
+                    style={styles.fingerImage}
+                  />
+                </Animated.View>
+              </View>
+              <TouchableOpacity style={styles.copyButton} onPress={handleCopyLink}>
+                <Text style={styles.copyText}>Copier le lien</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.copyButton} onPress={handleCopyLink}>
-              <Text style={styles.copyText}>Copier le lien</Text>
-            </TouchableOpacity>
-          </View>
           </ImageBackground>
         </View>
       </ScrollView>
@@ -720,12 +847,170 @@ const MiningGameScreen = ({ navigation }: any) => {
         onOpen={handleOpenGift}
       />
       
-      {/* 挖矿奖励弹窗 */}
+      {/* 挖矿奖励弹窗 - 现金 */}
       <MiningRewardModal
         visible={miningRewardVisible}
-        onClose={() => setMiningRewardVisible(false)}
+        onClose={() => {
+          setMiningRewardVisible(false);
+          // 关闭挖矿奖励弹窗后，检查是否需要显示面具游戏弹窗
+          console.log('检查面具游戏弹窗条件:', {
+            currentTotalReward,
+            floorValue: Math.floor(currentTotalReward),
+            isEqual4999: Math.floor(currentTotalReward) === 4999,
+            maskGameModalVisible
+          });
+          if (Math.floor(currentTotalReward) === 4999 && !maskGameModalVisible) {
+            console.log('触发面具游戏弹窗！');
+            setTimeout(() => {
+              setMaskGameModalVisible(true);
+            }, 300);
+          }
+        }}
         rewardAmount={currentReward}
       />
+      
+      {/* 面具奖励弹窗 */}
+      <MaskRewardModal
+        visible={maskRewardVisible}
+        onClose={() => {
+          setMaskRewardVisible(false);
+          // 如果在面具游戏模式，可能需要检查是否达到兑换条件
+        }}
+        rewardAmount={currentReward}
+      />
+      
+      {/* 面具游戏弹窗 */}
+      <MaskGameModal
+        visible={maskGameModalVisible}
+        onClose={() => setMaskGameModalVisible(false)}
+        onStart={() => {
+          setMaskGameModalVisible(false);
+          setIsMaskGameMode(true);
+          console.log('开始收集面具模式');
+        }}
+      />
+      
+      {/* 任务引导 */}
+      {showTaskGuide && (
+        <TouchableOpacity 
+          style={styles.taskGuideOverlay} 
+          activeOpacity={1}
+          onPress={() => {
+            setShowTaskGuide(false);
+            setShowInviteGuide(true);
+          }}
+        >
+          <View style={styles.taskGuideContainer}>
+            <Image 
+              source={require('../../../assets/img/task_guide.png')}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 金币图标 - 任务中心按钮复制版 - 确保在引导层之上 */}
+      {showTaskGuide && (
+        <View style={[styles.taskCenterContainer, styles.taskCenterHighlight]}>
+          <Animated.View
+            style={{
+              transform: [{ scale: taskCenterAnimation }]
+            }}
+          >
+            <TouchableOpacity 
+              style={styles.bottomGold}
+              onPress={() => {
+                setShowTaskGuide(false);
+                setShowInviteGuide(true);
+              }}
+            >
+              <Image 
+                source={require('../../../assets/img/group_139_1.png')}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      )}
+      
+      {/* 邀请引导 */}
+      {showInviteGuide && (
+        <TouchableOpacity 
+          style={styles.inviteGuideOverlay} 
+          activeOpacity={1}
+          onPress={() => setShowInviteGuide(false)}
+        >
+          <View style={styles.inviteGuideContainer}>
+            <Image 
+              source={require('../../../assets/img/invitation_guide.png')}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 邀请好友区域复制版 - 确保在引导层之上 */}
+      {showInviteGuide && (
+        <View style={styles.inviteSectionHighlight}>
+          <ImageBackground 
+            source={require('../../../assets/img/group_138_2x.png')}
+            style={styles.inviteSection}
+            resizeMode="contain"
+          >
+            <View style={styles.inviteButtons}>
+              <View style={{ position: 'relative' }}>
+                <TouchableOpacity 
+                  style={styles.whatsappButton} 
+                  onPress={() => {
+                    setShowInviteGuide(false);
+                    handleWhatsApp();
+                  }}
+                >
+                  <Text style={styles.whatsappText}>WhatsApp</Text>
+                </TouchableOpacity>
+                
+                {/* 手指图标和涟漪效果 - 在按钮外部 */}
+                <Animated.View
+                  style={[
+                    styles.fingerContainer,
+                    {
+                      transform: [{ translateY: fingerTranslate }]
+                    }
+                  ]}
+                  pointerEvents="none"
+                >
+                  {/* 涟漪效果跟随手指 */}
+                  <Animated.View 
+                    style={[
+                      styles.fingerRipple,
+                      {
+                        opacity: rippleOpacity,
+                        transform: [{ scale: rippleScale }]
+                      }
+                    ]}
+                  />
+                  {/* 手指图标 */}
+                  <Image 
+                    source={require('../../../assets/img/finger.png')}
+                    style={styles.fingerImage}
+                  />
+                </Animated.View>
+              </View>
+              <TouchableOpacity 
+                style={styles.copyButton} 
+                onPress={() => {
+                  setShowInviteGuide(false);
+                  handleCopyLink();
+                }}
+              >
+                <Text style={styles.copyText}>Copier le lien</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        </View>
+      )}
     </View>
   );
 };
@@ -887,10 +1172,10 @@ const styles = StyleSheet.create({
     marginTop: 65,
   },
   digButtonText: {
-    fontSize: 20,
+    fontSize: fontSize(16),
     fontWeight: '600',
     color: '#FFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowColor: '#00000040',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 0,
   },
@@ -972,8 +1257,6 @@ const styles = StyleSheet.create({
   inviteSection: {
     width: screenWidth,
     height: 152,
-    marginRight: 10,
-    marginTop: 10,
     position: 'relative',
   },
   inviteButtons: {
@@ -995,12 +1278,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   whatsappText: {
-    fontSize: 16,
+    fontSize: fontSize(14),
     fontWeight: '500',
     color: '#FFF',
   },
   copyButton: {
-    width: 104,
+    width: 120,
     height: 32,
     backgroundColor: '#FFF',
     borderRadius: 16,
@@ -1010,7 +1293,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   copyText: {
-    fontSize: 16,
+    fontSize: fontSize(14),
     fontWeight: '500',
     color: '#FF5100',
   },
@@ -1026,7 +1309,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: '#FFFFFF4D',
     top: '50%',
     left: '50%',
     marginTop: -100,
@@ -1052,10 +1335,123 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 40,
-    borderRadius: 40,
-    backgroundColor: 'green',
+    borderRadius: 20,
+    borderWidth: 6,
+    borderColor: 'gray',
+    backgroundColor: 'transparent',
     top: -0,  // 向上偏移，让涟漪中心在指尖
     left: 30,   // 向右偏移，对准指尖位置
+  },
+  guideOverlay: {
+    flex: 1,
+    backgroundColor: '#000000CC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guideImage: {
+    width: screenWidth * 0.8,
+    height: screenWidth * 0.8,
+  },
+  taskGuideContainer: {
+    position: 'absolute',
+    bottom: -10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  taskGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  taskCenterHighlight: {
+    zIndex: 1001,
+  },
+  inviteGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  inviteGuideContainer: {
+    position: 'absolute',
+    bottom: 100,
+    width: '100%',
+    alignItems: 'center',
+  },
+  inviteSectionHighlight: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    zIndex: 1001,
+  },
+  maskGameHeader: {
+    marginBottom: 20,
+  },
+  maskGameTitle: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  maskGameSubtitle: {
+    fontSize: fontSize(14),
+    color: '#666',
+    textAlign: 'center',
+  },
+  maskStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 25,
+  },
+  maskStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  maskStatLabel: {
+    fontSize: fontSize(11),
+    color: '#999',
+    marginBottom: 5,
+  },
+  maskStatValue: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#FF5100',
+  },
+  maskStatValueOrange: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#FF5100',
+  },
+  maskStatValueGray: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#999',
+  },
+  exchangeButton: {
+    backgroundColor: '#FF5100',
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  exchangeButtonDisabled: {
+    backgroundColor: '#D3D3D3',
+  },
+  exchangeButtonText: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  exchangeButtonTextDisabled: {
+    color: '#999',
   },
 });
 

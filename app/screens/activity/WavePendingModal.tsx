@@ -89,7 +89,7 @@ const WavePendingModal: React.FC<WavePendingModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: '#00000099',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40, // 增加底部间距
   },
   detailsContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#FFFFFFE6',
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,

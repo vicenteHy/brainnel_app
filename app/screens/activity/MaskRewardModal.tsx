@@ -14,34 +14,29 @@ import Animated, {
   withTiming,
   withSpring,
   withSequence,
-  interpolate,
 } from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-interface MiningRewardModalProps {
+interface MaskRewardModalProps {
   visible: boolean;
   onClose: () => void;
   rewardAmount: number;
 }
 
-const MiningRewardModal: React.FC<MiningRewardModalProps> = ({ 
+const MaskRewardModal: React.FC<MaskRewardModalProps> = ({ 
   visible, 
   onClose, 
   rewardAmount 
 }) => {
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(0.8);
-  const coinScaleAnim = useSharedValue(0);
-  const coinRotateAnim = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
       // 重置动画
       fadeAnim.value = 0;
       scaleAnim.value = 0.8;
-      coinScaleAnim.value = 0;
-      coinRotateAnim.value = 0;
       
       // 入场动画
       fadeAnim.value = withTiming(1, { duration: 300 });
@@ -49,15 +44,6 @@ const MiningRewardModal: React.FC<MiningRewardModalProps> = ({
         damping: 12,
         stiffness: 100,
       });
-      
-      // 金币动画
-      setTimeout(() => {
-        coinScaleAnim.value = withSequence(
-          withTiming(1.2, { duration: 300 }),
-          withSpring(1, { damping: 10, stiffness: 100 })
-        );
-        coinRotateAnim.value = withTiming(360, { duration: 600 });
-      }, 200);
     }
   }, [visible]);
 
@@ -70,15 +56,6 @@ const MiningRewardModal: React.FC<MiningRewardModalProps> = ({
   const contentAnimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scaleAnim.value }],
-    };
-  });
-
-  const coinAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: coinScaleAnim.value },
-        { rotate: `${coinRotateAnim.value}deg` },
-      ],
     };
   });
 
@@ -100,33 +77,31 @@ const MiningRewardModal: React.FC<MiningRewardModalProps> = ({
       onRequestClose={handleAccept}
     >
       <View style={styles.modalContainer}>
+        {/* 背景遮罩 */}
         <View style={styles.overlay} />
         
         <Animated.View style={[styles.contentContainer, containerAnimatedStyle]}>
           <Animated.View style={[styles.backgroundContainer, contentAnimatedStyle]}>
             {/* 背景图片 */}
             <Image
-              source={require('../../assets/miningReward/mining_reward_bg.png')}
+              source={require('../../../assets/img/mask_reward_bg.png')}
               style={styles.backgroundImage}
               resizeMode="contain"
             />
             
-            {/* 金币图标区域 - 使用动画 */}
-            <Animated.View style={[styles.coinContainer, coinAnimatedStyle]}>
-              {/* 这里的金币图标已经包含在背景图中 */}
-            </Animated.View>
+            {/* 奖励文字 */}
+            <Text style={styles.rewardText}>
+              +{rewardAmount} Masque{rewardAmount > 1 ? 's' : ''}
+            </Text>
             
-            {/* 奖励金额文字 */}
-            <Text style={styles.rewardText}>+{rewardAmount} FCFA</Text>
-            
-            {/* 接受按钮 */}
+            {/* 接受按钮 - 使用图片 */}
             <TouchableOpacity
               style={styles.acceptButton}
               onPress={handleAccept}
               activeOpacity={0.8}
             >
               <Image
-                source={require('../../assets/miningReward/accept_button.png')}
+                source={require('../../../assets/img/accept_button.png')}
                 style={styles.acceptButtonImage}
                 resizeMode="contain"
               />
@@ -152,25 +127,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backgroundContainer: {
-    width: screenWidth,
-    height: 522,
+    width: 370,
+    height: 457,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backgroundImage: {
-    width: screenWidth,
-    height: 522,
+    width: 370,
+    height: 457,
     position: 'absolute',
-  },
-  coinContainer: {
-    position: 'absolute',
-    top: 180,
-    width: 150,
-    height: 150,
   },
   rewardText: {
     position: 'absolute',
-    top: 369,
+    top: 335,
     fontSize: 23,
     fontWeight: '600',
     color: '#FFFFFF',
@@ -181,7 +150,9 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     position: 'absolute',
-    bottom: 45,
+    bottom: -45,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   acceptButtonImage: {
     width: 224,
@@ -189,4 +160,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MiningRewardModal;
+export default MaskRewardModal;

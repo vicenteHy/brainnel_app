@@ -77,7 +77,7 @@ const TaskCompleteModal: React.FC<TaskCompleteModalProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#FFFFFFE6',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,

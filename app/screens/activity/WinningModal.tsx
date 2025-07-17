@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: '#00000099',
   },
   centerContainer: {
     ...StyleSheet.absoluteFillObject,

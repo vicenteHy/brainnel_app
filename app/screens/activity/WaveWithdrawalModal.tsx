@@ -79,7 +79,7 @@ const WaveWithdrawalModal: React.FC<WaveWithdrawalModalProps> = ({
       animationType="none"
       statusBarTranslucent={true}
     >
-      <StatusBar backgroundColor="rgba(0,0,0,0.6)" barStyle="light-content" />
+      <StatusBar backgroundColor="#00000099" barStyle="light-content" />
       
       <KeyboardAvoidingView 
         style={styles.container}
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: screenWidth,
     height: screenHeight,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: '#00000099',
   },
   modalContainer: {
     width: 370,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#FFFFFFE6',
     borderRadius: 12,
     paddingHorizontal: 16,
   },
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   phoneInputContainer: {
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#FFFFFFE6',
     borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   countryModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#00000080',
     justifyContent: 'flex-end',
   },
   countryModalContent: {

@@ -31,7 +31,7 @@ const WithdrawalSuccessModal: React.FC<WithdrawalSuccessModalProps> = ({
       animationType="fade"
       statusBarTranslucent={true}
     >
-      <StatusBar backgroundColor="rgba(0,0,0,0.6)" barStyle="light-content" />
+      <StatusBar backgroundColor="#00000099" barStyle="light-content" />
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.container}>
           {/* 半透明遮罩 */}
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: screenWidth,
     height: screenHeight,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: '#00000099',
   },
   modalContainer: {
     width: 370,

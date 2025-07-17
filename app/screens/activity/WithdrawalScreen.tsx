@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   methodFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#FFFFFFCC',
     borderRadius: 8,
     padding: 12,
   },

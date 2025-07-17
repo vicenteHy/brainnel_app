@@ -11,3 +11,5 @@ export { default as WavePendingModal } from './WavePendingModal';
 export { default as BoostSuccessModal } from './BoostSuccessModal';
 export { default as BoostedSuccessModal } from './BoostedSuccessModal';
 export { default as TaskCompleteModal } from './TaskCompleteModal';
+export { default as MaskGameModal } from './MaskGameModal';
+export { default as MaskRewardModal } from './MaskRewardModal';

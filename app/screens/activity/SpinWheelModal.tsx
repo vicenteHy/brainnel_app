@@ -412,7 +412,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: '#000000B3',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: '#000000B3',
   },
   wheelBackground: {
     position: 'absolute',
