@@ -38,6 +38,10 @@ import { styles } from "./SearchResultScreen/styles";
 type SearchResultRouteParams = {
   keyword?: string;
   category_id?: number;
+  taskCompleted?: {
+    taskName: string;
+    reward: string;
+  };
 };
 
 type SearchResultScreenProps = {
@@ -118,6 +122,12 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
         }
       };
       fetchData();
+      
+      // 检查是否有任务完成信息
+      if (route.params?.taskCompleted) {
+        setTaskInfo(route.params.taskCompleted);
+        setShowTaskCompleteModal(true);
+      }
     }
     if (route.params?.category_id) {
       setSearchText(""); // 清空搜索框显示
@@ -197,19 +207,6 @@ export const SearchResultScreen = ({ route, navigation }: SearchResultScreenProp
     if (searchText.trim()) {
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logSearch(searchText.trim(), "search");
-      
-      // 上报文本搜索任务完成（任务2）
-      const activityStore = useActivityStore.getState();
-      const taskData = await activityStore.reportTaskComplete(2);
-      
-      // 根据API返回的任务信息显示弹窗
-      if (taskData && taskData.status === 2) {
-        setTaskInfo({
-          taskName: taskData.task_name,
-          reward: `+${taskData.reward_value} FCFA`
-        });
-        setShowTaskCompleteModal(true);
-      }
       
       setShowSkeleton(true);
       const newParams = {

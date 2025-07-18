@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signIn, getSignInStatus, TaskItem as TaskData } from '../../services/api/activity';
@@ -236,7 +237,11 @@ const TaskCenterScreen = ({ navigation }: any) => {
   const handleCheckIn = async () => {
     // 检查当天是否已签到
     if (checkInDays[currentDay - 1].completed) {
-      Alert.alert(t('提示'), t('今日已签到'));
+      Toast.show({
+        type: 'info',
+        text1: 'Déjà connecté aujourd\'hui',
+        position: 'center',
+      });
       return;
     }
 
@@ -250,10 +255,20 @@ const TaskCenterScreen = ({ navigation }: any) => {
       // 重新加载签到状态
       await loadSignInStatus();
       
-      Alert.alert(t('签到成功'), t(`您已获得 2 FCFA！`));
+      Toast.show({
+        type: 'success',
+        text1: 'Connexion réussie !',
+        text2: 'Vous avez gagné 2 FCFA !',
+        position: 'center',
+      });
     } catch (error) {
       console.error('签到失败:', error);
-      Alert.alert(t('错误'), t('签到失败，请重试'));
+      Toast.show({
+        type: 'error',
+        text1: 'Échec de la connexion',
+        text2: 'Veuillez réessayer',
+        position: 'center',
+      });
     } finally {
       setLoading(false);
     }

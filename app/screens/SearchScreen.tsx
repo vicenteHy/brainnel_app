@@ -25,6 +25,7 @@ import CameraIcon from "../components/CameraIcon";
 import { productApi } from "../services/api/productApi";
 import useAnalyticsStore from "../store/analytics";
 import fontSize from "../utils/fontsizeUtils";
+import useActivityStore from "../store/activityStore";
 
 // 图标组件 - 使用React.memo优化渲染
 const IconComponent = React.memo(({ name, size, color }: { name: string; size: number; color: string }) => {
@@ -203,7 +204,7 @@ export const SearchScreen = () => {
   }, []);
 
   // 处理搜索提交 - 使用useCallback优化函数引用
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (searchText.trim()) {
       const trimmedText = searchText.trim();
       const isIdSearch = isProductId(trimmedText);
@@ -212,23 +213,43 @@ export const SearchScreen = () => {
       const analyticsStore = useAnalyticsStore.getState();
       analyticsStore.logSearch(trimmedText, isIdSearch ? "product_id_search" : "search");
       
+      // 上报文本搜索任务完成（任务2）
+      const activityStore = useActivityStore.getState();
+      const taskData = await activityStore.reportTaskComplete(2);
+      
       saveSearchHistory(trimmedText);
       Keyboard.dismiss();
-      // 导航到搜索结果页面，并传递搜索关键词
-      navigation.navigate('SearchResult', { keyword: trimmedText });
+      // 导航到搜索结果页面，并传递搜索关键词和任务信息
+      navigation.navigate('SearchResult', { 
+        keyword: trimmedText,
+        taskCompleted: taskData ? {
+          taskName: taskData.task_name,
+          reward: `+${taskData.reward_value} FCFA`
+        } : null
+      });
     }
   }, [searchText, saveSearchHistory, navigation, isProductId]);
 
   // 点击搜索标签
-  const handleTagPress = (tag: string) => {
+  const handleTagPress = async (tag: string) => {
     // 记录搜索事件
     const analyticsStore = useAnalyticsStore.getState();
     analyticsStore.logSearch(tag, "search");
     
+    // 上报文本搜索任务完成（任务2）
+    const activityStore = useActivityStore.getState();
+    const taskData = await activityStore.reportTaskComplete(2);
+    
     setSearchText(tag);
     saveSearchHistory(tag);
-    // 导航到搜索结果页面，并传递搜索关键词
-    navigation.navigate('SearchResult', { keyword: tag });
+    // 导航到搜索结果页面，并传递搜索关键词和任务信息
+    navigation.navigate('SearchResult', { 
+      keyword: tag,
+      taskCompleted: taskData ? {
+        taskName: taskData.task_name,
+        reward: `+${taskData.reward_value} FCFA`
+      } : null
+    });
   }
 
   // 通用图片选择/拍照逻辑
