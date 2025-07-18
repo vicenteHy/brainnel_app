@@ -65,6 +65,8 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [availableGameAttempts, setAvailableGameAttempts] = useState(0);
   const [showTaskGuide, setShowTaskGuide] = useState(false);
   const [showInviteGuide, setShowInviteGuide] = useState(false);
+  const [showRedeemGuide, setShowRedeemGuide] = useState(false);
+  const [showWithdrawGuide, setShowWithdrawGuide] = useState(false);
   const [maskGameModalVisible, setMaskGameModalVisible] = useState(false);
   const [isMaskGameMode, setIsMaskGameMode] = useState(false);
   const [goldMasksCount, setGoldMasksCount] = useState(0);
@@ -273,6 +275,12 @@ const MiningGameScreen = ({ navigation }: any) => {
               setMaskGameModalVisible(true);
             }, 500);
           }
+          // 如果金额达到 5000，显示提现引导（只在没有其他弹窗时显示）
+          else if (currentAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
+            setTimeout(() => {
+              setShowWithdrawGuide(true);
+            }, 500);
+          }
         } catch (error) {
           console.error('页面聚焦 - 获取活动状态失败:', error);
         }
@@ -284,6 +292,18 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   const handleDig = () => {
     if (isDigging) {
+      return;
+    }
+
+    // 检查金额是否达到5000，显示提现引导
+    if (currentTotalReward >= 5000) {
+      setShowWithdrawGuide(true);
+      return;
+    }
+
+    // 检查是否达到20个面具，显示兑换引导
+    if (goldMasksCount >= targetGoldMasksCount) {
+      setShowRedeemGuide(true);
       return;
     }
 
@@ -434,10 +454,12 @@ const MiningGameScreen = ({ navigation }: any) => {
       setGoldMasksCount(updatedMasks);
       setTargetGoldMasksCount(updatedTargetMasks);
       
-      // 如果金额达到 5000，切换回挖现金模式
+      // 如果金额达到 5000，切换回挖现金模式并显示提现引导
       if (updatedAmount >= 5000) {
         setIsMaskGameMode(false);
-        Alert.alert(t('恭喜'), t('已解锁 5000 FCFA！现在可以提现了。'));
+        setTimeout(() => {
+          setShowWithdrawGuide(true);
+        }, 1000);
       }
       
       Toast.show({
@@ -577,6 +599,12 @@ const MiningGameScreen = ({ navigation }: any) => {
           setMaskGameModalVisible(true);
         }, 500);
       }
+      // 如果金额达到 5000，显示提现引导（只在没有其他弹窗时显示）
+      else if (updatedAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
+        setTimeout(() => {
+          setShowWithdrawGuide(true);
+        }, 500);
+      }
     } catch (error) {
       console.error('宝箱奖励 - 更新奖励金额失败:', error);
     }
@@ -710,7 +738,7 @@ const MiningGameScreen = ({ navigation }: any) => {
                   disabled={goldMasksCount < targetGoldMasksCount}
                 >
                   <Text style={[styles.exchangeButtonText, goldMasksCount < targetGoldMasksCount && styles.exchangeButtonTextDisabled]}>
-                    Retirer maintenant
+                    Échanger
                   </Text>
                 </TouchableOpacity>
               </>
@@ -1009,6 +1037,129 @@ const MiningGameScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             </View>
           </ImageBackground>
+        </View>
+      )}
+      
+      {/* 兑换引导 */}
+      {showRedeemGuide && (
+        <TouchableOpacity 
+          style={styles.redeemGuideOverlay} 
+          activeOpacity={1}
+          onPress={() => setShowRedeemGuide(false)}
+        >
+          <View style={styles.redeemGuideContainer}>
+            <Image 
+              source={require('../../../assets/img/redeem.png')}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 兑换按钮高亮版 - 确保在引导层之上 */}
+      {showRedeemGuide && isMaskGameMode && (
+        <View style={styles.exchangeButtonHighlight}>
+          <View style={styles.progressCard}>
+            <View style={styles.maskGameHeader}>
+              <Text style={styles.maskGameTitle}>Presque prêt à retirer 5,000 FCFA</Text>
+              <Text style={styles.maskGameSubtitle}>Utilisez 20 Masques Dorés pour débloquer le dernier FCFA</Text>
+            </View>
+            
+            <View style={styles.maskStats}>
+              <View style={styles.maskStatItem}>
+                <Text style={styles.maskStatLabel}>MASQUES GAGNÉS</Text>
+                <Text style={styles.maskStatValue}>{currentTotalReward.toLocaleString()}</Text>
+              </View>
+              <View style={styles.maskStatItem}>
+                <Text style={styles.maskStatLabel}>MASQUES REÇUS</Text>
+                <Text style={styles.maskStatValueOrange}>{goldMasksCount}</Text>
+              </View>
+              <View style={styles.maskStatItem}>
+                <Text style={styles.maskStatLabel}>MASQUES REQUIS</Text>
+                <Text style={styles.maskStatValueGray}>{targetGoldMasksCount}</Text>
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.exchangeButton, styles.exchangeButtonHighlighted]} 
+              onPress={() => {
+                setShowRedeemGuide(false);
+                handleExchangeMasks();
+              }}
+            >
+              <Text style={styles.exchangeButtonText}>
+                Échanger
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      
+      {/* 提现引导 */}
+      {showWithdrawGuide && (
+        <TouchableOpacity 
+          style={styles.withdrawGuideOverlay} 
+          activeOpacity={1}
+          onPress={() => setShowWithdrawGuide(false)}
+        >
+          <View style={styles.withdrawGuideContainer}>
+            <Image 
+              source={require('../../../assets/img/withdraw.png')}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 提现按钮高亮版 - 确保在引导层之上 */}
+      {showWithdrawGuide && !isMaskGameMode && (
+        <View style={styles.withdrawButtonHighlight}>
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <View>
+                <Text style={styles.progressLabel}>Reste</Text>
+                <Text style={styles.progressAmount}>{Math.max(0, targetRewardAmount - currentTotalReward).toLocaleString()} FCFA</Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.progressLabel}>Objectif</Text>
+                <Text style={styles.progressAmount}>{targetRewardAmount.toLocaleString()} FCFA</Text>
+              </View>
+            </View>
+
+            <View style={styles.progressBarWrapper}>
+              <Image 
+                source={require('../../../assets/img/rectangle_103_2x.png')}
+                style={styles.progressBarBg}
+                resizeMode="stretch"
+              />
+              <LinearGradient
+                colors={['#FF5100', '#FFDD9E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.progressBar, { width: `${progressWidth}%` }]}
+              />
+              <Image 
+                source={require('../../../assets/img/group_737.png')}
+                style={[styles.progressCoin, { left: `${progressWidth}%` }]}
+                resizeMode="contain"
+              />
+            </View>
+
+            <View style={styles.progressFooter}>
+              <Text style={styles.reminderText}>On y est presque !</Text>
+              <TouchableOpacity 
+                style={[styles.withdrawButton, styles.withdrawButtonHighlighted]} 
+                onPress={() => {
+                  setShowWithdrawGuide(false);
+                  handleWithdraw();
+                }}
+              >
+                <Text style={styles.withdrawText}>Retirer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       )}
     </View>
@@ -1452,6 +1603,64 @@ const styles = StyleSheet.create({
   },
   exchangeButtonTextDisabled: {
     color: '#999',
+  },
+  redeemGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  redeemGuideContainer: {
+    position: 'absolute',
+    bottom: 220,
+    width: '100%',
+    alignItems: 'center',
+  },
+  exchangeButtonHighlight: {
+    position: 'absolute',
+    top: 180,
+    left: 15,
+    right: 15,
+    zIndex: 1001,
+  },
+  exchangeButtonHighlighted: {
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  withdrawGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  withdrawGuideContainer: {
+    position: 'absolute',
+    bottom: 300,
+    width: '100%',
+    alignItems: 'center',
+  },
+  withdrawButtonHighlight: {
+    position: 'absolute',
+    top: 180,
+    left: 15,
+    right: 15,
+    zIndex: 1001,
+  },
+  withdrawButtonHighlighted: {
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
   },
 });
 
