@@ -18,8 +18,6 @@ import Animated, {
   interpolate,
   runOnJS,
 } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface WinningModalProps {
   visible: boolean;
@@ -45,14 +43,12 @@ export const WinningModal: React.FC<WinningModalProps> = ({
   onClose,
   onContinue,
 }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
   
   const handleContinue = () => {
     onClose();
     onContinue();
-    navigation.navigate('MiningGameScreen');
   };
 
   useEffect(() => {

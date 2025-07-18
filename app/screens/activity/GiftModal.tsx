@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -32,6 +32,7 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
   const scaleAnim = useSharedValue(0.8);
   const rotateAnim = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
+  const openTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -48,7 +49,27 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
         damping: 12,
         stiffness: 100,
       });
+    } else {
+      // 清理定时器
+      if (openTimeoutRef.current) {
+        clearTimeout(openTimeoutRef.current);
+        openTimeoutRef.current = null;
+      }
+      // 重置状态
+      setIsOpened(false);
+      fadeAnim.value = 0;
+      scaleAnim.value = 0.8;
+      rotateAnim.value = 0;
+      contentOpacity.value = 0;
     }
+    
+    // 清理函数
+    return () => {
+      if (openTimeoutRef.current) {
+        clearTimeout(openTimeoutRef.current);
+        openTimeoutRef.current = null;
+      }
+    };
   }, [visible]);
 
   const handleOpenGift = () => {
@@ -60,7 +81,7 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
     );
     
     // 延迟显示打开后的内容
-    setTimeout(() => {
+    openTimeoutRef.current = setTimeout(() => {
       setIsOpened(true);
       contentOpacity.value = withTiming(1, { duration: 300 });
     }, 600);
@@ -99,7 +120,13 @@ const GiftModal: React.FC<GiftModalProps> = ({ visible, onClose, onOpen }) => {
       onRequestClose={onClose}
     >
       <View style={styles.modalContainer}>
-        <View style={styles.overlay} />
+        <TouchableOpacity 
+          style={styles.overlay} 
+          activeOpacity={1}
+          onPress={() => {
+            // 防止点击背景关闭，只能通过按钮操作
+          }}
+        />
         
         <Animated.View style={[styles.contentContainer, containerAnimatedStyle]}>
           {!isOpened ? (

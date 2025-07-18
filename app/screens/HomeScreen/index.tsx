@@ -39,6 +39,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCategoryImageSource } from "../../utils/categoryImageUtils";
 import { eventBus } from "../../utils/eventBus";
 import fontSize from "../../utils/fontsizeUtils";
+import { SpinWheelModal } from "../activity/SpinWheelModal";
+import { WinningModal } from "../activity/WinningModal";
 
 // 导入拆分的组件
 import {
@@ -132,6 +134,8 @@ export const HomeScreen = () => {
   const [showLoginModal, setShowLoginModal] = useState(false); // 不依赖userStore初始化，在useEffect中处理
   const [hasUserDismissedLoginModal, setHasUserDismissedLoginModal] = useState(false); // 用户是否已关闭过登录弹窗
   const [hasCheckedActivity, setHasCheckedActivity] = useState(false); // 是否已检查过活动状态
+  const [showSpinWheelModal, setShowSpinWheelModal] = useState(false); // 转盘弹窗显示状态
+  const [showWinningModal, setShowWinningModal] = useState(false); // 中奖弹窗显示状态
 
   // 调试selectedCategoryId变化
   useEffect(() => {
@@ -339,11 +343,29 @@ export const HomeScreen = () => {
     setShowLoginModal(true);
   }, []);
 
-  // 检查活动状态（不再自动弹出转盘）
+  // 处理转盘弹窗关闭
+  const handleSpinWheelClose = useCallback(() => {
+    setShowSpinWheelModal(false);
+  }, []);
+
+  // 处理转盘旋转
+  const handleSpinWheelSpin = useCallback(() => {
+    // 转盘旋转逻辑在SpinWheelModal内部处理
+  }, []);
+
+  // 处理转盘中奖
+  const handleSpinWheelWin = useCallback((amount: number) => {
+    console.log('转盘中奖金额:', amount);
+    // 先显示中奖弹窗，与banner逻辑一致
+    setShowWinningModal(true);
+  }, []);
+
+  // 检查活动状态，404时自动弹出转盘（仅在推荐页面且用户首次登录时）
   const checkActivityStatus = useCallback(async () => {
     console.log('checkActivityStatus called', {
       userId: userStore.user?.user_id,
-      hasCheckedActivity
+      hasCheckedActivity,
+      selectedCategoryId
     });
     
     if (!userStore.user?.user_id) {
@@ -365,12 +387,28 @@ export const HomeScreen = () => {
       // 调用活动状态接口
       const response = await getActivityStatus();
       console.log('Activity status response:', response);
-      // 不再自动弹出转盘，只记录状态
+      // 用户已参加活动，不需要弹出转盘
     } catch (error: any) {
       console.log('Activity status error:', error);
-      // 不再自动弹出转盘
+      
+      // 如果是404错误，说明用户未参加活动
+      // 但只有在推荐页面(-1)时才自动弹出转盘，避免与banner逻辑冲突
+      if ((error?.response?.status === 404 || error?.status === 404) && selectedCategoryId === -1) {
+        // 检查是否通过邀请链接进入
+        const enteredViaInvite = await AsyncStorage.getItem('entered_via_invite');
+        if (enteredViaInvite === 'true') {
+          console.log('用户通过邀请链接进入，不显示转盘弹窗');
+          // 清除标记，避免永久影响
+          await AsyncStorage.removeItem('entered_via_invite');
+          return;
+        }
+        
+        console.log('用户未参加活动且在推荐页面，立即弹出转盘弹窗');
+        // 立即弹出转盘
+        setShowSpinWheelModal(true);
+      }
     }
-  }, [userStore.user?.user_id]);
+  }, [userStore.user?.user_id, selectedCategoryId]);
 
   // 图片选择器相关函数
   const cleanupImagePickerCache = async () => {
@@ -1187,7 +1225,25 @@ export const HomeScreen = () => {
             </>
           )}
 
-          {/* 转盘弹窗 - 已移除，现在只在CarouselBanner中使用 */}
+          {/* 转盘弹窗 - 当获取活动状态失败(404)时自动弹出 */}
+          <SpinWheelModal
+            visible={showSpinWheelModal}
+            onClose={handleSpinWheelClose}
+            onSpinPress={handleSpinWheelSpin}
+            onWin={handleSpinWheelWin}
+            shouldInitActivity={true} // HomeScreen已经知道用户未参加活动，需要初始化
+          />
+          
+          {/* 中奖弹窗 - 转盘结束后显示 */}
+          <WinningModal
+            visible={showWinningModal}
+            onClose={() => setShowWinningModal(false)}
+            onContinue={() => {
+              setShowWinningModal(false);
+              // 跳转到挖矿游戏
+              navigation.navigate('MiningGameScreen');
+            }}
+          />
         </View>
       </View>
     </SafeAreaView>

@@ -10,12 +10,14 @@ import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
 import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
-import { BoostSuccessModal } from "./app/screens/activity";
+import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal } from "./app/screens/activity";
+import { getActivityStatus } from "./app/services/api/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
 import * as Linking from "expo-linking";
 import { EventEmitter } from 'events';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StackActions } from '@react-navigation/native';
 import LanguageSelectionScreen, { checkLanguageSelected } from "./app/screens/LanguageSelectionScreen";
 import  useAnalyticsStore  from "./app/store/analytics";
 import { preloadService } from "./app/services/preloadService";
@@ -52,9 +54,13 @@ function AppContent() {
   const userStore = useUserStore();
   const { setUser } = userStore;
   const [boostModalVisible, setBoostModalVisible] = useState(false);
+  const [boostedModalVisible, setBoostedModalVisible] = useState(false);
   const [boostedUserId, setBoostedUserId] = useState<string>('');
   const [isAlreadyBoosted, setIsAlreadyBoosted] = useState(false);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const [showWinningModal, setShowWinningModal] = useState(false);
   const { login, logout } = useAuth();
+  const appStateRef = useRef(AppState.currentState);
   const [isLoading, setIsLoading] = useState(true);
   const [languageSelected, setLanguageSelected] = useState<boolean>(false);
   const [checkingLanguage, setCheckingLanguage] = useState(true);
@@ -164,7 +170,7 @@ function AppContent() {
       }
 
       // 方法3: 从AsyncStorage获取token，如果有token说明用户已登录
-      const authToken = await AsyncStorage.getItem('auth_token');
+      const authToken = await AsyncStorage.getItem('token');
       if (authToken) {
         // 可以在这里尝试从token中解析用户ID，或者返回一个特殊标识
         // 暂时返回undefined，让预加载使用通用推荐
@@ -206,6 +212,19 @@ function AppContent() {
           // 初始化 WebSocket 连接
           websocketService.connect().catch(error => {
             console.error('[App] Failed to establish WebSocket connection:', error);
+          });
+          
+          // 设置 WebSocket 消息处理器
+          websocketService.onMessage((data) => {
+            console.log('[App] 处理 WebSocket 消息:', data);
+            
+            // 处理 invitation 类型的消息 - 被别人助力
+            if (data.type === 'invitation' && data.invitee_name) {
+              console.log('[App] 收到被助力成功消息，显示 BoostedSuccessModal');
+              setBoostedUserId(data.invitee_name);
+              setIsAlreadyBoosted(false); // 这是成功助力的消息
+              setBoostedModalVisible(true); // 使用 BoostedSuccessModal
+            }
           });
           
           // 采集设备信息
@@ -256,6 +275,9 @@ function AppContent() {
                     setBoostedUserId(referrerId);
                     setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
                     setBoostModalVisible(true);
+                    
+                    // 设置标记，表示用户是通过邀请链接进入的
+                    await AsyncStorage.setItem('entered_via_invite', 'true');
                     
                     // 助力成功后清除referrer_id
                     await AsyncStorage.removeItem('referrer_id');
@@ -348,6 +370,9 @@ function AppContent() {
             setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
             setBoostModalVisible(true);
             
+            // 设置标记，表示用户是通过邀请链接进入的
+            await AsyncStorage.setItem('entered_via_invite', 'true');
+            
             // 助力成功后清除referrer_id
             await AsyncStorage.removeItem('referrer_id');
           } catch (error) {
@@ -394,27 +419,70 @@ function AppContent() {
           AsyncStorage.setItem('referrer_id', userId).then(async () => {
             console.log('Saved referrer_id:', userId);
             
+            // 设置标记，表示用户是通过邀请链接进入的
+            await AsyncStorage.setItem('entered_via_invite', 'true');
+            
             // 检查用户是否已登录
-            const authToken = await AsyncStorage.getItem('auth_token');
+            const authToken = await AsyncStorage.getItem('token');
             const currentUser = useUserStore.getState().user;
             
-            if (authToken && currentUser) {
-              // 用户已登录，直接调用助力接口
-              try {
-                const { assist } = await import('./app/services/api/activity');
-                const result = await assist(parseInt(userId));
-                
-                // 根据返回结果显示不同的弹窗内容
-                setBoostedUserId(userId);
-                setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
-                setBoostModalVisible(true);
-                
-                // 助力成功后清除referrer_id
-                await AsyncStorage.removeItem('referrer_id');
-              } catch (error) {
-                console.error('助力失败:', error);
-                Alert.alert('失败', '助力失败，请稍后重试');
-              }
+            // 优先信任 authToken，因为它是持久化的登录状态
+            if (authToken) {
+              // 用户已登录，延迟执行助力以确保应用状态完全恢复
+              console.log('检测到 authToken，用户已登录，准备执行助力');
+              
+              // 添加延迟，确保应用从后台恢复到正常状态
+              setTimeout(async () => {
+                try {
+                  // 确保应用在前台活跃状态
+                  if (appStateRef.current !== 'active') {
+                    console.log('应用不在活跃状态，等待应用恢复到前台');
+                    // 监听应用状态变化，等待应用回到前台
+                    const waitForActive = () => {
+                      return new Promise((resolve) => {
+                        const checkState = () => {
+                          if (appStateRef.current === 'active') {
+                            resolve(true);
+                          } else {
+                            setTimeout(checkState, 100);
+                          }
+                        };
+                        checkState();
+                      });
+                    };
+                    await waitForActive();
+                  }
+                  
+                  // 重新获取最新的用户状态
+                  const latestUser = useUserStore.getState().user;
+                  if (!latestUser || !latestUser.user_id) {
+                    console.log('用户状态未恢复，尝试重新获取用户信息');
+                    const userProfileSuccess = await fetchUserProfile();
+                    if (!userProfileSuccess) {
+                      console.log('获取用户信息失败，但仍尝试执行助力（API会验证token）');
+                      // 即使无法获取用户信息，仍然尝试执行助力
+                      // 因为 API 端会通过 token 验证用户身份
+                    }
+                  }
+                  
+                  const { assist } = await import('./app/services/api/activity');
+                  const result = await assist(parseInt(userId));
+                  
+                  // 根据返回结果显示不同的弹窗内容
+                  setBoostedUserId(userId);
+                  setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
+                  setBoostModalVisible(true);
+                  
+                  // 设置标记，表示用户是通过邀请链接进入的
+                  await AsyncStorage.setItem('entered_via_invite', 'true');
+                  
+                  // 助力成功后清除referrer_id
+                  await AsyncStorage.removeItem('referrer_id');
+                } catch (error) {
+                  console.error('助力失败:', error);
+                  Alert.alert('失败', '助力失败，请稍后重试');
+                }
+              }, 1000); // 延迟1秒执行，确保应用状态完全恢复
             } else {
               // 用户未登录，保存referrer_id等待登录后处理
               console.log('用户未登录，等待登录后助力');
@@ -525,9 +593,120 @@ function AppContent() {
     setLanguageSelected(true);
   };
 
+  // 处理 JOUER 按钮点击 - BoostSuccessModal (主动助力别人)
+  const handleBoostJouerPress = async () => {
+    // 延迟一点时间确保 BoostSuccessModal 关闭动画完成
+    setTimeout(async () => {
+      try {
+        console.log('[App] 检查活动状态...');
+        const statusData = await getActivityStatus();
+        console.log('[App] 活动状态返回:', statusData);
+        
+        const currentRewardAmount = parseFloat(statusData.current_reward_amount) || 0;
+        console.log('[App] 用户累积金额:', currentRewardAmount);
+        
+        if (currentRewardAmount < 4000) {
+          console.log('[App] 累积金额小于4000，显示转盘弹窗');
+          setShowSpinWheel(true);
+        } else {
+          console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('MiningGameScreen');
+          }
+        }
+      } catch (error: any) {
+        console.log('[App] 获取活动状态错误:', error);
+        
+        if (error?.response?.status === 404 || error?.status === 404) {
+          console.log('[App] 用户未参加活动，显示转盘弹窗');
+          setShowSpinWheel(true);
+        } else {
+          console.error('[App] 获取活动状态失败:', error);
+          // 默认跳转到挖矿页面
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('MiningGameScreen');
+          }
+        }
+      }
+    }, 300);
+  };
+
+  // 处理 JOUER 按钮点击 - BoostedSuccessModal (被别人助力)
+  const handleBoostedJouerPress = async () => {
+    // 延迟一点时间确保 BoostedSuccessModal 关闭动画完成
+    setTimeout(async () => {
+      try {
+        console.log('[App] 检查活动状态...');
+        const statusData = await getActivityStatus();
+        console.log('[App] 活动状态返回:', statusData);
+        
+        const currentRewardAmount = parseFloat(statusData.current_reward_amount) || 0;
+        console.log('[App] 用户累积金额:', currentRewardAmount);
+        
+        if (currentRewardAmount < 4000) {
+          console.log('[App] 累积金额小于4000，显示转盘弹窗');
+          setShowSpinWheel(true);
+        } else {
+          console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
+          if (navigationRef.isReady()) {
+            // 获取当前路由
+            const currentRoute = navigationRef.current?.getCurrentRoute();
+            if (currentRoute?.name === 'MiningGameScreen') {
+              // 如果当前已经在挖矿页面，使用 replace 重新加载
+              console.log('[App] 当前在挖矿页面，使用 replace 重新加载');
+              navigationRef.current?.dispatch(
+                StackActions.replace('MiningGameScreen')
+              );
+            } else {
+              // 否则正常导航
+              navigationRef.navigate('MiningGameScreen');
+            }
+          }
+        }
+      } catch (error: any) {
+        console.log('[App] 获取活动状态错误:', error);
+        
+        if (error?.response?.status === 404 || error?.status === 404) {
+          console.log('[App] 用户未参加活动，显示转盘弹窗');
+          setShowSpinWheel(true);
+        } else {
+          console.error('[App] 获取活动状态失败:', error);
+          // 默认跳转到挖矿页面
+          if (navigationRef.isReady()) {
+            const currentRoute = navigationRef.current?.getCurrentRoute();
+            if (currentRoute?.name === 'MiningGameScreen') {
+              navigationRef.current?.dispatch(
+                StackActions.replace('MiningGameScreen')
+              );
+            } else {
+              navigationRef.navigate('MiningGameScreen');
+            }
+          }
+        }
+      }
+    }, 300);
+  };
+
+  // 处理转盘中奖
+  const handleSpinWin = (amount: number) => {
+    console.log('[App] 转盘中奖金额:', amount);
+    setShowSpinWheel(false);
+    setShowWinningModal(true);
+  };
+
+  // 处理中奖弹窗继续按钮
+  const handleWinningContinue = () => {
+    setShowWinningModal(false);
+    if (navigationRef.isReady()) {
+      navigationRef.navigate('MiningGameScreen');
+    }
+  };
+
   // 监听应用状态变化，确保强制更新弹窗持久显示
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: string) => {
+      // 更新应用状态引用
+      appStateRef.current = nextAppState;
       
       // 如果应用重新激活且存在强制更新
       if (nextAppState === 'active' && hasForceUpdate) {
@@ -628,11 +807,28 @@ function AppContent() {
         onClose={() => setBoostModalVisible(false)}
         userId={boostedUserId}
         isAlreadyBoosted={isAlreadyBoosted}
-        onJouerPress={() => {
-          if (navigationRef.isReady()) {
-            navigationRef.navigate('MiningGameScreen');
-          }
-        }}
+        onJouerPress={handleBoostJouerPress}
+      />
+      
+      <BoostedSuccessModal
+        visible={boostedModalVisible}
+        onClose={() => setBoostedModalVisible(false)}
+        userId={boostedUserId}
+        isAlreadyBoosted={isAlreadyBoosted}
+        onJouerPress={handleBoostedJouerPress}
+      />
+      
+      <SpinWheelModal
+        visible={showSpinWheel}
+        onClose={() => setShowSpinWheel(false)}
+        onSpinPress={() => {}}
+        onWin={handleSpinWin}
+      />
+      
+      <WinningModal
+        visible={showWinningModal}
+        onClose={() => setShowWinningModal(false)}
+        onContinue={handleWinningContinue}
       />
     </>
   );

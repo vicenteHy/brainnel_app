@@ -15,7 +15,7 @@ export const API_TIMEOUT = 150000;
 
 // 本地存储键名
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'auth_token',
+  AUTH_TOKEN: 'token',
   USER_INFO: 'user_info',
   LANGUAGE: 'app_language',
   CURRENCY: 'app_currency',

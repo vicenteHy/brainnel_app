@@ -21,6 +21,7 @@ interface SpinWheelModalProps {
   onWin?: (amount: number) => void;
   currentCoins?: number;
   totalCoins?: number;
+  shouldInitActivity?: boolean; // 是否需要初始化活动（用于避免重复初始化）
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -36,6 +37,9 @@ const MODAL_HEIGHT = (MODAL_WIDTH / DESIGN_WIDTH) * DESIGN_HEIGHT;
 // 计算缩放比例
 const scale = MODAL_WIDTH / DESIGN_WIDTH;
 
+// 创建一个全局的初始化锁
+let isInitializing = false;
+
 export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
   visible,
   onClose,
@@ -43,6 +47,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
   onWin,
   currentCoins = 0,
   totalCoins = 5000,
+  shouldInitActivity = true, // 默认为 true，保持向后兼容
 }) => {
   const rotateValue = useRef(new Animated.Value(0)).current;
   const [isSpinning, setIsSpinning] = useState(false);
@@ -82,30 +87,56 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
         } catch (error: any) {
           // 如果返回404，说明用户未参加活动，需要初始化
           if (error?.response?.status === 404 || error?.status === 404) {
-            console.log('用户未参加活动，调用初始化接口...');
-            try {
-              const data = await enterActivity(0);
-              console.log('活动初始化成功:', data);
-              setActivityData(data);
+            if (shouldInitActivity) {
+              // 检查是否正在初始化
+              if (isInitializing) {
+                console.log('活动正在初始化中，跳过重复初始化...');
+                // 等待初始化完成后再获取状态
+                setTimeout(async () => {
+                  try {
+                    const statusData = await getActivityStatus();
+                    setActivityData(statusData);
+                    const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
+                    const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
+                    setCurrentTotalReward(currentAmount);
+                    setTargetRewardAmount(targetAmount);
+                  } catch (err) {
+                    console.error('重新获取活动状态失败:', err);
+                  }
+                }, 1000);
+                return;
+              }
               
-              // 保存当前累积金额和目标金额
-              const currentAmount = parseFloat(data.current_reward_amount) || 0;
-              const targetAmount = parseFloat(data.target_reward_amount) || 0;
-              setCurrentTotalReward(currentAmount);
-              setTargetRewardAmount(targetAmount);
-              
-              // 打印具体的返回数据
-              console.log('初始化后的活动数据:');
-              console.log('用户ID:', data.user_id);
-              console.log('当前奖励金额:', data.current_reward_amount);
-              console.log('目标奖励金额:', data.target_reward_amount);
-              console.log('金币面具数量:', data.gold_masks_count);
-              console.log('目标金币面具数量:', data.target_gole_masks_count);
-              console.log('总邀请数:', data.total_invite_count);
-              console.log('有效邀请数:', data.effective_invite_count);
-              console.log('推荐人ID:', data.referrer_id);
-            } catch (enterError) {
-              console.error('初始化活动失败:', enterError);
+              isInitializing = true;
+              console.log('用户未参加活动，调用初始化接口...');
+              try {
+                const data = await enterActivity(0);
+                console.log('活动初始化成功:', data);
+                setActivityData(data);
+                
+                // 保存当前累积金额和目标金额
+                const currentAmount = parseFloat(data.current_reward_amount) || 0;
+                const targetAmount = parseFloat(data.target_reward_amount) || 0;
+                setCurrentTotalReward(currentAmount);
+                setTargetRewardAmount(targetAmount);
+                
+                // 打印具体的返回数据
+                console.log('初始化后的活动数据:');
+                console.log('用户ID:', data.user_id);
+                console.log('当前奖励金额:', data.current_reward_amount);
+                console.log('目标奖励金额:', data.target_reward_amount);
+                console.log('金币面具数量:', data.gold_masks_count);
+                console.log('目标金币面具数量:', data.target_gole_masks_count);
+                console.log('总邀请数:', data.total_invite_count);
+                console.log('有效邀请数:', data.effective_invite_count);
+                console.log('推荐人ID:', data.referrer_id);
+              } catch (enterError) {
+                console.error('初始化活动失败:', enterError);
+              } finally {
+                isInitializing = false;
+              }
+            } else {
+              console.log('用户未参加活动，但不进行初始化（由调用方处理）');
             }
           } else {
             console.error('获取活动状态失败:', error);

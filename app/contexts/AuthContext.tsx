@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 清除本地存储
       await AsyncStorage.setItem('isLoggedIn', 'false');
       await AsyncStorage.removeItem('email_for_signin');
-      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('token');  // 修改为正确的 token 键名
       await AsyncStorage.removeItem('refresh_token');
       await AsyncStorage.removeItem('user_id'); // 清除用户ID
       

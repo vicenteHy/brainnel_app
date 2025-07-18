@@ -25,6 +25,8 @@ import GiftModal from './GiftModal';
 import MiningRewardModal from './MiningRewardModal';
 import MaskGameModal from './MaskGameModal';
 import MaskRewardModal from './MaskRewardModal';
+import RewardRulesModal from './RewardRulesModal';
+import EmptySpinModal from './EmptySpinModal';
 import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus, exchangeMasks } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
@@ -53,6 +55,13 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [giftModalVisible, setGiftModalVisible] = useState(false);
   const [miningRewardVisible, setMiningRewardVisible] = useState(false);
   const [maskRewardVisible, setMaskRewardVisible] = useState(false);
+  const [emptySpinModalVisible, setEmptySpinModalVisible] = useState(false);
+  const modalTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  
+  // 检查是否有任何 Modal 正在显示
+  const isAnyModalVisible = () => {
+    return giftModalVisible || miningRewardVisible || maskRewardVisible || maskGameModalVisible || showWithdrawGuide || emptySpinModalVisible;
+  };
   const [currentReward, setCurrentReward] = useState(0);
   const [currentRewardType, setCurrentRewardType] = useState(0); // 0: 现金, 1: 面具
   const [showDigEffect, setShowDigEffect] = useState(false);
@@ -71,6 +80,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [isMaskGameMode, setIsMaskGameMode] = useState(false);
   const [goldMasksCount, setGoldMasksCount] = useState(0);
   const [targetGoldMasksCount, setTargetGoldMasksCount] = useState(20);
+  const [isRewardRulesVisible, setIsRewardRulesVisible] = useState(false);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const bubbleAnimation = useRef(new Animated.Value(0)).current;
@@ -138,16 +148,24 @@ const MiningGameScreen = ({ navigation }: any) => {
         console.log('挖矿游戏 - 可用游戏次数:', gameAttempts);
         
         // 如果金额小于4500，显示礼品弹窗
-        if (currentAmount < 4500 && !giftModalVisible) {
-          setTimeout(() => {
-            setGiftModalVisible(true);
+        if (currentAmount < 4500 && !giftModalVisible && !maskGameModalVisible && !miningRewardVisible && !maskRewardVisible) {
+          const timeout = setTimeout(() => {
+            // 再次检查是否没有其他弹窗
+            if (!maskGameModalVisible && !miningRewardVisible && !maskRewardVisible) {
+              setGiftModalVisible(true);
+            }
           }, 500);
+          modalTimeoutsRef.current.push(timeout);
         }
         // 如果金额等于4999，显示面具游戏弹窗（只在没有其他弹窗时显示）
-        else if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
-          setTimeout(() => {
-            setMaskGameModalVisible(true);
+        else if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+          const timeout = setTimeout(() => {
+            // 再次检查是否没有其他弹窗
+            if (!giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+              setMaskGameModalVisible(true);
+            }
           }, 500);
+          modalTimeoutsRef.current.push(timeout);
         }
         
         // 同时刷新任务状态
@@ -240,6 +258,9 @@ const MiningGameScreen = ({ navigation }: any) => {
       if (animationRef.current) {
         clearInterval(animationRef.current);
       }
+      // 清理所有定时器
+      modalTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      modalTimeoutsRef.current = [];
     };
   }, []);
 
@@ -270,16 +291,22 @@ const MiningGameScreen = ({ navigation }: any) => {
           console.log('页面聚焦 - 更新金额:', currentAmount);
           
           // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
-          if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
-            setTimeout(() => {
-              setMaskGameModalVisible(true);
+          if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+            const timeout = setTimeout(() => {
+              if (!giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+                setMaskGameModalVisible(true);
+              }
             }, 500);
+            modalTimeoutsRef.current.push(timeout);
           }
           // 如果金额达到 5000，显示提现引导（只在没有其他弹窗时显示）
-          else if (currentAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
-            setTimeout(() => {
-              setShowWithdrawGuide(true);
+          else if (currentAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+            const timeout = setTimeout(() => {
+              if (!maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+                setShowWithdrawGuide(true);
+              }
             }, 500);
+            modalTimeoutsRef.current.push(timeout);
           }
         } catch (error) {
           console.error('页面聚焦 - 获取活动状态失败:', error);
@@ -374,6 +401,9 @@ const MiningGameScreen = ({ navigation }: any) => {
             } else {
               setMaskRewardVisible(true);
             }
+          } else if (rewardAmount === 0) {
+            // 当奖励为0时，显示空转盘弹窗
+            setEmptySpinModalVisible(true);
           }
           
           // 无论是否获得奖励，都调用 getActivityStatus 获取最新的活动数据
@@ -419,8 +449,8 @@ const MiningGameScreen = ({ navigation }: any) => {
   };
 
   const handleWithdraw = () => {
-    if (balance < requiredAmount) {
-      Alert.alert(t('提示'), t('余额不足，继续挖矿！'));
+    if (currentTotalReward < 5000) {
+      // 按钮已禁用，不需要额外处理
       return;
     }
     
@@ -553,7 +583,13 @@ const MiningGameScreen = ({ navigation }: any) => {
   };
 
   const handleOpenGift = async () => {
+    // 先关闭礼品弹窗
     setGiftModalVisible(false);
+    
+    // 清理所有待执行的定时器
+    modalTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    modalTimeoutsRef.current = [];
+    
     // 添加 500 FCFA 到余额
     const giftAmount = 500;
     addReward(giftAmount);
@@ -594,16 +630,22 @@ const MiningGameScreen = ({ navigation }: any) => {
       console.log('===========================');
       
       // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
-      if (Math.floor(updatedAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
-        setTimeout(() => {
-          setMaskGameModalVisible(true);
+      if (Math.floor(updatedAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+        const timeout = setTimeout(() => {
+          if (!giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+            setMaskGameModalVisible(true);
+          }
         }, 500);
+        modalTimeoutsRef.current.push(timeout);
       }
       // 如果金额达到 5000，显示提现引导（只在没有其他弹窗时显示）
-      else if (updatedAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible) {
-        setTimeout(() => {
-          setShowWithdrawGuide(true);
+      else if (updatedAmount >= 5000 && !showWithdrawGuide && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+        const timeout = setTimeout(() => {
+          if (!maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
+            setShowWithdrawGuide(true);
+          }
         }, 500);
+        modalTimeoutsRef.current.push(timeout);
       }
     } catch (error) {
       console.error('宝箱奖励 - 更新奖励金额失败:', error);
@@ -656,7 +698,9 @@ const MiningGameScreen = ({ navigation }: any) => {
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Cash Gratuit</Text>
               <View style={styles.headerRight}>
-                <Text style={styles.rulesText}>Règles</Text>
+                <TouchableOpacity onPress={() => setIsRewardRulesVisible(true)}>
+                  <Text style={styles.rulesText}>Règles</Text>
+                </TouchableOpacity>
                 <Text style={styles.separator}> ｜ </Text>
                 <Text style={styles.detailsText}>Détails</Text>
               </View>
@@ -704,8 +748,17 @@ const MiningGameScreen = ({ navigation }: any) => {
 
                 <View style={styles.progressFooter}>
                   <Text style={styles.reminderText}>On y est presque !</Text>
-                  <TouchableOpacity style={styles.withdrawButton} onPress={handleWithdraw}>
-                    <Text style={styles.withdrawText}>Retirer</Text>
+                  <TouchableOpacity 
+                    style={[
+                      styles.withdrawButton, 
+                      currentTotalReward < 5000 && styles.withdrawButtonDisabled
+                    ]} 
+                    onPress={handleWithdraw}
+                  >
+                    <Text style={[
+                      styles.withdrawText,
+                      currentTotalReward < 5000 && styles.withdrawTextDisabled
+                    ]}>Retirer</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -887,11 +940,14 @@ const MiningGameScreen = ({ navigation }: any) => {
             isEqual4999: Math.floor(currentTotalReward) === 4999,
             maskGameModalVisible
           });
-          if (Math.floor(currentTotalReward) === 4999 && !maskGameModalVisible) {
+          if (Math.floor(currentTotalReward) === 4999 && !maskGameModalVisible && !giftModalVisible) {
             console.log('触发面具游戏弹窗！');
-            setTimeout(() => {
-              setMaskGameModalVisible(true);
+            const timeout = setTimeout(() => {
+              if (!giftModalVisible && !maskRewardVisible) {
+                setMaskGameModalVisible(true);
+              }
             }, 300);
+            modalTimeoutsRef.current.push(timeout);
           }
         }}
         rewardAmount={currentReward}
@@ -916,6 +972,17 @@ const MiningGameScreen = ({ navigation }: any) => {
           setIsMaskGameMode(true);
           console.log('开始收集面具模式');
         }}
+      />
+      
+      {/* 奖励规则弹窗 */}
+      <RewardRulesModal
+        visible={isRewardRulesVisible}
+        onClose={() => setIsRewardRulesVisible(false)}
+      />
+      
+      <EmptySpinModal
+        visible={emptySpinModalVisible}
+        onClose={() => setEmptySpinModalVisible(false)}
       />
       
       {/* 任务引导 */}
@@ -1306,6 +1373,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FF5100',
+  },
+  withdrawButtonDisabled: {
+    backgroundColor: '#E5E5E5',
+    borderColor: '#CCCCCC',
+  },
+  withdrawTextDisabled: {
+    color: '#999999',
   },
   gameArea: {
     width: screenWidth,

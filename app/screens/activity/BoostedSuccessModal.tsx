@@ -94,13 +94,6 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        {/* 背景图片 */}
-        <Image
-          source={require('../../../assets/img/boost/background_new.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-        />
-        
         {/* 半透明黑色遮罩 */}
         <Animated.View style={[styles.overlay, animatedOverlayStyle]} />
         
@@ -155,41 +148,20 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
                   </Text>
                 </View>
                 
-                {/* Chance de Jeu Gratuite 区域 - 只在成功助力时显示 */}
+                {/* JOUER 按钮 - 透明覆盖层 - 只在成功助力时显示 */}
                 {!isAlreadyBoosted && (
-                  <>
-                    <View
-                      style={[
-                        styles.chanceContainer,
-                        {
-                          width: 338 * scale,
-                          height: 70 * scale,
-                          bottom: 100 * scale,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.chanceTitle, { fontSize: 18 * scale }]}>
-                        Chance de Jeu Gratuite
-                      </Text>
-                      <Text style={[styles.chanceText, { fontSize: 14 * scale }]}>
-                        Vous avez une chance de jeu gratuite. Tentez votre chance !
-                      </Text>
-                    </View>
-                    
-                    {/* JOUER 按钮 - 透明覆盖层 */}
-                    <TouchableOpacity
-                      style={[
-                        styles.jouerButton,
-                        {
-                          width: 207 * scale,
-                          height: 48 * scale,
-                          bottom: 30 * scale,
-                        },
-                      ]}
-                      onPress={handleJouerPress}
-                      activeOpacity={0.8}
-                    />
-                  </>
+                  <TouchableOpacity
+                    style={[
+                      styles.jouerButton,
+                      {
+                        width: 207 * scale,
+                        height: 48 * scale,
+                        bottom: 30 * scale,
+                      },
+                    ]}
+                    onPress={handleJouerPress}
+                    activeOpacity={0.8}
+                  />
                 )}
                 
                 {/* 关闭按钮 - 右上角 */}
@@ -221,13 +193,6 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backgroundImage: {
-    position: 'absolute',
-    width: screenWidth,
-    height: screenHeight,
-    top: 0,
-    left: 0,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -263,24 +228,6 @@ const styles = StyleSheet.create({
   },
   userIdText: {
     fontWeight: '600',
-  },
-  chanceContainer: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  chanceTitle: {
-    color: '#333333',
-    fontFamily: 'SF Pro Display',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  chanceText: {
-    color: '#666666',
-    fontFamily: 'SF Pro Display',
-    textAlign: 'center',
-    lineHeight: 20,
   },
   closeButton: {
     position: 'absolute',

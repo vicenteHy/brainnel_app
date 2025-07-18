@@ -17,8 +17,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { getActivityStatus } from '../../services/api/activity';
 import { navigationRef } from '../../navigation/AppNavigator';
-import { SpinWheelModal } from './SpinWheelModal';
-
 interface BoostSuccessModalProps {
   visible: boolean;
   onClose: () => void;
@@ -45,50 +43,13 @@ export const BoostSuccessModal: React.FC<BoostSuccessModalProps> = ({
 }) => {
   const opacity = useSharedValue(0);
   const contentScale = useSharedValue(0);
-  const [showSpinWheel, setShowSpinWheel] = useState(false);
   
-  const handleJouerPress = async () => {
-    try {
-      console.log('[BoostSuccessModal] 检查活动状态...');
-      // 调用 getActivityStatus 接口判断用户是否参加过活动
-      const statusData = await getActivityStatus();
-      console.log('[BoostSuccessModal] 活动状态返回:', statusData);
-      
-      // 关闭弹窗
-      onClose();
-      
-      // 如果成功获取状态，说明用户已经参加过活动，跳转到 MiningGameScreen
-      if (navigationRef.isReady()) {
-        navigationRef.navigate('MiningGameScreen');
-      }
-    } catch (error: any) {
-      console.log('[BoostSuccessModal] 获取活动状态错误:', error);
-      
-      // 如果返回404，说明用户未参加活动，显示转盘弹窗
-      if (error?.response?.status === 404 || error?.status === 404) {
-        console.log('[BoostSuccessModal] 用户未参加活动，显示转盘弹窗');
-        
-        // 关闭当前弹窗
-        onClose();
-        
-        // 显示转盘弹窗
-        setShowSpinWheel(true);
-      } else {
-        // 其他错误，也关闭弹窗并执行默认行为
-        console.error('[BoostSuccessModal] 获取活动状态失败:', error);
-        onClose();
-        if (onJouerPress) {
-          onJouerPress();
-        }
-      }
-    }
-  };
-  
-  const handleSpinWheelClose = () => {
-    setShowSpinWheel(false);
-    // 转盘关闭后跳转到挖矿页面
-    if (navigationRef.isReady()) {
-      navigationRef.navigate('MiningGameScreen');
+  const handleJouerPress = () => {
+    // 先关闭 BoostSuccessModal
+    onClose();
+    // 调用父组件传入的回调，让父组件处理后续逻辑
+    if (onJouerPress) {
+      onJouerPress();
     }
   };
 
@@ -224,17 +185,6 @@ export const BoostSuccessModal: React.FC<BoostSuccessModalProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </View>
-      
-      {/* 转盘弹窗 */}
-      <SpinWheelModal
-        visible={showSpinWheel}
-        onClose={handleSpinWheelClose}
-        onSpinPress={() => {}}
-        onWin={(amount) => {
-          console.log('[BoostSuccessModal] 转盘中奖金额:', amount);
-          handleSpinWheelClose();
-        }}
-      />
     </Modal>
   );
 };

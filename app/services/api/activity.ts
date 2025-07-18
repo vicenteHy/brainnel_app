@@ -226,3 +226,35 @@ export const exchangeMasks = async (): Promise<ExchangeMasksResponse> => {
     throw error;
   }
 };
+
+// 邀请记录相关接口
+export interface Invitee {
+  user_id: number;
+  username: string;
+  avatar_url: string;
+}
+
+export interface InvitationRecord {
+  invitation_id: number;
+  inviter_id: number;
+  invitee: Invitee;
+  invite_date: string;
+  is_effective: boolean;
+  game_attempts_allocated: number;
+}
+
+export interface InvitationsResponse {
+  invitations: InvitationRecord[];
+}
+
+// 获取邀请记录接口
+export const getInvitations = async (): Promise<InvitationsResponse> => {
+  try {
+    const data = await apiService.get<InvitationsResponse>('/api/activity/invitations');
+    console.log('[Activity] 获取邀请记录成功:', data);
+    return data;
+  } catch (error) {
+    console.error('获取邀请记录失败:', error);
+    throw error;
+  }
+};

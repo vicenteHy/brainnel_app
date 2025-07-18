@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { View, TouchableOpacity, Image, Dimensions } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { styles } from "../styles";
 import { SpinWheelModal } from "../../activity/SpinWheelModal";
@@ -33,25 +33,35 @@ export const CarouselBanner = React.memo(
       [],
     );
 
-    // 获取用户活动状态
-    useEffect(() => {
-      const fetchActivityStatus = async () => {
-        if (userStore.user?.user_id) {
-          try {
-            const status = await getActivityStatus();
-            const amount = parseFloat(status.current_reward_amount) || 0;
-            const finished = status.is_finished === 1;
-            console.log('[CarouselBanner] 获取到的活动金额:', amount);
-            console.log('[CarouselBanner] 活动是否已完成:', finished);
-            setCurrentRewardAmount(amount);
-            setIsActivityFinished(finished);
-          } catch (error) {
-            console.log('获取活动状态失败:', error);
-          }
+    // 定义获取活动状态的函数
+    const fetchActivityStatus = useCallback(async () => {
+      if (userStore.user?.user_id) {
+        try {
+          const status = await getActivityStatus();
+          const amount = parseFloat(status.current_reward_amount) || 0;
+          const finished = status.is_finished === 1;
+          console.log('[CarouselBanner] 获取到的活动金额:', amount);
+          console.log('[CarouselBanner] 活动是否已完成:', finished);
+          setCurrentRewardAmount(amount);
+          setIsActivityFinished(finished);
+        } catch (error) {
+          console.log('获取活动状态失败:', error);
         }
-      };
-      fetchActivityStatus();
+      }
     }, [userStore.user?.user_id]);
+
+    // 获取用户活动状态 - 组件挂载时
+    useEffect(() => {
+      fetchActivityStatus();
+    }, [fetchActivityStatus]);
+
+    // 页面获得焦点时重新获取活动状态
+    useFocusEffect(
+      useCallback(() => {
+        console.log('[CarouselBanner] 页面获得焦点，重新获取活动状态');
+        fetchActivityStatus();
+      }, [fetchActivityStatus])
+    );
 
     const handleBannerPress = useCallback(() => {
       // 检查用户是否已登录
