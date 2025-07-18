@@ -279,7 +279,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
 
               {/* 转盘主体 - 可旋转 */}
               <Animated.Image
-                source={require('../../../assets/img/group_59_2x.png')}
+                source={require('../../../assets/img/spin.png')}
                 style={[
                   styles.wheelMain,
                   {
