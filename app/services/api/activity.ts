@@ -247,6 +247,7 @@ export interface InvitationsResponse {
   invitations: InvitationRecord[];
 }
 
+
 // 获取邀请记录接口
 export const getInvitations = async (): Promise<InvitationsResponse> => {
   try {
@@ -255,6 +256,38 @@ export const getInvitations = async (): Promise<InvitationsResponse> => {
     return data;
   } catch (error) {
     console.error('获取邀请记录失败:', error);
+    throw error;
+  }
+};
+
+// 游戏记录接口类型
+export interface GameLog {
+  log_id: number;
+  play_time: string;
+  reward_earned: string;
+  reward_type: 0 | 1; // 0: 现金, 1: 面具
+}
+
+export interface GameLogsResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  items: GameLog[];
+}
+
+// 获取游戏记录接口
+export const getGameLogs = async (page: number = 1, page_size: number = 20): Promise<GameLogsResponse> => {
+  try {
+    const data = await apiService.get<GameLogsResponse>('/api/activity/game/logs', {
+      params: {
+        page,
+        page_size
+      }
+    });
+    console.log('[Activity] 获取游戏记录成功:', data);
+    return data;
+  } catch (error) {
+    console.error('获取游戏记录失败:', error);
     throw error;
   }
 };

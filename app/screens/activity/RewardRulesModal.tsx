@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -16,15 +17,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
+import { getInvitations, InvitationRecord, GameLog, getGameLogs } from '../../services/api/activity';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-interface RewardRecord {
-  id: string;
-  type: 'daily' | 'wheel';
-  amount: number;
-  date: string;
-}
 
 interface RewardRulesModalProps {
   visible: boolean;
@@ -33,17 +29,13 @@ interface RewardRulesModalProps {
 
 const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose }) => {
   const [activeTab, setActiveTab] = useState<'history' | 'records'>('records');
+  const [invitationRecords, setInvitationRecords] = useState<InvitationRecord[]>([]);
+  const [gameRecords, setGameRecords] = useState<GameLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(0.8);
-
-  // 模拟奖励记录数据
-  const rewardRecords: RewardRecord[] = [
-    { id: '1', type: 'daily', amount: 20, date: '2024-01-15 14:30' },
-    { id: '2', type: 'wheel', amount: 50, date: '2024-01-15 14:30' },
-    { id: '3', type: 'daily', amount: 20, date: '2024-01-15 14:30' },
-    { id: '4', type: 'wheel', amount: 50, date: '2024-01-15 14:30' },
-    { id: '5', type: 'daily', amount: 20, date: '2024-01-15 14:30' },
-  ];
 
   useEffect(() => {
     if (visible) {
@@ -52,8 +44,55 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
         damping: 12,
         stiffness: 100,
       });
+      
+      // 根据当前标签加载对应数据
+      if (activeTab === 'history') {
+        loadGameRecords();
+      } else if (activeTab === 'records') {
+        loadInvitationRecords();
+      }
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (visible) {
+      if (activeTab === 'history') {
+        loadGameRecords();
+      } else if (activeTab === 'records') {
+        loadInvitationRecords();
+      }
+    }
+  }, [activeTab, visible]);
+
+  const loadInvitationRecords = async () => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      const response = await getInvitations();
+      setInvitationRecords(response.invitations);
+      setHasMore(false);
+    } catch (error) {
+      console.error('加载邀请记录失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadGameRecords = async () => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      const response = await getGameLogs(1, 100);
+      setGameRecords(response.items);
+      setHasMore(response.items.length === 100);
+    } catch (error) {
+      console.error('加载游戏记录失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -76,11 +115,16 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
     }, 300);
   };
 
-  const getRecordText = (type: 'daily' | 'wheel') => {
-    if (type === 'daily') {
-      return 'Gain de connexion quotidienne';
-    }
-    return 'Gain de la roue';
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -119,45 +163,54 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
                       width="338" 
                       height="49" 
                       viewBox="0 0 338 49" 
-                      style={StyleSheet.absoluteFillObject}
+                      style={StyleSheet.absoluteFill}
                     >
-                      {/* 左侧灰色标签 */}
+                      {/* 左侧标签 - 使用更清晰的重叠设计实现切线反转 */}
                       <Path
-                        d="M 16 0 L 168 0 L 148 49 L 16 49 Q 0 49 0 33 L 0 16 Q 0 0 16 0"
-                        fill="#F6F6F6"
+                        d={activeTab === 'history' ? 
+                          "M 15 0 L 170 0 L 155 49 L 15 49 Q 0 49 0 34 L 0 15 Q 0 0 15 0" : 
+                          "M 15 0 L 170 0 L 145 49 L 15 49 Q 0 49 0 34 L 0 15 Q 0 0 15 0"
+                        }
+                        fill={activeTab === 'history' ? '#FFFFFF' : '#F6F6F6'}
                       />
-                      {/* 右侧白色标签 */}
+                      {/* 右侧标签 - 使用对称的切线设计 */}
                       <Path
-                        d="M 148 49 L 168 0 L 322 0 Q 338 0 338 16 L 338 49 L 148 49"
-                        fill="#FFFFFF"
+                        d={activeTab === 'records' ? 
+                          "M 323 0 L 168 0 L 183 49 L 323 49 Q 338 49 338 34 L 338 15 Q 338 0 323 0" : 
+                          "M 323 0 L 168 0 L 193 49 L 323 49 Q 338 49 338 34 L 338 15 Q 338 0 323 0"
+                        }
+                        fill={activeTab === 'records' ? '#FFFFFF' : '#F6F6F6'}
                       />
                     </Svg>
                     
                     {/* 左侧标签内容 */}
                     <TouchableOpacity
-                      style={styles.leftTabButton}
+                      style={[styles.leftTabButton, activeTab === 'history' && styles.activeTabButton]}
                       onPress={() => setActiveTab('history')}
                     >
                       <Text style={[
                         styles.tabText,
                         styles.leftTabText,
-                        activeTab === 'history' && styles.inactiveTabText
+                        activeTab === 'history' ? styles.activeTabText : styles.inactiveTabText
                       ]}>
                         Historique des gains
                       </Text>
+                      {activeTab === 'history' && (
+                        <View style={styles.tabUnderline} />
+                      )}
                     </TouchableOpacity>
                     
                     {/* 右侧标签内容 */}
                     <TouchableOpacity
-                      style={styles.rightTabButton}
+                      style={[styles.rightTabButton, activeTab === 'records' && styles.activeTabButton]}
                       onPress={() => setActiveTab('records')}
                     >
                       <Text style={[
                         styles.tabText,
                         styles.rightTabText,
-                        activeTab === 'records' && styles.activeTabText
+                        activeTab === 'records' ? styles.activeTabText : styles.inactiveTabText
                       ]}>
-                        Reward Records
+Invitation Records
                       </Text>
                       {activeTab === 'records' && (
                         <View style={styles.tabUnderline} />
@@ -166,69 +219,87 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
                   </View>
 
                   {/* Content List */}
-                  <ScrollView 
-                    style={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {/* 第一条记录 */}
-                    <View style={[styles.recordItem, styles.firstRecordItem]}>
-                      <View style={styles.recordLeft}>
-                        <Text style={styles.recordTitle}>
-                          Gain de connexion quotidienne
-                        </Text>
-                        <Text style={styles.recordDate}>2024-01-15 14:30</Text>
-                      </View>
-                      <Text style={styles.recordAmount}>+20 FCFA</Text>
-                    </View>
-                    <View style={styles.divider} />
-
-                    {/* 第二条记录 */}
-                    <View style={styles.recordItem}>
-                      <View style={styles.recordLeft}>
-                        <Text style={styles.recordTitle}>
-                          Gain de la roue
-                        </Text>
-                        <Text style={styles.recordDate}>2024-01-15 14:30</Text>
-                      </View>
-                      <Text style={styles.recordAmount}>+50 FCFA</Text>
-                    </View>
-                    <View style={styles.divider} />
-
-                    {/* 第三条记录 */}
-                    <View style={styles.recordItem}>
-                      <View style={styles.recordLeft}>
-                        <Text style={styles.recordTitle}>
-                          Gain de connexion quotidienne
-                        </Text>
-                        <Text style={styles.recordDate}>2024-01-15 14:30</Text>
-                      </View>
-                      <Text style={styles.recordAmount}>+20 FCFA</Text>
-                    </View>
-                    <View style={styles.divider} />
-
-                    {/* 第四条记录 */}
-                    <View style={styles.recordItem}>
-                      <View style={styles.recordLeft}>
-                        <Text style={styles.recordTitle}>
-                          Gain de la roue
-                        </Text>
-                        <Text style={styles.recordDate}>2024-01-15 14:30</Text>
-                      </View>
-                      <Text style={styles.recordAmount}>+50 FCFA</Text>
-                    </View>
-                    <View style={styles.divider} />
-
-                    {/* 第五条记录 */}
-                    <View style={[styles.recordItem, styles.lastRecordItem]}>
-                      <View style={styles.recordLeft}>
-                        <Text style={styles.recordTitle}>
-                          Gain de connexion quotidienne
-                        </Text>
-                        <Text style={styles.recordDate}>2024-01-15 14:30</Text>
-                      </View>
-                      <Text style={styles.recordAmount}>+20 FCFA</Text>
-                    </View>
-                  </ScrollView>
+                  {activeTab === 'history' ? (
+                    <ScrollView 
+                      style={styles.scrollContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {loading ? (
+                        <View style={styles.loadingContainer}>
+                          <ActivityIndicator size="small" color="#FF5100" />
+                        </View>
+                      ) : gameRecords.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                          <Text style={styles.emptyText}>Aucun enregistrement</Text>
+                        </View>
+                      ) : (
+                        gameRecords.map((record, index) => (
+                          <React.Fragment key={record.log_id}>
+                            <View style={[
+                              styles.recordItem,
+                              index === 0 && styles.firstRecordItem,
+                              index === gameRecords.length - 1 && styles.lastRecordItem
+                            ]}>
+                              <View style={styles.recordLeft}>
+                                <Text style={styles.recordTitle}>
+                                  Récompense de minage
+                                </Text>
+                              </View>
+                              <View style={styles.recordRight}>
+                                <Text style={styles.recordAmount}>
+                                  +{record.reward_earned} {record.reward_type === 0 ? 'FCFA' : parseFloat(record.reward_earned) > 1 ? 'Masques' : 'Masque'}
+                                </Text>
+                                <Text style={[styles.recordDate, styles.recordDateRight]}>
+                                  {formatDate(record.play_time)}
+                                </Text>
+                              </View>
+                            </View>
+                            {index < gameRecords.length - 1 && <View style={styles.divider} />}
+                          </React.Fragment>
+                        ))
+                      )}
+                    </ScrollView>
+                  ) : (
+                    <ScrollView 
+                      style={styles.scrollContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {loading ? (
+                        <View style={styles.loadingContainer}>
+                          <ActivityIndicator size="small" color="#FF5100" />
+                        </View>
+                      ) : invitationRecords.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                          <Text style={styles.emptyText}>Aucun enregistrement</Text>
+                        </View>
+                      ) : (
+                        invitationRecords.map((record, index) => (
+                          <React.Fragment key={record.invitation_id}>
+                            <View style={[
+                              styles.recordItem,
+                              index === 0 && styles.firstRecordItem,
+                              index === invitationRecords.length - 1 && styles.lastRecordItem
+                            ]}>
+                              <View style={styles.recordLeft}>
+                                <Text style={styles.recordTitle}>
+                                  User {record.invitee.user_id} t'a aidé
+                                </Text>
+                              </View>
+                              <View style={styles.recordRight}>
+                                <Text style={styles.recordAmount}>
+                                  Partie +1
+                                </Text>
+                                <Text style={[styles.recordDate, styles.recordDateRight]}>
+                                  {formatDate(record.invite_date)}
+                                </Text>
+                              </View>
+                            </View>
+                            {index < invitationRecords.length - 1 && <View style={styles.divider} />}
+                          </React.Fragment>
+                        ))
+                      )}
+                    </ScrollView>
+                  )}
                 </View>
               </View>
             </View>
@@ -362,6 +433,9 @@ const styles = StyleSheet.create({
   inactiveTabText: {
     color: '#666666',
   },
+  activeTabButton: {
+    zIndex: 1,
+  },
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
@@ -389,6 +463,9 @@ const styles = StyleSheet.create({
   recordLeft: {
     flex: 1,
   },
+  recordRight: {
+    alignItems: 'flex-end',
+  },
   recordTitle: {
     fontSize: 14,
     fontWeight: '500',
@@ -401,6 +478,9 @@ const styles = StyleSheet.create({
     color: '#B6B6B6',
     fontFamily: 'SF Pro Display',
   },
+  recordDateRight: {
+    marginTop: 4,
+  },
   recordAmount: {
     fontSize: 12,
     fontWeight: '600',
@@ -411,6 +491,23 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#E5E5E5',
     marginHorizontal: 0,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#666666',
+    fontFamily: 'SF Pro Display',
   },
 });
 
