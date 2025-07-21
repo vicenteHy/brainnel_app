@@ -15,6 +15,7 @@ import Animated, {
   withSpring,
   withSequence,
 } from 'react-native-reanimated';
+import fontSize from '../../utils/fontsizeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   rewardText: {
     position: 'absolute',
     top: 335,
-    fontSize: 23,
+    fontSize: fontSize(23),
     fontWeight: '600',
     color: '#FFFFFF',
     textShadowColor: '#00000040',

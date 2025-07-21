@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -66,16 +67,16 @@ const RulesModal: React.FC<RulesModalProps> = ({ visible, onClose }) => {
       onRequestClose={handleClose}
     >
       <View style={styles.modalContainer}>
-        {/* 黑色半透明背景 */}
-        <View style={styles.overlay} />
+        <TouchableOpacity 
+          style={styles.overlay} 
+          activeOpacity={1}
+          onPress={handleClose}
+        />
         
         <Animated.View style={[styles.contentContainer, containerAnimatedStyle]}>
           <Animated.View style={[styles.modalContent, contentAnimatedStyle]}>
             {/* 主背景 - 米色背景 */}
-            <View style={styles.mainBackground}>
-              {/* 圆角矩形背景 */}
-              <View style={styles.backgroundShape} />
-              
+            <View style={styles.backgroundShape}>
               {/* Header */}
               <View style={styles.header}>
                 <Text style={styles.headerTitle}>Règles</Text>
@@ -86,12 +87,15 @@ const RulesModal: React.FC<RulesModalProps> = ({ visible, onClose }) => {
 
               {/* 内容容器 */}
               <View style={styles.innerContentContainer}>
-                {/* 白色内容背景 */}
-                <View style={styles.contentBackground}>
-                  <ScrollView 
-                    style={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                  >
+                <ScrollView 
+                  style={styles.scrollViewStyle}
+                  contentContainerStyle={styles.scrollContentContainer}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={Platform.OS === 'android'}
+                  scrollEventThrottle={16}
+                  bounces={true}
+                  alwaysBounceVertical={Platform.OS === 'ios'}
+                >
                     {/* I. Comment jouer ? */}
                     <View style={styles.section}>
                       <Text style={styles.sectionTitle}>I. Comment jouer ?</Text>
@@ -175,8 +179,7 @@ const RulesModal: React.FC<RulesModalProps> = ({ visible, onClose }) => {
                   </ScrollView>
                 </View>
               </View>
-            </View>
-          </Animated.View>
+            </Animated.View>
         </Animated.View>
       </View>
     </Modal>
@@ -194,19 +197,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   contentContainer: {
+    position: 'absolute',
     alignItems: 'center',
   },
   modalContent: {
     width: 370,
     height: 600,
-    position: 'relative',
-  },
-  mainBackground: {
-    flex: 1,
-    position: 'relative',
   },
   backgroundShape: {
-    position: 'absolute',
     width: 370,
     height: 600,
     backgroundColor: '#FFF5DB',
@@ -243,17 +241,12 @@ const styles = StyleSheet.create({
     height: 20,
   },
   innerContentContainer: {
-    position: 'absolute',
-    left: 16,
-    top: 53,
-    width: 338,
-    height: 531,
-  },
-  contentBackground: {
+    marginTop: 53,
+    marginHorizontal: 16,
     flex: 1,
+    marginBottom: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -262,11 +255,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
   },
-  scrollContent: {
+  scrollViewStyle: {
     flex: 1,
+  },
+  scrollContentContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 20,
   },
   section: {
     marginBottom: 25,

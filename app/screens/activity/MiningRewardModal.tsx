@@ -16,6 +16,7 @@ import Animated, {
   withSequence,
   interpolate,
 } from 'react-native-reanimated';
+import fontSize from '../../utils/fontsizeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -170,13 +171,13 @@ const styles = StyleSheet.create({
   },
   rewardText: {
     position: 'absolute',
-    top: 369,
-    fontSize: 23,
+    top: 362,
+    fontSize: fontSize(26),
     fontWeight: '600',
     color: '#FFFFFF',
     textShadowColor: '#00000040',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 0,
+    textShadowRadius: 2,
     fontFamily: 'SF Pro Display',
   },
   acceptButton: {

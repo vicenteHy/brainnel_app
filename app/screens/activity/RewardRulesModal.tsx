@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -135,16 +136,16 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
       onRequestClose={handleClose}
     >
       <View style={styles.modalContainer}>
-        {/* 黑色半透明背景 */}
-        <View style={styles.overlay} />
+        <TouchableOpacity 
+          style={styles.overlay} 
+          activeOpacity={1}
+          onPress={handleClose}
+        />
         
         <Animated.View style={[styles.contentContainer, containerAnimatedStyle]}>
           <Animated.View style={[styles.modalContent, contentAnimatedStyle]}>
             {/* 主背景 - 米色背景 */}
-            <View style={styles.mainBackground}>
-              {/* 圆角矩形背景 */}
-              <View style={styles.backgroundShape} />
-              
+            <View style={styles.backgroundShape}>
               {/* Header */}
               <View style={styles.header}>
                 <Text style={styles.headerTitle}>Détails</Text>
@@ -155,8 +156,7 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
 
               {/* 内容容器 */}
               <View style={styles.innerContentContainer}>
-                {/* 白色内容背景 */}
-                <View style={styles.contentBackground}>
+                <View style={styles.contentWrapper}>
                   {/* Tabs with SVG */}
                   <View style={styles.tabContainer}>
                     <Svg 
@@ -219,11 +219,18 @@ Invitation Records
                   </View>
 
                   {/* Content List */}
-                  {activeTab === 'history' ? (
-                    <ScrollView 
-                      style={styles.scrollContent}
-                      showsVerticalScrollIndicator={false}
-                    >
+                  <View style={styles.scrollViewWrapper}>
+                    {activeTab === 'history' ? (
+                      <ScrollView 
+                        style={styles.scrollContent}
+                        contentContainerStyle={styles.scrollContentContainer}
+                        showsVerticalScrollIndicator={false}
+                        nestedScrollEnabled={true}
+                        scrollEventThrottle={16}
+                        bounces={true}
+                        alwaysBounceVertical={Platform.OS === 'ios'}
+                        removeClippedSubviews={false}
+                      >
                       {loading ? (
                         <View style={styles.loadingContainer}>
                           <ActivityIndicator size="small" color="#FF5100" />
@@ -258,12 +265,18 @@ Invitation Records
                           </React.Fragment>
                         ))
                       )}
-                    </ScrollView>
-                  ) : (
-                    <ScrollView 
-                      style={styles.scrollContent}
-                      showsVerticalScrollIndicator={false}
-                    >
+                      </ScrollView>
+                    ) : (
+                      <ScrollView 
+                        style={styles.scrollContent}
+                        contentContainerStyle={styles.scrollContentContainer}
+                        showsVerticalScrollIndicator={false}
+                        nestedScrollEnabled={true}
+                        scrollEventThrottle={16}
+                        bounces={true}
+                        alwaysBounceVertical={Platform.OS === 'ios'}
+                        removeClippedSubviews={false}
+                      >
                       {loading ? (
                         <View style={styles.loadingContainer}>
                           <ActivityIndicator size="small" color="#FF5100" />
@@ -298,8 +311,9 @@ Invitation Records
                           </React.Fragment>
                         ))
                       )}
-                    </ScrollView>
-                  )}
+                      </ScrollView>
+                    )}
+                  </View>
                 </View>
               </View>
             </View>
@@ -321,19 +335,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   contentContainer: {
+    position: 'absolute',
     alignItems: 'center',
   },
   modalContent: {
     width: 370,
     height: 444,
-    position: 'relative',
-  },
-  mainBackground: {
-    flex: 1,
-    position: 'relative',
   },
   backgroundShape: {
-    position: 'absolute',
     width: 370,
     height: 444,
     backgroundColor: '#FFF5DB',
@@ -372,18 +381,15 @@ const styles = StyleSheet.create({
     height: 20,
   },
   innerContentContainer: {
-    position: 'absolute',
-    left: 16,
-    top: 53,
-    width: 338,
-    height: 375,
+    marginTop: 53,
+    marginHorizontal: 16,
+    flex: 1,
+    marginBottom: 16,
   },
-  contentBackground: {
+  contentWrapper: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    overflow: 'hidden',
-    // 内容背景阴影
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -392,6 +398,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -443,10 +450,21 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#FF5100',
   },
+  scrollViewWrapper: {
+    flex: 1,
+    ...Platform.select({
+      android: {
+        height: 326, // 375 - 49 (tab height)
+      },
+    }),
+  },
   scrollContent: {
     flex: 1,
-    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
+  },
+  scrollContentContainer: {
+    paddingHorizontal: 16,
+    flexGrow: 1,
   },
   recordItem: {
     flexDirection: 'row',

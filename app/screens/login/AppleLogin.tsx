@@ -168,10 +168,11 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
       onPress={handleAppleLogin}
     >
       <Image
-        source={require("../../../assets/login/apple.png")}
+        source={require("../../../assets/img/apple.png")}
         style={styles.loginIcon}
       />
-      <Text style={styles.loginButtonText}>Continue with Apple</Text>
+      <Text style={styles.loginButtonText}>Continuer avec Apple</Text>
+      <Text style={styles.arrowText}>›</Text>
     </TouchableOpacity>
   );
 };
@@ -180,30 +181,28 @@ const styles = StyleSheet.create({
   loginButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    backgroundColor: "#000",
+    borderRadius: 30,
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   loginIcon: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
+    marginRight: 12,
   },
   loginButtonText: {
     flex: 1,
-    color: "#374151",
+    color: "#fff",
     fontSize: fontSize(16),
     fontWeight: "500",
     textAlign: "center",
-    marginLeft: -24,
+  },
+  arrowText: {
+    fontSize: fontSize(20),
+    color: "#fff",
+    marginLeft: 8,
   },
 });
 

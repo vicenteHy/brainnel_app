@@ -72,6 +72,7 @@ export type RootStackParamList = {
   PreviewOrder: undefined;
   ForgotPhonePassword: undefined;
   PhoneLoginScreen: undefined;
+  WhatsAppLogin: undefined;
   Info: undefined;
   ChangePassword: undefined;
   PrivacyPolicyScreen: undefined;

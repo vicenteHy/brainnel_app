@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   },
   cameraButtonOverlay: {
     position: 'absolute',
-    top: 70,  // 向上移动
+    top: Platform.OS === 'android' ? 10 : 70,  // 向上移动
     right: 90,  // 再向左移动
     zIndex: 1001,
   },

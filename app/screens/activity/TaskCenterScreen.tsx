@@ -8,6 +8,7 @@ import {
   Image,
   ImageBackground,
   StatusBar,
+  Platform,
   Dimensions,
   Alert,
 } from 'react-native';
@@ -244,7 +245,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'info',
         text1: 'Déjà connecté aujourd\'hui',
-        position: 'center',
+        position: 'top',
       });
       return;
     }
@@ -263,7 +264,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
         type: 'success',
         text1: 'Connexion réussie !',
         text2: 'Vous avez gagné 2 FCFA !',
-        position: 'center',
+        position: 'top',
       });
     } catch (error) {
       console.error('签到失败:', error);
@@ -271,7 +272,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
         type: 'error',
         text1: 'Échec de la connexion',
         text2: 'Veuillez réessayer',
-        position: 'center',
+        position: 'top',
       });
     } finally {
       setLoading(false);
@@ -546,14 +547,14 @@ const styles = StyleSheet.create({
   },
   headerBg: {
     width: screenWidth,
-    height: 191,
+    height: Platform.OS === 'android' ? 160 : 191,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 80,
+    paddingTop: Platform.OS === 'android' ? 40 : 80,
     paddingBottom: 20,
   },
   headerTitle: {

@@ -12,6 +12,8 @@ import {
   Dimensions,
   ImageBackground,
   Modal,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,6 +34,7 @@ import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus, exc
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
 import fontSize from '../../utils/fontsizeUtils';
+import { getStatusBarHeight } from '../../utils/dimensions';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -771,41 +774,41 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      {/* 背景图片 */}
-      <Image 
-        source={require('../../../assets/img/img_6271.svg')} 
-        style={styles.backgroundImage}
-      />
-      
-      {/* 通知弹窗 */}
-      <Animated.View 
-        style={[
-          styles.notificationContainer,
-          {
-            opacity: notificationAnimation,
-            transform: [{
-              translateY: notificationAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-20, 0]
-              })
-            }]
-          }
-        ]}
-        pointerEvents="none"
-      >
-        <View style={styles.notificationContent}>
-          <Image 
-            source={require('../../../assets/logo/logo.png')} 
-            style={styles.notificationLogo}
-          />
-          <Text style={styles.notificationText} numberOfLines={2}>
-            {notifications[currentNotificationIndex] || ''}
-          </Text>
-        </View>
-      </Animated.View>
+        {/* 背景图片 */}
+        <Image 
+          source={require('../../../assets/img/img_6271.svg')} 
+          style={styles.backgroundImage}
+        />
+        
+        {/* 通知弹窗 */}
+        <Animated.View 
+          style={[
+            styles.notificationContainer,
+            {
+              opacity: notificationAnimation,
+              transform: [{
+                translateY: notificationAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }]
+            }
+          ]}
+          pointerEvents="none"
+        >
+          <View style={styles.notificationContent}>
+            <Image 
+              source={require('../../../assets/logo/logo.png')} 
+              style={styles.notificationLogo}
+            />
+            <Text style={styles.notificationText} numberOfLines={2}>
+              {notifications[currentNotificationIndex] || ''}
+            </Text>
+          </View>
+        </Animated.View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.contentWrapper}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.contentWrapper}>
           {/* 顶部余额卡片包含导航栏 */}
           <ImageBackground 
             source={require('../../../assets/img/mask_group_2x.png')}
@@ -1383,13 +1386,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 80,
+    paddingTop: Platform.OS === 'ios' ? getStatusBarHeight() + 20 : (StatusBar.currentHeight || 0) - 20,
     paddingBottom: 10,
   },
   headerTitle: {
     alignItems: 'center',
     marginLeft: 80,
-    fontSize: 18,
+      fontSize: fontSize(18),
     fontWeight: '600',
     color: '#000',
   },
@@ -1403,10 +1406,10 @@ const styles = StyleSheet.create({
   },
   separator: {
     color: '#AE8623',
-    fontSize: 12,
+    fontSize: fontSize(12),
   },
   detailsText: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#AE8623',
   },
   content: {
@@ -1418,7 +1421,7 @@ const styles = StyleSheet.create({
   },
   topCard: {
     width: screenWidth,
-    height: 220,
+    height: Platform.OS === 'android' ? 180 : 220,
   },
   balanceContainer: {
     flex: 1,
@@ -1428,8 +1431,8 @@ const styles = StyleSheet.create({
     marginTop: -40,
   },
   balanceAmount: {
-    marginTop: 10,
-    fontSize: 33,
+    marginTop: Platform.OS === 'android' ? 40 : 25,
+    fontSize: fontSize(33),
     fontWeight: '600',
     color: '#FF5100',
   },
@@ -1867,7 +1870,7 @@ const styles = StyleSheet.create({
   },
   notificationContainer: {
     position: 'absolute',
-    top: 60,
+    top: Platform.OS === 'android' ? 10 : 60,
     left: 20,
     right: 20,
     zIndex: 999,
@@ -1883,7 +1886,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 5,
+
   },
   notificationLogo: {
     width: 24,

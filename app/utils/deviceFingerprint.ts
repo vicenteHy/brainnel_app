@@ -53,6 +53,11 @@ interface DeviceFingerprint {
   isRTL: boolean;
   is24HourFormat: boolean | null; // 24小时制
   
+  // 字体信息
+  systemFonts: string[] | null; // 系统可用字体列表
+  defaultFont: string | null; // 默认字体
+  fontSmoothing: boolean | null; // 字体平滑
+  
   // 网络信息
   networkType: string | null;
   isConnected: boolean | null;
@@ -118,6 +123,8 @@ interface SimpleDeviceInfo {
   screenSize: string;
   brand: string | null;
   platformVersion: string | undefined;
+  fontScale: number;
+  defaultFont: string | null;
   fingerprintString: string; // 规范化的指纹字符串
   fingerprintHash: string; // SHA-256 哈希值
 }
@@ -254,6 +261,33 @@ export class DeviceFingerprintCollector {
         androidFingerprint = platformConstants.Fingerprint || osBuildFingerprint;
       }
       
+      // 字体信息采集
+      let systemFonts: string[] | null = null;
+      let defaultFont: string | null = null;
+      let fontSmoothing: boolean | null = null;
+      
+      try {
+        if (Platform.OS === 'android') {
+          // Android 平台字体信息
+          if (platformConstants.systemFontFamilies) {
+            systemFonts = platformConstants.systemFontFamilies;
+          }
+          // Android 默认字体通常是 Roboto
+          defaultFont = 'Roboto';
+        } else if (Platform.OS === 'ios') {
+          // iOS 平台字体信息
+          if (platformConstants.systemFontFamilies) {
+            systemFonts = platformConstants.systemFontFamilies;
+          }
+          // iOS 默认字体
+          defaultFont = platformConstants.systemFontFamily || 'System';
+          // iOS 字体平滑始终开启
+          fontSmoothing = true;
+        }
+      } catch (e) {
+        console.warn('获取字体信息失败:', e);
+      }
+      
       // 屏幕密度
       let screenDensity: number | null = null;
       if (Platform.OS === 'android' && platformConstants.Density) {
@@ -346,6 +380,11 @@ export class DeviceFingerprintCollector {
         // Android特定
         androidId,
         androidFingerprint,
+        
+        // 字体信息
+        systemFonts,
+        defaultFont,
+        fontSmoothing,
         
         // 采集时间
         collectedAt: new Date().toISOString(),
@@ -509,6 +548,22 @@ export class DeviceFingerprintCollector {
       console.log(`  24小时制: ${fingerprint.is24HourFormat ? '是' : '否'}`);
     }
     
+    // 字体信息
+    if ('systemFonts' in fingerprint || 'defaultFont' in fingerprint) {
+      console.log('\n🔤 字体信息:');
+      console.log(`  字体缩放: ${fingerprint.fontScale || 1}`);
+      console.log(`  默认字体: ${fingerprint.defaultFont || '未知'}`);
+      if ('fontSmoothing' in fingerprint) {
+        console.log(`  字体平滑: ${fingerprint.fontSmoothing ? '开启' : (fingerprint.fontSmoothing === false ? '关闭' : '未知')}`);
+      }
+      if ('systemFonts' in fingerprint && fingerprint.systemFonts) {
+        console.log(`  系统字体数量: ${fingerprint.systemFonts.length}`);
+        if (fingerprint.systemFonts.length > 0 && fingerprint.systemFonts.length <= 10) {
+          console.log(`  系统字体列表: ${fingerprint.systemFonts.join(', ')}`);
+        }
+      }
+    }
+    
     // 网络信息
     if ('networkType' in fingerprint) {
       console.log('\n📡 网络信息:');
@@ -656,15 +711,19 @@ export class DeviceFingerprintCollector {
     screenSize: string;
     brand: string | null;
     platformVersion: string | undefined;
+    fontScale?: number;
+    defaultFont?: string | null;
   }): { fingerprintString: string; fingerprintHash: string } {
     // 规范化各个字段
     const pixelRatio = data.pixelRatio.toString();
     const screenSize = data.screenSize.replace(' x ', '*'); // 440 x 956 -> 440*956
     const brand = this.normalizeString(data.brand);
     const platformVersion = this.normalizeString(data.platformVersion);
+    const fontScale = data.fontScale ? data.fontScale.toString() : '1';
+    const defaultFont = this.normalizeString(data.defaultFont);
     
-    // 按照指定顺序拼接：像素比_屏幕尺寸_品牌_系统版本
-    const fingerprintString = `${pixelRatio}_${screenSize}_${brand}_${platformVersion}`;
+    // 按照指定顺序拼接：像素比_屏幕尺寸_品牌_系统版本_字体缩放_默认字体
+    const fingerprintString = `${pixelRatio}_${screenSize}_${brand}_${platformVersion}_${fontScale}_${defaultFont}`;
     
     // 使用 SHA-256 生成哈希
     const fingerprintHash = CryptoJS.SHA256(fingerprintString).toString();
@@ -678,19 +737,31 @@ export class DeviceFingerprintCollector {
       // 获取屏幕信息
       const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
       const pixelRatio = PixelRatio.get();
+      const fontScale = PixelRatio.getFontScale();
       
       // 获取硬件信息
       const brand = Device.brand;
       
       // 获取平台信息
       const platformVersion = Platform.Version?.toString();
+      const platformConstants = Platform.constants || {};
+      
+      // 获取默认字体
+      let defaultFont: string | null = null;
+      if (Platform.OS === 'android') {
+        defaultFont = 'Roboto';
+      } else if (Platform.OS === 'ios') {
+        defaultFont = platformConstants.systemFontFamily || 'System';
+      }
       
       // 准备基础数据
       const baseData = {
         pixelRatio,
         screenSize: `${windowWidth} x ${windowHeight}`,
         brand,
-        platformVersion
+        platformVersion,
+        fontScale,
+        defaultFont
       };
       
       // 生成指纹字符串和哈希
@@ -723,6 +794,8 @@ export class DeviceFingerprintCollector {
       console.log(`  系统版本: ${info.platformVersion || '未知'}`);
     }
     
+    console.log(`  字体缩放: ${info.fontScale}`);
+    console.log(`  默认字体: ${info.defaultFont || '未知'}`);
     console.log(`  指纹字符串: ${info.fingerprintString}`);
     console.log(`  指纹哈希: ${info.fingerprintHash}`);
   }
