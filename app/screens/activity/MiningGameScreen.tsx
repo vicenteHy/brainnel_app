@@ -588,13 +588,13 @@ const MiningGameScreen = ({ navigation }: any) => {
       
       Toast.show({
         type: 'success',
-        text1: response.message || t('兑换成功'),
+        text1: 'Échange réussi',
         position: 'top',
         visibilityTime: 2000,
       });
     } catch (error) {
       console.error('兑换面具失败:', error);
-      Alert.alert(t('错误'), t('兑换失败，请重试'));
+      Alert.alert('Erreur', 'Échange échoué, veuillez réessayer');
     }
   };
 

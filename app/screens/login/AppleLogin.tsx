@@ -17,6 +17,7 @@ import useUserStore from '../../store/user';
 import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
+import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
 
 interface AppleLoginButtonProps {
   onLoginStart?: () => void;
@@ -76,9 +77,16 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
       };
 
       try {
+        // 收集设备指纹
+        console.log("📱 收集设备指纹信息...");
+        const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+        const fingerprintHash = deviceInfo.fingerprintHash;
+        console.log("✅ 设备指纹收集完成:", fingerprintHash);
+        
         // 调用后端API进行Apple登录
         console.log("📡 调用后端API进行Apple登录验证...");
-        const res = await loginApi.appleLogin(appleUserData);
+        console.log("📤 设备指纹哈希:", fingerprintHash);
+        const res = await loginApi.appleLogin(appleUserData, fingerprintHash);
         console.log("✅ 后端Apple登录验证成功:", res);
 
         // 保存access_token到AsyncStorage

@@ -32,6 +32,8 @@ import { Country, countries } from "../../constants/countries";
 import { AppleLoginButton } from '../login/AppleLogin';
 import { GoogleLoginButton } from '../login/GoogleLogin';
 import { handleLoginSettingsCheck } from "../../utils/userSettingsUtils";
+import { AUTH_EVENTS } from '../../contexts/AuthContext';
+import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
 
 
 // 国家代码到Country对象的映射
@@ -210,9 +212,16 @@ export const LoginScreen = () => {
       console.log("[WhatsApp] 验证验证码 - 完整号码:", fullPhoneNumber);
       console.log("[WhatsApp] 验证验证码 - 验证码:", verificationCode);
 
+      // 收集设备指纹
+      console.log("📱 收集设备指纹信息...");
+      const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+      const fingerprintHash = deviceInfo.fingerprintHash;
+      console.log("✅ 设备指纹收集完成:", fingerprintHash);
+
       const res = await loginApi.verifyWhatsappOtp({
         phone_number: fullPhoneNumber,
         code: verificationCode,
+        fingerprint_hash: fingerprintHash,
       });
 
       if (res.access_token) {
@@ -230,11 +239,25 @@ export const LoginScreen = () => {
         setUser(user);
         setLoading(false);
 
+        // 发出登录成功事件通知
+        console.log('[WhatsApp] 准备发出登录成功事件');
+        console.log('[WhatsApp] global.EventEmitter 存在:', !!global.EventEmitter);
+        if (global.EventEmitter) {
+          console.log('[WhatsApp] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
+        } else {
+          console.error('[WhatsApp] global.EventEmitter 不存在！');
+        }
+
         // 记录登录成功埋点
         console.log("[WhatsApp] 准备发送登录成功埋点");
         analyticsStore.logLogin(true, "whatsapp");
         console.log("[WhatsApp] 登录成功埋点已调用");
-        navigation.replace("MainTabs", { screen: "Home" });
+        
+        console.log('[WhatsApp] 准备导航到 MainTabs');
+        // 使用与苹果/谷歌登录相同的导航方式
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log('[WhatsApp] 导航命令已发送');
       }
     } catch (error) {
       console.error("[WhatsApp] 验证码验证失败:", error);

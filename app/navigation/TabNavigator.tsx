@@ -115,22 +115,35 @@ export const TabNavigator = () => {
   const [currentTab, setCurrentTab] = useState<string>('');
   const isFocused = useIsFocused();
   
+  // 获取 insets，确保有默认值
+  const safeInsets = useSafeAreaInsets() || { top: 0, bottom: 0, left: 0, right: 0 };
+  
+  console.log('[TabNavigator] 渲染中...');
+  console.log('[TabNavigator] 当前路由:', route.name);
+  console.log('[TabNavigator] 用户状态:', user?.user_id ? '已登录' : '未登录');
+  console.log('[TabNavigator] 键盘状态:', keyboardVisible ? '显示' : '隐藏');
+  console.log('[TabNavigator] insets:', safeInsets);
+  console.log('[TabNavigator] insets.bottom:', safeInsets.bottom);
+  console.log('[TabNavigator] isFocused:', isFocused);
+  console.log('[TabNavigator] navigation.isFocused():', navigation.isFocused());
+  
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
-  const insets = useSafeAreaInsets();
 
   // Listen to keyboard events
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       () => {
+        console.log('[TabNavigator] 键盘显示事件触发');
         setKeyboardVisible(true);
       }
     );
     const keyboardDidHideListener = Keyboard.addListener(
       'keyboardDidHide',
       () => {
+        console.log('[TabNavigator] 键盘隐藏事件触发');
         setKeyboardVisible(false);
       }
     );
@@ -140,6 +153,22 @@ export const TabNavigator = () => {
       keyboardDidShowListener.remove();
     };
   }, []);
+
+  // 当用户登录状态改变时，确保键盘状态正确
+  useEffect(() => {
+    if (user?.user_id && keyboardVisible) {
+      console.log('[TabNavigator] 用户已登录，检查键盘状态');
+      // 手动检查键盘是否真的在显示
+      const checkKeyboard = setTimeout(() => {
+        if (keyboardVisible) {
+          console.log('[TabNavigator] 强制重置键盘状态');
+          setKeyboardVisible(false);
+        }
+      }, 500);
+      
+      return () => clearTimeout(checkKeyboard);
+    }
+  }, [user?.user_id, keyboardVisible]);
 
   // Check if login prompt was already shown
   useEffect(() => {
@@ -221,21 +250,29 @@ export const TabNavigator = () => {
     navigation.navigate('Login');
   };
 
+  console.log('[TabNavigator] 准备渲染 Tab.Navigator');
+  console.log('[TabNavigator] Tab 对象:', !!Tab);
+  console.log('[TabNavigator] Tab.Navigator:', !!Tab.Navigator);
+  
+  const tabBarStyle = {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    display: keyboardVisible ? 'none' : 'flex',
+    paddingBottom: safeInsets.bottom + 8,
+    height: 75 + safeInsets.bottom,
+    paddingTop: 8,
+  };
+  
+  console.log('[TabNavigator] tabBarStyle:', JSON.stringify(tabBarStyle, null, 2));
+  
   return (
     <>
       <Tab.Navigator
         screenOptions={{
           tabBarActiveTintColor: '#FF5100',
           tabBarInactiveTintColor: '#000000',
-          tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 1,
-            borderTopColor: '#F0F0F0',
-            display: keyboardVisible ? 'none' : 'flex',
-            paddingBottom: insets.bottom + 8,
-            height: 75 + insets.bottom,
-            paddingTop: 8,
-          },
+          tabBarStyle,
           tabBarLabelStyle: {
             fontSize: fontSize(10),
             marginTop: 2,

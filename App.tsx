@@ -28,6 +28,8 @@ import Constants from 'expo-constants';
 import { initializeFacebookSDK, extractAndSaveFbclid } from "./app/services/facebook-events";
 import websocketService from "./app/services/websocketService";
 import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
+import { useModalQueue } from "./app/hooks/useModalQueue";
+import { ModalType, ModalPriority } from "./app/utils/modalQueueManager";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -53,12 +55,40 @@ function AppContent() {
   const analyticsData = useAnalyticsStore();
   const userStore = useUserStore();
   const { setUser } = userStore;
-  const [boostModalVisible, setBoostModalVisible] = useState(false);
-  const [boostedModalVisible, setBoostedModalVisible] = useState(false);
+  
+  // 使用弹窗队列管理各个弹窗
+  const boostModal = useModalQueue({
+    modalId: 'boost-success',
+    modalType: ModalType.BOOST_SUCCESS,
+    priority: ModalPriority.URGENT, // 助力弹窗也设为最高优先级
+    canInterrupt: false, // 助力弹窗不可被中断
+  });
+  
+  const boostedModal = useModalQueue({
+    modalId: 'boosted-success',
+    modalType: ModalType.BOOSTED_SUCCESS,
+    priority: ModalPriority.URGENT, // 被助力弹窗也设为最高优先级
+    canInterrupt: false, // 被助力弹窗不可被中断
+  });
+  
+  const spinWheelModal = useModalQueue({
+    modalId: 'spin-wheel',
+    modalType: ModalType.SPIN_WHEEL,
+    priority: ModalPriority.MEDIUM,
+    canInterrupt: true, // 转盘弹窗可被中断
+  });
+  
+  const winningModal = useModalQueue({
+    modalId: 'winning',
+    modalType: ModalType.WINNING,
+    priority: ModalPriority.LOW,
+    canInterrupt: true, // 中奖弹窗可被中断
+  });
+  
+  // 旧的状态保留用于数据传递
   const [boostedUserId, setBoostedUserId] = useState<string>('');
   const [isAlreadyBoosted, setIsAlreadyBoosted] = useState(false);
-  const [showSpinWheel, setShowSpinWheel] = useState(false);
-  const [showWinningModal, setShowWinningModal] = useState(false);
+  
   const { login, logout } = useAuth();
   const appStateRef = useRef(AppState.currentState);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,8 +125,18 @@ function AppContent() {
   // 获取用户资料的函数
   const fetchUserProfile = async () => {
     try {
+      console.log('[App] 开始获取用户资料...');
       const user = await userApi.getProfile();
+      console.log('[App] 获取到的用户资料:', user);
+      
       setUser(user);
+      
+      // 等待一下确保状态更新
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // 验证状态是否正确更新
+      const updatedUser = useUserStore.getState().user;
+      console.log('[App] 更新后的 userStore.user:', updatedUser);
       
       // 获取用户资料成功后，检查并创建用户设置
       await checkAndCreateUserSettings();
@@ -223,7 +263,11 @@ function AppContent() {
               console.log('[App] 收到被助力成功消息，显示 BoostedSuccessModal');
               setBoostedUserId(data.invitee_name);
               setIsAlreadyBoosted(false); // 这是成功助力的消息
-              setBoostedModalVisible(true); // 使用 BoostedSuccessModal
+              // 使用弹窗队列显示被助力弹窗
+              boostedModal.showModal({
+                userId: data.invitee_name,
+                isAlreadyBoosted: false
+              });
             }
           });
           
@@ -267,23 +311,36 @@ function AppContent() {
                 if (referrerId) {
                   console.log('应用初始化时发现待处理的referrer_id:', referrerId);
                   
-                  try {
-                    const { assist } = await import('./app/services/api/activity');
-                    const result = await assist(parseInt(referrerId));
-                    
-                    // 根据返回结果显示不同的弹窗内容
-                    setBoostedUserId(referrerId);
-                    setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
-                    setBoostModalVisible(true);
-                    
-                    // 设置标记，表示用户是通过邀请链接进入的
-                    await AsyncStorage.setItem('entered_via_invite', 'true');
-                    
-                    // 助力成功后清除referrer_id
-                    await AsyncStorage.removeItem('referrer_id');
-                  } catch (error) {
-                    console.error('助力失败:', error);
-                    Alert.alert('失败', '助力失败，请稍后重试');
+                  // 检查用户是否已登录
+                  const authToken = await AsyncStorage.getItem('token');
+                  if (authToken) {
+                    console.log('用户已登录，执行助力');
+                    try {
+                      const { assist } = await import('./app/services/api/activity');
+                      // 获取设备指纹哈希
+                      const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+                      const result = await assist(parseInt(referrerId), deviceInfo.fingerprintHash);
+                      
+                      // 根据返回结果显示不同的弹窗内容
+                      setBoostedUserId(referrerId);
+                      setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
+                      // 使用弹窗队列显示助力弹窗
+                      boostModal.showModal({
+                        userId: referrerId,
+                        isAlreadyBoosted: !result.success
+                      });
+                      
+                      // 设置标记，表示用户是通过邀请链接进入的
+                      await AsyncStorage.setItem('entered_via_invite', 'true');
+                      
+                      // 助力成功后清除referrer_id
+                      await AsyncStorage.removeItem('referrer_id');
+                    } catch (error) {
+                      console.error('助力失败:', error);
+                      Alert.alert('失败', '助力失败，请稍后重试');
+                    }
+                  } else {
+                    console.log('用户未登录，保留referrer_id等待登录后处理');
                   }
                 }
               } catch (error) {
@@ -326,8 +383,14 @@ function AppContent() {
 
   // 监听登录成功事件，刷新用户资料
   useEffect(() => {
+    console.log('[App] 设置登录成功事件监听器');
+    console.log('[App] global.EventEmitter 存在:', !!global.EventEmitter);
+    console.log('[App] AUTH_EVENTS.LOGIN_SUCCESS:', AUTH_EVENTS.LOGIN_SUCCESS);
+    
     const handleLoginSuccess = async () => {
+      console.log('[App] 收到登录成功事件！');
       const success = await fetchUserProfile();
+      console.log('[App] fetchUserProfile 结果:', success);
       
       // 登录成功后，获取任务状态
       const activityStore = useActivityStore.getState();
@@ -335,8 +398,17 @@ function AppContent() {
       console.log('[App] 登录成功后，活动任务状态已更新');
       
       // 登录成功后，重新预加载推荐产品（使用用户ID）
-      if (success && userStore.user?.user_id) {
-        const userId = userStore.user.user_id.toString();
+      console.log('[App] success:', success);
+      console.log('[App] userStore.user:', userStore.user);
+      console.log('[App] userStore.user?.user_id:', userStore.user?.user_id);
+      
+      // 重新获取最新的用户状态
+      const latestUserState = useUserStore.getState();
+      const latestUser = latestUserState.user;
+      console.log('[App] 重新获取的 user:', latestUser);
+      
+      if (success && latestUser?.user_id) {
+        const userId = latestUser.user_id.toString();
         
         // 保存用户ID到本地存储
         try {
@@ -349,10 +421,20 @@ function AppContent() {
         });
         
         // 重新连接 WebSocket
+        console.log('[App] 准备重新连接 WebSocket');
+        console.log('[App] 当前 WebSocket 连接状态:', websocketService.isConnected());
         websocketService.disconnect();
-        websocketService.connect().catch(error => {
-          console.error('[App] Failed to reconnect WebSocket after login:', error);
-        });
+        console.log('[App] WebSocket 已断开，准备重新连接');
+        
+        // 延迟一下再连接，确保断开完成
+        setTimeout(() => {
+          console.log('[App] 开始连接 WebSocket...');
+          websocketService.connect().then(() => {
+            console.log('[App] WebSocket 重新连接成功');
+          }).catch(error => {
+            console.error('[App] Failed to reconnect WebSocket after login:', error);
+          });
+        }, 100);
       }
       
       // 检查是否有待处理的助力
@@ -363,12 +445,18 @@ function AppContent() {
           
           try {
             const { assist } = await import('./app/services/api/activity');
-            const result = await assist(parseInt(referrerId));
+            // 获取设备指纹哈希
+            const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+            const result = await assist(parseInt(referrerId), deviceInfo.fingerprintHash);
             
             // 根据返回结果显示不同的弹窗内容
             setBoostedUserId(referrerId);
             setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
-            setBoostModalVisible(true);
+            // 使用弹窗队列显示助力弹窗
+            boostModal.showModal({
+              userId: referrerId,
+              isAlreadyBoosted: !result.success
+            });
             
             // 设置标记，表示用户是通过邀请链接进入的
             await AsyncStorage.setItem('entered_via_invite', 'true');
@@ -466,12 +554,18 @@ function AppContent() {
                   }
                   
                   const { assist } = await import('./app/services/api/activity');
-                  const result = await assist(parseInt(userId));
+                  // 获取设备指纹哈希
+                  const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+                  const result = await assist(parseInt(userId), deviceInfo.fingerprintHash);
                   
                   // 根据返回结果显示不同的弹窗内容
                   setBoostedUserId(userId);
                   setIsAlreadyBoosted(!result.success); // 如果 success 为 false，说明已经助力过
-                  setBoostModalVisible(true);
+                  // 使用弹窗队列显示助力弹窗
+                  boostModal.showModal({
+                    userId: userId,
+                    isAlreadyBoosted: !result.success
+                  });
                   
                   // 设置标记，表示用户是通过邀请链接进入的
                   await AsyncStorage.setItem('entered_via_invite', 'true');
@@ -607,7 +701,7 @@ function AppContent() {
         
         if (currentRewardAmount < 4000) {
           console.log('[App] 累积金额小于4000，显示转盘弹窗');
-          setShowSpinWheel(true);
+          spinWheelModal.showModal();
         } else {
           console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
           if (navigationRef.isReady()) {
@@ -619,7 +713,7 @@ function AppContent() {
         
         if (error?.response?.status === 404 || error?.status === 404) {
           console.log('[App] 用户未参加活动，显示转盘弹窗');
-          setShowSpinWheel(true);
+          spinWheelModal.showModal();
         } else {
           console.error('[App] 获取活动状态失败:', error);
           // 默认跳转到挖矿页面
@@ -645,7 +739,7 @@ function AppContent() {
         
         if (currentRewardAmount < 4000) {
           console.log('[App] 累积金额小于4000，显示转盘弹窗');
-          setShowSpinWheel(true);
+          spinWheelModal.showModal();
         } else {
           console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
           if (navigationRef.isReady()) {
@@ -668,7 +762,7 @@ function AppContent() {
         
         if (error?.response?.status === 404 || error?.status === 404) {
           console.log('[App] 用户未参加活动，显示转盘弹窗');
-          setShowSpinWheel(true);
+          spinWheelModal.showModal();
         } else {
           console.error('[App] 获取活动状态失败:', error);
           // 默认跳转到挖矿页面
@@ -690,13 +784,16 @@ function AppContent() {
   // 处理转盘中奖
   const handleSpinWin = (amount: number) => {
     console.log('[App] 转盘中奖金额:', amount);
-    setShowSpinWheel(false);
-    setShowWinningModal(true);
+    spinWheelModal.closeModal();
+    // 延迟一点时间再显示中奖弹窗，确保转盘弹窗已关闭
+    setTimeout(() => {
+      winningModal.showModal({ amount });
+    }, 300);
   };
 
   // 处理中奖弹窗继续按钮
   const handleWinningContinue = () => {
-    setShowWinningModal(false);
+    winningModal.closeModal();
     if (navigationRef.isReady()) {
       navigationRef.navigate('MiningGameScreen');
     }
@@ -788,6 +885,10 @@ function AppContent() {
     );
   }
 
+  console.log('[App] 准备渲染 AppNavigator');
+  console.log('[App] isLoading:', isLoading);
+  console.log('[App] languageSelected:', languageSelected);
+  
   return (
     <>
       <AppNavigator />
@@ -803,31 +904,31 @@ function AppContent() {
         />
       )}
       <BoostSuccessModal
-        visible={boostModalVisible}
-        onClose={() => setBoostModalVisible(false)}
-        userId={boostedUserId}
-        isAlreadyBoosted={isAlreadyBoosted}
+        visible={boostModal.visible}
+        onClose={boostModal.closeModal}
+        userId={boostModal.modalData?.userId || boostedUserId}
+        isAlreadyBoosted={boostModal.modalData?.isAlreadyBoosted || isAlreadyBoosted}
         onJouerPress={handleBoostJouerPress}
       />
       
       <BoostedSuccessModal
-        visible={boostedModalVisible}
-        onClose={() => setBoostedModalVisible(false)}
-        userId={boostedUserId}
-        isAlreadyBoosted={isAlreadyBoosted}
+        visible={boostedModal.visible}
+        onClose={boostedModal.closeModal}
+        userId={boostedModal.modalData?.userId || boostedUserId}
+        isAlreadyBoosted={boostedModal.modalData?.isAlreadyBoosted || isAlreadyBoosted}
         onJouerPress={handleBoostedJouerPress}
       />
       
       <SpinWheelModal
-        visible={showSpinWheel}
-        onClose={() => setShowSpinWheel(false)}
+        visible={spinWheelModal.visible}
+        onClose={spinWheelModal.closeModal}
         onSpinPress={() => {}}
         onWin={handleSpinWin}
       />
       
       <WinningModal
-        visible={showWinningModal}
-        onClose={() => setShowWinningModal(false)}
+        visible={winningModal.visible}
+        onClose={winningModal.closeModal}
         onContinue={handleWinningContinue}
       />
     </>

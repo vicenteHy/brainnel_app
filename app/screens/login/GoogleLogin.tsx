@@ -19,6 +19,7 @@ import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { settingApi } from '../../services/api/setting';
 import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
+import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
 
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
@@ -121,10 +122,17 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       }
       
       try {
+        // 收集设备指纹
+        console.log("📱 收集设备指纹信息...");
+        const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+        const fingerprintHash = deviceInfo.fingerprintHash;
+        console.log("✅ 设备指纹收集完成:", fingerprintHash);
+        
         // 调用后端API进行登录
         console.log("📡 调用后端API进行登录验证...");
         console.log("📤 发送的用户数据:", userData);
-        const res = await loginApi.google(userData);
+        console.log("📤 设备指纹哈希:", fingerprintHash);
+        const res = await loginApi.google(userData, fingerprintHash);
         console.log("✅ 后端登录验证成功:", res);
         
         // 保存access_token到AsyncStorage

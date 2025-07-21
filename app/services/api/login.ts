@@ -5,13 +5,14 @@ const GOOGLE_CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET || '';
 const GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI || 'https://api.brainnel.com/backend/api/users/auth/callback/google';
 
 export const loginApi = {
-    google: (userInfo: any) => {
+    google: (userInfo: any, fingerprintHash?: string) => {
+        const payload = fingerprintHash ? { ...userInfo, fingerprint_hash: fingerprintHash } : userInfo;
         return apiService.post<{
             access_token: string;
             token_type: string;
             user?: any;
             first_login?: boolean;
-        }>('/api/users/auth/callback/google', userInfo);
+        }>('/api/users/auth/callback/google', payload);
     },
     appleLogin: (appleUserData: {
         user: string;
@@ -20,18 +21,19 @@ export const loginApi = {
         identityToken: string | null;
         authorizationCode: string | null;
         state: string | null;
-    }) => {
+    }, fingerprintHash?: string) => {
+        const payload = fingerprintHash ? { ...appleUserData, fingerprint_hash: fingerprintHash } : appleUserData;
         return apiService.post<{
             access_token: string;
             token_type: string;
             user?: any;
             first_login?: boolean;
-        }>('/api/users/auth/callback/apple', appleUserData);
+        }>('/api/users/auth/callback/apple', payload);
     },
     sendWhatsappOtp: (data: { phone_number: string; language: string }) => {
         return apiService.post('/api/users/send-whatsapp-otp/', data);
     },
-    verifyWhatsappOtp: (data: { phone_number: string; code: string }) => {
+    verifyWhatsappOtp: (data: { phone_number: string; code: string; fingerprint_hash?: string }) => {
         return apiService.post<{
             access_token: string;
             token_type: string;

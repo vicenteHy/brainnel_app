@@ -22,8 +22,12 @@ export const AppNavigator = () => {
     <NavigationContainer
       ref={navigationRef}
       onReady={() => {
+        console.log('[AppNavigator] NavigationContainer ready');
         // 设置导航引用供其他模块使用
         setNavigationRef(navigationRef);
+      }}
+      onStateChange={(state) => {
+        console.log('[AppNavigator] Navigation state changed:', JSON.stringify(state, null, 2));
       }}
     >
       <Stack.Navigator

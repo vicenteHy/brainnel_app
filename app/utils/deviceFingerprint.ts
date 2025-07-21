@@ -67,6 +67,9 @@ interface DeviceFingerprint {
   androidId: string | null; // Android ID
   androidFingerprint: string | null; // Android设备指纹
   
+  // 用户代理
+  userAgent: string; // User Agent 字符串
+  
   // 采集时间
   collectedAt: string;
   
@@ -121,6 +124,37 @@ interface SimpleDeviceInfo {
 
 export class DeviceFingerprintCollector {
   private static readonly DEVICE_ID_KEY = '@device_fingerprint_id';
+  
+  // Android API 级别到版本号映射
+  private static readonly ANDROID_API_TO_VERSION: { [key: string]: string } = {
+    '34': 'Android 14',
+    '33': 'Android 13',
+    '32': 'Android 12L',
+    '31': 'Android 12',
+    '30': 'Android 11',
+    '29': 'Android 10',
+    '28': 'Android 9',
+    '27': 'Android 8.1',
+    '26': 'Android 8.0',
+    '25': 'Android 7.1',
+    '24': 'Android 7.0',
+    '23': 'Android 6.0',
+    '22': 'Android 5.1',
+    '21': 'Android 5.0',
+    '20': 'Android 4.4W',
+    '19': 'Android 4.4',
+    '18': 'Android 4.3',
+    '17': 'Android 4.2',
+    '16': 'Android 4.1',
+    '15': 'Android 4.0.3',
+    '14': 'Android 4.0',
+  };
+  
+  // 获取 Android 版本号
+  static getAndroidVersionName(apiLevel: string | undefined): string | undefined {
+    if (!apiLevel) return undefined;
+    return this.ANDROID_API_TO_VERSION[apiLevel] || `Android API ${apiLevel}`;
+  }
   
   // 获取或生成持久化的设备ID
   private static async getOrCreateDeviceId(): Promise<string> {
@@ -438,7 +472,17 @@ export class DeviceFingerprintCollector {
     // 系统信息
     console.log('\n💻 系统信息:');
     console.log(`  平台: ${fingerprint.platform}`);
-    console.log(`  系统版本: ${fingerprint.platformVersion || '未知'}`);
+    
+    // 显示友好的系统版本
+    if (fingerprint.platform === 'android' && fingerprint.platformVersion) {
+      const androidVersion = this.getAndroidVersionName(fingerprint.platformVersion);
+      console.log(`  系统版本: ${androidVersion} (API ${fingerprint.platformVersion})`);
+    } else if (fingerprint.platform === 'ios' && fingerprint.platformVersion) {
+      console.log(`  系统版本: iOS ${fingerprint.platformVersion}`);
+    } else {
+      console.log(`  系统版本: ${fingerprint.platformVersion || '未知'}`);
+    }
+    
     if ('osName' in fingerprint) {
       console.log(`  系统名称: ${fingerprint.osName || '未知'}`);
       console.log(`  构建ID: ${fingerprint.osBuildId || '未知'}`);
@@ -668,7 +712,17 @@ export class DeviceFingerprintCollector {
     console.log(`  像素比: ${info.pixelRatio}`);
     console.log(`  屏幕尺寸: ${info.screenSize}`);
     console.log(`  品牌: ${info.brand || '未知'}`);
-    console.log(`  系统版本: ${info.platformVersion || '未知'}`);
+    
+    // 显示友好的系统版本
+    if (Platform.OS === 'android' && info.platformVersion) {
+      const androidVersion = this.getAndroidVersionName(info.platformVersion);
+      console.log(`  系统版本: ${androidVersion} (API ${info.platformVersion})`);
+    } else if (Platform.OS === 'ios' && info.platformVersion) {
+      console.log(`  系统版本: iOS ${info.platformVersion}`);
+    } else {
+      console.log(`  系统版本: ${info.platformVersion || '未知'}`);
+    }
+    
     console.log(`  指纹字符串: ${info.fingerprintString}`);
     console.log(`  指纹哈希: ${info.fingerprintHash}`);
   }

@@ -29,6 +29,7 @@ import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
+import { AUTH_EVENTS } from '../../contexts/AuthContext';
 
 // 国家代码到Country对象的映射
 const countryCodeToCountry: { [key: number]: Country } = {
@@ -194,8 +195,25 @@ export const PhoneLoginScreen = () => {
         setUser(user);
         setLoading(false);
         
+        console.log('[PhoneLogin] 准备发出登录成功事件');
+        console.log('[PhoneLogin] global.EventEmitter 存在:', !!global.EventEmitter);
+        
+        // 发出登录成功事件通知
+        if (global.EventEmitter) {
+          console.log('[PhoneLogin] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
+        } else {
+          console.error('[PhoneLogin] global.EventEmitter 不存在！');
+        }
+        
         analyticsStore.logLogin(true, "phone");
-        navigation.replace("MainTabs");
+        
+        console.log('[PhoneLogin] 准备导航到 MainTabs');
+        console.log('[PhoneLogin] 当前导航堆栈:', navigation.getState());
+        
+        // 使用与苹果/谷歌登录相同的导航方式
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log('[PhoneLogin] 导航命令已发送');
       }
     } catch (error) {
       console.error('[PhoneLogin] 密码登录失败:', error);
@@ -296,8 +314,25 @@ export const PhoneLoginScreen = () => {
         setUser(user);
         setLoading(false);
         
+        console.log('[PhoneLogin OTP] 准备发出登录成功事件');
+        console.log('[PhoneLogin OTP] global.EventEmitter 存在:', !!global.EventEmitter);
+        
+        // 发出登录成功事件通知
+        if (global.EventEmitter) {
+          console.log('[PhoneLogin OTP] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
+        } else {
+          console.error('[PhoneLogin OTP] global.EventEmitter 不存在！');
+        }
+        
         analyticsStore.logLogin(true, "phone_otp");
-        navigation.replace("MainTabs");
+        
+        console.log('[PhoneLogin OTP] 准备导航到 MainTabs');
+        console.log('[PhoneLogin OTP] 当前导航堆栈:', navigation.getState());
+        
+        // 使用与苹果/谷歌登录相同的导航方式
+        navigation.navigate("MainTabs", { screen: "Home" });
+        console.log('[PhoneLogin OTP] 导航命令已发送');
       }
     } catch (error) {
       console.error('[PhoneLogin] OTP验证失败:', error);

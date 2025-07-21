@@ -157,10 +157,11 @@ export interface AssistResponse {
   message: string;
 }
 
-export const assist = async (referrerId: number): Promise<AssistResponse> => {
+export const assist = async (referrerId: number, fingerprintHash?: string): Promise<AssistResponse> => {
   try {
     const data = await apiService.post<AssistResponse>('/api/activity/assist', {
-      referrer_id: referrerId
+      referrer_id: referrerId,
+      ...(fingerprintHash && { fingerprint_hash: fingerprintHash })
     });
     console.log('[Activity] 助力成功:', data);
     return data;
