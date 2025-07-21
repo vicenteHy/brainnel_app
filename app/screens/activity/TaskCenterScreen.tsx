@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signIn, getSignInStatus, TaskItem as TaskData } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
+import RulesModal from './RulesModal';
+import RewardRulesModal from './RewardRulesModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -181,6 +183,8 @@ const TaskCenterScreen = ({ navigation }: any) => {
   const [currentDay, setCurrentDay] = useState(1);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRulesModalVisible, setIsRulesModalVisible] = useState(false);
+  const [isRewardRulesVisible, setIsRewardRulesVisible] = useState(false);
   
   // 使用 activity store
   const { tasks, fetchTasks, getTaskStatus: getTaskStatusFromStore, reportTaskClaimed } = useActivityStore();
@@ -277,7 +281,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
   const handleTaskAction = (taskId: number) => {
     switch (taskId) {
       case 1: // 图搜
-        navigation.navigate('Search' as any);
+        navigation.navigate('Search' as any, { showImageSearchGuide: true });
         break;
       case 2: // 文本搜索
         navigation.navigate('Search' as any);
@@ -327,9 +331,13 @@ const TaskCenterScreen = ({ navigation }: any) => {
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Centre des Missions</Text>
             <View style={styles.headerRight}>
-              <Text style={styles.rulesText}>Règles</Text>
+              <TouchableOpacity onPress={() => setIsRulesModalVisible(true)}>
+                <Text style={styles.rulesText}>Règles</Text>
+              </TouchableOpacity>
               <Text style={styles.separator}> ｜ </Text>
-              <Text style={styles.detailsText}>Détails</Text>
+              <TouchableOpacity onPress={() => setIsRewardRulesVisible(true)}>
+                <Text style={styles.detailsText}>Détails</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ImageBackground>
@@ -505,6 +513,18 @@ const TaskCenterScreen = ({ navigation }: any) => {
         </View>
 
       </ScrollView>
+      
+      {/* 规则弹窗 */}
+      <RulesModal
+        visible={isRulesModalVisible}
+        onClose={() => setIsRulesModalVisible(false)}
+      />
+      
+      {/* 奖励详情弹窗 */}
+      <RewardRulesModal
+        visible={isRewardRulesVisible}
+        onClose={() => setIsRewardRulesVisible(false)}
+      />
     </View>
   );
 };
@@ -533,8 +553,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 10,
+    paddingTop: 80,
+    paddingBottom: 20,
   },
   headerTitle: {
     fontSize: 18,
@@ -559,7 +579,7 @@ const styles = StyleSheet.create({
   },
   checkInCard: {
     marginHorizontal: 17,
-    marginTop: -81,
+    marginTop: -60,
     backgroundColor: '#FFF5DB',
     borderRadius: 12,
     paddingHorizontal: 16,

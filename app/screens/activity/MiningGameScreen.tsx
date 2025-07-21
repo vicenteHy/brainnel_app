@@ -27,6 +27,7 @@ import MaskGameModal from './MaskGameModal';
 import MaskRewardModal from './MaskRewardModal';
 import RewardRulesModal from './RewardRulesModal';
 import EmptySpinModal from './EmptySpinModal';
+import RulesModal from './RulesModal';
 import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus, exchangeMasks } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
@@ -81,6 +82,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [goldMasksCount, setGoldMasksCount] = useState(0);
   const [targetGoldMasksCount, setTargetGoldMasksCount] = useState(20);
   const [isRewardRulesVisible, setIsRewardRulesVisible] = useState(false);
+  const [isRulesModalVisible, setIsRulesModalVisible] = useState(false);
   const digAnimation = useRef(new Animated.Value(0)).current;
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const bubbleAnimation = useRef(new Animated.Value(0)).current;
@@ -89,8 +91,62 @@ const MiningGameScreen = ({ navigation }: any) => {
   const rippleAnimation = useRef(new Animated.Value(0)).current;
   const rippleOpacity = useRef(new Animated.Value(0)).current;
   const taskCenterAnimation = useRef(new Animated.Value(1)).current;
+  const notificationAnimation = useRef(new Animated.Value(0)).current;
+  const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+  const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const progress = getProgress();
+  
+  // 随机国家列表（法语）
+  const countries = [
+    "Côte d'Ivoire",
+    "Bénin",
+    "Togo",
+    "Cameroun",
+    "République démocratique du Congo",
+    "Burkina Faso",
+    "Sénégal",
+    "Mali"
+  ];
+  
+  // 生成随机电话号码后四位
+  const getRandomPhone = () => {
+    const lastFour = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `****${lastFour}`;
+  };
+  
+  // 生成三位随机数
+  const getRandomThreeDigits = () => {
+    return Math.floor(Math.random() * 900 + 100).toString();
+  };
+  
+  // 获取随机国家
+  const getRandomCountry = () => {
+    return countries[Math.floor(Math.random() * countries.length)];
+  };
+  
+  // 通知文案生成函数
+  const generateNotification = (index: number) => {
+    const templates = [
+      () => `Quelle rapidité ! L'utilisateur ${getRandomPhone()} a raflé 5000 FCFA en quelques secondes !`,
+      () => `La cagnotte est prise d'assaut ! Agissez maintenant !`,
+      () => `À l'instant, l'utilisateur ${getRandomPhone()} de ${getRandomCountry()} vient d'encaisser 5000 FCFA !`,
+      () => `Un autre utilisateur chanceux, ${getRandomPhone()}, a empoché l'argent !`,
+      () => `Un autre prix vient d'être réclamé ! La cagnotte diminue à toute vitesse !`,
+      () => `Ne te laisse pas devancer ! L'utilisateur ${getRandomPhone()} a déjà sécurisé sa récompense`,
+      () => `Retirer son gain est un jeu d'enfant aujourd'hui ! Déjà ${getRandomThreeDigits()} utilisateurs de plus ont réussi`
+    ];
+    
+    return templates[index % templates.length]();
+  };
+  
+  // 生成新的通知集合
+  const refreshNotifications = () => {
+    return Array.from({ length: 7 }, (_, i) => generateNotification(i));
+  };
+  
+  // 初始化通知数组
+  const [notifications, setNotifications] = useState<string[]>(() => refreshNotifications());
 
   // 数字滚动动画函数
   const animateValue = (start: number, end: number, duration: number) => {
@@ -121,6 +177,40 @@ const MiningGameScreen = ({ navigation }: any) => {
   useEffect(() => {
     rechargeDigs();
     const interval = setInterval(rechargeDigs, 60000);
+    
+    // 通知动画逻辑
+    const showNotification = () => {
+      // 每次显示前刷新通知内容
+      const newNotifications = refreshNotifications();
+      setNotifications(newNotifications);
+      
+      // 淡入动画
+      Animated.timing(notificationAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        // 停留2秒后淡出
+        setTimeout(() => {
+          Animated.timing(notificationAnimation, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            // 更新到下一条通知
+            setCurrentNotificationIndex(prev => (prev + 1) % 7);
+          });
+        }, 2000);
+      });
+    };
+    
+    // 立即显示第一条通知
+    showNotification();
+    
+    // 每4秒循环一次（2秒显示 + 2秒间隔）
+    notificationIntervalRef.current = setInterval(() => {
+      showNotification();
+    }, 4000);
     
     // 获取活动状态数据
     const fetchActivityStatus = async () => {
@@ -261,6 +351,10 @@ const MiningGameScreen = ({ navigation }: any) => {
       // 清理所有定时器
       modalTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
       modalTimeoutsRef.current = [];
+      // 清理通知定时器
+      if (notificationIntervalRef.current) {
+        clearInterval(notificationIntervalRef.current);
+      }
     };
   }, []);
 
@@ -682,6 +776,33 @@ const MiningGameScreen = ({ navigation }: any) => {
         source={require('../../../assets/img/img_6271.svg')} 
         style={styles.backgroundImage}
       />
+      
+      {/* 通知弹窗 */}
+      <Animated.View 
+        style={[
+          styles.notificationContainer,
+          {
+            opacity: notificationAnimation,
+            transform: [{
+              translateY: notificationAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-20, 0]
+              })
+            }]
+          }
+        ]}
+        pointerEvents="none"
+      >
+        <View style={styles.notificationContent}>
+          <Image 
+            source={require('../../../assets/logo/logo.png')} 
+            style={styles.notificationLogo}
+          />
+          <Text style={styles.notificationText} numberOfLines={2}>
+            {notifications[currentNotificationIndex] || ''}
+          </Text>
+        </View>
+      </Animated.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.contentWrapper}>
@@ -698,11 +819,13 @@ const MiningGameScreen = ({ navigation }: any) => {
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Cash Gratuit</Text>
               <View style={styles.headerRight}>
-                <TouchableOpacity onPress={() => setIsRewardRulesVisible(true)}>
+                <TouchableOpacity onPress={() => setIsRulesModalVisible(true)}>
                   <Text style={styles.rulesText}>Règles</Text>
                 </TouchableOpacity>
                 <Text style={styles.separator}> ｜ </Text>
-                <Text style={styles.detailsText}>Détails</Text>
+                <TouchableOpacity onPress={() => setIsRewardRulesVisible(true)}>
+                  <Text style={styles.detailsText}>Détails</Text>
+                </TouchableOpacity>
               </View>
             </View>
             
@@ -983,6 +1106,12 @@ const MiningGameScreen = ({ navigation }: any) => {
       <EmptySpinModal
         visible={emptySpinModalVisible}
         onClose={() => setEmptySpinModalVisible(false)}
+      />
+      
+      {/* 规则弹窗 */}
+      <RulesModal
+        visible={isRulesModalVisible}
+        onClose={() => setIsRulesModalVisible(false)}
       />
       
       {/* 任务引导 */}
@@ -1735,6 +1864,38 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 10,
     elevation: 10,
+  },
+  notificationContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    zIndex: 999,
+  },
+  notificationContent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  notificationLogo: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    borderRadius: 4,
+  },
+  notificationText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#333',
+    lineHeight: 18,
   },
 });
 

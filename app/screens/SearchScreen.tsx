@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -84,7 +84,7 @@ const EmptySearchHistory = React.memo(() => {
   );
 });
 
-export const SearchScreen = () => {
+export const SearchScreen = ({ route }: any) => {
   const [searchText, setSearchText] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +93,7 @@ export const SearchScreen = () => {
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [galleryUsed, setGalleryUsed] = useState(false);
   const [trendingSearchTerms, setTrendingSearchTerms] = useState<string[]>([]);
+  const [showImageSearchGuide, setShowImageSearchGuide] = useState(false);
 
   // 获取热门搜索词
   const loadHotTerms = useCallback(async () => {
@@ -110,6 +111,32 @@ export const SearchScreen = () => {
     useCallback(() => {
       loadSearchHistory();
       loadHotTerms();
+      
+      // 检查是否需要显示图搜引导
+      const checkGuide = async () => {
+        try {
+          // 只有从任务中心进入且带有showImageSearchGuide参数时才显示
+          if (route?.params?.showImageSearchGuide) {
+            const hasShown = await AsyncStorage.getItem('hasShownImageSearchGuide');
+            console.log('图搜引导 - hasShownImageSearchGuide:', hasShown);
+            if (!hasShown) {
+              console.log('图搜引导 - 从任务中心进入，准备显示引导');
+              setTimeout(() => {
+                console.log('图搜引导 - 设置显示状态为 true');
+                setShowImageSearchGuide(true);
+                AsyncStorage.setItem('hasShownImageSearchGuide', 'true');
+              }, 500);
+            } else {
+              console.log('图搜引导 - 用户已经看过引导');
+            }
+          } else {
+            console.log('图搜引导 - 不是从任务中心进入，不显示引导');
+          }
+        } catch (error) {
+          console.error('图搜引导 - 检查失败:', error);
+        }
+      };
+      checkGuide();
     }, [loadHotTerms])
   );
 
@@ -490,6 +517,39 @@ export const SearchScreen = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* 图搜引导遮罩层 */}
+      {showImageSearchGuide && (
+        <TouchableOpacity 
+          style={styles.imageSearchGuideOverlay}
+          activeOpacity={1}
+          onPress={() => setShowImageSearchGuide(false)}
+        >
+          <View style={styles.imageSearchGuideContainer}>
+            <Image 
+              source={require('../../assets/img/imageSearch_guide.png')}
+              style={styles.imageSearchGuideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 高亮的相机按钮 - 在引导层之上 */}
+      {showImageSearchGuide && (
+        <View style={styles.cameraButtonOverlay}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowImageSearchGuide(false);
+              handleCameraPress();
+            }}
+            style={styles.cameraButtonHighlight}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <CameraIcon size={20} color="#747474" />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -622,5 +682,42 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: '#9e9e9e',
     fontWeight: 700,
+  },
+  imageSearchGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  imageSearchGuideContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 80,  // 从顶部向下80px的位置开始
+  },
+  imageSearchGuideImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'contain',
+  },
+  cameraButtonOverlay: {
+    position: 'absolute',
+    top: 70,  // 向上移动
+    right: 90,  // 再向左移动
+    zIndex: 1001,
+  },
+  cameraButtonHighlight: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 10,
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
   },
 }); 
