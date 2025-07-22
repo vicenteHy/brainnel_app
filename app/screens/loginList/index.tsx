@@ -70,7 +70,7 @@ export const LoginScreen = () => {
               <TouchableOpacity style={styles.backButton} onPress={handleClose}>
                 <Text style={styles.backButtonText}>‹</Text>
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Se connecter ou s'inscrire</Text>
+              <Text style={styles.headerTitle}>{t('logInOrSignUp')}</Text>
               <View style={styles.headerSpacer} />
             </View>
           </View>
@@ -115,7 +115,7 @@ export const LoginScreen = () => {
                     source={require("../../../assets/img/phone.png")}
                     style={styles.optionIcon}
                   />
-                  <Text style={styles.optionText}>Téléphone</Text>
+                  <Text style={styles.optionText}>{t('phone')}</Text>
                 </TouchableOpacity>
 
                 {/* 邮箱登录 */}
@@ -127,7 +127,7 @@ export const LoginScreen = () => {
                     source={require("../../../assets/img/email.png")}
                     style={[styles.optionIcon, styles.emailIcon]}
                   />
-                  <Text style={styles.optionText}>E-mail</Text>
+                  <Text style={styles.optionText}>{t('email')}</Text>
                 </TouchableOpacity>
 
                 {/* WhatsApp登录 */}
@@ -147,19 +147,19 @@ export const LoginScreen = () => {
             {/* 条款和隐私政策 */}
             <View style={styles.privacyContainer}>
               <Text style={styles.privacyText}>
-                En continuant, vous acceptez nos{" "}
+                {t('termsText')}{" "}
                 <Text
                   style={styles.linkText}
                   onPress={() => navigation.navigate("TermsOfUseScreen")}
                 >
-                  Conditions d'utilisation
+                  {t('termsOfUse')}
                 </Text>{" "}
-                et notre{" "}
+                {t('and')}{" "}
                 <Text
                   style={styles.linkText}
                   onPress={() => navigation.navigate("PrivacyPolicyScreen")}
                 >
-                  Politique de confidentialité
+                  {t('privacyPolicy')}
                 </Text>
                 .
               </Text>
