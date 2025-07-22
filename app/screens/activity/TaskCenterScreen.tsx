@@ -22,7 +22,7 @@ import RulesModal from './RulesModal';
 import RewardRulesModal from './RewardRulesModal';
 import fontSize from '../../utils/fontsizeUtils';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface DayCheckInItemProps {
   day: number;
@@ -604,8 +604,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionIcon: {
-    width: screenWidth * 0.055,
-    height: screenWidth * 0.055,
+    width: screenWidth * 0.07,
+    height: screenWidth * 0.07,
     marginRight: screenWidth * 0.02,
   },
   sectionTitle: {
@@ -627,10 +627,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayItemBg: {
-    width: 65,
-    height: 84,
+    width: screenWidth * 0.16,
+    height: screenWidth * 0.20,
     alignItems: 'center',
-    paddingTop: 5,
+    paddingTop: screenWidth * 0.01,
   },
   dayText: {
     fontSize: fontSize(12),
@@ -733,17 +733,18 @@ const styles = StyleSheet.create({
     marginTop: -6,
   },
   taskItem: {
-    height: 92,
-    marginBottom: 16,
-    borderRadius: 16,
+    height: screenHeight * 0.1,
+    width: screenWidth * 0.85,
+    marginBottom: screenHeight * 0.02,
+    borderRadius: screenWidth * 0.04,
     overflow: 'hidden',
   },
   taskContent: {
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    paddingRight: 8,
-    paddingBottom: 20,
+    paddingRight: screenHeight * 0.02,
+    paddingBottom: screenHeight * 0.01,
   },
   taskButton: {
     width: 104,
