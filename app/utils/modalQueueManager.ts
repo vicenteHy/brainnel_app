@@ -13,6 +13,7 @@ export enum ModalType {
   BOOSTED_SUCCESS = 'boosted_success',
   SPIN_WHEEL = 'spin_wheel',
   WINNING = 'winning',
+  FRIENDS_WITHDRAWAL = 'friends_withdrawal',
 }
 
 export interface ModalQueueItem {
@@ -54,8 +55,10 @@ class ModalQueueManager extends EventEmitter {
 
     // 如果新弹窗优先级更高，且当前弹窗可被中断
     if (modal.priority > this.currentModal.priority && this.currentModal.canInterrupt !== false) {
-      // 对于助力成功这类重要且时效性强的弹窗
-      if (modal.type === ModalType.BOOST_SUCCESS || modal.type === ModalType.BOOSTED_SUCCESS) {
+      // 对于助力成功和好友提现成功这类重要且时效性强的弹窗
+      if (modal.type === ModalType.BOOST_SUCCESS || 
+          modal.type === ModalType.BOOSTED_SUCCESS ||
+          modal.type === ModalType.FRIENDS_WITHDRAWAL) {
         // 将当前弹窗放回队列前面（稍后显示）
         this.queue.unshift(this.currentModal);
         // 立即显示新的高优先级弹窗
@@ -73,12 +76,16 @@ class ModalQueueManager extends EventEmitter {
   private handleUrgentModal(modal: ModalQueueItem) {
     // 如果当前正在显示同样是紧急优先级的弹窗
     if (this.currentModal && this.currentModal.priority === ModalPriority.URGENT) {
-      // 特殊处理：助力相关弹窗需要排队显示
-      if ((modal.type === ModalType.BOOST_SUCCESS || modal.type === ModalType.BOOSTED_SUCCESS) &&
-          (this.currentModal.type === ModalType.BOOST_SUCCESS || this.currentModal.type === ModalType.BOOSTED_SUCCESS)) {
-        // 将新的助力弹窗加入队列前面，确保能显示
+      // 特殊处理：助力相关和好友提现弹窗需要排队显示
+      if ((modal.type === ModalType.BOOST_SUCCESS || 
+           modal.type === ModalType.BOOSTED_SUCCESS || 
+           modal.type === ModalType.FRIENDS_WITHDRAWAL) &&
+          (this.currentModal.type === ModalType.BOOST_SUCCESS || 
+           this.currentModal.type === ModalType.BOOSTED_SUCCESS ||
+           this.currentModal.type === ModalType.FRIENDS_WITHDRAWAL)) {
+        // 将新的弹窗加入队列前面，确保能显示
         this.queue.unshift(modal);
-        console.log('[ModalQueueManager] 另一个助力弹窗正在显示，新弹窗已加入队列前面');
+        console.log('[ModalQueueManager] 另一个高优先级弹窗正在显示，新弹窗已加入队列前面');
         return;
       }
     }

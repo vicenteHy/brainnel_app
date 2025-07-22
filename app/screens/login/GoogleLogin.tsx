@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -20,6 +20,7 @@ import fontSize from '../../utils/fontsizeUtils';
 import { settingApi } from '../../services/api/setting';
 import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
+import { BoostSuccessModal } from '../activity/BoostSuccessModal';
 
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
@@ -40,6 +41,8 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
   const analyticsStore = useAnalyticsStore();
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boosterUserId, setBoosterUserId] = useState<string>('');
 
   useEffect(() => {
     // 配置 Google 登录 - 避免重复配置
@@ -142,6 +145,13 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           console.log("✅ Token已保存:", token);
         }
         
+        // 检查是否有referrer_id且不为0
+        if (res.referrer_id && res.referrer_id !== 0) {
+          console.log("🎯 检测到referrer_id:", res.referrer_id);
+          setBoosterUserId(res.referrer_id.toString());
+          setShowBoostModal(true);
+        }
+        
         // 处理首次登录设置
         if (handleFirstLoginSettings) {
           await handleFirstLoginSettings(res);
@@ -193,17 +203,29 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.loginButton}
-      onPress={signInWithGoogle}
-    >
-      <Image
-        source={require("../../../assets/login/google.png")}
-        style={styles.loginIcon}
+    <>
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={signInWithGoogle}
+      >
+        <Image
+          source={require("../../../assets/login/google.png")}
+          style={styles.loginIcon}
+        />
+        <Text style={styles.loginButtonText}>Continue avec Google</Text>
+        <Text style={styles.arrowText}>›</Text>
+      </TouchableOpacity>
+      
+      <BoostSuccessModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        userId={boosterUserId}
+        onJouerPress={() => {
+          setShowBoostModal(false);
+          // 可以在这里添加跳转到游戏页面的逻辑
+        }}
       />
-      <Text style={styles.loginButtonText}>Continue avec Google</Text>
-      <Text style={styles.arrowText}>›</Text>
-    </TouchableOpacity>
+    </>
   );
 };
 

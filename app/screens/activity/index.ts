@@ -6,6 +6,7 @@ export { default as MiningRewardModal } from './MiningRewardModal';
 export { SpinWheelModal } from './SpinWheelModal';
 export { WinningModal } from './WinningModal';
 export { default as WithdrawalSuccessModal } from './WithdrawalSuccessModal';
+export { default as FriendsWithdrawalSuccessModal } from './FriendsWithdrawalSuccessModal';
 export { default as WaveWithdrawalModal } from './WaveWithdrawalModal';
 export { default as WavePendingModal } from './WavePendingModal';
 export { default as BoostSuccessModal } from './BoostSuccessModal';

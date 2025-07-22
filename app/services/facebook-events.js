@@ -27,7 +27,6 @@ export const saveFbclid = async (fbclid) => {
       await AsyncStorage.setItem('fbclid', fbclid);
       await AsyncStorage.setItem('fbclid_timestamp', Date.now().toString());
     } catch (error) {
-      console.error('Failed to save fbclid:', error);
     }
   }
 };
@@ -46,7 +45,6 @@ export const extractAndSaveFbclid = async (url) => {
       return fbclid;
     }
   } catch (error) {
-    console.error('Failed to extract fbclid from URL:', error);
   }
   return null;
 };
@@ -68,7 +66,6 @@ export const requestTrackingPermissionIOS = async () => {
     
     return trackingStatus;
   } catch (error) {
-    console.error('Failed to get tracking permission:', error);
     return 'denied';
   }
 };
@@ -79,10 +76,6 @@ export const checkFacebookSDKStatus = async () => {
     // 只检查支持的方法
     const trackingEnabled = await Settings.getAdvertiserTrackingEnabled();
     
-    console.log('[Facebook SDK] Status check:');
-    console.log('  - App ID:', '1662120374497452');
-    console.log('  - Advertiser Tracking:', trackingEnabled);
-    console.log('  - Auto Log Events:', true); // 我们手动设置为 true
     
     return {
       appId: '1662120374497452',
@@ -90,7 +83,6 @@ export const checkFacebookSDKStatus = async () => {
       autoLogEnabled: true,
     };
   } catch (error) {
-    console.error('[Facebook SDK] Failed to check status:', error);
     return null;
   }
 };
@@ -98,12 +90,10 @@ export const checkFacebookSDKStatus = async () => {
 // 初始化 Facebook SDK
 export const initializeFacebookSDK = async () => {
   try {
-    console.log('[Facebook SDK] Starting initialization...');
     
     // SDK 已经通过 app.json 中的 isAutoInitEnabled: true 自动初始化
     // 自动事件记录也已通过 app.json 中的 autoLogAppEventsEnabled: true 启用
     
-    console.log('[Facebook SDK] Initialized with App ID:', '1662120374497452');
     
     // 在 iOS 上请求追踪权限
     if (Platform.OS === 'ios') {
@@ -113,8 +103,6 @@ export const initializeFacebookSDK = async () => {
       // 设置广告追踪（根据用户权限）
       await Settings.setAdvertiserTrackingEnabled(isTrackingEnabled);
       
-      console.log('[Facebook SDK] Tracking permission status:', trackingStatus);
-      console.log('[Facebook SDK] Advertiser tracking enabled:', isTrackingEnabled);
     } else {
       // Android 默认启用
       await Settings.setAdvertiserTrackingEnabled(true);
@@ -129,13 +117,10 @@ export const initializeFacebookSDK = async () => {
       version: Constants.expoConfig?.version || '1.0.0',
     };
     if (FACEBOOK_TEST_MODE) {
-      console.log('[Facebook SDK] Running in TEST MODE with code:', FACEBOOK_TEST_CODE);
     }
     logEventWithCallback('sdk_initialized', initEventParams);
     
-    console.log('[Facebook SDK] Initialization completed with auto events enabled');
   } catch (error) {
-    console.error('[Facebook SDK] Failed to initialize:', error);
   }
 };
 
@@ -148,12 +133,10 @@ export const logEventWithCallback = (eventName, parameters = {}) => {
       : parameters;
     
     AppEventsLogger.logEvent(eventName, eventParams);
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Event logged: ${eventName}`, eventParams);
     
     // Facebook SDK 不提供直接的成功回调，但我们可以捕获错误
     return true;
   } catch (error) {
-    console.error(`[Facebook SDK] Failed to log event ${eventName}:`, error);
     return false;
   }
 };
@@ -161,18 +144,14 @@ export const logEventWithCallback = (eventName, parameters = {}) => {
 // 获取延迟深度链接
 export const fetchDeferredAppLink = async () => {
   try {
-    console.log('[Facebook SDK] Fetching deferred app link...');
     const url = await AppLink.fetchDeferredAppLink();
     
     if (url) {
-      console.log('[Facebook SDK] Deferred app link received:', url);
       // 提取并保存 fbclid
       await extractAndSaveFbclid(url);
     } else {
-      console.log('[Facebook SDK] No deferred app link found (organic install)');
     }
   } catch (error) {
-    console.error('[Facebook SDK] Error fetching deferred app link:', error);
   }
 };
 
@@ -189,7 +168,6 @@ const getFbp = async () => {
     }
     return fbp;
   } catch (error) {
-    console.error('Failed to get/generate fbp:', error);
     return null;
   }
 };
@@ -206,7 +184,6 @@ const getFbc = async () => {
     }
     return null;
   } catch (error) {
-    console.error('Failed to get fbc:', error);
     return null;
   }
 };
@@ -274,10 +251,8 @@ const sendEventToBackend = async (eventName, parameters = {}) => {
     }
 
     const result = await response.json();
-    console.log(`Event ${eventName} sent successfully:`, result);
     return result;
   } catch (error) {
-    console.error(`Failed to send event ${eventName} to backend:`, error);
     throw error;
   }
 };
@@ -335,16 +310,6 @@ export const logAddToCartEvent = (product, skuDetails = null, totalQuantity = 1,
       parameters.test_event_code = FACEBOOK_TEST_CODE;
     }
     
-    // 添加调试信息
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Preparing AddToCart event:`, {
-      productId: productId,
-      productName: productName,
-      totalQuantity: totalQuantity,
-      totalPrice: value,
-      currency: product.currency || 'USD',
-      contentIds: contentIds,
-      parameters: parameters
-    });
     
     // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
@@ -353,20 +318,9 @@ export const logAddToCartEvent = (product, skuDetails = null, totalQuantity = 1,
       parameters
     );
     
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] AddToCart event logged successfully:`, {
-      productId: productId,
-      productName: productName,
-      totalQuantity: totalQuantity,
-      totalPrice: value,
-      currency: product.currency || 'USD',
-      skuCount: contents.length
-    });
     
     
   } catch (error) {
-    console.error('[Facebook SDK] Failed to log AddToCart event:', error);
-    console.error('[Facebook SDK] Product object:', product);
-    console.error('[Facebook SDK] Error details:', error.message, error.stack);
   }
 };
 
@@ -395,14 +349,6 @@ export const logViewContentEvent = (product) => {
       parameters.test_event_code = FACEBOOK_TEST_CODE;
     }
     
-    // 添加额外的调试信息
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Preparing ViewContent event:`, {
-      productId: productId,
-      productName: productName,
-      price: productPrice,
-      currency: product.currency || 'USD',
-      parameters: parameters
-    });
     
     // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
@@ -411,18 +357,9 @@ export const logViewContentEvent = (product) => {
       parameters
     );
     
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] ViewContent event logged successfully:`, {
-      productId: productId,
-      productName: productName,
-      price: productPrice,
-      currency: product.currency || 'USD'
-    });
     
     
   } catch (error) {
-    console.error('[Facebook SDK] Failed to log ViewContent event:', error);
-    console.error('[Facebook SDK] Product object:', product);
-    console.error('[Facebook SDK] Error details:', error.message, error.stack);
   }
 };
 
@@ -479,18 +416,6 @@ export const logInitiateCheckoutEvent = (orderInfo, skuDetails = [], paymentMeth
       parameters.test_event_code = FACEBOOK_TEST_CODE;
     }
     
-    // 添加详细的调试信息
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Preparing InitiateCheckout event:`, {
-      orderId: orderInfo.orderId,
-      totalPrice: totalPrice,
-      totalQuantity: totalQuantity,
-      currency: orderInfo.currency || 'USD',
-      paymentMethod: paymentMethod,
-      paymentType: orderInfo.offlinePayment ? 'offline' : 'online',
-      contentIds: contentIds,
-      skuCount: skuArray.length,
-      parameters: parameters
-    });
     
     // 使用 SDK 直接上报
     AppEventsLogger.logEvent(
@@ -499,23 +424,9 @@ export const logInitiateCheckoutEvent = (orderInfo, skuDetails = [], paymentMeth
       parameters
     );
     
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] InitiateCheckout event logged successfully:`, {
-      orderId: orderInfo.orderId,
-      totalPrice: totalPrice,
-      currency: orderInfo.currency || 'USD',
-      paymentMethod: paymentMethod,
-      paymentType: orderInfo.offlinePayment ? 'offline' : 'online',
-      itemCount: totalQuantity,
-      shippingFee: orderInfo.shippingFee,
-      domesticShippingFee: orderInfo.domesticShippingFee
-    });
     
     
   } catch (error) {
-    console.error('[Facebook SDK] Failed to log InitiateCheckout event:', error);
-    console.error('[Facebook SDK] OrderInfo:', orderInfo);
-    console.error('[Facebook SDK] SkuDetails:', skuDetails);
-    console.error('[Facebook SDK] Error details:', error.message, error.stack);
   }
 };
 
@@ -573,18 +484,6 @@ export const logPurchaseEvent = (orderInfo, skuDetails = [], paymentMethod = '')
       parameters.test_event_code = FACEBOOK_TEST_CODE;
     }
     
-    // 添加详细的调试信息
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Preparing Purchase event:`, {
-      orderId: orderInfo.orderId,
-      orderNo: orderInfo.orderNo,
-      totalPrice: totalPrice,
-      totalQuantity: totalQuantity,
-      currency: orderInfo.currency || 'USD',
-      paymentMethod: paymentMethod,
-      contentIds: contentIds,
-      skuCount: skuArray.length,
-      parameters: parameters
-    });
     
     // 使用 SDK 直接上报（Facebook SDK 推荐的方式）
     AppEventsLogger.logPurchase(
@@ -593,21 +492,9 @@ export const logPurchaseEvent = (orderInfo, skuDetails = [], paymentMethod = '')
       parameters  // 额外参数
     );
     
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Purchase event logged successfully:`, {
-      orderId: orderInfo.orderId,
-      orderNo: orderInfo.orderNo,
-      totalPrice: totalPrice,
-      currency: orderInfo.currency || 'USD',
-      paymentMethod: paymentMethod,
-      itemCount: totalQuantity
-    });
     
     
   } catch (error) {
-    console.error('[Facebook SDK] Failed to log Purchase event:', error);
-    console.error('[Facebook SDK] OrderInfo:', orderInfo);
-    console.error('[Facebook SDK] SkuDetails:', skuDetails);
-    console.error('[Facebook SDK] Error details:', error.message, error.stack);
   }
 };
 
@@ -638,15 +525,6 @@ export const logCompleteRegistrationEvent = (userInfo = {}, registrationMethod =
       parameters.test_event_code = FACEBOOK_TEST_CODE;
     }
     
-    // 添加详细的调试信息
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] Preparing CompleteRegistration event:`, {
-      userId: userInfo.user_id,
-      registrationMethod: registrationMethod,
-      email: userInfo.email,
-      phone: userInfo.phone,
-      username: userInfo.username,
-      parameters: parameters
-    });
     
     // 使用 SDK 直接上报（Facebook SDK 推荐的方式）
     AppEventsLogger.logEvent(
@@ -654,18 +532,8 @@ export const logCompleteRegistrationEvent = (userInfo = {}, registrationMethod =
       parameters
     );
     
-    console.log(`[Facebook SDK${FACEBOOK_TEST_MODE ? ' TEST MODE' : ''}] CompleteRegistration event logged successfully:`, {
-      userId: userInfo.user_id,
-      registrationMethod: registrationMethod,
-      email: userInfo.email,
-      phone: userInfo.phone,
-      username: userInfo.username
-    });
     
     
   } catch (error) {
-    console.error('[Facebook SDK] Failed to log CompleteRegistration event:', error);
-    console.error('[Facebook SDK] UserInfo:', userInfo);
-    console.error('[Facebook SDK] Error details:', error.message, error.stack);
   }
 };

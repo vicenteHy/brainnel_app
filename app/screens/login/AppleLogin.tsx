@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -18,6 +18,7 @@ import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
+import { BoostSuccessModal } from '../activity/BoostSuccessModal';
 
 interface AppleLoginButtonProps {
   onLoginStart?: () => void;
@@ -35,6 +36,8 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
   const analyticsStore = useAnalyticsStore();
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boosterUserId, setBoosterUserId] = useState<string>('');
 
   const handleAppleLogin = async () => {
     console.log("🚀 Apple登录按钮被点击");
@@ -94,6 +97,13 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
           const token = `${res.token_type} ${res.access_token}`;
           await AsyncStorage.setItem("token", token);
           console.log("✅ Token已保存:", token);
+        }
+        
+        // 检查是否有referrer_id且不为0
+        if (res.referrer_id && res.referrer_id !== 0) {
+          console.log("🎯 检测到referrer_id:", res.referrer_id);
+          setBoosterUserId(res.referrer_id.toString());
+          setShowBoostModal(true);
         }
 
         // 处理首次登录设置同步
@@ -163,17 +173,29 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
   }
 
   return (
-    <TouchableOpacity
-      style={styles.loginButton}
-      onPress={handleAppleLogin}
-    >
-      <Image
-        source={require("../../../assets/img/apple.png")}
-        style={styles.loginIcon}
+    <>
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={handleAppleLogin}
+      >
+        <Image
+          source={require("../../../assets/img/apple.png")}
+          style={styles.loginIcon}
+        />
+        <Text style={styles.loginButtonText}>Continuer avec Apple</Text>
+        <Text style={styles.arrowText}>›</Text>
+      </TouchableOpacity>
+      
+      <BoostSuccessModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        userId={boosterUserId}
+        onJouerPress={() => {
+          setShowBoostModal(false);
+          // 可以在这里添加跳转到游戏页面的逻辑
+        }}
       />
-      <Text style={styles.loginButtonText}>Continuer avec Apple</Text>
-      <Text style={styles.arrowText}>›</Text>
-    </TouchableOpacity>
+    </>
   );
 };
 

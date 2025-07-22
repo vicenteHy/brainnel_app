@@ -10,7 +10,7 @@ import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
 import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
-import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal } from "./app/screens/activity";
+import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal } from "./app/screens/activity";
 import { getActivityStatus } from "./app/services/api/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
@@ -85,6 +85,13 @@ function AppContent() {
     canInterrupt: true, // 中奖弹窗可被中断
   });
   
+  const friendsWithdrawalModal = useModalQueue({
+    modalId: 'friends-withdrawal',
+    modalType: ModalType.FRIENDS_WITHDRAWAL,
+    priority: ModalPriority.URGENT, // 好友提现弹窗设为最高优先级
+    canInterrupt: false, // 好友提现弹窗不可被中断
+  });
+  
   // 旧的状态保留用于数据传递
   const [boostedUserId, setBoostedUserId] = useState<string>('');
   const [isAlreadyBoosted, setIsAlreadyBoosted] = useState(false);
@@ -125,9 +132,7 @@ function AppContent() {
   // 获取用户资料的函数
   const fetchUserProfile = async () => {
     try {
-      console.log('[App] 开始获取用户资料...');
       const user = await userApi.getProfile();
-      console.log('[App] 获取到的用户资料:', user);
       
       setUser(user);
       
@@ -136,7 +141,6 @@ function AppContent() {
       
       // 验证状态是否正确更新
       const updatedUser = useUserStore.getState().user;
-      console.log('[App] 更新后的 userStore.user:', updatedUser);
       
       // 获取用户资料成功后，检查并创建用户设置
       await checkAndCreateUserSettings();
@@ -144,7 +148,6 @@ function AppContent() {
       // 获取活动任务状态
       const activityStore = useActivityStore.getState();
       await activityStore.fetchTasks();
-      console.log('[App] 活动任务状态已加载');
       
       return true;
     } catch (error) {
@@ -238,7 +241,6 @@ function AppContent() {
           // 初始化 Facebook SDK（Install 事件会自动上报）
           initializeFacebookSDK()
             .then(() => {
-              console.log('[App] Facebook SDK initialized successfully');
               // 延迟 2 秒后检查 SDK 状态
               setTimeout(async () => {
                 const { checkFacebookSDKStatus } = await import('./app/services/facebook-events');
@@ -246,27 +248,33 @@ function AppContent() {
               }, 2000);
             })
             .catch(error => {
-              console.error('[App] Failed to initialize Facebook SDK:', error);
             });
           
           // 初始化 WebSocket 连接
           websocketService.connect().catch(error => {
-            console.error('[App] Failed to establish WebSocket connection:', error);
           });
           
           // 设置 WebSocket 消息处理器
           websocketService.onMessage((data) => {
-            console.log('[App] 处理 WebSocket 消息:', data);
             
             // 处理 invitation 类型的消息 - 被别人助力
             if (data.type === 'invitation' && data.invitee_name) {
-              console.log('[App] 收到被助力成功消息，显示 BoostedSuccessModal');
               setBoostedUserId(data.invitee_name);
               setIsAlreadyBoosted(false); // 这是成功助力的消息
               // 使用弹窗队列显示被助力弹窗
               boostedModal.showModal({
                 userId: data.invitee_name,
                 isAlreadyBoosted: false
+              });
+            }
+            
+            // 处理 broadcast 类型的消息 - 好友提现成功
+            if (data.type === 'broadcast' && data.broadcast_name) {
+              console.log('收到好友提现成功广播:', data);
+              // 使用弹窗队列显示好友提现成功弹窗
+              friendsWithdrawalModal.showModal({
+                phoneNumber: data.broadcast_name,
+                message: data.message
               });
             }
           });
@@ -277,13 +285,11 @@ function AppContent() {
             // 采集简化的设备信息
             DeviceFingerprintCollector.collectSimpleDeviceInfo()
               .then(deviceInfo => {
-                console.log('[App] 设备信息采集成功:');
                 
                 // 打印简化的设备信息
                 DeviceFingerprintCollector.printSimpleDeviceInfo(deviceInfo);
               })
               .catch(error => {
-                console.error('[App] 设备信息采集失败:', error);
                 // 不影响应用正常运行
               });
           }, 3000); // 延迟3秒执行
@@ -309,12 +315,10 @@ function AppContent() {
               try {
                 const referrerId = await AsyncStorage.getItem('referrer_id');
                 if (referrerId) {
-                  console.log('应用初始化时发现待处理的referrer_id:', referrerId);
                   
                   // 检查用户是否已登录
                   const authToken = await AsyncStorage.getItem('token');
                   if (authToken) {
-                    console.log('用户已登录，执行助力');
                     try {
                       const { assist } = await import('./app/services/api/activity');
                       // 获取设备指纹哈希
@@ -336,22 +340,18 @@ function AppContent() {
                       // 助力成功后清除referrer_id
                       await AsyncStorage.removeItem('referrer_id');
                     } catch (error) {
-                      console.error('助力失败:', error);
                       Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
                     }
                   } else {
-                    console.log('用户未登录，保留referrer_id等待登录后处理');
                   }
                 }
               } catch (error) {
-                console.error('检查待处理助力失败:', error);
               }
             }
           }).catch(error => {
           });
           
         } catch (error) {
-          console.error('App initialization error:', error);
         }
       };
       
@@ -383,29 +383,19 @@ function AppContent() {
 
   // 监听登录成功事件，刷新用户资料
   useEffect(() => {
-    console.log('[App] 设置登录成功事件监听器');
-    console.log('[App] global.EventEmitter 存在:', !!global.EventEmitter);
-    console.log('[App] AUTH_EVENTS.LOGIN_SUCCESS:', AUTH_EVENTS.LOGIN_SUCCESS);
     
     const handleLoginSuccess = async () => {
-      console.log('[App] 收到登录成功事件！');
       const success = await fetchUserProfile();
-      console.log('[App] fetchUserProfile 结果:', success);
       
       // 登录成功后，获取任务状态
       const activityStore = useActivityStore.getState();
       await activityStore.fetchTasks();
-      console.log('[App] 登录成功后，活动任务状态已更新');
       
       // 登录成功后，重新预加载推荐产品（使用用户ID）
-      console.log('[App] success:', success);
-      console.log('[App] userStore.user:', userStore.user);
-      console.log('[App] userStore.user?.user_id:', userStore.user?.user_id);
       
       // 重新获取最新的用户状态
       const latestUserState = useUserStore.getState();
       const latestUser = latestUserState.user;
-      console.log('[App] 重新获取的 user:', latestUser);
       
       if (success && latestUser?.user_id) {
         const userId = latestUser.user_id.toString();
@@ -421,18 +411,12 @@ function AppContent() {
         });
         
         // 重新连接 WebSocket
-        console.log('[App] 准备重新连接 WebSocket');
-        console.log('[App] 当前 WebSocket 连接状态:', websocketService.isConnected());
         websocketService.disconnect();
-        console.log('[App] WebSocket 已断开，准备重新连接');
         
         // 延迟一下再连接，确保断开完成
         setTimeout(() => {
-          console.log('[App] 开始连接 WebSocket...');
           websocketService.connect().then(() => {
-            console.log('[App] WebSocket 重新连接成功');
           }).catch(error => {
-            console.error('[App] Failed to reconnect WebSocket after login:', error);
           });
         }, 100);
       }
@@ -441,7 +425,6 @@ function AppContent() {
       try {
         const referrerId = await AsyncStorage.getItem('referrer_id');
         if (referrerId) {
-          console.log('登录成功，处理待助力的referrer_id:', referrerId);
           
           try {
             const { assist } = await import('./app/services/api/activity');
@@ -486,14 +469,12 @@ function AppContent() {
   useEffect(() => {
     // 处理深度链接
     const handleDeepLink = ({ url }: { url: string }) => {
-      console.log('Deep link received:', url);
       
       // 提取并保存 fbclid（如果存在）
       extractAndSaveFbclid(url);
       
       // 处理活动邀请深度链接
       if (url.includes("/activity/invite")) {
-        console.log('Activity invite deep link detected:', url);
         
         // 解析URL参数
         const urlParts = url.split('?');
@@ -501,11 +482,9 @@ function AppContent() {
         const userId = queryParams.get('user_id');
         
         if (userId) {
-          console.log('Invite from user_id:', userId);
           
           // 保存邀请者ID到AsyncStorage
           AsyncStorage.setItem('referrer_id', userId).then(async () => {
-            console.log('Saved referrer_id:', userId);
             
             // 设置标记，表示用户是通过邀请链接进入的
             await AsyncStorage.setItem('entered_via_invite', 'true');
@@ -517,14 +496,12 @@ function AppContent() {
             // 优先信任 authToken，因为它是持久化的登录状态
             if (authToken) {
               // 用户已登录，延迟执行助力以确保应用状态完全恢复
-              console.log('检测到 authToken，用户已登录，准备执行助力');
               
               // 添加延迟，确保应用从后台恢复到正常状态
               setTimeout(async () => {
                 try {
                   // 确保应用在前台活跃状态
                   if (appStateRef.current !== 'active') {
-                    console.log('应用不在活跃状态，等待应用恢复到前台');
                     // 监听应用状态变化，等待应用回到前台
                     const waitForActive = () => {
                       return new Promise((resolve) => {
@@ -544,10 +521,8 @@ function AppContent() {
                   // 重新获取最新的用户状态
                   const latestUser = useUserStore.getState().user;
                   if (!latestUser || !latestUser.user_id) {
-                    console.log('用户状态未恢复，尝试重新获取用户信息');
                     const userProfileSuccess = await fetchUserProfile();
                     if (!userProfileSuccess) {
-                      console.log('获取用户信息失败，但仍尝试执行助力（API会验证token）');
                       // 即使无法获取用户信息，仍然尝试执行助力
                       // 因为 API 端会通过 token 验证用户身份
                     }
@@ -579,10 +554,8 @@ function AppContent() {
               }, 1000); // 延迟1秒执行，确保应用状态完全恢复
             } else {
               // 用户未登录，保存referrer_id等待登录后处理
-              console.log('用户未登录，等待登录后助力');
             }
           }).catch(error => {
-            console.error('Failed to save referrer_id:', error);
           });
         }
         return;
@@ -594,7 +567,6 @@ function AppContent() {
         url.includes("myapp://payment-polling") ||
         url.includes("exp://") && url.includes("/payment-polling")
       ) {
-        console.log('Payment polling deep link detected, staying on current screen');
         // 不做任何导航，保持在当前页面
         return;
       }
@@ -610,7 +582,6 @@ function AppContent() {
         const token = params.token || "";
         const payerId = params.PayerID || "";
 
-        console.log('Payment success params:', { paymentId, token, payerId });
 
         // 发送支付成功事件，让当前页面处理
         global.EventEmitter.emit(PAYMENT_SUCCESS_EVENT, {
@@ -633,7 +604,6 @@ function AppContent() {
         const params = parsed.queryParams || {};
         const error = params.error || "";
 
-        console.log('Payment failure params:', { error });
 
         // 发送支付失败事件
         global.EventEmitter.emit(PAYMENT_FAILURE_EVENT, {
@@ -667,7 +637,6 @@ function AppContent() {
 
     // 处理应用冷启动的深度链接
     Linking.getInitialURL().then((url) => {
-      console.log(url);
       if (url) {
         // 立即提取 fbclid（不需要等待导航器）
         extractAndSaveFbclid(url);
@@ -692,30 +661,22 @@ function AppContent() {
     // 延迟一点时间确保 BoostSuccessModal 关闭动画完成
     setTimeout(async () => {
       try {
-        console.log('[App] 检查活动状态...');
         const statusData = await getActivityStatus();
-        console.log('[App] 活动状态返回:', statusData);
         
         const currentRewardAmount = parseFloat(statusData.current_reward_amount) || 0;
-        console.log('[App] 用户累积金额:', currentRewardAmount);
         
         if (currentRewardAmount < 4000) {
-          console.log('[App] 累积金额小于4000，显示转盘弹窗');
           spinWheelModal.showModal();
         } else {
-          console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
           if (navigationRef.isReady()) {
             navigationRef.navigate('MiningGameScreen');
           }
         }
       } catch (error: any) {
-        console.log('[App] 获取活动状态错误:', error);
         
         if (error?.response?.status === 404 || error?.status === 404) {
-          console.log('[App] 用户未参加活动，显示转盘弹窗');
           spinWheelModal.showModal();
         } else {
-          console.error('[App] 获取活动状态失败:', error);
           // 默认跳转到挖矿页面
           if (navigationRef.isReady()) {
             navigationRef.navigate('MiningGameScreen');
@@ -730,24 +691,18 @@ function AppContent() {
     // 延迟一点时间确保 BoostedSuccessModal 关闭动画完成
     setTimeout(async () => {
       try {
-        console.log('[App] 检查活动状态...');
         const statusData = await getActivityStatus();
-        console.log('[App] 活动状态返回:', statusData);
         
         const currentRewardAmount = parseFloat(statusData.current_reward_amount) || 0;
-        console.log('[App] 用户累积金额:', currentRewardAmount);
         
         if (currentRewardAmount < 4000) {
-          console.log('[App] 累积金额小于4000，显示转盘弹窗');
           spinWheelModal.showModal();
         } else {
-          console.log('[App] 累积金额大于等于4000，跳转到挖矿页面');
           if (navigationRef.isReady()) {
             // 获取当前路由
             const currentRoute = navigationRef.current?.getCurrentRoute();
             if (currentRoute?.name === 'MiningGameScreen') {
               // 如果当前已经在挖矿页面，使用 replace 重新加载
-              console.log('[App] 当前在挖矿页面，使用 replace 重新加载');
               navigationRef.current?.dispatch(
                 StackActions.replace('MiningGameScreen')
               );
@@ -758,13 +713,10 @@ function AppContent() {
           }
         }
       } catch (error: any) {
-        console.log('[App] 获取活动状态错误:', error);
         
         if (error?.response?.status === 404 || error?.status === 404) {
-          console.log('[App] 用户未参加活动，显示转盘弹窗');
           spinWheelModal.showModal();
         } else {
-          console.error('[App] 获取活动状态失败:', error);
           // 默认跳转到挖矿页面
           if (navigationRef.isReady()) {
             const currentRoute = navigationRef.current?.getCurrentRoute();
@@ -783,7 +735,6 @@ function AppContent() {
 
   // 处理转盘中奖
   const handleSpinWin = (amount: number) => {
-    console.log('[App] 转盘中奖金额:', amount);
     spinWheelModal.closeModal();
     // 延迟一点时间再显示中奖弹窗，确保转盘弹窗已关闭
     setTimeout(() => {
@@ -814,14 +765,11 @@ function AppContent() {
       if (nextAppState === 'active') {
         // 应用回到前台，检查并重新连接 WebSocket
         if (!websocketService.isConnected()) {
-          console.log('[App] 应用回到前台，重新连接 WebSocket');
           websocketService.connect().catch(error => {
-            console.error('[App] Failed to reconnect WebSocket on app active:', error);
           });
         }
       } else if (nextAppState === 'background') {
         // 应用进入后台，断开 WebSocket 连接
-        console.log('[App] 应用进入后台，断开 WebSocket');
         websocketService.disconnect();
       }
     };
@@ -885,9 +833,6 @@ function AppContent() {
     );
   }
 
-  console.log('[App] 准备渲染 AppNavigator');
-  console.log('[App] isLoading:', isLoading);
-  console.log('[App] languageSelected:', languageSelected);
   
   return (
     <>
@@ -930,6 +875,12 @@ function AppContent() {
         visible={winningModal.visible}
         onClose={winningModal.closeModal}
         onContinue={handleWinningContinue}
+      />
+      
+      <FriendsWithdrawalSuccessModal
+        visible={friendsWithdrawalModal.visible}
+        onClose={friendsWithdrawalModal.closeModal}
+        onConfirm={friendsWithdrawalModal.closeModal}
       />
     </>
   );

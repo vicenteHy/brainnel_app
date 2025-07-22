@@ -118,12 +118,10 @@ const WithdrawalScreen = () => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
               <Ionicons name="chevron-back" size={22} color="#000" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Options de retrait</Text>
-            <View style={styles.headerRight}>
-              <Text style={styles.rulesText}>Règles</Text>
-              <Text style={styles.separator}> ｜ </Text>
-              <Text style={styles.detailsText}>Détails</Text>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Options de retrait</Text>
             </View>
+            <View style={{ width: 30 }} />
           </View>
 
           {/* 余额卡片 */}
@@ -267,26 +265,14 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 4,
   },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rulesText: {
-    fontSize: 14,
-    color: '#AE8623',
-  },
-  separator: {
-    color: '#AE8623',
-    fontSize: 14,
-  },
-  detailsText: {
-    fontSize: 14,
-    color: '#AE8623',
   },
   balanceCard: {
     alignItems: 'center',

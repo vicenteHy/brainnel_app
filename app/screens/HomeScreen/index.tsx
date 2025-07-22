@@ -606,17 +606,12 @@ export const HomeScreen = () => {
 
   // 组件初始化时检查活动状态（仅记录状态，不弹窗）
   useEffect(() => {
-    console.log('Init effect - checking if should call checkActivityStatus', {
-      userId: userStore.user?.user_id,
-      hasCheckedActivity: hasCheckedActivityRef.current
-    });
     
     // 只在组件挂载时执行一次，如果用户已登录但lastUserIdRef还没有值
     // 说明是初次加载，需要检查活动状态
     if (userStore.user?.user_id && !hasCheckedActivityRef.current && lastUserIdRef.current === undefined) {
       // 延迟一下执行，确保组件完全加载
       setTimeout(() => {
-        console.log('Calling checkActivityStatus from init effect');
         checkActivityStatus();
       }, 1000);
     }
