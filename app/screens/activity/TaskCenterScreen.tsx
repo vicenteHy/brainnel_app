@@ -329,7 +329,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
           {/* 导航栏 */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.navigate('MiningGameScreen')}>
-              <Ionicons name="chevron-back" size={22} color="#000" />
+              <Ionicons name="chevron-back" size={screenWidth * 0.051} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Centre des Missions</Text>
             <View style={styles.headerRight}>
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     position: 'absolute',
     width: screenWidth,
-    height: 980,
+    height: screenHeight * 1.05,
     top: 0,
     left: 0,
   },
@@ -548,15 +548,15 @@ const styles = StyleSheet.create({
   },
   headerBg: {
     width: screenWidth,
-    height: Platform.OS === 'android' ? 160 : 191,
+    height: Platform.OS === 'android' ? screenHeight * 0.17 : screenHeight * 0.205,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 40 : 80,
-    paddingBottom: 20,
+    paddingHorizontal: screenWidth * 0.037,
+    paddingTop: Platform.OS === 'android' ? screenHeight * 0.043 : screenHeight * 0.086,
+    paddingBottom: screenHeight * 0.021,
   },
   headerTitle: {
     fontSize: fontSize(18),
@@ -583,25 +583,25 @@ const styles = StyleSheet.create({
   checkInCard: {
     width: screenWidth * 0.92,
     marginHorizontal: screenWidth * 0.04,
-    marginTop: -60,
+    marginTop: screenHeight * -0.064,
     backgroundColor: '#FFF5DB',
-    borderRadius: 12,
+    borderRadius: screenWidth * 0.028,
     paddingHorizontal: screenWidth * 0.04,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: screenHeight * 0.021,
+    paddingBottom: screenHeight * 0.017,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: screenWidth * 0.019,
     elevation: 5,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: screenHeight * 0.017,
   },
   sectionIcon: {
     width: screenWidth * 0.07,
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   checkInDays: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: screenHeight * 0.021,
   },
   dayItem: {
     alignItems: 'center',
@@ -639,24 +639,25 @@ const styles = StyleSheet.create({
   dayDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 2,
+    marginVertical: screenHeight * 0.002,
   },
   dayDividerLeft: {
-    width: 11,
-    height: 2,
+    width: screenWidth * 0.026,
+    height: screenHeight * 0.002,
     backgroundColor: '#FFF',
-    marginRight: 15,
+    marginRight: screenWidth * 0.035,
   },
   dayDividerRight: {
-    width: 11,
-    height: 2,
+    width: screenWidth * 0.026,
+    height: screenHeight * 0.002,
     backgroundColor: '#FFF',
-    marginLeft: 15,
+    marginLeft: screenWidth * 0.035,
   },
   dayReward: {
     fontSize: fontSize(12),
     fontWeight: '600',
-    marginTop: 38,
+    marginTop: screenHeight * 0.048,
+    fontFamily: 'System',
   },
   checkInFooter: {
     flexDirection: 'row',
@@ -674,10 +675,10 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   checkInButton: {
-    width: 104,
-    height: 32,
+    width: screenWidth * 0.24,
+    height: screenHeight * 0.034,
     backgroundColor: '#FFF',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     borderWidth: 1,
     borderColor: '#FF5100',
     justifyContent: 'center',
@@ -689,7 +690,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   checkInButtonText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(14),
     fontWeight: '500',
     color: '#FF5100',
     fontFamily: 'System',
@@ -698,15 +699,15 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   checkInButtonCompleted: {
-    width: 104,
-    height: 32,
+    width: screenWidth * 0.24,
+    height: screenHeight * 0.034,
     backgroundColor: '#F5F5F5',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkInButtonTextCompleted: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(14),
     fontWeight: '500',
     color: '#999',
     fontFamily: 'System',
@@ -714,23 +715,23 @@ const styles = StyleSheet.create({
   tasksCard: {
     width: screenWidth * 0.92,
     marginHorizontal: screenWidth * 0.04,
-    marginTop: 16,
+    marginTop: screenHeight * 0.017,
     backgroundColor: '#FFF',
-    borderRadius: 12,
+    borderRadius: screenWidth * 0.028,
     paddingHorizontal: screenWidth * 0.04,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: screenHeight * 0.021,
+    paddingBottom: screenHeight * 0.017,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: screenWidth * 0.019,
     elevation: 5,
   },
   tasksList: {
-    marginTop: -6,
+    marginTop: screenHeight * -0.006,
   },
   taskItem: {
     height: screenHeight * 0.1,
@@ -747,10 +748,10 @@ const styles = StyleSheet.create({
     paddingBottom: screenHeight * 0.01,
   },
   taskButton: {
-    width: 104,
-    height: 32,
+    width: screenWidth * 0.24,
+    height: screenHeight * 0.034,
     backgroundColor: '#FFEDE5',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     borderWidth: 1,
     borderColor: '#FF5100',
     justifyContent: 'center',
@@ -781,7 +782,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#F6F6F6',
-    marginBottom: 16,
+    marginBottom: screenHeight * 0.017,
   },
   taskButtonClaimed: {
     backgroundColor: '#B6B6B6',

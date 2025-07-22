@@ -337,7 +337,7 @@ function AppContent() {
                       await AsyncStorage.removeItem('referrer_id');
                     } catch (error) {
                       console.error('助力失败:', error);
-                      Alert.alert('失败', '助力失败，请稍后重试');
+                      Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
                     }
                   } else {
                     console.log('用户未登录，保留referrer_id等待登录后处理');
@@ -465,7 +465,7 @@ function AppContent() {
             await AsyncStorage.removeItem('referrer_id');
           } catch (error) {
             console.error('助力失败:', error);
-            Alert.alert('失败', '助力失败，请稍后重试');
+            Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
           }
         }
       } catch (error) {
@@ -574,7 +574,7 @@ function AppContent() {
                   await AsyncStorage.removeItem('referrer_id');
                 } catch (error) {
                   console.error('助力失败:', error);
-                  Alert.alert('失败', '助力失败，请稍后重试');
+                  Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
                 }
               }, 1000); // 延迟1秒执行，确保应用状态完全恢复
             } else {

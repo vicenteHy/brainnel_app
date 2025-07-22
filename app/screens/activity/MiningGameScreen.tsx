@@ -36,7 +36,7 @@ import Toast from 'react-native-toast-message';
 import fontSize from '../../utils/fontsizeUtils';
 import { getStatusBarHeight } from '../../utils/dimensions';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const MiningGameScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -755,7 +755,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   const digTransform = {
     translateY: digAnimation.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 20],
+      outputRange: [0, screenHeight * 0.021],
     }),
   };
 
@@ -764,7 +764,7 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   const fingerTranslate = fingerAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -7.5],
+    outputRange: [0, screenHeight * -0.008],
   });
 
   const rippleScale = rippleAnimation.interpolate({
@@ -789,7 +789,7 @@ const MiningGameScreen = ({ navigation }: any) => {
               transform: [{
                 translateY: notificationAnimation.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [-20, 0]
+                  outputRange: [screenHeight * -0.021, 0]
                 })
               }]
             }
@@ -818,7 +818,7 @@ const MiningGameScreen = ({ navigation }: any) => {
             {/* 导航栏 */}
             <View style={styles.header}>
               <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Ionicons name="chevron-back" size={22} color="#000" />
+                <Ionicons name="chevron-back" size={screenWidth * 0.051} color="#000" />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Cash Gratuit</Text>
               <View style={styles.headerRight}>
@@ -928,7 +928,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           <ImageBackground 
           source={require('../../../assets/img/mask_group_2x1.png')}
           style={styles.gameArea}
-          resizeMode="contain"
+          resizeMode="stretch"
         >
           <TouchableOpacity 
             style={styles.digButton} 
@@ -944,17 +944,17 @@ const MiningGameScreen = ({ navigation }: any) => {
                 {/* 挖掘通道 */}
                 <Image 
                   source={require('../../../assets/img/Vector 87 1.png')} 
-                  style={{ position: 'absolute', top: 0, left: -40, transform: [{ scale: 0.52  }] }}
+                  style={{ position: 'absolute', top: 0, left: screenWidth * -0.093, transform: [{ scale: 0.52  }] }}
                 />
                 {/* 在通道尽头的阴影 */}
                 <Image 
                   source={require('../../../assets/img/Ellipse 164 2.png')} 
-                  style={{ position: 'absolute', top: 80, left: -45, transform: [{ scale: 0.55 }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.086, left: screenWidth * -0.105, transform: [{ scale: 0.55 }] }}
                 />
                 {/* 在通道尽头的小人 */}
                 <Image 
                   source={require('../../../assets/img/Group 125 1.png')} 
-                  style={{ position: 'absolute', top: 150, left: -35, transform: [{ scale: 0.52  }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.161, left: screenWidth * -0.081, transform: [{ scale: 0.52  }] }}
                 />
               </>
             ) : (
@@ -962,7 +962,7 @@ const MiningGameScreen = ({ navigation }: any) => {
                 {/* 阴影保持静止 */}
                 <Image 
                   source={require('../../../assets/img/Ellipse 164 2.png')} 
-                  style={{ position: 'absolute', top: 80, left: -45, transform: [{ scale: 0.55 }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.086, left: screenWidth * -0.105, transform: [{ scale: 0.55 }] }}
                 />
                 {/* 只有小人移动 */}
                 <Animated.Image 
@@ -1004,7 +1004,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           <ImageBackground 
             source={require('../../../assets/img/group_138_2x.png')}
             style={styles.inviteSection}
-            resizeMode="contain"
+            resizeMode="stretch"
           >
             <View style={styles.inviteButtons}>
               <View style={{ position: 'relative' }}>
@@ -1184,7 +1184,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           <ImageBackground 
             source={require('../../../assets/img/group_138_2x.png')}
             style={styles.inviteSection}
-            resizeMode="contain"
+            resizeMode="stretch"
           >
             <View style={styles.inviteButtons}>
               <View style={{ position: 'relative' }}>
@@ -1373,7 +1373,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     position: 'absolute',
     width: screenWidth,
-    height: 980,
+    height: screenHeight * 1.05,
     top: 0,
     left: 0,
   },
@@ -1385,13 +1385,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? getStatusBarHeight() + 20 : (StatusBar.currentHeight || 0) - 20,
-    paddingBottom: 10,
+    paddingHorizontal: screenWidth * 0.037,
+    paddingTop: Platform.OS === 'ios' ? getStatusBarHeight() + screenHeight * 0.021 : (StatusBar.currentHeight || 0) - screenHeight * 0.021,
+    paddingBottom: screenHeight * 0.011,
   },
   headerTitle: {
     alignItems: 'center',
-    marginLeft: 80,
+    marginLeft: screenWidth * 0.186,
     fontSize: fontSize(18),
     fontWeight: '600',
     color: '#000',
@@ -1420,37 +1420,37 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     alignItems: 'center',
-    paddingBottom: 30,
+    paddingBottom: screenHeight * 0.032,
   },
   topCard: {
     width: screenWidth,
-    height: Platform.OS === 'android' ? 180 : 220,
+    height: Platform.OS === 'android' ? screenHeight * 0.193 : screenHeight * 0.236,
   },
   balanceContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 20,
-    marginTop: -40,
+    marginLeft: screenWidth * 0.047,
+    marginTop: screenHeight * -0.043,
   },
   balanceAmount: {
-    marginTop: Platform.OS === 'android' ? 50 : 20,
+    marginTop: Platform.OS === 'android' ? screenHeight * 0.054 : screenHeight * 0.021,
     fontSize: fontSize(30),
     fontWeight: '600',
     color: '#FF5100',
     fontFamily: 'System',
   },
   progressCard: {
-    width: screenWidth - 30,
+    width: screenWidth * 0.93,
     backgroundColor: '#FFF5DB',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: screenWidth * 0.037,
+    padding: screenWidth * 0.047,
 
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: screenHeight * 0.016,
   },
   progressLabel: {
     fontSize: fontSize(14),
@@ -1461,32 +1461,32 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: '600',
     color: '#FF5100',
-    marginTop: 5,
+    marginTop: screenHeight * 0.005,
     fontFamily: 'System',
   },
   progressBarWrapper: {
-    height: 25,
+    height: screenHeight * 0.027,
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: screenHeight * 0.021,
   },
   progressBarBg: {
     position: 'absolute',
     width: '100%',
-    height: 25,
+    height: screenHeight * 0.027,
   },
   progressBar: {
     position: 'absolute',
-    left: 6,
-    top: 6,
-    height: 10,
-    borderRadius: 5,
+    left: screenWidth * 0.014,
+    top: screenHeight * 0.006,
+    height: screenHeight * 0.011,
+    borderRadius: screenHeight * 0.005,
   },
   progressCoin: {
     position: 'absolute',
-    width: 33,
-    height: 35,
-    top: -5,
-    marginLeft: -16,
+    width: screenWidth * 0.077,
+    height: screenHeight * 0.038,
+    top: screenHeight * -0.005,
+    marginLeft: screenWidth * -0.037,
   },
   progressFooter: {
     flexDirection: 'row',
@@ -1499,10 +1499,10 @@ const styles = StyleSheet.create({
     fontFamily: 'System',
   },
   withdrawButton: {
-    width: 104,
-    height: 32,
+    width: screenWidth * 0.242,
+    height: screenHeight * 0.034,
     backgroundColor: '#FFF',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     borderWidth: 1,
     borderColor: '#FF5100',
     justifyContent: 'center',
@@ -1523,19 +1523,19 @@ const styles = StyleSheet.create({
     fontFamily: 'System',
   },
   gameArea: {
-    width: screenWidth,
-    height: 455,
-    marginTop: 16,
-    borderRadius: 20,
+    width: screenWidth * 0.93,
+    height: screenHeight * 0.489,
+    marginTop: screenHeight * 0.017,
+    borderRadius: screenWidth * 0.047,
     overflow: 'hidden',
     alignItems: 'center',
   },
   digButton: {
-    width: 224,
-    height: 54,
+    width: screenWidth * 0.521,
+    height: screenHeight * 0.058,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 65,
+    marginTop: screenHeight * 0.07,
   },
   digButtonText: {
     fontSize: fontSize(16),
@@ -1548,21 +1548,21 @@ const styles = StyleSheet.create({
   },
   minerContainer: {
     position: 'absolute',
-    top: 123,
+    top: screenHeight * 0.132,
     left: '50%',
-    marginLeft: -32.25, // width/2
+    marginLeft: screenWidth * -0.075, // width/2
   },
   minerImage: {
-    width: 64.5,
-    height: 112,
+    width: screenWidth * 0.15,
+    height: screenHeight * 0.12,
   },
   rewardContainer: {
     position: 'absolute',
     top: '50%',
     backgroundColor: '#FFD700',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingHorizontal: screenWidth * 0.07,
+    paddingVertical: screenHeight * 0.016,
+    borderRadius: screenWidth * 0.058,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -1577,25 +1577,25 @@ const styles = StyleSheet.create({
   },
   taskCenterContainer: {
     position: 'absolute',
-    bottom: 160,
-    right: 3,
-    width: 108,
-    height: 107,
+    bottom: screenHeight * 0.172,
+    right: screenWidth * 0.042,
+    width: screenWidth * 0.251,
+    height: screenHeight * 0.115,
     zIndex: 999,
   },
   bottomGold: {
-    width: 108,
-    height: 107,
+    width: screenWidth * 0.251,
+    height: screenHeight * 0.115,
   },
   guideBubble: {
     position: 'absolute',
-    bottom: 120,
-    right: 40,
+    bottom: screenHeight * 0.129,
+    right: screenWidth * 0.093,
     backgroundColor: '#FFF',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 180,
+    paddingHorizontal: screenWidth * 0.035,
+    paddingVertical: screenHeight * 0.011,
+    borderRadius: screenWidth * 0.019,
+    minWidth: screenWidth * 0.419,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -1604,13 +1604,13 @@ const styles = StyleSheet.create({
   },
   bubbleArrow: {
     position: 'absolute',
-    bottom: -8,
-    right: 20,
+    bottom: screenHeight * -0.009,
+    right: screenWidth * 0.047,
     width: 0,
     height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderTopWidth: 8,
+    borderLeftWidth: screenWidth * 0.019,
+    borderRightWidth: screenWidth * 0.019,
+    borderTopWidth: screenHeight * 0.009,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderTopColor: '#FFF',
@@ -1620,27 +1620,27 @@ const styles = StyleSheet.create({
     fontSize: fontSize(13),
     fontWeight: '500',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: screenHeight * 0.019,
     fontFamily: 'System',
   },
   inviteSection: {
-    width: screenWidth,
-    height: 152,
+    width: screenWidth * 0.93,
+    height: screenHeight * 0.163,
     position: 'relative',
   },
   inviteButtons: {
     position: 'absolute',
     flexDirection: 'row',
-    bottom: 21,
+    bottom: screenHeight * 0.023,
     left: '50%',
-    marginLeft: -112, // (104 * 2 + 16) / 2
-    gap: 16,
+    marginLeft: screenWidth * -0.26, // (104 * 2 + 16) / 2
+    gap: screenWidth * 0.037,
   },
   whatsappButton: {
-    width: 104,
-    height: 32,
+    width: screenWidth * 0.242,
+    height: screenHeight * 0.034,
     backgroundColor: '#25D366',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -1653,10 +1653,10 @@ const styles = StyleSheet.create({
     fontFamily: 'System',
   },
   copyButton: {
-    width: 120,
-    height: 32,
+    width: screenWidth * 0.279,
+    height: screenHeight * 0.034,
     backgroundColor: '#FFF',
-    borderRadius: 16,
+    borderRadius: screenWidth * 0.037,
     borderWidth: 1,
     borderColor: '#FF5100',
     justifyContent: 'center',
@@ -1670,48 +1670,48 @@ const styles = StyleSheet.create({
   },
   fingerIcon: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    bottom: -35,
-    left: -20,
+    width: screenWidth * 0.14,
+    height: screenHeight * 0.064,
+    bottom: screenHeight * -0.038,
+    left: screenWidth * -0.047,
   },
   rippleEffect: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: screenWidth * 0.465,
+    height: screenHeight * 0.215,
+    borderRadius: screenWidth * 0.233,
     backgroundColor: '#FFFFFF4D',
     top: '50%',
     left: '50%',
-    marginTop: -100,
-    marginLeft: -100,
+    marginTop: screenHeight * -0.107,
+    marginLeft: screenWidth * -0.233,
     zIndex: -1,
   },
   fingerContainer: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    bottom: -35,
-    left: -20,
+    width: screenWidth * 0.14,
+    height: screenHeight * 0.064,
+    bottom: screenHeight * -0.038,
+    left: screenWidth * -0.047,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fingerImage: {
-    width: 60,
-    height: 60,
-    top: 10,
+    width: screenWidth * 0.14,
+    height: screenHeight * 0.064,
+    top: screenHeight * 0.011,
     position: 'absolute',
   },
   fingerRipple: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 6,
+    width: screenWidth * 0.093,
+    height: screenHeight * 0.043,
+    borderRadius: screenWidth * 0.047,
+    borderWidth: screenWidth * 0.014,
     borderColor: 'gray',
     backgroundColor: 'transparent',
-    top: -0,  // 向上偏移，让涟漪中心在指尖
-    left: 30,   // 向右偏移，对准指尖位置
+    top: 0,  // 向上偏移，让涟漪中心在指尖
+    left: screenWidth * 0.07,   // 向右偏移，对准指尖位置
   },
   guideOverlay: {
     flex: 1,
@@ -1725,7 +1725,7 @@ const styles = StyleSheet.create({
   },
   taskGuideContainer: {
     position: 'absolute',
-    bottom: -10,
+    bottom: screenHeight * -0.011,
     width: '100%',
     alignItems: 'center',
   },
@@ -1752,26 +1752,27 @@ const styles = StyleSheet.create({
   },
   inviteGuideContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: screenHeight * 0.107,
     width: '100%',
     alignItems: 'center',
   },
   inviteSectionHighlight: {
     position: 'absolute',
-    bottom: 50,
+    bottom: screenHeight * 0.054,
     left: 0,
     right: 0,
     zIndex: 1001,
+    alignItems: 'center',
   },
   maskGameHeader: {
-    marginBottom: 20,
+    marginBottom: screenHeight * 0.021,
   },
   maskGameTitle: {
     fontSize: fontSize(18),
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: screenHeight * 0.009,
     fontFamily: 'System',
   },
   maskGameSubtitle: {
@@ -1783,7 +1784,7 @@ const styles = StyleSheet.create({
   maskStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 25,
+    marginBottom: screenHeight * 0.027,
   },
   maskStatItem: {
     flex: 1,
@@ -1792,7 +1793,7 @@ const styles = StyleSheet.create({
   maskStatLabel: {
     fontSize: fontSize(11),
     color: '#999',
-    marginBottom: 5,
+    marginBottom: screenHeight * 0.005,
     fontFamily: 'System',
   },
   maskStatValue: {
@@ -1815,8 +1816,8 @@ const styles = StyleSheet.create({
   },
   exchangeButton: {
     backgroundColor: '#FF5100',
-    borderRadius: 25,
-    paddingVertical: 15,
+    borderRadius: screenWidth * 0.058,
+    paddingVertical: screenHeight * 0.016,
     alignItems: 'center',
   },
   exchangeButtonDisabled: {
@@ -1843,22 +1844,22 @@ const styles = StyleSheet.create({
   },
   redeemGuideContainer: {
     position: 'absolute',
-    bottom: 220,
+    bottom: screenHeight * 0.236,
     width: '100%',
     alignItems: 'center',
   },
   exchangeButtonHighlight: {
     position: 'absolute',
-    top: 180,
-    left: 15,
-    right: 15,
+    top: screenHeight * 0.193,
+    left: screenWidth * 0.035,
+    right: screenWidth * 0.035,
     zIndex: 1001,
   },
   exchangeButtonHighlighted: {
     shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 10,
+    shadowRadius: screenWidth * 0.023,
     elevation: 10,
   },
   withdrawGuideOverlay: {
@@ -1872,55 +1873,55 @@ const styles = StyleSheet.create({
   },
   withdrawGuideContainer: {
     position: 'absolute',
-    bottom: 300,
+    bottom: screenHeight * 0.322,
     width: '100%',
     alignItems: 'center',
   },
   withdrawButtonHighlight: {
     position: 'absolute',
-    top: 180,
-    left: 15,
-    right: 15,
+    top: screenHeight * 0.193,
+    left: screenWidth * 0.035,
+    right: screenWidth * 0.035,
     zIndex: 1001,
   },
   withdrawButtonHighlighted: {
     shadowColor: '#FF5100',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 10,
+    shadowRadius: screenWidth * 0.023,
     elevation: 10,
   },
   notificationContainer: {
     position: 'absolute',
-    top: Platform.OS === 'android' ? 10 : 60,
-    left: 20,
-    right: 20,
+    top: Platform.OS === 'android' ? screenHeight * 0.011 : screenHeight * 0.064,
+    left: screenWidth * 0.047,
+    right: screenWidth * 0.047,
     zIndex: 999,
   },
   notificationContent: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderRadius: screenWidth * 0.028,
+    paddingHorizontal: screenWidth * 0.037,
+    paddingVertical: screenHeight * 0.013,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: screenWidth * 0.019,
 
   },
   notificationLogo: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-    borderRadius: 4,
+    width: screenWidth * 0.056,
+    height: screenHeight * 0.026,
+    marginRight: screenWidth * 0.023,
+    borderRadius: screenWidth * 0.009,
   },
   notificationText: {
     flex: 1,
     fontSize: fontSize(13),
     color: '#333',
-    lineHeight: 18,
+    lineHeight: screenHeight * 0.019,
     fontFamily: 'System',
   },
 });
