@@ -10,7 +10,7 @@ import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
 import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
-import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal } from "./app/screens/activity";
+import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal, TaskCompleteModal } from "./app/screens/activity";
 import { getActivityStatus } from "./app/services/api/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
@@ -92,9 +92,20 @@ function AppContent() {
     canInterrupt: false, // 好友提现弹窗不可被中断
   });
   
+  const taskCompleteModal = useModalQueue({
+    modalId: 'task-complete',
+    modalType: ModalType.TASK_COMPLETE,
+    priority: ModalPriority.HIGH,
+    canInterrupt: false, // 任务完成弹窗不可被中断
+  });
+  
   // 旧的状态保留用于数据传递
   const [boostedUserId, setBoostedUserId] = useState<string>('');
   const [isAlreadyBoosted, setIsAlreadyBoosted] = useState(false);
+  const [taskCompleteInfo, setTaskCompleteInfo] = useState<{
+    taskName: string;
+    reward: string;
+  }>({ taskName: '', reward: '' });
   
   const { login, logout } = useAuth();
   const appStateRef = useRef(AppState.currentState);
@@ -275,6 +286,29 @@ function AppContent() {
               friendsWithdrawalModal.showModal({
                 phoneNumber: data.broadcast_name,
                 message: data.message
+              });
+            }
+            
+            // 处理 task 类型的消息 - 任务完成
+            if (data.type === 'task' && data.task_id) {
+              console.log('收到任务完成消息:', data);
+              // 上报任务完成状态
+              const activityStore = useActivityStore.getState();
+              activityStore.reportTaskComplete(data.task_id).then((taskData) => {
+                if (taskData && taskData.status === 2) {
+                  // 设置任务信息并显示弹窗
+                  setTaskCompleteInfo({
+                    taskName: data.task_name || taskData.task_name,
+                    reward: `+${data.reward_value || taskData.reward_value} FCFA`
+                  });
+                  // 使用弹窗队列显示任务完成弹窗
+                  taskCompleteModal.showModal({
+                    taskName: data.task_name || taskData.task_name,
+                    reward: `+${data.reward_value || taskData.reward_value} FCFA`
+                  });
+                }
+              }).catch(error => {
+                console.error('上报任务完成失败:', error);
               });
             }
           });
@@ -881,6 +915,18 @@ function AppContent() {
         visible={friendsWithdrawalModal.visible}
         onClose={friendsWithdrawalModal.closeModal}
         onConfirm={friendsWithdrawalModal.closeModal}
+      />
+      
+      <TaskCompleteModal
+        visible={taskCompleteModal.visible}
+        onClose={taskCompleteModal.closeModal}
+        taskTitle={taskCompleteModal.modalData?.taskName || taskCompleteInfo.taskName}
+        reward={taskCompleteModal.modalData?.reward || taskCompleteInfo.reward}
+        onNavigate={() => {
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('TaskCenter' as never);
+          }
+        }}
       />
     </>
   );

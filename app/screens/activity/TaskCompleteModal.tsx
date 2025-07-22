@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { navigationRef } from '../../navigation/AppNavigator';
 
 const { width: screenWidth } = Dimensions.get('window');
 const modalWidth = screenWidth * 0.85;
@@ -20,6 +21,7 @@ interface TaskCompleteModalProps {
   onClose: () => void;
   taskTitle?: string;
   reward?: string;
+  onNavigate?: () => void;
 }
 
 const TaskCompleteModal: React.FC<TaskCompleteModalProps> = ({
@@ -27,12 +29,27 @@ const TaskCompleteModal: React.FC<TaskCompleteModalProps> = ({
   onClose,
   taskTitle = 'Enregistrer l\'adressede livraison',
   reward = '+30 FCFA',
+  onNavigate,
 }) => {
-  const navigation = useNavigation<any>();
+  // 尝试使用 useNavigation，如果失败则使用 navigationRef 或 onNavigate
+  let navigation: any;
+  try {
+    navigation = useNavigation<any>();
+  } catch (error) {
+    // 在 NavigationContainer 外部时会抛出错误
+    navigation = null;
+  }
 
   const handleConsult = () => {
     onClose();
-    navigation.navigate('TaskCenter');
+    
+    if (onNavigate) {
+      onNavigate();
+    } else if (navigation) {
+      navigation.navigate('TaskCenter');
+    } else if (navigationRef.isReady()) {
+      navigationRef.navigate('TaskCenter' as never);
+    }
   };
 
   return (

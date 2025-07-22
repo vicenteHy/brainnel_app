@@ -14,6 +14,7 @@ export enum ModalType {
   SPIN_WHEEL = 'spin_wheel',
   WINNING = 'winning',
   FRIENDS_WITHDRAWAL = 'friends_withdrawal',
+  TASK_COMPLETE = 'task_complete',
 }
 
 export interface ModalQueueItem {
