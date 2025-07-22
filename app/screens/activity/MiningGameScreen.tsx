@@ -944,32 +944,39 @@ const MiningGameScreen = ({ navigation }: any) => {
                 {/* 挖掘通道 */}
                 <Image 
                   source={require('../../../assets/img/Vector 87 1.png')} 
-                  style={{ position: 'absolute', top: 0, left: screenWidth * -0.093, transform: [{ scale: 0.52  }] }}
+                  style={{ position: 'absolute', top: 0, left: screenWidth * -0.103, transform: [{ scale: 0.52  }], zIndex: 0 }}
                 />
                 {/* 在通道尽头的阴影 */}
                 <Image 
                   source={require('../../../assets/img/Ellipse 164 2.png')} 
-                  style={{ position: 'absolute', top: screenHeight * 0.086, left: screenWidth * -0.105, transform: [{ scale: 0.55 }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.095, left: screenWidth * -0.115, transform: [{ scale: 0.55 }], zIndex: 1 }}
                 />
-                {/* 在通道尽头的小人 */}
+                {/* 在通道尽头的小人 - 设置最高的zIndex */}
                 <Image 
                   source={require('../../../assets/img/Group 125 1.png')} 
-                  style={{ position: 'absolute', top: screenHeight * 0.161, left: screenWidth * -0.081, transform: [{ scale: 0.52  }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.161, left: screenWidth * -0.091, transform: [{ scale: 0.52  }], zIndex: 2 }}
                 />
               </>
             ) : (
               <>
-                {/* 阴影保持静止 */}
+                {/* 阴影保持静止 - 调整位置确保钻头在阴影内 */}
                 <Image 
                   source={require('../../../assets/img/Ellipse 164 2.png')} 
-                  style={{ position: 'absolute', top: screenHeight * 0.086, left: screenWidth * -0.105, transform: [{ scale: 0.55 }] }}
+                  style={{ position: 'absolute', top: screenHeight * 0.095, left: screenWidth * -0.115, transform: [{ scale: 0.55 }], zIndex: 1 }}
                 />
-                {/* 只有小人移动 */}
+                {/* 只有小人移动 - 设置更高的zIndex确保在最上层 */}
                 <Animated.Image 
                   source={require('../../../assets/img/group_86_2x.png')} 
                   style={[
                     styles.minerImage,
-                    { transform: [digTransform, { translateX: shakeAnimation }] }
+                    { 
+                      transform: [
+                        digTransform, 
+                        { translateX: shakeAnimation },
+                        { translateY: screenHeight * 0.013 }
+                      ], 
+                      zIndex: 2 
+                    }
                   ]}
                 />
               </>
@@ -1524,7 +1531,7 @@ const styles = StyleSheet.create({
   },
   gameArea: {
     width: screenWidth * 0.93,
-    height: screenHeight * 0.489,
+    height: screenHeight * 0.52,
     marginTop: screenHeight * 0.017,
     borderRadius: screenWidth * 0.047,
     overflow: 'hidden',
@@ -1535,7 +1542,7 @@ const styles = StyleSheet.create({
     height: screenHeight * 0.058,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: screenHeight * 0.07,
+    marginTop: screenHeight * 0.076,
   },
   digButtonText: {
     fontSize: fontSize(16),
@@ -1890,6 +1897,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: screenWidth * 0.023,
     elevation: 10,
+    borderWidth: 2,
+    borderColor: '#FF5100',
   },
   notificationContainer: {
     position: 'absolute',

@@ -193,7 +193,7 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
                         styles.leftTabText,
                         activeTab === 'history' ? styles.activeTabText : styles.inactiveTabText
                       ]}>
-                        Historique des gains
+                        Historique d'aide
                       </Text>
                       {activeTab === 'history' && (
                         <View style={styles.tabUnderline} />
@@ -210,7 +210,7 @@ const RewardRulesModal: React.FC<RewardRulesModalProps> = ({ visible, onClose })
                         styles.rightTabText,
                         activeTab === 'records' ? styles.activeTabText : styles.inactiveTabText
                       ]}>
-Invitation Records
+Invitations
                       </Text>
                       {activeTab === 'records' && (
                         <View style={styles.tabUnderline} />
