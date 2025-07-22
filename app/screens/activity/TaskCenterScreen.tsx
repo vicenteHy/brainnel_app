@@ -20,6 +20,7 @@ import { signIn, getSignInStatus, TaskItem as TaskData } from '../../services/ap
 import useActivityStore from '../../store/activityStore';
 import RulesModal from './RulesModal';
 import RewardRulesModal from './RewardRulesModal';
+import fontSize from '../../utils/fontsizeUtils';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -558,32 +559,34 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: fontSize(18),
     fontWeight: '600',
     color: '#000',
+    fontFamily: 'System',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   rulesText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#AE8623',
   },
   separator: {
     color: '#AE8623',
-    fontSize: 14,
+    fontSize: fontSize(14),
   },
   detailsText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#AE8623',
   },
   checkInCard: {
-    marginHorizontal: 17,
+    width: screenWidth * 0.92,
+    marginHorizontal: screenWidth * 0.04,
     marginTop: -60,
     backgroundColor: '#FFF5DB',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: screenWidth * 0.04,
     paddingTop: 20,
     paddingBottom: 16,
     shadowColor: '#000',
@@ -601,18 +604,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionIcon: {
-    width: 22,
-    height: 22,
-    marginRight: 8,
+    width: screenWidth * 0.055,
+    height: screenWidth * 0.055,
+    marginRight: screenWidth * 0.02,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '600',
     color: '#000',
     flex: 1,
   },
   dailyReward: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#666',
   },
   checkInDays: {
@@ -630,7 +633,7 @@ const styles = StyleSheet.create({
     paddingTop: 5,
   },
   dayText: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: '400',
   },
   dayDivider: {
@@ -651,7 +654,7 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   dayReward: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: '600',
     marginTop: 38,
   },
@@ -661,7 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkInProgress: {
-    fontSize: 16,
+    fontSize: fontSize(16),
   },
   checkInProgressHighlight: {
     color: '#FF5100',
@@ -686,9 +689,10 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   checkInButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '500',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   checkInButtonTextDisabled: {
     color: '#999',
@@ -702,16 +706,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkInButtonTextCompleted: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '500',
     color: '#999',
+    fontFamily: 'System',
   },
   tasksCard: {
-    marginHorizontal: 17,
+    width: screenWidth * 0.92,
+    marginHorizontal: screenWidth * 0.04,
     marginTop: 16,
     backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: screenWidth * 0.04,
     paddingTop: 20,
     paddingBottom: 16,
     shadowColor: '#000',
@@ -755,9 +761,10 @@ const styles = StyleSheet.create({
     borderColor: '#FF5100',
   },
   taskButtonText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '500',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   taskButtonTextCompleted: {
     color: '#FF5100',
@@ -781,6 +788,7 @@ const styles = StyleSheet.create({
   },
   taskButtonTextClaimed: {
     color: '#FFF',
+    fontFamily: 'System',
   },
   taskButtonReadyToClaim: {
     backgroundColor: '#FF5100',
@@ -788,6 +796,7 @@ const styles = StyleSheet.create({
   },
   taskButtonTextReadyToClaim: {
     color: '#FFF',
+    fontFamily: 'System',
   },
 });
 

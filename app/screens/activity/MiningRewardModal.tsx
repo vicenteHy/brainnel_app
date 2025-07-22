@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -171,14 +172,14 @@ const styles = StyleSheet.create({
   },
   rewardText: {
     position: 'absolute',
-    top: 362,
+    top: Platform.OS === 'ios' ? 362 : 365,
     fontSize: fontSize(26),
-    fontWeight: '600',
+    fontWeight: '600',  
     color: '#FFFFFF',
     textShadowColor: '#00000040',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 2,
-    fontFamily: 'SF Pro Display',
+    fontFamily: 'system',
   },
   acceptButton: {
     position: 'absolute',

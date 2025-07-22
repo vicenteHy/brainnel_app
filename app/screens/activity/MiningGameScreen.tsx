@@ -1392,17 +1392,19 @@ const styles = StyleSheet.create({
   headerTitle: {
     alignItems: 'center',
     marginLeft: 80,
-      fontSize: fontSize(18),
+    fontSize: fontSize(18),
     fontWeight: '600',
     color: '#000',
+    fontFamily: 'System',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   rulesText: {
-    fontSize: 12,
+    fontSize: fontSize(12),
     color: '#AE8623',
+    fontFamily: 'System',
   },
   separator: {
     color: '#AE8623',
@@ -1411,6 +1413,7 @@ const styles = StyleSheet.create({
   detailsText: {
     fontSize: fontSize(12),
     color: '#AE8623',
+    fontFamily: 'System',
   },
   content: {
     flex: 1,
@@ -1431,10 +1434,11 @@ const styles = StyleSheet.create({
     marginTop: -40,
   },
   balanceAmount: {
-    marginTop: Platform.OS === 'android' ? 40 : 25,
-    fontSize: fontSize(33),
+    marginTop: Platform.OS === 'android' ? 50 : 20,
+    fontSize: fontSize(30),
     fontWeight: '600',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   progressCard: {
     width: screenWidth - 30,
@@ -1449,14 +1453,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   progressLabel: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#666',
+    fontFamily: 'System',
   },
   progressAmount: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '600',
     color: '#FF5100',
     marginTop: 5,
+    fontFamily: 'System',
   },
   progressBarWrapper: {
     height: 25,
@@ -1488,8 +1494,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   reminderText: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     color: '#000',
+    fontFamily: 'System',
   },
   withdrawButton: {
     width: 104,
@@ -1502,9 +1509,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   withdrawText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     fontWeight: '500',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   withdrawButtonDisabled: {
     backgroundColor: '#E5E5E5',
@@ -1512,6 +1520,7 @@ const styles = StyleSheet.create({
   },
   withdrawTextDisabled: {
     color: '#999999',
+    fontFamily: 'System',
   },
   gameArea: {
     width: screenWidth,
@@ -1532,6 +1541,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: '600',
     color: '#FFF',
+    fontFamily: 'System',
     textShadowColor: '#00000040',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 0,
@@ -1560,9 +1570,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   rewardText: {
-    fontSize: 28,
+    fontSize: fontSize(28),
     fontWeight: 'bold',
     color: '#FFF',
+    fontFamily: 'System',
   },
   taskCenterContainer: {
     position: 'absolute',
@@ -1606,10 +1617,11 @@ const styles = StyleSheet.create({
   },
   bubbleText: {
     color: '#000',
-    fontSize: 13,
+    fontSize: fontSize(13),
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 18,
+    fontFamily: 'System',
   },
   inviteSection: {
     width: screenWidth,
@@ -1638,6 +1650,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     fontWeight: '500',
     color: '#FFF',
+    fontFamily: 'System',
   },
   copyButton: {
     width: 120,
@@ -1653,6 +1666,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     fontWeight: '500',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   fingerIcon: {
     position: 'absolute',
@@ -1758,11 +1772,13 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     marginBottom: 8,
+    fontFamily: 'System',
   },
   maskGameSubtitle: {
     fontSize: fontSize(14),
     color: '#666',
     textAlign: 'center',
+    fontFamily: 'System',
   },
   maskStats: {
     flexDirection: 'row',
@@ -1777,21 +1793,25 @@ const styles = StyleSheet.create({
     fontSize: fontSize(11),
     color: '#999',
     marginBottom: 5,
+    fontFamily: 'System',
   },
   maskStatValue: {
     fontSize: fontSize(18),
     fontWeight: '600',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   maskStatValueOrange: {
     fontSize: fontSize(18),
     fontWeight: '600',
     color: '#FF5100',
+    fontFamily: 'System',
   },
   maskStatValueGray: {
     fontSize: fontSize(18),
     fontWeight: '600',
     color: '#999',
+    fontFamily: 'System',
   },
   exchangeButton: {
     backgroundColor: '#FF5100',
@@ -1806,9 +1826,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: '600',
     color: '#FFF',
+    fontFamily: 'System',
   },
   exchangeButtonTextDisabled: {
     color: '#999',
+    fontFamily: 'System',
   },
   redeemGuideOverlay: {
     position: 'absolute',
@@ -1896,9 +1918,10 @@ const styles = StyleSheet.create({
   },
   notificationText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: fontSize(13),
     color: '#333',
     lineHeight: 18,
+    fontFamily: 'System',
   },
 });
 
