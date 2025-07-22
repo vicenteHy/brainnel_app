@@ -37,7 +37,7 @@ const FriendsWithdrawalSuccessModal: React.FC<FriendsWithdrawalSuccessModalProps
           {/* 半透明遮罩 */}
           <View style={styles.overlay} />
           
-          {/* 弹窗内容 */}
+          {/* 弹窗内容 - 无背景 */}
           <TouchableWithoutFeedback>
             <View style={styles.modalContainer}>
               {/* 成功图片 */}
@@ -49,9 +49,9 @@ const FriendsWithdrawalSuccessModal: React.FC<FriendsWithdrawalSuccessModalProps
               
               {/* 文字内容 */}
               <View style={styles.contentContainer}>
-                <Text style={styles.titleText}>Félicitations !</Text>
+                <Text style={styles.titleText}>C'est ton tour !</Text>
                 <Text style={styles.messageText}>
-                  Le retrait de vos amis a été traité avec succès
+                  Ton ami 150150151 vient d'encaisser 5000 FCFA ! Ne lâche rien, le prochain c'est toi !
                 </Text>
               </View>
               
@@ -61,7 +61,7 @@ const FriendsWithdrawalSuccessModal: React.FC<FriendsWithdrawalSuccessModalProps
                 onPress={onConfirm}
                 activeOpacity={0.8}
               >
-                <Text style={styles.confirmButtonText}>Continuer</Text>
+                <Text style={styles.confirmButtonText}>OK</Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -81,56 +81,59 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: screenWidth,
     height: screenHeight,
-    backgroundColor: '#00000099',
+    backgroundColor: '#00000080',
   },
   modalContainer: {
-    width: 370,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingTop: 40,
-    paddingBottom: 30,
-    paddingHorizontal: 30,
+    width: 335,
+    backgroundColor: 'transparent',
     alignItems: 'center',
   },
   successImage: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
+    width: screenWidth * 0.75,
+    height: screenWidth * 0.75,
+    marginBottom: -20,
   },
   contentContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 25,
   },
   titleText: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#FF5100',
-    marginBottom: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    textShadowColor: '#00000080',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   messageText: {
-    fontSize: 16,
-    color: '#333333',
+    fontSize: 15,
+    color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+    textShadowColor: '#00000080',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   confirmButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#FF5100',
-    borderRadius: 25,
+    width: '70%',
+    height: 48,
+    backgroundColor: '#FF6B35',
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FF5100',
+    shadowColor: '#FF6B35',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   confirmButtonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
   },

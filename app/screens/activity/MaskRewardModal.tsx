@@ -128,19 +128,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backgroundContainer: {
-    width: 370,
-    height: 457,
+    width: screenWidth * 0.86,
+    height: screenHeight * 0.49,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backgroundImage: {
-    width: 370,
-    height: 457,
+    width: screenWidth * 0.86,
+    height: screenHeight * 0.49,
     position: 'absolute',
   },
   rewardText: {
     position: 'absolute',
-    top: 335,
+    top: screenHeight * 0.36,
     fontSize: fontSize(23),
     fontWeight: '600',
     color: '#FFFFFF',
@@ -151,13 +151,13 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     position: 'absolute',
-    bottom: -45,
+    bottom: screenHeight * -0.048,
     alignItems: 'center',
     justifyContent: 'center',
   },
   acceptButtonImage: {
-    width: 224,
-    height: 54,
+    width: screenWidth * 0.52,
+    height: screenHeight * 0.058,
   },
 });
 

@@ -97,8 +97,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   const notificationAnimation = useRef(new Animated.Value(0)).current;
   const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
   const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const progress = getProgress();
+  const [progress, setProgress] = useState(0);
   
   // 随机国家列表（法语）
   const countries = [
@@ -178,6 +177,9 @@ const MiningGameScreen = ({ navigation }: any) => {
   };
 
   useEffect(() => {
+    // 获取进度
+    setProgress(getProgress());
+    
     rechargeDigs();
     const interval = setInterval(rechargeDigs, 60000);
     

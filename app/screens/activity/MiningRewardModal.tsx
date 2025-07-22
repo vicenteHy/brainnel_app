@@ -155,24 +155,24 @@ const styles = StyleSheet.create({
   },
   backgroundContainer: {
     width: screenWidth,
-    height: 522,
+    height: screenHeight * 0.56,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backgroundImage: {
     width: screenWidth,
-    height: 522,
+    height: screenHeight * 0.56,
     position: 'absolute',
   },
   coinContainer: {
     position: 'absolute',
-    top: 180,
-    width: 150,
-    height: 150,
+    top: screenHeight * 0.19,
+    width: screenWidth * 0.35,
+    height: screenWidth * 0.35,
   },
   rewardText: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 362 : 365,
+    top: Platform.OS === 'ios' ? screenHeight * 0.39 : screenHeight * 0.39,
     fontSize: fontSize(26),
     fontWeight: '600',  
     color: '#FFFFFF',
@@ -183,11 +183,11 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     position: 'absolute',
-    bottom: 45,
+    bottom: screenHeight * 0.048,
   },
   acceptButtonImage: {
-    width: 224,
-    height: 54,
+    width: screenWidth * 0.52,
+    height: screenHeight * 0.058,
   },
 });
 
