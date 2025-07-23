@@ -12,10 +12,11 @@ import { getActivityStatus } from "../../../services/api/activity";
 interface CarouselBannerProps {
   onCameraPress: () => void;
   onLoginRequired: () => void;
+  isRefreshing?: boolean;
 }
 
 export const CarouselBanner = React.memo(
-  ({ onCameraPress, onLoginRequired }: CarouselBannerProps) => {
+  ({ onCameraPress, onLoginRequired, isRefreshing = false }: CarouselBannerProps) => {
     const screenWidth = Dimensions.get("window").width;
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
     const [showSpinWheel, setShowSpinWheel] = useState(false);
@@ -23,6 +24,7 @@ export const CarouselBanner = React.memo(
     const [showActivityCompletedModal, setShowActivityCompletedModal] = useState(false);
     const [currentRewardAmount, setCurrentRewardAmount] = useState(0);
     const [isActivityFinished, setIsActivityFinished] = useState(false);
+    const [isCheckingStatus, setIsCheckingStatus] = useState(false);
     const userStore = useUserStore();
     
     const bannerData = useMemo(
@@ -59,28 +61,62 @@ export const CarouselBanner = React.memo(
       }, [fetchActivityStatus])
     );
 
-    const handleBannerPress = useCallback(() => {
+    const handleBannerPress = useCallback(async () => {
+      // 如果正在刷新或正在检查状态，禁用点击
+      if (isRefreshing || isCheckingStatus) {
+        return;
+      }
+      
       // 检查用户是否已登录
       if (!userStore.user?.user_id) {
         // 用户未登录，显示登录弹窗
         onLoginRequired();
       } else {
-        // 用户已登录，先检查活动是否已完成
-        if (isActivityFinished) {
-          // 活动已完成，显示提示弹窗
-          setShowActivityCompletedModal(true);
-        } else {
-          // 活动未完成，检查金额
-          if (currentRewardAmount >= 4000) {
-            // 金额大于等于4000，直接跳转到挖矿游戏
-            navigation.navigate('MiningGameScreen');
+        // 设置检查状态标志，防止重复点击
+        setIsCheckingStatus(true);
+        
+        // 用户已登录，先实时获取最新的活动状态
+        try {
+          const status = await getActivityStatus();
+          const latestAmount = parseFloat(status.current_reward_amount) || 0;
+          const latestIsFinished = status.is_finished === 1;
+          
+          // 更新本地状态
+          setCurrentRewardAmount(latestAmount);
+          setIsActivityFinished(latestIsFinished);
+          
+          // 使用最新的状态进行判断
+          if (latestIsFinished) {
+            // 活动已完成，显示提示弹窗
+            setShowActivityCompletedModal(true);
           } else {
-            // 金额小于4000，显示转盘弹窗
-            setShowSpinWheel(true);
+            // 活动未完成，检查金额
+            if (latestAmount >= 4000) {
+              // 金额大于等于4000，直接跳转到挖矿游戏
+              navigation.navigate('MiningGameScreen');
+            } else {
+              // 金额小于4000，显示转盘弹窗
+              setShowSpinWheel(true);
+            }
           }
+        } catch (error) {
+          console.error('获取活动状态失败:', error);
+          // 如果获取失败，使用本地缓存的状态
+          if (isActivityFinished) {
+            setShowActivityCompletedModal(true);
+          } else {
+            if (currentRewardAmount >= 4000) {
+              navigation.navigate('MiningGameScreen');
+            } else {
+              setShowSpinWheel(true);
+            }
+          }
+        } finally {
+          // 重置检查状态标志
+          setIsCheckingStatus(false);
         }
       }
-    }, [userStore.user, onLoginRequired, currentRewardAmount, isActivityFinished, navigation]);
+    }, [userStore.user, onLoginRequired, currentRewardAmount, isActivityFinished, navigation, isRefreshing, isCheckingStatus]);
     
     const handleSpinPress = useCallback(() => {
       // 处理转盘旋转逻辑
@@ -105,10 +141,14 @@ export const CarouselBanner = React.memo(
             height: 240,
             
           }}
+          disabled={isRefreshing || isCheckingStatus}
         >
           <Image
             source={bannerData.imgUrl}
-            style={{ width: "100%", height: "100%" }}
+            style={{ 
+              width: "100%", 
+              height: "100%"
+            }}
             resizeMode="cover"
             defaultSource={require("../../../../assets/img/activity1.png")}
           />
@@ -141,6 +181,8 @@ export const CarouselBanner = React.memo(
     );
   },
   (prevProps, nextProps) => {
-    return prevProps.onCameraPress === nextProps.onCameraPress && prevProps.onLoginRequired === nextProps.onLoginRequired;
+    return prevProps.onCameraPress === nextProps.onCameraPress && 
+           prevProps.onLoginRequired === nextProps.onLoginRequired &&
+           prevProps.isRefreshing === nextProps.isRefreshing;
   },
 );

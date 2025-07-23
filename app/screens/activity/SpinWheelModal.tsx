@@ -51,9 +51,18 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
 }) => {
   const rotateValue = useRef(new Animated.Value(0)).current;
   const [isSpinning, setIsSpinning] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // 处理中奖结果期间也禁用按钮
   const [activityData, setActivityData] = useState<any>(null);
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
   const [targetRewardAmount, setTargetRewardAmount] = useState(5000);
+
+  // 当弹窗关闭时重置状态
+  useEffect(() => {
+    if (!visible) {
+      setIsSpinning(false);
+      setIsProcessing(false);
+    }
+  }, [visible]);
 
   // 当弹窗打开时先检查活动状态
   useEffect(() => {
@@ -161,10 +170,11 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
   ];
 
   const handleSpin = () => {
-    if (isSpinning) return;
+    if (isSpinning || isProcessing) return;
     console.log('开始旋转...');
 
     setIsSpinning(true);
+    setIsProcessing(true); // 设置处理中状态
     
     // 重置旋转值
     rotateValue.setValue(0);
@@ -198,6 +208,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
       // 动画结束后
       console.log('动画结束，中奖金额:', prize);
       setIsSpinning(false);
+      // 注意：此时isProcessing仍然为true，按钮继续禁用
       
       // 显示中奖结果
       setTimeout(async () => {
@@ -240,6 +251,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
         if (onWin) {
           onWin(prize);
         }
+        setIsProcessing(false); // 处理完成后才重置处理状态
         onClose(); // 关闭转盘弹窗
       }, 500);
     });
@@ -320,8 +332,8 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                   },
                 ]}
                 onPress={handleSpin}
-                activeOpacity={0.8}
-                disabled={isSpinning}
+                activeOpacity={1}
+                disabled={isSpinning || isProcessing}
               >
                 <Image
                   source={require('../../../assets/img/spin_button.png')}

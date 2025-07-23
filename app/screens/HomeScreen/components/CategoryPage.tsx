@@ -357,7 +357,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           // 推荐页面显示功能导航和轮播图
           <>
             <FeatureNavigationBar />
-            <CarouselBanner onCameraPress={onCameraPress} onLoginRequired={onLoginRequired} />
+            <CarouselBanner 
+              onCameraPress={onCameraPress} 
+              onLoginRequired={onLoginRequired} 
+              isRefreshing={pageData.loading}
+            />
           </>
         ) : (
           // 分类页面显示二级分类
@@ -365,7 +369,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         )}
       </>
     ),
-    [categoryId, onCameraPress, subcategoryComponent],
+    [categoryId, onCameraPress, onLoginRequired, subcategoryComponent, pageData.loading],
   );
 
   // 处理用户下拉刷新
