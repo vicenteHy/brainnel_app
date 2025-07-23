@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "../constants/config";
+import { STORAGE_KEYS, WS_BASE_URL } from "../constants/config";
 import { handleMultipleDeviceLogin } from "../utils/navigationUtils";
 
 class WebSocketService {
@@ -9,7 +9,7 @@ class WebSocketService {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
   private reconnectDelay: number = 3000; // 3秒
-  private wsUrl: string = "wss://api.brainnel.com/test/ws";
+  private wsUrl: string = WS_BASE_URL;
   
   // 回调函数
   private onOpenCallback?: () => void;

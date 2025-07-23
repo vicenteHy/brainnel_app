@@ -4,6 +4,12 @@ const PROD_API_URL = 'https://api.brainnel.com/backend';
 
 export const API_BASE_URL = DEV_API_URL
 
+// WebSocket配置 - 自动将 https 转换为 wss
+const DEV_WS_URL = DEV_API_URL.replace('https://', 'wss://') + '/ws';
+const PROD_WS_URL = PROD_API_URL.replace('https://', 'wss://') + '/ws';
+
+export const WS_BASE_URL = API_BASE_URL === DEV_API_URL ? DEV_WS_URL : PROD_WS_URL
+
 // 环境变量配置
 export const ENV = {
   PRODUCTION: process.env.NODE_ENV === 'production',
