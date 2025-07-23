@@ -596,8 +596,13 @@ function AppContent() {
       }
       
       // 处理 Wave 支付回调 URL
-      if (url.includes("/api/payment/wave/callback/success") || url.includes("/api/payment/wave/callback/failed")) {
+      if (url.includes("/api/payment/wave/callback/success") || 
+          url.includes("/api/payment/wave/callback/failed") ||
+          url.includes("/api/payment/wave/callback/cancel")) {
         console.log("检测到Wave支付回调深度链接:", url);
+        console.log("=== Wave支付深度链接调试信息 ===");
+        console.log("完整URL:", url);
+        console.log("支付状态:", url.includes('/success') ? "成功" : url.includes('/failed') ? "失败" : "取消");
         
         // 解析URL获取参数
         const urlObj = new URL(url);
@@ -605,12 +610,19 @@ function AppContent() {
         const rechargeId = urlObj.searchParams.get('recharge_id');
         const isSuccess = url.includes('/success');
         
+        console.log("URL参数解析:");
+        console.log("- order_id:", orderId);
+        console.log("- recharge_id:", rechargeId);
+        console.log("- 所有查询参数:", Object.fromEntries(urlObj.searchParams));
+        console.log("=== 调试信息结束 ===");
+        
         // 先从AsyncStorage获取当前支付类型信息
         AsyncStorage.getItem('current_wave_payment_type').then((paymentTypeInfo) => {
           let paymentType = 'order';
           let paymentId = orderId || '';
           
           if (paymentTypeInfo) {
+            console.log("从AsyncStorage获取到的支付信息:", paymentTypeInfo);
             const info = JSON.parse(paymentTypeInfo);
             if (info.type === 'recharge' && info.id) {
               paymentType = 'recharge';
@@ -618,11 +630,14 @@ function AppContent() {
             }
             // 清除临时存储
             AsyncStorage.removeItem('current_wave_payment_type');
+          } else {
+            console.log("AsyncStorage中没有支付类型信息");
           }
           
           console.log(`Wave支付回调 - 类型: ${paymentType}, ID: ${paymentId}`);
           
           if (isSuccess) {
+            console.log("处理Wave支付成功...");
             // 直接导航到支付成功页面
             if (navigationRef.isReady()) {
               navigationRef.navigate('PaymentSuccessScreen', {
@@ -636,6 +651,12 @@ function AppContent() {
               });
             }
           } else {
+            console.log("处理Wave支付失败...");
+            console.log("失败页面参数:", {
+              msg: paymentType === 'recharge' ? 'recharge.status.wave_payment_failed' : 'payment.status.wave_payment_failed',
+              [`${paymentType}_id`]: paymentId,
+              isRecharge: paymentType === 'recharge'
+            });
             // 导航到支付失败页面
             if (navigationRef.isReady()) {
               navigationRef.navigate('PayError', {
@@ -643,6 +664,8 @@ function AppContent() {
                 [`${paymentType}_id`]: paymentId,
                 isRecharge: paymentType === 'recharge'
               });
+            } else {
+              console.log("导航器未就绪，无法跳转到失败页面");
             }
           }
         }).catch(() => {
