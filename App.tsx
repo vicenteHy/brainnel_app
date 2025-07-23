@@ -595,6 +595,85 @@ function AppContent() {
         return;
       }
       
+      // 处理 Wave 支付回调 URL
+      if (url.includes("/api/payment/wave/callback/success") || url.includes("/api/payment/wave/callback/failed")) {
+        console.log("检测到Wave支付回调深度链接:", url);
+        
+        // 解析URL获取参数
+        const urlObj = new URL(url);
+        const orderId = urlObj.searchParams.get('order_id');
+        const rechargeId = urlObj.searchParams.get('recharge_id');
+        const isSuccess = url.includes('/success');
+        
+        // 先从AsyncStorage获取当前支付类型信息
+        AsyncStorage.getItem('current_wave_payment_type').then((paymentTypeInfo) => {
+          let paymentType = 'order';
+          let paymentId = orderId || '';
+          
+          if (paymentTypeInfo) {
+            const info = JSON.parse(paymentTypeInfo);
+            if (info.type === 'recharge' && info.id) {
+              paymentType = 'recharge';
+              paymentId = info.id;
+            }
+            // 清除临时存储
+            AsyncStorage.removeItem('current_wave_payment_type');
+          }
+          
+          console.log(`Wave支付回调 - 类型: ${paymentType}, ID: ${paymentId}`);
+          
+          if (isSuccess) {
+            // 直接导航到支付成功页面
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('PaymentSuccessScreen', {
+                payment_method: 'wave',
+                [`${paymentType}_id`]: paymentId,
+                isRecharge: paymentType === 'recharge',
+                recharge_id: paymentType === 'recharge' ? paymentId : undefined,
+                order_id: paymentType === 'order' ? paymentId : undefined,
+                // 添加其他必要的参数
+                status: 1
+              });
+            }
+          } else {
+            // 导航到支付失败页面
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('PayError', {
+                msg: paymentType === 'recharge' ? 'recharge.status.wave_payment_failed' : 'payment.status.wave_payment_failed',
+                [`${paymentType}_id`]: paymentId,
+                isRecharge: paymentType === 'recharge'
+              });
+            }
+          }
+        }).catch(() => {
+          // 如果获取失败，默认为订单支付
+          console.log("无法获取支付类型信息，默认为订单支付");
+          const paymentType = 'order';
+          const paymentId = orderId || '';
+          
+          if (isSuccess) {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('PaymentSuccessScreen', {
+                payment_method: 'wave',
+                order_id: paymentId,
+                isRecharge: false,
+                status: 1
+              });
+            }
+          } else {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('PayError', {
+                msg: 'payment.status.wave_payment_failed',
+                order_id: paymentId,
+                isRecharge: false
+              });
+            }
+          }
+        });
+        
+        return;
+      }
+      
       // 处理 payment-polling 深度链接
       if (
         url.includes("com.brainnel.app://payment-polling") ||

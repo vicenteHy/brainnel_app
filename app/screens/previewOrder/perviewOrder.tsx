@@ -404,13 +404,34 @@ export const PreviewOrder = () => {
         if (res.success) {
 
           if (route.params.payMethod === "wave") {
-            // Wave支付直接跳转到Pay页面，让Pay页面处理外部应用跳转和轮询
-            console.log("Wave支付: 跳转到Pay页面进行统一处理");
-            navigation.navigate("Pay", {
-              payUrl: res.payment_url,
-              method: "wave",
-              order_id: route.params.data.order_id.toString()
-            });
+            // Wave支付直接打开浏览器，不跳转轮询页面
+            try {
+              console.log("=== Wave订单支付：直接打开浏览器 ===");
+              console.log("支付URL:", res.payment_url);
+              
+              // 保存订单ID和类型信息到AsyncStorage，供深度链接处理使用
+              await AsyncStorage.setItem('current_wave_payment_type', JSON.stringify({
+                type: 'order',
+                id: route.params.data.order_id.toString()
+              }));
+              
+              // 打开Wave支付页面
+              await Linking.openURL(res.payment_url);
+              console.log("✅ Wave支付页面已打开");
+            } catch (error) {
+              console.error("❌ 打开Wave支付页面失败:", error);
+              Alert.alert(
+                t("common.error") || "Error", 
+                t("payment.failed_to_open_payment") || "Failed to open payment page"
+              );
+              // 打开失败时跳转到支付失败页面
+              navigation.navigate("PayError", {
+                order_id: route.params.data.order_id?.toString(),
+                order_no: route.params.data.order_no,
+                amount: route.params.data.actual_amount?.toString(),
+                currency: route.params.data.currency
+              });
+            }
             return;
           }
 

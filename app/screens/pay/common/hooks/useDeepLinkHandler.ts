@@ -38,6 +38,61 @@ export const useDeepLinkHandler = ({
         return;
       }
 
+      // 处理 Wave 支付回调 URL
+      if (url.includes("/api/payment/wave/callback/success") || url.includes("/api/payment/wave/callback/failed")) {
+        console.log("检测到Wave支付回调深度链接");
+        stopPolling();
+        
+        // 解析URL获取参数
+        const urlObj = new URL(url);
+        const orderId = urlObj.searchParams.get('order_id') || urlObj.searchParams.get('recharge_id');
+        const isSuccess = url.includes('/success');
+        
+        if (isSuccess) {
+          setPaymentStatus('checking');
+          console.log(`Wave${paymentType === 'order' ? '支付' : '充值'}成功回调，ID: ${orderId}`);
+          
+          try {
+            // 验证支付状态
+            const res = await payApi.getPaymentStatus(paymentType, paymentId);
+            console.log(`Wave${paymentType === 'order' ? '支付' : '充值'}状态验证结果:`, res);
+            
+            if (res.status === 1) {
+              setPaymentStatus('completed');
+              const successData = paymentType === 'recharge' 
+                ? { ...res, isRecharge: true }
+                : res;
+              onSuccess(successData);
+            } else {
+              setPaymentStatus('failed');
+              onError({
+                msg: `${paymentType}.status.wave_verification_failed`,
+                [`${paymentType}_id`]: paymentId,
+                ...(paymentType === 'recharge' && { isRecharge: true })
+              });
+            }
+          } catch (error) {
+            console.error(`Wave${paymentType === 'order' ? '支付' : '充值'}状态验证错误:`, error);
+            setPaymentStatus('failed');
+            onError({
+              msg: `${paymentType}.status.wave_verification_failed`,
+              [`${paymentType}_id`]: paymentId,
+              ...(paymentType === 'recharge' && { isRecharge: true })
+            });
+          }
+        } else {
+          // Wave支付失败
+          console.log("Wave支付失败回调");
+          setPaymentStatus('failed');
+          onError({
+            msg: `${paymentType}.status.wave_payment_failed`,
+            [`${paymentType}_id`]: paymentId,
+            ...(paymentType === 'recharge' && { isRecharge: true })
+          });
+        }
+        return;
+      }
+
       if (
         url.includes("com.brainnel.app://payment-success") ||
         url.includes("myapp://payment-success")

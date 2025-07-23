@@ -408,12 +408,33 @@ const RechargeSummaryScreen = () => {
       if (response && response.success) {
         const paymentInfo = response.payment;
 
-        // 跳转到充值轮询页面
-        navigation.navigate('RechargePay', {
-          payUrl: paymentInfo.payment_url,
-          method: paymentParams.payment_method,
-          recharge_id: response.recharge_id.toString()
-        });
+        // Wave支付直接打开浏览器，不跳转轮询页面
+        if (paymentParams.payment_method === "wave") {
+          try {
+            console.log("=== Wave充值：直接打开浏览器 ===");
+            console.log("支付URL:", paymentInfo.payment_url);
+            
+            // 保存充值ID和类型信息到AsyncStorage，供深度链接处理使用
+            await AsyncStorage.setItem('current_wave_payment_type', JSON.stringify({
+              type: 'recharge',
+              id: response.recharge_id.toString()
+            }));
+            
+            // 打开Wave支付页面
+            await Linking.openURL(paymentInfo.payment_url);
+            console.log("✅ Wave支付页面已打开");
+          } catch (error) {
+            console.error("❌ 打开Wave支付页面失败:", error);
+            Alert.alert(t("common.error"), t("recharge.failed_to_open_payment"));
+          }
+        } else {
+          // 其他支付方式跳转到充值轮询页面
+          navigation.navigate('RechargePay', {
+            payUrl: paymentInfo.payment_url,
+            method: paymentParams.payment_method,
+            recharge_id: response.recharge_id.toString()
+          });
+        }
       } else {
         // 处理失败情况，显示错误消息
         const errorMessage =
