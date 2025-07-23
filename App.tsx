@@ -598,17 +598,21 @@ function AppContent() {
       // 处理 Wave 支付回调 URL
       if (url.includes("/api/payment/wave/callback/success") || 
           url.includes("/api/payment/wave/callback/failed") ||
+          url.includes("/api/payment/wave/callback/error") ||
           url.includes("/api/payment/wave/callback/cancel")) {
         console.log("检测到Wave支付回调深度链接:", url);
         console.log("=== Wave支付深度链接调试信息 ===");
         console.log("完整URL:", url);
-        console.log("支付状态:", url.includes('/success') ? "成功" : url.includes('/failed') ? "失败" : "取消");
+        console.log("支付状态:", url.includes('/success') ? "成功" : url.includes('/failed') ? "失败" : url.includes('/error') ? "错误" : "取消");
         
         // 解析URL获取参数
         const urlObj = new URL(url);
         const orderId = urlObj.searchParams.get('order_id');
         const rechargeId = urlObj.searchParams.get('recharge_id');
         const isSuccess = url.includes('/success');
+        const isError = url.includes('/error');
+        const isFailed = url.includes('/failed');
+        const isCancelled = url.includes('/cancel');
         
         console.log("URL参数解析:");
         console.log("- order_id:", orderId);
@@ -650,8 +654,8 @@ function AppContent() {
                 status: 1
               });
             }
-          } else {
-            console.log("处理Wave支付失败...");
+          } else if (isError || isFailed || isCancelled) {
+            console.log("处理Wave支付失败/错误/取消...");
             console.log("失败页面参数:", {
               msg: paymentType === 'recharge' ? 'recharge.status.wave_payment_failed' : 'payment.status.wave_payment_failed',
               [`${paymentType}_id`]: paymentId,
