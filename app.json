@@ -22,7 +22,7 @@
         "applinks:api.brainnel.com",
         "applinks:brainnel.com"
       ],
-      "buildNumber": "520",
+      "buildNumber": "550",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "CFBundleURLTypes": [
