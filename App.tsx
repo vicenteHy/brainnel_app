@@ -49,7 +49,7 @@ if (!global.EventEmitter) {
 }
 
 // 定义全局事件处理支付成功
-import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from "./app/constants/events";
+import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT, BOOST_SUCCESS_EVENT } from "./app/constants/events";
 
 function AppContent() {
   const analyticsData = useAnalyticsStore();
@@ -795,6 +795,26 @@ function AppContent() {
   const handleLanguageSelected = () => {
     setLanguageSelected(true);
   };
+
+  // 监听谷歌/苹果登录的助力事件
+  useEffect(() => {
+    const handleBoostSuccess = (data: { userId: string; isAlreadyBoosted: boolean }) => {
+      console.log('📱 收到助力成功事件:', data);
+      // 使用全局弹窗队列显示助力弹窗
+      boostModal.showModal({
+        userId: data.userId,
+        isAlreadyBoosted: data.isAlreadyBoosted
+      });
+    };
+
+    // 注册事件监听器
+    global.EventEmitter.on(BOOST_SUCCESS_EVENT, handleBoostSuccess);
+
+    // 清理函数
+    return () => {
+      global.EventEmitter.off(BOOST_SUCCESS_EVENT, handleBoostSuccess);
+    };
+  }, []);
 
   // 处理 JOUER 按钮点击 - BoostSuccessModal (主动助力别人)
   const handleBoostJouerPress = async () => {

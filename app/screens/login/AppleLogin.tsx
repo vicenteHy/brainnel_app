@@ -18,7 +18,7 @@ import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
-import { BoostSuccessModal } from '../activity/BoostSuccessModal';
+import { BOOST_SUCCESS_EVENT } from '../../constants/events';
 
 interface AppleLoginButtonProps {
   onLoginStart?: () => void;
@@ -36,8 +36,6 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { setUser } = useUserStore();
   const analyticsStore = useAnalyticsStore();
-  const [showBoostModal, setShowBoostModal] = useState(false);
-  const [boosterUserId, setBoosterUserId] = useState<string>('');
 
   const handleAppleLogin = async () => {
     console.log("🚀 Apple登录按钮被点击");
@@ -102,8 +100,45 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
         // 检查是否有referrer_id且不为0
         if (res.referrer_id && res.referrer_id !== 0) {
           console.log("🎯 检测到referrer_id:", res.referrer_id);
-          setBoosterUserId(res.referrer_id.toString());
-          setShowBoostModal(true);
+          // 使用全局事件触发助力弹窗
+          global.EventEmitter.emit(BOOST_SUCCESS_EVENT, {
+            userId: res.referrer_id.toString(),
+            isAlreadyBoosted: false
+          });
+        } else {
+          // 如果响应中没有referrer_id或为0，检查AsyncStorage中是否有待处理的助力
+          try {
+            const storedReferrerId = await AsyncStorage.getItem('referrer_id');
+            if (storedReferrerId) {
+              console.log("📱 从AsyncStorage检测到待处理的referrer_id:", storedReferrerId);
+              
+              try {
+                const { assist } = await import('../../services/api/activity');
+                // 获取设备指纹哈希
+                const deviceInfo = await DeviceFingerprintCollector.collectSimpleDeviceInfo();
+                const result = await assist(parseInt(storedReferrerId), deviceInfo.fingerprintHash);
+                
+                console.log("✅ 助力API调用结果:", result);
+                
+                // 使用全局事件触发助力弹窗
+                global.EventEmitter.emit(BOOST_SUCCESS_EVENT, {
+                  userId: storedReferrerId,
+                  isAlreadyBoosted: !result.success
+                });
+                
+                // 设置标记，表示用户是通过邀请链接进入的
+                await AsyncStorage.setItem('entered_via_invite', 'true');
+                
+                // 助力成功后清除referrer_id
+                await AsyncStorage.removeItem('referrer_id');
+              } catch (error) {
+                console.error('助力失败:', error);
+                // 不显示错误弹窗，避免影响用户体验
+              }
+            }
+          } catch (error) {
+            console.error('检查待处理助力失败:', error);
+          }
         }
 
         // 处理首次登录设置同步
@@ -173,29 +208,17 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
   }
 
   return (
-    <>
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={handleAppleLogin}
-      >
-        <Image
-          source={require("../../../assets/img/apple.png")}
-          style={styles.loginIcon}
-        />
-        <Text style={styles.loginButtonText}>Continuer avec Apple</Text>
-        <Text style={styles.arrowText}>›</Text>
-      </TouchableOpacity>
-      
-      <BoostSuccessModal
-        visible={showBoostModal}
-        onClose={() => setShowBoostModal(false)}
-        userId={boosterUserId}
-        onJouerPress={() => {
-          setShowBoostModal(false);
-          // 可以在这里添加跳转到游戏页面的逻辑
-        }}
+    <TouchableOpacity
+      style={styles.loginButton}
+      onPress={handleAppleLogin}
+    >
+      <Image
+        source={require("../../../assets/img/apple.png")}
+        style={styles.loginIcon}
       />
-    </>
+      <Text style={styles.loginButtonText}>Continuer avec Apple</Text>
+      <Text style={styles.arrowText}>›</Text>
+    </TouchableOpacity>
   );
 };
 

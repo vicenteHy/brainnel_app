@@ -1,3 +1,6 @@
 // 支付相关事件常量
 export const PAYMENT_SUCCESS_EVENT = "PAYMENT_SUCCESS_EVENT";
 export const PAYMENT_FAILURE_EVENT = "PAYMENT_FAILURE_EVENT";
+
+// 助力相关事件常量
+export const BOOST_SUCCESS_EVENT = "BOOST_SUCCESS_EVENT";
