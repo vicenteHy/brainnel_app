@@ -66,35 +66,35 @@ const WithdrawalScreen = () => {
             setShowWavePendingModal(true);
           } else {
             Alert.alert(
-              t('提现处理中'),
-              t('您的提现申请正在处理中，请稍后查看状态。'),
-              [{ text: t('确定'), onPress: () => navigation.goBack() }]
+              'En cours de traitement',
+              'Votre demande de retrait est en cours de traitement, veuillez vérifier le statut plus tard.',
+              [{ text: 'OK', onPress: () => navigation.goBack() }]
             );
           }
           break;
         case 'approved':
           Alert.alert(
-            t('提现已批准'),
-            t('您的提现申请已批准，正在处理付款。'),
-            [{ text: t('确定'), onPress: () => navigation.goBack() }]
+            'Retrait approuvé',
+            'Votre demande de retrait a été approuvée et le paiement est en cours de traitement.',
+            [{ text: 'OK', onPress: () => navigation.goBack() }]
           );
           break;
         case 'rejected':
           Alert.alert(
-            t('提现失败'),
-            t('您的提现申请被拒绝，请联系客服了解详情。'),
-            [{ text: t('确定') }]
+            'Échec du retrait',
+            'Votre demande de retrait a été refusée, veuillez contacter le service client pour plus de détails.',
+            [{ text: 'OK' }]
           );
           break;
         default:
-          Alert.alert(t('错误'), t('未知的提现状态'));
+          Alert.alert('Erreur', 'Statut de retrait inconnu');
       }
     } catch (error) {
       console.error('提现失败:', error);
       Alert.alert(
-        t('提现失败'),
-        t('提现请求失败，请稍后重试。'),
-        [{ text: t('确定') }]
+        'Échec du retrait',
+        'La demande de retrait a échoué, veuillez réessayer plus tard.',
+        [{ text: 'OK' }]
       );
     } finally {
       setIsLoading(false);

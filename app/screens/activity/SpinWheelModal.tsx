@@ -64,10 +64,10 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
     }
   }, [visible]);
 
-  // 当弹窗打开时先检查活动状态
+  // 当弹窗打开时先检查活动状态（但不初始化）
   useEffect(() => {
     if (visible) {
-      const initActivity = async () => {
+      const checkActivityStatus = async () => {
         try {
           // 先尝试获取活动状态
           console.log('调用活动状态接口...');
@@ -94,66 +94,16 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
           console.log('有效邀请数:', statusData.effective_invite_count);
           console.log('推荐人ID:', statusData.referrer_id);
         } catch (error: any) {
-          // 如果返回404，说明用户未参加活动，需要初始化
+          // 如果返回404，说明用户未参加活动，但暂时不初始化
           if (error?.response?.status === 404 || error?.status === 404) {
-            if (shouldInitActivity) {
-              // 检查是否正在初始化
-              if (isInitializing) {
-                console.log('活动正在初始化中，跳过重复初始化...');
-                // 等待初始化完成后再获取状态
-                setTimeout(async () => {
-                  try {
-                    const statusData = await getActivityStatus();
-                    setActivityData(statusData);
-                    const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
-                    const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
-                    setCurrentTotalReward(currentAmount);
-                    setTargetRewardAmount(targetAmount);
-                  } catch (err) {
-                    console.error('重新获取活动状态失败:', err);
-                  }
-                }, 1000);
-                return;
-              }
-              
-              isInitializing = true;
-              console.log('用户未参加活动，调用初始化接口...');
-              try {
-                const data = await enterActivity(0);
-                console.log('活动初始化成功:', data);
-                setActivityData(data);
-                
-                // 保存当前累积金额和目标金额
-                const currentAmount = parseFloat(data.current_reward_amount) || 0;
-                const targetAmount = parseFloat(data.target_reward_amount) || 0;
-                setCurrentTotalReward(currentAmount);
-                setTargetRewardAmount(targetAmount);
-                
-                // 打印具体的返回数据
-                console.log('初始化后的活动数据:');
-                console.log('用户ID:', data.user_id);
-                console.log('当前奖励金额:', data.current_reward_amount);
-                console.log('目标奖励金额:', data.target_reward_amount);
-                console.log('金币面具数量:', data.gold_masks_count);
-                console.log('目标金币面具数量:', data.target_gole_masks_count);
-                console.log('总邀请数:', data.total_invite_count);
-                console.log('有效邀请数:', data.effective_invite_count);
-                console.log('推荐人ID:', data.referrer_id);
-              } catch (enterError) {
-                console.error('初始化活动失败:', enterError);
-              } finally {
-                isInitializing = false;
-              }
-            } else {
-              console.log('用户未参加活动，但不进行初始化（由调用方处理）');
-            }
+            console.log('用户未参加活动，将在点击转动按钮时初始化');
           } else {
             console.error('获取活动状态失败:', error);
           }
         }
       };
       
-      initActivity();
+      checkActivityStatus();
     }
   }, [visible]);
 
@@ -169,9 +119,82 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
     { value: 1000, angle: 315 },
   ];
 
-  const handleSpin = () => {
+  const handleSpin = async () => {
     if (isSpinning || isProcessing) return;
     console.log('开始旋转...');
+
+    // 先检查是否已经初始化活动
+    if (!activityData) {
+      console.log('活动未初始化，先进行初始化...');
+      setIsProcessing(true); // 设置处理中状态，防止重复点击
+      
+      try {
+        // 再次尝试获取活动状态
+        const statusData = await getActivityStatus();
+        console.log('活动状态返回:', statusData);
+        
+        // 如果成功获取状态，说明用户已经参加过活动
+        setActivityData(statusData);
+        
+        // 保存当前累积金额和目标金额
+        const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
+        const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
+        setCurrentTotalReward(currentAmount);
+        setTargetRewardAmount(targetAmount);
+      } catch (error: any) {
+        // 如果返回404，说明用户未参加活动，需要初始化
+        if (error?.response?.status === 404 || error?.status === 404) {
+          if (shouldInitActivity) {
+            // 检查是否正在初始化
+            if (isInitializing) {
+              console.log('活动正在初始化中，跳过重复初始化...');
+              setIsProcessing(false);
+              return;
+            }
+            
+            isInitializing = true;
+            console.log('用户未参加活动，调用初始化接口...');
+            try {
+              const data = await enterActivity(0);
+              console.log('活动初始化成功:', data);
+              setActivityData(data);
+              
+              // 保存当前累积金额和目标金额
+              const currentAmount = parseFloat(data.current_reward_amount) || 0;
+              const targetAmount = parseFloat(data.target_reward_amount) || 0;
+              setCurrentTotalReward(currentAmount);
+              setTargetRewardAmount(targetAmount);
+              
+              // 打印具体的返回数据
+              console.log('初始化后的活动数据:');
+              console.log('用户ID:', data.user_id);
+              console.log('当前奖励金额:', data.current_reward_amount);
+              console.log('目标奖励金额:', data.target_reward_amount);
+              console.log('金币面具数量:', data.gold_masks_count);
+              console.log('目标金币面具数量:', data.target_gole_masks_count);
+              console.log('总邀请数:', data.total_invite_count);
+              console.log('有效邀请数:', data.effective_invite_count);
+              console.log('推荐人ID:', data.referrer_id);
+            } catch (enterError) {
+              console.error('初始化活动失败:', enterError);
+              setIsProcessing(false);
+              isInitializing = false;
+              return; // 初始化失败，不执行转盘
+            } finally {
+              isInitializing = false;
+            }
+          } else {
+            console.log('用户未参加活动，但不进行初始化（由调用方处理）');
+            setIsProcessing(false);
+            return;
+          }
+        } else {
+          console.error('获取活动状态失败:', error);
+          setIsProcessing(false);
+          return;
+        }
+      }
+    }
 
     setIsSpinning(true);
     setIsProcessing(true); // 设置处理中状态

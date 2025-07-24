@@ -328,7 +328,7 @@ const TaskCenterScreen = ({ navigation }: any) => {
         >
           {/* 导航栏 */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.navigate('MiningGameScreen')}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={screenWidth * 0.051} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Centre des Missions</Text>
