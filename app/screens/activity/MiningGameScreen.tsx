@@ -72,6 +72,7 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [currentTotalReward, setCurrentTotalReward] = useState(0);
   const [displayedReward, setDisplayedReward] = useState(0);
   const [userInvitationLink, setUserInvitationLink] = useState<string | null>(null);
+  const [userInvitationText, setUserInvitationText] = useState<string | null>(null);
   const [targetRewardAmount, setTargetRewardAmount] = useState(0);
   const [isActivityInitialized, setIsActivityInitialized] = useState(false);
   const [showTaskCenterBubble, setShowTaskCenterBubble] = useState(true);
@@ -603,42 +604,48 @@ const MiningGameScreen = ({ navigation }: any) => {
     }
   };
 
-  // 获取邀请链接（先从本地获取，没有则调用API）
-  const getOrFetchInvitationLink = async (): Promise<string> => {
+  // 获取邀请链接和文案（先从本地获取，没有则调用API）
+  const getOrFetchInvitationData = async (): Promise<{ link: string; text: string }> => {
     try {
-      // 先检查内存中是否有链接
-      if (userInvitationLink) {
-        return userInvitationLink;
+      // 先检查内存中是否有链接和文案
+      if (userInvitationLink && userInvitationText) {
+        return { link: userInvitationLink, text: userInvitationText };
       }
 
       // 检查本地存储
       const storedLink = await AsyncStorage.getItem('user_invitation_link');
-      if (storedLink) {
+      const storedText = await AsyncStorage.getItem('user_invitation_text');
+      if (storedLink && storedText) {
         setUserInvitationLink(storedLink);
-        return storedLink;
+        setUserInvitationText(storedText);
+        return { link: storedLink, text: storedText };
       }
 
-      // 调用API获取链接
+      // 调用API获取链接和文案
       const response = await getInvitationLink();
       const invitationLink = response.invitation_link;
+      const invitationText = response.text || "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
       
       // 保存到本地存储和内存
       await AsyncStorage.setItem('user_invitation_link', invitationLink);
+      await AsyncStorage.setItem('user_invitation_text', invitationText);
       setUserInvitationLink(invitationLink);
+      setUserInvitationText(invitationText);
       
-      return invitationLink;
+      return { link: invitationLink, text: invitationText };
     } catch (error) {
       console.error('获取邀请链接失败:', error);
-      // 如果失败，返回默认链接
+      // 如果失败，返回默认链接和文案
       const inviteCode = referralCode || user?.id || 'default';
-      return `https://brainnel.com/invite?ref=${inviteCode}`;
+      const defaultLink = `https://brainnel.com/invite?ref=${inviteCode}`;
+      const defaultText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      return { link: defaultLink, text: defaultText };
     }
   };
 
   const handleInvite = async () => {
     try {
-      const shareUrl = await getOrFetchInvitationLink();
-      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      const { link: shareUrl, text: shareText } = await getOrFetchInvitationData();
       await Share.share({
         message: shareText + '\n\n' + shareUrl,
       });
@@ -649,8 +656,7 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   const handleCopyLink = async () => {
     try {
-      const shareUrl = await getOrFetchInvitationLink();
-      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      const { link: shareUrl, text: shareText } = await getOrFetchInvitationData();
       await Clipboard.setString(shareText + '\n\n' + shareUrl);
       Toast.show({
         type: 'success',
@@ -666,8 +672,7 @@ const MiningGameScreen = ({ navigation }: any) => {
 
   const handleWhatsApp = async () => {
     try {
-      const shareUrl = await getOrFetchInvitationLink();
-      const shareText = "J'y suis presque pour retirer mon cash sur Brainnel ! Télécharge l'appli, inscris-toi pour me donner un coup de main et tente de gagner 5000 FCFA toi aussi !";
+      const { link: shareUrl, text: shareText } = await getOrFetchInvitationData();
       
       // 先复制链接
       await Clipboard.setString(shareText + '\n\n' + shareUrl);

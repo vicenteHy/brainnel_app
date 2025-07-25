@@ -138,6 +138,7 @@ export const updateTaskStatus = async (request: UpdateTaskStatusRequest): Promis
 // 获取用户邀请链接
 export interface InvitationLinkResponse {
   invitation_link: string;
+  text: string;
 }
 
 export const getInvitationLink = async (): Promise<InvitationLinkResponse> => {
