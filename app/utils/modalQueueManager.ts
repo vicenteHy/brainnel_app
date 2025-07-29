@@ -15,6 +15,7 @@ export enum ModalType {
   WINNING = 'winning',
   FRIENDS_WITHDRAWAL = 'friends_withdrawal',
   TASK_COMPLETE = 'task_complete',
+  WITHDRAWAL_SUCCESS = 'withdrawal_success',
 }
 
 export interface ModalQueueItem {

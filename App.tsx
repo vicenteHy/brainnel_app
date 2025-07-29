@@ -10,7 +10,7 @@ import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
 import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
-import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal, TaskCompleteModal } from "./app/screens/activity";
+import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal, TaskCompleteModal, WithdrawalSuccessModal } from "./app/screens/activity";
 import { getActivityStatus } from "./app/services/api/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "./app/i18n";
@@ -97,6 +97,13 @@ function AppContent() {
     modalType: ModalType.TASK_COMPLETE,
     priority: ModalPriority.HIGH,
     canInterrupt: false, // 任务完成弹窗不可被中断
+  });
+  
+  const withdrawalSuccessModal = useModalQueue({
+    modalId: 'withdrawal-success',
+    modalType: ModalType.WITHDRAWAL_SUCCESS,
+    priority: ModalPriority.URGENT,
+    canInterrupt: false, // 提现成功弹窗不可被中断
   });
   
   // 旧的状态保留用于数据传递
@@ -309,6 +316,15 @@ function AppContent() {
                 }
               }).catch(error => {
                 console.error('上报任务完成失败:', error);
+              });
+            }
+            
+            // 处理 withdrawal 类型的消息 - Wave提现成功
+            if (data.type === 'withdrawal' && data.message === 'Retrait réussi') {
+              console.log('收到Wave提现成功消息:', data);
+              // 使用弹窗队列显示提现成功弹窗
+              withdrawalSuccessModal.showModal({
+                message: data.message
               });
             }
           });
@@ -1051,6 +1067,17 @@ function AppContent() {
         onNavigate={() => {
           if (navigationRef.isReady()) {
             navigationRef.navigate('TaskCenter' as never);
+          }
+        }}
+      />
+      
+      <WithdrawalSuccessModal
+        visible={withdrawalSuccessModal.visible}
+        onClose={withdrawalSuccessModal.closeModal}
+        onViewBalance={() => {
+          withdrawalSuccessModal.closeModal();
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Profile' as never);
           }
         }}
       />

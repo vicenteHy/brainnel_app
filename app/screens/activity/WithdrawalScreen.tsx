@@ -81,8 +81,8 @@ const WithdrawalScreen = () => {
           break;
         case 'rejected':
           Alert.alert(
-            'Échec du retrait',
-            'Votre demande de retrait a été refusée, veuillez contacter le service client pour plus de détails.',
+            'Retrait refusé',
+            'Bonjour, le système a détecté que tu as obtenu des récompenses par des méthodes malveillantes comme le farming de comptes, les fausses inscriptions, etc. Ton retrait a été refusé. Si tu as des questions, contacte le service client.',
             [{ text: 'OK' }]
           );
           break;
