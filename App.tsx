@@ -31,7 +31,6 @@ import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
 import { useModalQueue } from "./app/hooks/useModalQueue";
 import { ModalType, ModalPriority } from "./app/utils/modalQueueManager";
 import notificationService from "./app/services/notificationService";
-import messaging from '@react-native-firebase/messaging';
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -245,6 +244,134 @@ function AppContent() {
     }
   };
 
+  // 用于跟踪已处理的通知
+  const processedNotifications = useRef<Set<string>>(new Set());
+  
+  // 处理通知点击导航
+  const handleNotificationNavigation = (message: any) => {
+    // 生成消息唯一标识
+    const messageId = message.messageId || `${message.sentTime}_${JSON.stringify(message.data)}`;
+    
+    // 检查是否已处理过该通知
+    if (processedNotifications.current.has(messageId)) {
+      console.log('通知已处理，跳过:', messageId);
+      return;
+    }
+    
+    if (!navigationRef.current || !navigationRef.isReady()) {
+      console.log('导航器未准备好，延迟处理通知导航');
+      // 延迟处理，等待导航器准备好
+      setTimeout(() => {
+        if (navigationRef.current && navigationRef.isReady()) {
+          handleNotificationNavigation(message);
+        }
+      }, 500);
+      return;
+    }
+
+    // 标记通知已处理
+    processedNotifications.current.add(messageId);
+    console.log('处理通知导航:', message.data);
+    
+    const navigation = navigationRef.current;
+    const data = message.data || {};
+
+    // 根据不同的参数导航到不同页面
+    if (data.screen) {
+      switch (data.screen) {
+        case 'ProductDetail':
+          if (data.productId) {
+            navigation.navigate('ProductDetail' as never, { id: data.productId } as never);
+          }
+          break;
+        
+        case 'OrderDetail':
+          if (data.orderId) {
+            navigation.navigate('OrderDetails' as never, { orderId: data.orderId } as never);
+          }
+          break;
+        
+        case 'Cart':
+          // 先确保在 MainTabs
+          navigation.navigate('MainTabs' as never);
+          setTimeout(() => {
+            navigation.navigate('MainTabs' as never, { screen: 'Cart' } as never);
+          }, 100);
+          break;
+        
+        case 'Profile':
+          // 先确保在 MainTabs
+          navigation.navigate('MainTabs' as never);
+          setTimeout(() => {
+            navigation.navigate('MainTabs' as never, { screen: 'Profile' } as never);
+          }, 100);
+          break;
+        
+        case 'Home':
+          // 先确保在 MainTabs
+          navigation.navigate('MainTabs' as never);
+          setTimeout(() => {
+            navigation.navigate('MainTabs' as never, { screen: 'Home' } as never);
+          }, 100);
+          break;
+        
+        case 'Activity':
+          // Activity 不是 Tab，直接导航到活动页面
+          navigation.navigate('MiningGameScreen' as never);
+          break;
+        
+        case 'Category':
+        case 'CategoryScreen':
+          // 先确保跳转到 MainTabs
+          navigation.navigate('MainTabs' as never);
+          // 延迟一下再跳转到具体的 Tab
+          setTimeout(() => {
+            if (data.categoryId) {
+              navigation.navigate('MainTabs' as never, { 
+                screen: 'CategoryScreen',
+                params: { categoryId: data.categoryId }
+              } as never);
+            } else {
+              navigation.navigate('MainTabs' as never, { screen: 'CategoryScreen' } as never);
+            }
+          }, 100);
+          break;
+        
+        case 'Notifications':
+          // 通知列表页面不存在，跳转到聊天页面的通知 tab
+          navigation.navigate('MainTabs' as never, { screen: 'Chat' } as never);
+          break;
+        
+        case 'WithdrawalHistory':
+          navigation.navigate('WithdrawalScreen' as never);
+          break;
+        
+        case 'PromotionDetail':
+          // 促销详情页面不存在，跳转到首页
+          navigation.navigate('MainTabs' as never, { screen: 'Home' } as never);
+          break;
+        
+        default:
+          // 默认跳转到首页
+          navigation.navigate('MainTabs' as never, { screen: 'Home' } as never);
+          break;
+      }
+    } else if (data.deepLink) {
+      // 处理深度链接
+      Linking.openURL(data.deepLink).catch(err => {
+        console.error('无法打开链接:', err);
+      });
+    } else if (data.url) {
+      // WebView 页面不存在，使用浏览器打开链接
+      Linking.openURL(data.url).catch(err => {
+        console.error('无法打开链接:', err);
+      });
+    } else {
+      // 没有指定页面，默认跳转到聊天页面
+      navigation.navigate('MainTabs' as never, { screen: 'Chat' } as never);
+    }
+  };
+
   // 应用初始化（只执行一次）
   useEffect(() => {
     // 只有在语言检查完成且用户已选择语言后才初始化应用
@@ -362,17 +489,35 @@ function AppContent() {
           
           const unsubscribeOnNotificationOpened = notificationService.onNotificationOpenedApp((message) => {
             console.log('通过通知打开应用:', message);
-            // 处理通知点击，比如导航到特定页面
-            if (message.data?.screen) {
-              // navigationRef.current?.navigate(message.data.screen);
-            }
+            // 添加小延迟，避免重复触发
+            setTimeout(() => {
+              handleNotificationNavigation(message);
+            }, 100);
           });
           
           // 检查是否通过通知打开应用
           notificationService.getInitialNotification().then((message) => {
             if (message) {
               console.log('应用通过通知启动:', message);
-              // 处理初始通知
+              // 保存通知信息，等待应用完全启动后处理
+              AsyncStorage.setItem('pendingNotification', JSON.stringify(message)).catch(() => {});
+              
+              // 延迟处理，确保导航器已准备好
+              const checkAndNavigate = () => {
+                if (navigationRef.current && navigationRef.isReady()) {
+                  // 先导航到 MainTabs，确保应用进入主界面
+                  navigationRef.current.navigate('MainTabs' as never);
+                  // 再处理具体的通知导航
+                  setTimeout(() => {
+                    handleNotificationNavigation(message);
+                  }, 500);
+                } else {
+                  // 如果导航器还未就绪，继续等待
+                  setTimeout(checkAndNavigate, 200);
+                }
+              };
+              // 初始延迟更长一些，确保应用完全启动
+              setTimeout(checkAndNavigate, 2000);
             }
           });
           

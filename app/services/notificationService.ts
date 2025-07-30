@@ -57,7 +57,7 @@ class NotificationService {
   }
 
   // 检查 token 是否需要刷新
-  async onTokenRefresh(callback: (token: string) => void): Promise<void> {
+  onTokenRefresh(callback: (token: string) => void): () => void {
     return messaging().onTokenRefresh(async (token) => {
       console.log('FCM Token 已刷新:', token);
       await AsyncStorage.setItem('fcmToken', token);
