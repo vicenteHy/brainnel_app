@@ -1,4 +1,14 @@
 import { registerRootComponent } from 'expo';
+import messaging from '@react-native-firebase/messaging';
+
+// 注册后台消息处理器
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  console.log('后台收到消息:', remoteMessage);
+  
+  // 在这里处理后台消息
+  // 注意：这个处理器在后台运行，不能访问 React 组件或状态
+  // 你可以使用本地通知库来显示通知
+});
 
 // 添加 polyfill 来解决 NativeModule undefined 问题
 if (typeof global !== 'undefined') {

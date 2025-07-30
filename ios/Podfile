@@ -13,6 +13,10 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
+# Firebase 需要使用静态框架
+use_frameworks! :linkage => :static
+$RNFirebaseAsStaticFramework = true
+
 target 'brainnel' do
   use_expo_modules!
 

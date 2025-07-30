@@ -24,6 +24,9 @@
       ],
       "buildNumber": "565",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "entitlements": {
+        "aps-environment": "development"
+      },
       "infoPlist": {
         "CFBundleURLTypes": [
           {
@@ -47,6 +50,7 @@
         "NSPhotoLibraryUsageDescription": "此应用程序需要访问您的照片库以上传图片。",
         "NSCameraUsageDescription": "此应用程序需要访问您的相机以拍照。",
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+        "UIBackgroundModes": ["remote-notification"],
         "SKAdNetworkItems": [
           {
             "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
@@ -96,6 +100,8 @@
       "favicon": "./assets/logo/logo.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "expo-video",
       "expo-apple-authentication",
       [

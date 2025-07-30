@@ -30,6 +30,8 @@ import websocketService from "./app/services/websocketService";
 import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
 import { useModalQueue } from "./app/hooks/useModalQueue";
 import { ModalType, ModalPriority } from "./app/utils/modalQueueManager";
+import notificationService from "./app/services/notificationService";
+import messaging from '@react-native-firebase/messaging';
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -268,6 +270,29 @@ function AppContent() {
             .catch(error => {
             });
           
+          // 初始化通知服务
+          const initNotifications = async () => {
+            try {
+              // 请求通知权限
+              const hasPermission = await notificationService.requestPermission();
+              if (hasPermission) {
+                // 获取 FCM Token
+                const token = await notificationService.getToken();
+                if (token) {
+                  console.log('通知服务初始化成功，Token:', token);
+                  
+                  // 订阅默认主题
+                  await notificationService.subscribeToTopic('all_users');
+                  await notificationService.subscribeToTopic('brainnel_news');
+                }
+              }
+            } catch (error) {
+              console.error('通知服务初始化失败:', error);
+            }
+          };
+          
+          initNotifications();
+          
           // 初始化 WebSocket 连接
           websocketService.connect().catch(error => {
           });
@@ -326,6 +351,28 @@ function AppContent() {
               withdrawalSuccessModal.showModal({
                 message: data.message
               });
+            }
+          });
+          
+          // 设置通知消息处理器
+          const unsubscribeOnMessage = notificationService.onMessage((message) => {
+            console.log('收到前台推送消息:', message);
+            // 你可以在这里处理消息，比如更新UI或导航到特定页面
+          });
+          
+          const unsubscribeOnNotificationOpened = notificationService.onNotificationOpenedApp((message) => {
+            console.log('通过通知打开应用:', message);
+            // 处理通知点击，比如导航到特定页面
+            if (message.data?.screen) {
+              // navigationRef.current?.navigate(message.data.screen);
+            }
+          });
+          
+          // 检查是否通过通知打开应用
+          notificationService.getInitialNotification().then((message) => {
+            if (message) {
+              console.log('应用通过通知启动:', message);
+              // 处理初始通知
             }
           });
           
