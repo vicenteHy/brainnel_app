@@ -50,6 +50,8 @@
     <string>05f78312f74e6490066ade883a896f56</string>
     <key>FacebookDisplayName</key>
     <string>brainnel</string>
+    <key>GIDClientID</key>
+    <string>449517618313-o672a77oeaol21n1mk2qm77qvp3r3hec.apps.googleusercontent.com</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSApplicationQueriesSchemes</key>
