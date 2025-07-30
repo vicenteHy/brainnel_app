@@ -2,7 +2,7 @@
   "expo": {
     "name": "brainnel",
     "slug": "brainnel",
-    "version": "5.3.3",
+    "version": "5.3.4",
     "orientation": "portrait",
     "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "applinks:api.brainnel.com",
         "applinks:brainnel.com"
       ],
-      "buildNumber": "560",
+      "buildNumber": "562",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "CFBundleURLTypes": [
@@ -65,9 +65,7 @@
       }
     },
     "android": {
-      "permissions": [
-        "android.permission.INTERNET"
-      ],
+      "permissions": ["android.permission.INTERNET"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo/logo.png",
         "backgroundColor": "#ffffff"
@@ -90,10 +88,7 @@
               "pathPattern": ".*"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
