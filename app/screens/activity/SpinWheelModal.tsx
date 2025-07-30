@@ -61,6 +61,10 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
     if (!visible) {
       setIsSpinning(false);
       setIsProcessing(false);
+      // 重置活动数据，确保下次打开时重新获取
+      setActivityData(null);
+      setCurrentTotalReward(0);
+      setTargetRewardAmount(5000);
     }
   }, [visible]);
 
@@ -79,7 +83,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
           
           // 保存当前累积金额和目标金额
           const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
-          const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
+          const targetAmount = parseFloat(statusData.target_reward_amount) || 5000;
           setCurrentTotalReward(currentAmount);
           setTargetRewardAmount(targetAmount);
           
@@ -138,7 +142,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
         
         // 保存当前累积金额和目标金额
         const currentAmount = parseFloat(statusData.current_reward_amount) || 0;
-        const targetAmount = parseFloat(statusData.target_reward_amount) || 0;
+        const targetAmount = parseFloat(statusData.target_reward_amount) || 5000;
         setCurrentTotalReward(currentAmount);
         setTargetRewardAmount(targetAmount);
       } catch (error: any) {
@@ -161,7 +165,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
               
               // 保存当前累积金额和目标金额
               const currentAmount = parseFloat(data.current_reward_amount) || 0;
-              const targetAmount = parseFloat(data.target_reward_amount) || 0;
+              const targetAmount = parseFloat(data.target_reward_amount) || 5000;
               setCurrentTotalReward(currentAmount);
               setTargetRewardAmount(targetAmount);
               
@@ -443,7 +447,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
                 ]}
               >
                 <Text style={[styles.currentCoinsText, { fontSize: 12 * scale }]}>
-                  {currentTotalReward.toLocaleString()} FCFA
+                  {activityData ? currentTotalReward.toLocaleString() : '0'} FCFA
                 </Text>
                 <Text style={[styles.totalCoinsText, { fontSize: 12 * scale }]}>
                   {' '}/{targetRewardAmount.toLocaleString()} FCFA

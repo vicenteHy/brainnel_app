@@ -1045,6 +1045,7 @@ function AppContent() {
         onClose={spinWheelModal.closeModal}
         onSpinPress={() => {}}
         onWin={handleSpinWin}
+        shouldInitActivity={true}
       />
       
       <WinningModal
