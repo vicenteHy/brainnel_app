@@ -134,6 +134,7 @@ function AppContent() {
   // 强制更新状态 - 用于确保强制更新弹窗持久显示
   const [hasForceUpdate, setHasForceUpdate] = useState(false);
   
+  
   // 开屏动画时间控制
   const splashStartTime = useRef<number>(Date.now());
   const [splashMinTimeElapsed, setSplashMinTimeElapsed] = useState(false);
@@ -258,6 +259,7 @@ function AppContent() {
       return;
     }
     
+    
     if (!navigationRef.current || !navigationRef.isReady()) {
       console.log('导航器未准备好，延迟处理通知导航');
       // 延迟处理，等待导航器准备好
@@ -367,8 +369,8 @@ function AppContent() {
         console.error('无法打开链接:', err);
       });
     } else {
-      // 没有指定页面，默认跳转到聊天页面
-      navigation.navigate('MainTabs' as never, { screen: 'Chat' } as never);
+      // 没有指定页面，仅打开应用，不进行导航
+      console.log('通知点击：仅打开应用，不进行页面跳转');
     }
   };
 
@@ -400,8 +402,8 @@ function AppContent() {
           // 初始化通知服务
           const initNotifications = async () => {
             try {
-              // 请求通知权限
-              const hasPermission = await notificationService.requestPermission();
+              // 使用新的检查和请求权限方法
+              const hasPermission = await notificationService.checkAndRequestPermission();
               if (hasPermission) {
                 // 获取 FCM Token
                 const token = await notificationService.getToken();
@@ -410,8 +412,12 @@ function AppContent() {
                   
                   // 订阅默认主题
                   await notificationService.subscribeToTopic('all_users');
-                  await notificationService.subscribeToTopic('brainnel_news');
                 }
+              } else {
+                console.log('用户未授权通知权限');
+                
+                // 保存状态，下次应用启动时可以再次提醒
+                await AsyncStorage.setItem('notification_permission_denied', 'true');
               }
             } catch (error) {
               console.error('通知服务初始化失败:', error);
@@ -486,6 +492,7 @@ function AppContent() {
             console.log('收到前台推送消息:', message);
             // 你可以在这里处理消息，比如更新UI或导航到特定页面
           });
+          
           
           const unsubscribeOnNotificationOpened = notificationService.onNotificationOpenedApp((message) => {
             console.log('通过通知打开应用:', message);
@@ -1122,6 +1129,7 @@ function AppContent() {
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: string) => {
       // 更新应用状态引用
+      const previousAppState = appStateRef.current;
       appStateRef.current = nextAppState;
       
       // 如果应用重新激活且存在强制更新
@@ -1135,6 +1143,26 @@ function AppContent() {
         if (!websocketService.isConnected()) {
           websocketService.connect().catch(error => {
           });
+        }
+        
+        // 检查通知权限（Android）
+        if (Platform.OS === 'android' && previousAppState.match(/inactive|background/)) {
+          const deniedBefore = await AsyncStorage.getItem('notification_permission_denied');
+          if (deniedBefore === 'true') {
+            // 如果之前用户拒绝了，再次检查是否已经在设置中开启
+            const hasPermission = await notificationService.requestPermission();
+            if (hasPermission) {
+              // 用户已经开启了通知
+              await AsyncStorage.removeItem('notification_permission_denied');
+              console.log('用户已在设置中开启通知');
+              
+              // 重新初始化通知服务
+              const token = await notificationService.getToken();
+              if (token) {
+                await notificationService.subscribeToTopic('all_users');
+              }
+            }
+          }
         }
       } else if (nextAppState === 'background') {
         // 应用进入后台，断开 WebSocket 连接

@@ -12,6 +12,14 @@
       "remindLater": "Remind Later",
       "forceUpdateButton": "Update Now"
   },
+  "notification": {
+      "permission": {
+          "title": "Enable Notifications",
+          "message": "Notifications are turned off. You won't be able to receive order updates, promotional offers, and other important information. Would you like to go to settings to enable them?",
+          "later": "Later",
+          "goToSettings": "Go to Settings"
+      }
+  },
   "selectCountry": "Select your country",
   "loading": "Loading...",
   "related_goods": "Related goods",

@@ -12,6 +12,14 @@
       "remindLater": "Rappeler plus tard",
       "forceUpdateButton": "Mettre à jour maintenant"
   },
+  "notification": {
+      "permission": {
+          "title": "Activer les notifications",
+          "message": "Les notifications sont désactivées. Vous ne pourrez pas recevoir les mises à jour de commandes, les offres promotionnelles et autres informations importantes. Voulez-vous aller dans les paramètres pour les activer ?",
+          "later": "Plus tard",
+          "goToSettings": "Aller aux paramètres"
+      }
+  },
   "loading": "Chargement...",
   "loading_product_details": "Chargement des détails du produit...",
   "moreFromStore": "Plus de ce magasin",

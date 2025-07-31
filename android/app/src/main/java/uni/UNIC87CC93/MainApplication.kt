@@ -16,6 +16,11 @@ import com.facebook.soloader.SoLoader
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import android.util.Log
+
 class MainApplication : Application(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
@@ -48,6 +53,72 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    
+    // 创建通知渠道（Android 8.0+）
+    createNotificationChannel()
+  }
+  
+  private fun createNotificationChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      try {
+        // 默认通知渠道
+        val defaultChannel = NotificationChannel(
+          "brainnel_default_channel",
+          "Brainnel Notifications",
+          NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+          description = "General notifications from Brainnel"
+          enableVibration(true)
+          enableLights(true)
+          setShowBadge(true)
+        }
+        
+        // 订单通知渠道
+        val orderChannel = NotificationChannel(
+          "brainnel_order_channel",
+          "Order Updates",
+          NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+          description = "Order status and delivery updates"
+          enableVibration(true)
+          enableLights(true)
+          setShowBadge(true)
+        }
+        
+        // 促销通知渠道
+        val promoChannel = NotificationChannel(
+          "brainnel_promo_channel",
+          "Promotions & Offers",
+          NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+          description = "Special offers and promotional messages"
+          enableVibration(true)
+          setShowBadge(true)
+        }
+        
+        // 活动通知渠道
+        val activityChannel = NotificationChannel(
+          "brainnel_activity_channel",
+          "Activity Rewards",
+          NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+          description = "Mining game and activity rewards"
+          enableVibration(true)
+          setShowBadge(true)
+        }
+        
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.let {
+          it.createNotificationChannel(defaultChannel)
+          it.createNotificationChannel(orderChannel)
+          it.createNotificationChannel(promoChannel)
+          it.createNotificationChannel(activityChannel)
+          Log.d("MainApplication", "Notification channels created successfully")
+        }
+      } catch (e: Exception) {
+        Log.e("MainApplication", "Error creating notification channels", e)
+      }
+    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

@@ -1,6 +1,6 @@
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, Linking, AppState, NativeModules } from 'react-native';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -15,6 +15,29 @@ class NotificationService {
   // 请求通知权限
   async requestPermission(): Promise<boolean> {
     try {
+      // Android 13+ 需要先请求 POST_NOTIFICATIONS 权限
+      if (Platform.OS === 'android' && Platform.Version >= 33) {
+        const { PermissionsAndroid } = require('react-native');
+        
+        // 检查是否已有权限
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
+        
+        if (!hasPermission) {
+          // 请求权限 - 使用系统默认对话框
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+          
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('用户拒绝了通知权限');
+            return false;
+          }
+        }
+      }
+      
+      // 然后请求 Firebase 权限
       const authStatus = await messaging().requestPermission();
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -28,6 +51,93 @@ class NotificationService {
       return false;
     } catch (error) {
       console.error('请求通知权限失败:', error);
+      return false;
+    }
+  }
+  
+  // 检查实际的通知状态（Android）
+  async checkActualNotificationStatus(): Promise<boolean> {
+    try {
+      if (Platform.OS === 'android') {
+        // Android 13+ 需要检查 POST_NOTIFICATIONS 权限
+        const { PermissionsAndroid } = require('react-native');
+        
+        if (Platform.Version >= 33) {
+          const granted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+          
+          if (!granted) {
+            console.log('Android 13+ POST_NOTIFICATIONS 权限未授予');
+            return false;
+          }
+        }
+        
+        // 对于所有 Android 版本，还需要检查应用通知设置
+        // 这里我们只能通过 Firebase 的状态来判断
+        // 如果用户在系统设置中关闭了通知，Firebase 在某些情况下仍会返回已授权
+        // 这是 Android 的限制，无法通过代码精确检测
+        
+        return true;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('检查通知状态失败:', error);
+      // 如果检查失败，默认返回 true
+      return true;
+    }
+  }
+  
+  // 显示通知权限提示
+  async showNotificationPermissionAlert(): Promise<void> {
+    // 导入 i18n
+    const { t } = require('../i18n');
+    
+    Alert.alert(
+      t('notification.permission.title'),
+      t('notification.permission.message'),
+      [
+        {
+          text: t('notification.permission.later'),
+          style: 'cancel',
+        },
+        {
+          text: t('notification.permission.goToSettings'),
+          onPress: () => this.openNotificationSettings(),
+        },
+      ],
+    );
+  }
+  
+  // 打开系统通知设置
+  async openNotificationSettings(): Promise<void> {
+    if (Platform.OS === 'ios') {
+      // iOS: 打开应用设置
+      Linking.openURL('app-settings:');
+    } else {
+      // Android: 打开应用通知设置
+      Linking.openSettings();
+    }
+  }
+  
+  // 完整的权限检查和请求流程
+  async checkAndRequestPermission(): Promise<boolean> {
+    try {
+      // 先请求权限（Android 13+ 会弹出系统对话框）
+      const hasPermission = await this.requestPermission();
+      
+      if (!hasPermission) {
+        // Android 13+ 用户在系统对话框中拒绝了
+        // Android 12- 或用户之前已经在设置中关闭了通知
+        // 显示自定义提示，引导去设置
+        await this.showNotificationPermissionAlert();
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('检查和请求权限失败:', error);
       return false;
     }
   }
