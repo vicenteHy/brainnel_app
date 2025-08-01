@@ -9,7 +9,7 @@ import useActivityStore from "./app/store/activityStore";
 import { AuthProvider, useAuth, AUTH_EVENTS } from "./app/contexts/AuthContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator, navigationRef } from "./app/navigation/AppNavigator";
-import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState } from "react-native";
+import { View, ActivityIndicator, Alert, Text, Image, Animated, AppState, Platform } from "react-native";
 import { BoostSuccessModal, BoostedSuccessModal, SpinWheelModal, WinningModal, FriendsWithdrawalSuccessModal, TaskCompleteModal, WithdrawalSuccessModal } from "./app/screens/activity";
 import { getActivityStatus } from "./app/services/api/activity";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,6 +31,8 @@ import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
 import { useModalQueue } from "./app/hooks/useModalQueue";
 import { ModalType, ModalPriority } from "./app/utils/modalQueueManager";
 import notificationService from "./app/services/notificationService";
+import log from "./app/utils/logger";
+import GlobalDebugOverlay from "./app/components/GlobalDebugOverlay";
 type RootStackParamList = {
   Login: undefined;
   EmailLogin: undefined;
@@ -148,6 +150,25 @@ function AppContent() {
   const appStartTime = useRef(Date.now());
   const [splashDuration, setSplashDuration] = useState(0);
   
+  // 应用启动时记录
+  useEffect(() => {
+    log.info('[App] ========== 应用启动信息 ==========');
+    log.info('[App] 应用版本:', Constants.expoConfig?.version || 'unknown');
+    log.info('[App] 环境:', __DEV__ ? '开发环境' : '生产环境');
+    log.info('[App] 平台:', Platform.OS, Platform.Version);
+    log.info('[App] Expo SDK:', Constants.expoConfig?.sdkVersion || 'unknown');
+    log.info('[App] Bundle ID:', Constants.expoConfig?.ios?.bundleIdentifier || 'unknown');
+    log.info('[App] 构建时间:', new Date().toISOString());
+    
+    // 检查 Firebase 配置
+    if (Platform.OS === 'ios') {
+      log.info('[App] iOS 配置检查:');
+      log.info('[App] - GoogleService-Info.plist 位置:', Constants.expoConfig?.ios?.googleServicesFile || '未配置');
+    }
+    
+    log.info('[App] ========== 启动信息结束 ==========');
+  }, []);
+  
 
   // 获取用户资料的函数
   const fetchUserProfile = async () => {
@@ -171,7 +192,7 @@ function AppContent() {
       
       return true;
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
+      log.error('[App] Failed to fetch user profile:', error);
       return false;
     }
   };
@@ -207,7 +228,7 @@ function AppContent() {
         const isLanguageSelected = await checkLanguageSelected();
         setLanguageSelected(isLanguageSelected);
       } catch (error) {
-        console.error('Error checking language selection:', error);
+        log.error('[App] Error checking language selection:', error);
         setLanguageSelected(false);
       } finally {
         setCheckingLanguage(false);
@@ -255,13 +276,13 @@ function AppContent() {
     
     // 检查是否已处理过该通知
     if (processedNotifications.current.has(messageId)) {
-      console.log('通知已处理，跳过:', messageId);
+      log.info('[App] 通知已处理，跳过:', messageId);
       return;
     }
     
     
     if (!navigationRef.current || !navigationRef.isReady()) {
-      console.log('导航器未准备好，延迟处理通知导航');
+      log.info('[App] 导航器未准备好，延迟处理通知导航');
       // 延迟处理，等待导航器准备好
       setTimeout(() => {
         if (navigationRef.current && navigationRef.isReady()) {
@@ -273,7 +294,7 @@ function AppContent() {
 
     // 标记通知已处理
     processedNotifications.current.add(messageId);
-    console.log('处理通知导航:', message.data);
+    log.info('[App] 处理通知导航:', message.data);
     
     const navigation = navigationRef.current;
     const data = message.data || {};
@@ -361,16 +382,16 @@ function AppContent() {
     } else if (data.deepLink) {
       // 处理深度链接
       Linking.openURL(data.deepLink).catch(err => {
-        console.error('无法打开链接:', err);
+        log.error('[App] 无法打开链接:', err);
       });
     } else if (data.url) {
       // WebView 页面不存在，使用浏览器打开链接
       Linking.openURL(data.url).catch(err => {
-        console.error('无法打开链接:', err);
+        log.error('[App] 无法打开链接:', err);
       });
     } else {
       // 没有指定页面，仅打开应用，不进行导航
-      console.log('通知点击：仅打开应用，不进行页面跳转');
+      log.info('[App] 通知点击：仅打开应用，不进行页面跳转');
     }
   };
 
@@ -402,25 +423,27 @@ function AppContent() {
           // 初始化通知服务
           const initNotifications = async () => {
             try {
+              log.info('[App] 开始初始化通知服务...');
               // 使用新的检查和请求权限方法
               const hasPermission = await notificationService.checkAndRequestPermission();
               if (hasPermission) {
                 // 获取 FCM Token
                 const token = await notificationService.getToken();
                 if (token) {
-                  console.log('通知服务初始化成功，Token:', token);
+                  log.info('[App] 通知服务初始化成功，Token:', token.substring(0, 20) + '...');
                   
                   // 订阅默认主题
                   await notificationService.subscribeToTopic('all_users');
+                  log.info('[App] 已订阅 all_users 主题');
                 }
               } else {
-                console.log('用户未授权通知权限');
+                log.warn('[App] 用户未授权通知权限');
                 
                 // 保存状态，下次应用启动时可以再次提醒
                 await AsyncStorage.setItem('notification_permission_denied', 'true');
               }
             } catch (error) {
-              console.error('通知服务初始化失败:', error);
+              log.error('[App] 通知服务初始化失败:', error);
             }
           };
           
@@ -446,7 +469,7 @@ function AppContent() {
             
             // 处理 broadcast 类型的消息 - 好友提现成功
             if (data.type === 'broadcast' && data.broadcast_name) {
-              console.log('收到好友提现成功广播:', data);
+              log.info('[App] 收到好友提现成功广播:', data);
               // 使用弹窗队列显示好友提现成功弹窗
               friendsWithdrawalModal.showModal({
                 phoneNumber: data.broadcast_name,
@@ -456,7 +479,7 @@ function AppContent() {
             
             // 处理 task 类型的消息 - 任务完成
             if (data.type === 'task' && data.task_id) {
-              console.log('收到任务完成消息:', data);
+              log.info('[App] 收到任务完成消息:', data);
               // 上报任务完成状态
               const activityStore = useActivityStore.getState();
               activityStore.reportTaskComplete(data.task_id).then((taskData) => {
@@ -473,13 +496,13 @@ function AppContent() {
                   });
                 }
               }).catch(error => {
-                console.error('上报任务完成失败:', error);
+                log.error('[App] 上报任务完成失败:', error);
               });
             }
             
             // 处理 withdrawal 类型的消息 - Wave提现成功
             if (data.type === 'withdrawal' && data.message === 'Retrait réussi') {
-              console.log('收到Wave提现成功消息:', data);
+              log.info('[App] 收到Wave提现成功消息:', data);
               // 使用弹窗队列显示提现成功弹窗
               withdrawalSuccessModal.showModal({
                 message: data.message
@@ -489,13 +512,13 @@ function AppContent() {
           
           // 设置通知消息处理器
           const unsubscribeOnMessage = notificationService.onMessage((message) => {
-            console.log('收到前台推送消息:', message);
+            log.info('[App] 收到前台推送消息:', JSON.stringify(message, null, 2));
             // 你可以在这里处理消息，比如更新UI或导航到特定页面
           });
           
           
           const unsubscribeOnNotificationOpened = notificationService.onNotificationOpenedApp((message) => {
-            console.log('通过通知打开应用:', message);
+            log.info('[App] 通过通知打开应用:', JSON.stringify(message, null, 2));
             // 添加小延迟，避免重复触发
             setTimeout(() => {
               handleNotificationNavigation(message);
@@ -505,7 +528,7 @@ function AppContent() {
           // 检查是否通过通知打开应用
           notificationService.getInitialNotification().then((message) => {
             if (message) {
-              console.log('应用通过通知启动:', message);
+              log.info('[App] 应用通过通知启动:', JSON.stringify(message, null, 2));
               // 保存通知信息，等待应用完全启动后处理
               AsyncStorage.setItem('pendingNotification', JSON.stringify(message)).catch(() => {});
               
@@ -696,12 +719,12 @@ function AppContent() {
             // 助力成功后清除referrer_id
             await AsyncStorage.removeItem('referrer_id');
           } catch (error) {
-            console.error('助力失败:', error);
+            log.error('[App] 助力失败:', error);
             Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
           }
         }
       } catch (error) {
-        console.error('检查待处理助力失败:', error);
+        log.error('[App] 检查待处理助力失败:', error);
       }
     };
 
@@ -797,7 +820,7 @@ function AppContent() {
                   // 助力成功后清除referrer_id
                   await AsyncStorage.removeItem('referrer_id');
                 } catch (error) {
-                  console.error('助力失败:', error);
+                  log.error('[App] 助力失败:', error);
                   Alert.alert('Échec', 'Le boost a échoué, veuillez réessayer plus tard');
                 }
               }, 1000); // 延迟1秒执行，确保应用状态完全恢复
@@ -815,10 +838,10 @@ function AppContent() {
           url.includes("/api/payment/wave/callback/failed") ||
           url.includes("/api/payment/wave/callback/error") ||
           url.includes("/api/payment/wave/callback/cancel")) {
-        console.log("检测到Wave支付回调深度链接:", url);
-        console.log("=== Wave支付深度链接调试信息 ===");
-        console.log("完整URL:", url);
-        console.log("支付状态:", url.includes('/success') ? "成功" : url.includes('/failed') ? "失败" : url.includes('/error') ? "错误" : "取消");
+        log.info("[App] 检测到Wave支付回调深度链接:", url);
+        log.info("[App] === Wave支付深度链接调试信息 ===");
+        log.info("[App] 完整URL:", url);
+        log.info("[App] 支付状态:", url.includes('/success') ? "成功" : url.includes('/failed') ? "失败" : url.includes('/error') ? "错误" : "取消");
         
         // 解析URL获取参数
         const urlObj = new URL(url);
@@ -829,11 +852,11 @@ function AppContent() {
         const isFailed = url.includes('/failed');
         const isCancelled = url.includes('/cancel');
         
-        console.log("URL参数解析:");
-        console.log("- order_id:", orderId);
-        console.log("- recharge_id:", rechargeId);
-        console.log("- 所有查询参数:", Object.fromEntries(urlObj.searchParams));
-        console.log("=== 调试信息结束 ===");
+        log.info("[App] URL参数解析:");
+        log.info("[App] - order_id:", orderId);
+        log.info("[App] - recharge_id:", rechargeId);
+        log.info("[App] - 所有查询参数:", Object.fromEntries(urlObj.searchParams));
+        log.info("[App] === 调试信息结束 ===");
         
         // 先从AsyncStorage获取当前支付类型信息
         AsyncStorage.getItem('current_wave_payment_type').then((paymentTypeInfo) => {
@@ -1233,6 +1256,7 @@ function AppContent() {
   return (
     <>
       <AppNavigator />
+      <GlobalDebugOverlay />
       {versionInfo && (
         <UpdateModal
           visible={showUpdateModal || hasForceUpdate}

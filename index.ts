@@ -1,9 +1,10 @@
 import { registerRootComponent } from 'expo';
 import messaging from '@react-native-firebase/messaging';
+import log from './app/utils/logger';
 
 // 注册后台消息处理器
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('后台收到消息:', remoteMessage);
+  log.info('[FCM] 后台收到消息:', JSON.stringify(remoteMessage, null, 2));
   
   // 在这里处理后台消息
   // 注意：这个处理器在后台运行，不能访问 React 组件或状态

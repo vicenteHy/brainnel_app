@@ -1,6 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform, Linking, AppState, NativeModules } from 'react-native';
+import log from '../utils/logger';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -15,6 +16,9 @@ class NotificationService {
   // 请求通知权限
   async requestPermission(): Promise<boolean> {
     try {
+      log.info('[权限] ========== 开始请求通知权限 ==========');
+      log.info('[权限] 平台:', Platform.OS, Platform.Version);
+      
       // Android 13+ 需要先请求 POST_NOTIFICATIONS 权限
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         const { PermissionsAndroid } = require('react-native');
@@ -24,6 +28,8 @@ class NotificationService {
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
         
+        log.info('[权限] Android POST_NOTIFICATIONS 状态:', hasPermission);
+        
         if (!hasPermission) {
           // 请求权限 - 使用系统默认对话框
           const granted = await PermissionsAndroid.request(
@@ -31,27 +37,76 @@ class NotificationService {
           );
           
           if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('用户拒绝了通知权限');
+            log.warn('[权限] 用户拒绝了 Android 通知权限');
             return false;
           }
         }
       }
       
-      // 然后请求 Firebase 权限
+      // iOS 特定检查
+      if (Platform.OS === 'ios') {
+        log.info('[权限] iOS: 检查当前权限状态...');
+        const currentStatus = await messaging().hasPermission();
+        log.info('[权限] iOS: 当前权限状态码:', currentStatus);
+        log.info('[权限] iOS: 权限状态:', this.getAuthStatusString(currentStatus));
+      }
+      
+      // 请求 Firebase 权限
+      log.info('[权限] 请求 Firebase 通知权限...');
       const authStatus = await messaging().requestPermission();
+      
+      log.info('[权限] Firebase 返回状态码:', authStatus);
+      log.info('[权限] Firebase 权限状态:', this.getAuthStatusString(authStatus));
+      
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-        console.log('通知权限状态:', authStatus);
+        log.info('[权限] 通知权限已启用');
+        
+        // iOS 特定: 检查具体权限设置
+        if (Platform.OS === 'ios') {
+          const settings = await messaging().requestPermission({
+            alert: true,
+            badge: true,
+            sound: true,
+            provisional: false,
+          });
+          
+          log.info('[权限] iOS 详细权限设置:', {
+            authorizationStatus: this.getAuthStatusString(settings.authorizationStatus),
+            alert: settings.alert,
+            badge: settings.badge,
+            sound: settings.sound,
+            criticalAlert: settings.criticalAlert,
+            notificationCenter: settings.notificationCenter,
+            lockScreen: settings.lockScreen,
+            provisional: settings.provisional,
+          });
+        }
+        
+        log.info('[权限] ========== 权限请求成功 ==========');
         return true;
       }
       
+      log.warn('[权限] ========== 权限请求失败 ==========');
       return false;
     } catch (error) {
-      console.error('请求通知权限失败:', error);
+      log.error('[权限] ========== 权限请求出错 ==========');
+      log.error('[权限] 错误:', error);
       return false;
+    }
+  }
+  
+  // 辅助方法：将权限状态码转换为可读字符串
+  private getAuthStatusString(status: number): string {
+    switch (status) {
+      case -1: return 'NOT_DETERMINED (未确定)';
+      case 0: return 'DENIED (已拒绝)';
+      case 1: return 'AUTHORIZED (已授权)';
+      case 2: return 'PROVISIONAL (临时授权)';
+      default: return `UNKNOWN (${status})`;
     }
   }
   
@@ -68,7 +123,7 @@ class NotificationService {
           );
           
           if (!granted) {
-            console.log('Android 13+ POST_NOTIFICATIONS 权限未授予');
+            log.warn('Android 13+ POST_NOTIFICATIONS 权限未授予');
             return false;
           }
         }
@@ -83,7 +138,7 @@ class NotificationService {
       
       return true;
     } catch (error) {
-      console.error('检查通知状态失败:', error);
+      log.error('检查通知状态失败:', error);
       // 如果检查失败，默认返回 true
       return true;
     }
@@ -137,7 +192,7 @@ class NotificationService {
       
       return true;
     } catch (error) {
-      console.error('检查和请求权限失败:', error);
+      log.error('检查和请求权限失败:', error);
       return false;
     }
   }
@@ -145,23 +200,66 @@ class NotificationService {
   // 获取 FCM Token
   async getToken(): Promise<string | null> {
     try {
+      log.info('[FCM] ========== 开始获取 FCM Token ==========');
+      log.info('[FCM] 平台:', Platform.OS, Platform.Version);
+      log.info('[FCM] 环境:', __DEV__ ? '开发' : '生产');
+      
       // 确保已注册远程消息
       if (Platform.OS === 'ios') {
-        await messaging().registerDeviceForRemoteMessages();
+        log.info('[FCM] iOS: 检查远程消息注册状态...');
+        
+        // 检查是否已经注册
+        const isRegistered = messaging().isDeviceRegisteredForRemoteMessages;
+        log.info('[FCM] iOS: 当前注册状态:', isRegistered ? '已注册' : '未注册');
+        
+        if (!isRegistered) {
+          log.info('[FCM] iOS: 开始注册远程消息...');
+          try {
+            await messaging().registerDeviceForRemoteMessages();
+            log.info('[FCM] iOS: 远程消息注册成功');
+          } catch (regError) {
+            log.error('[FCM] iOS: 远程消息注册失败:', regError);
+            throw regError;
+          }
+        }
+        
+        // 再次检查注册状态
+        const isRegisteredAfter = messaging().isDeviceRegisteredForRemoteMessages;
+        log.info('[FCM] iOS: 注册后状态:', isRegisteredAfter ? '已注册' : '未注册');
       }
       
+      log.info('[FCM] 正在获取 Token...');
       const token = await messaging().getToken();
-      console.log('FCM Token:', token);
       
-      // 保存 token 到本地存储
-      await AsyncStorage.setItem('fcmToken', token);
+      if (token) {
+        log.info('[FCM] Token 获取成功');
+        log.info('[FCM] Token 长度:', token.length);
+        log.info('[FCM] Token 前30字符:', token.substring(0, 30) + '...');
+        log.info('[FCM] Token 后30字符:', '...' + token.substring(token.length - 30));
+        
+        // 保存 token 到本地存储
+        await AsyncStorage.setItem('fcmToken', token);
+        log.info('[FCM] Token 已保存到本地存储');
+      } else {
+        log.error('[FCM] Token 获取失败: 返回值为 null');
+      }
       
-      // TODO: 将 token 发送到你的服务器
-      // await api.updateDeviceToken(token);
+      log.info('[FCM] ========== Token 获取流程结束 ==========');
       
       return token;
     } catch (error) {
-      console.error('获取 FCM Token 失败:', error);
+      log.error('[FCM] ========== Token 获取出错 ==========');
+      log.error('[FCM] 错误类型:', error?.constructor?.name);
+      log.error('[FCM] 错误信息:', error);
+      
+      if (error instanceof Error) {
+        log.error('[FCM] 错误详情:', error.message);
+        log.error('[FCM] 错误代码:', (error as any).code);
+        log.error('[FCM] 错误域:', (error as any).domain);
+        log.error('[FCM] 错误堆栈:', error.stack);
+      }
+      
+      log.error('[FCM] ========== 错误信息结束 ==========');
       return null;
     }
   }
@@ -169,7 +267,7 @@ class NotificationService {
   // 检查 token 是否需要刷新
   onTokenRefresh(callback: (token: string) => void): () => void {
     return messaging().onTokenRefresh(async (token) => {
-      console.log('FCM Token 已刷新:', token);
+      log.info('FCM Token 已刷新:', token);
       await AsyncStorage.setItem('fcmToken', token);
       callback(token);
     });
@@ -178,7 +276,7 @@ class NotificationService {
   // 处理前台消息
   onMessage(callback: (message: any) => void): () => void {
     return messaging().onMessage(async (remoteMessage) => {
-      console.log('收到前台消息:', remoteMessage);
+      log.info('[FCM] 收到前台消息:', JSON.stringify(remoteMessage, null, 2));
       
       // 在前台时显示本地通知或 Alert
       Alert.alert(
@@ -201,7 +299,7 @@ class NotificationService {
   // 处理通知点击（应用在后台）
   onNotificationOpenedApp(callback: (message: any) => void): () => void {
     return messaging().onNotificationOpenedApp((remoteMessage) => {
-      console.log('通过通知打开应用（后台）:', remoteMessage);
+      log.info('[FCM] 通过通知打开应用（后台）:', JSON.stringify(remoteMessage, null, 2));
       callback(remoteMessage);
     });
   }
@@ -210,7 +308,7 @@ class NotificationService {
   async getInitialNotification(): Promise<any> {
     const remoteMessage = await messaging().getInitialNotification();
     if (remoteMessage) {
-      console.log('通过通知打开应用（已关闭）:', remoteMessage);
+      log.info('[FCM] 通过通知打开应用（已关闭）:', JSON.stringify(remoteMessage, null, 2));
       return remoteMessage;
     }
     return null;
@@ -220,9 +318,9 @@ class NotificationService {
   async subscribeToTopic(topic: string): Promise<void> {
     try {
       await messaging().subscribeToTopic(topic);
-      console.log(`已订阅主题: ${topic}`);
+      log.info(`已订阅主题: ${topic}`);
     } catch (error) {
-      console.error(`订阅主题失败 ${topic}:`, error);
+      log.error(`订阅主题失败 ${topic}:`, error);
     }
   }
 
@@ -230,9 +328,9 @@ class NotificationService {
   async unsubscribeFromTopic(topic: string): Promise<void> {
     try {
       await messaging().unsubscribeFromTopic(topic);
-      console.log(`已取消订阅主题: ${topic}`);
+      log.info(`已取消订阅主题: ${topic}`);
     } catch (error) {
-      console.error(`取消订阅主题失败 ${topic}:`, error);
+      log.error(`取消订阅主题失败 ${topic}:`, error);
     }
   }
 }

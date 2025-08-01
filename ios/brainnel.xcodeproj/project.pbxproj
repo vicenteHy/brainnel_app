@@ -29,6 +29,7 @@
 		BC81CCD36266B29C42C483C7 /* Pods_brainnel.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_brainnel.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFD3A3683CC2167D22219B36 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = brainnel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E9373A7AF3484D43A75F187B /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "brainnel/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		E969B5862E3B6B8A00338B84 /* brainnel.release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = brainnel.release.entitlements; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = brainnel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* brainnel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "brainnel-Bridging-Header.h"; path = "brainnel/brainnel-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -49,6 +50,7 @@
 		13B07FAE1A68108700A75B9A /* brainnel */ = {
 			isa = PBXGroup;
 			children = (
+				E969B5862E3B6B8A00338B84 /* brainnel.release.entitlements */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* brainnel-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,

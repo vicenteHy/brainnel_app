@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { styles } from './styles';
 import LeftArrowIcon from '../../components/DownArrowIcon';
@@ -31,10 +31,10 @@ const serviceItems = [
   { nameKey: 'profile.services.item.address', iconName: 'location-outline', screen: 'AddressList' },
 ];
 
-const SectionCard: React.FC<{title: string, onAllPress?: () => void, children: React.ReactNode, allText?: string}> = ({ title, onAllPress, allText, children }) => (
+const SectionCard: React.FC<{title: string | React.ReactNode, onAllPress?: () => void, children: React.ReactNode, allText?: string}> = ({ title, onAllPress, allText, children }) => (
   <View style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      {typeof title === 'string' ? <Text style={styles.sectionTitle}>{title}</Text> : title}
       {onAllPress && (
         <TouchableOpacity style={styles.sectionAllButton} onPress={onAllPress}>
           <Text style={styles.sectionAllButtonText}>{allText}</Text>
@@ -137,15 +137,47 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => {
   );
 };
 
-export const ToolSection: React.FC<SectionProps> = ({ t, navigation }) => (
-  <SectionCard title={t("profile.services.title")}>
-    {serviceItems.map((item, index) => (
-      <SectionItem
-        key={index}
-        item={item}
-        t={t}
-        onPress={() => navigation.navigate(item.screen)}
-      />
-    ))}
-  </SectionCard>
-); 
+export const ToolSection: React.FC<SectionProps> = ({ t, navigation }) => {
+  const [debugTapCount, setDebugTapCount] = useState(0);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTitleTap = () => {
+    const newCount = debugTapCount + 1;
+    setDebugTapCount(newCount);
+    
+    // 清除之前的超时
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
+    if (newCount >= 7) {
+      // 触发显示调试覆盖层事件
+      if (global.EventEmitter) {
+        global.EventEmitter.emit('SHOW_DEBUG_OVERLAY');
+      }
+      setDebugTapCount(0);
+    }
+    
+    // 3秒后重置计数
+    tapTimeoutRef.current = setTimeout(() => {
+      setDebugTapCount(0);
+    }, 3000);
+  };
+
+  return (
+    <SectionCard title={
+      <TouchableOpacity onPress={handleTitleTap} activeOpacity={1}>
+        <Text style={styles.sectionTitle}>{t("profile.services.title")}</Text>
+      </TouchableOpacity>
+    }>
+      {serviceItems.map((item, index) => (
+        <SectionItem
+          key={index}
+          item={item}
+          t={t}
+          onPress={() => navigation.navigate(item.screen)}
+        />
+      ))}
+    </SectionCard>
+  );
+}; 
