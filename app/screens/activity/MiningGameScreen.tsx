@@ -30,11 +30,13 @@ import MaskRewardModal from './MaskRewardModal';
 import RewardRulesModal from './RewardRulesModal';
 import EmptySpinModal from './EmptySpinModal';
 import RulesModal from './RulesModal';
+import NotificationPermissionModal from './NotificationPermissionModal';
 import { updateRewardAmount, playGame, getInvitationLink, getActivityStatus, exchangeMasks } from '../../services/api/activity';
 import useActivityStore from '../../store/activityStore';
 import Toast from 'react-native-toast-message';
 import fontSize from '../../utils/fontsizeUtils';
 import { getStatusBarHeight } from '../../utils/dimensions';
+import notificationService from '../../services/notificationService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -60,11 +62,12 @@ const MiningGameScreen = ({ navigation }: any) => {
   const [miningRewardVisible, setMiningRewardVisible] = useState(false);
   const [maskRewardVisible, setMaskRewardVisible] = useState(false);
   const [emptySpinModalVisible, setEmptySpinModalVisible] = useState(false);
+  const [notificationPermissionModalVisible, setNotificationPermissionModalVisible] = useState(false);
   const modalTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
   // 检查是否有任何 Modal 正在显示
   const isAnyModalVisible = () => {
-    return giftModalVisible || miningRewardVisible || maskRewardVisible || maskGameModalVisible || showWithdrawGuide || emptySpinModalVisible;
+    return giftModalVisible || miningRewardVisible || maskRewardVisible || maskGameModalVisible || showWithdrawGuide || emptySpinModalVisible || notificationPermissionModalVisible;
   };
   const [currentReward, setCurrentReward] = useState(0);
   const [currentRewardType, setCurrentRewardType] = useState(0); // 0: 现金, 1: 面具
@@ -417,8 +420,16 @@ const MiningGameScreen = ({ navigation }: any) => {
     }, [])
   );
 
-  const handleDig = () => {
+  const handleDig = async () => {
     if (isDigging) {
+      return;
+    }
+
+    // 检查通知权限
+    const hasPermission = await notificationService.requestPermission();
+    if (!hasPermission) {
+      // 显示通知权限弹窗
+      setNotificationPermissionModalVisible(true);
       return;
     }
 
@@ -1129,6 +1140,16 @@ const MiningGameScreen = ({ navigation }: any) => {
       <RulesModal
         visible={isRulesModalVisible}
         onClose={() => setIsRulesModalVisible(false)}
+      />
+      
+      {/* 通知权限弹窗 */}
+      <NotificationPermissionModal
+        visible={notificationPermissionModalVisible}
+        onClose={() => setNotificationPermissionModalVisible(false)}
+        onPermissionGranted={() => {
+          // 权限授予后继续挖矿
+          handleDig();
+        }}
       />
       
       {/* 任务引导 */}
