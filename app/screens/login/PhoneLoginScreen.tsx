@@ -56,7 +56,7 @@ export const PhoneLoginScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [isPasswordMode, setIsPasswordMode] = useState(true); // 默认为密码模式
+  const isPasswordMode = true; // 强制使用密码模式，移除验证码登录功能
   const [showVerificationInput, setShowVerificationInput] = useState(false); // 是否显示验证码输入
   const [loading, setLoading] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0); // 重新发送倒计时
@@ -447,36 +447,9 @@ export const PhoneLoginScreen = () => {
           </View>
         )}
 
-        {/* SMS验证切换 - 密码模式下显示 */}
-        {isPasswordMode && (
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleSpacer} />
-            <TouchableOpacity 
-              style={styles.toggleContainer}
-              onPress={() => setIsPasswordMode(false)}
-            >
-              <Text style={styles.toggleText}>{t('phoneLogin.smsVerificationLogin')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* SMS验证切换 - 已删除 */}
 
-        {/* 验证码模式的提示文本和切换按钮 */}
-        {!isPasswordMode && !showVerificationInput && (
-          <View style={styles.verificationContainer}>
-            <Text style={styles.infoText}>
-              {t('verificationCodeInfo')}
-            </Text>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleSpacer} />
-              <TouchableOpacity 
-                style={styles.toggleContainer}
-                onPress={() => setIsPasswordMode(true)}
-              >
-                <Text style={styles.toggleText}>{t('phoneLogin.passwordLogin')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+        {/* 验证码模式的提示文本和切换按钮 - 已删除 */}
 
         {/* 验证码输入框 - 仅在显示验证码输入时显示 */}
         {showVerificationInput && (
@@ -538,22 +511,7 @@ export const PhoneLoginScreen = () => {
           )}
         </TouchableOpacity>
 
-        {/* 在验证码页面显示切换密码登录选项 */}
-        {showVerificationInput && (
-          <View style={styles.switchToPasswordContainer}>
-            <TouchableOpacity 
-              onPress={() => {
-                setIsPasswordMode(true);
-                setShowVerificationInput(false);
-                setVerificationCode('');
-                setResendCountdown(0);
-                setCanResend(true);
-              }}
-            >
-              <Text style={styles.switchToPasswordText}>{t('phoneLogin.passwordLogin')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* 在验证码页面显示切换密码登录选项 - 已删除 */}
       </View>
 
       {/* 国家选择下拉框 */}

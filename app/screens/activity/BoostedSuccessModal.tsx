@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -15,6 +15,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { getActivityStatus } from '../../services/api/activity';
+import { ActivityCompletedModal } from './ActivityCompletedModal';
 
 interface BoostedSuccessModalProps {
   visible: boolean;
@@ -42,11 +44,38 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
 }) => {
   const opacity = useSharedValue(0);
   const contentScale = useSharedValue(0);
+  const [showActivityCompletedModal, setShowActivityCompletedModal] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   
-  const handleJouerPress = () => {
-    onClose();
-    if (onJouerPress) {
-      onJouerPress();
+  const handleJouerPress = async () => {
+    if (isCheckingStatus) return;
+    
+    setIsCheckingStatus(true);
+    
+    try {
+      // 获取最新的活动状态
+      const status = await getActivityStatus();
+      const isFinished = status.is_finished === 1;
+      
+      if (isFinished) {
+        // 活动已完成，显示提示弹窗
+        setShowActivityCompletedModal(true);
+      } else {
+        // 活动未完成，执行原有逻辑
+        onClose();
+        if (onJouerPress) {
+          onJouerPress();
+        }
+      }
+    } catch (error) {
+      console.error('获取活动状态失败:', error);
+      // 如果获取失败，继续执行原有逻辑
+      onClose();
+      if (onJouerPress) {
+        onJouerPress();
+      }
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
 
@@ -161,6 +190,7 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
                     ]}
                     onPress={handleJouerPress}
                     activeOpacity={0.8}
+                    disabled={isCheckingStatus}
                   />
                 )}
                 
@@ -186,6 +216,11 @@ export const BoostedSuccessModal: React.FC<BoostedSuccessModalProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </View>
+      
+      <ActivityCompletedModal
+        visible={showActivityCompletedModal}
+        onClose={() => setShowActivityCompletedModal(false)}
+      />
     </Modal>
   );
 };

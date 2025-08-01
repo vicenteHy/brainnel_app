@@ -344,60 +344,6 @@ const TaskCenterScreen = ({ navigation }: any) => {
           </View>
         </ImageBackground>
 
-        {/* 每日签到卡片 */}
-        <View style={styles.checkInCard}>
-          <View style={styles.sectionHeader}>
-            <Image 
-              source={require('../../../assets/img/iconCalendar.png')}
-              style={styles.sectionIcon}
-            />
-            <Text style={styles.sectionTitle}>Connexion quotidienne</Text>
-            <Text style={styles.dailyReward}>+2 FCFA par jour</Text>
-          </View>
-
-          {/* 签到天数 */}
-          <View style={styles.checkInDays}>
-            {checkInDays.map((item, index) => (
-              <DayCheckInItem
-                key={index}
-                day={item.day}
-                amount={2}
-                isCompleted={item.completed}
-                isActive={item.day === currentDay && !item.completed}
-                onPress={() => {
-                  if (item.day === currentDay && !item.completed && !loading) {
-                    handleCheckIn();
-                  }
-                }}
-                currentDay={currentDay}
-              />
-            ))}
-          </View>
-
-          {/* 签到进度和按钮 */}
-          <View style={styles.checkInFooter}>
-            <Text style={styles.checkInProgress}>
-              <Text style={styles.checkInProgressHighlight}>{checkInDays.filter(d => d.completed).length}</Text>
-              <Text style={styles.checkInProgressText}>/5 complété</Text>
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.checkInButton,
-                isSignedInToday && styles.checkInButtonCompleted
-              ]}
-              onPress={handleCheckIn}
-              disabled={isSignedInToday || currentDay > 5 || loading}
-            >
-              <Text style={[
-                styles.checkInButtonText,
-                isSignedInToday && styles.checkInButtonTextCompleted
-              ]}>
-                {loading ? 'Chargement...' : (isSignedInToday ? 'Complété' : 'Se connecter')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* 高价值任务卡片 */}
         <View style={styles.tasksCard}>
           <View style={styles.sectionHeader}>
@@ -715,7 +661,7 @@ const styles = StyleSheet.create({
   tasksCard: {
     width: screenWidth * 0.92,
     marginHorizontal: screenWidth * 0.04,
-    marginTop: screenHeight * 0.017,
+    marginTop: screenHeight * -0.064,
     backgroundColor: '#FFF',
     borderRadius: screenWidth * 0.028,
     paddingHorizontal: screenWidth * 0.04,
