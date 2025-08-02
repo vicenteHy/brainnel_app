@@ -5,6 +5,7 @@ import log from '../utils/logger';
 
 class NotificationService {
   private static instance: NotificationService;
+  private hasRequestedPermission: boolean = false;
   
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -19,6 +20,15 @@ class NotificationService {
       log.info('[权限] ========== 开始请求通知权限 ==========');
       log.info('[权限] 平台:', Platform.OS, Platform.Version);
       
+      // 防止重复请求
+      if (this.hasRequestedPermission) {
+        log.info('[权限] 已经请求过权限，跳过重复请求');
+        // 返回当前的权限状态
+        const currentStatus = await messaging().hasPermission();
+        return currentStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+               currentStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      }
+      
       // Android 13+ 需要先请求 POST_NOTIFICATIONS 权限
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         const { PermissionsAndroid } = require('react-native');
@@ -29,8 +39,11 @@ class NotificationService {
         );
         
         log.info('[权限] Android POST_NOTIFICATIONS 状态:', hasPermission);
+        log.info('[权限] 检查时间:', new Date().toISOString());
         
         if (!hasPermission) {
+          // 标记已经请求过权限
+          this.hasRequestedPermission = true;
           // 请求权限 - 使用系统默认对话框
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
@@ -49,7 +62,16 @@ class NotificationService {
         const currentStatus = await messaging().hasPermission();
         log.info('[权限] iOS: 当前权限状态码:', currentStatus);
         log.info('[权限] iOS: 权限状态:', this.getAuthStatusString(currentStatus));
+        
+        // 如果已经有权限，直接返回
+        if (currentStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+            currentStatus === messaging.AuthorizationStatus.PROVISIONAL) {
+          return true;
+        }
       }
+      
+      // 标记已经请求过权限
+      this.hasRequestedPermission = true;
       
       // 请求 Firebase 权限
       log.info('[权限] 请求 Firebase 通知权限...');
@@ -176,19 +198,49 @@ class NotificationService {
     }
   }
   
+  // 重置权限请求状态（用于用户主动请求时）
+  async resetPermissionState(): Promise<void> {
+    this.hasRequestedPermission = false;
+    await AsyncStorage.removeItem('notification_permanently_denied');
+    await AsyncStorage.removeItem('notification_denied_count');
+    log.info('[权限] 已重置权限请求状态');
+  }
+  
   // 完整的权限检查和请求流程
   async checkAndRequestPermission(): Promise<boolean> {
     try {
+      // 检查是否已经永久拒绝
+      const permanentlyDenied = await AsyncStorage.getItem('notification_permanently_denied');
+      if (permanentlyDenied === 'true') {
+        log.info('[权限] 用户已永久拒绝通知权限，不再自动请求');
+        return false;
+      }
+      
       // 先请求权限（Android 13+ 会弹出系统对话框）
       const hasPermission = await this.requestPermission();
       
       if (!hasPermission) {
-        // Android 13+ 用户在系统对话框中拒绝了
-        // Android 12- 或用户之前已经在设置中关闭了通知
-        // 显示自定义提示，引导去设置
-        await this.showNotificationPermissionAlert();
+        // 记录用户拒绝了权限
+        await AsyncStorage.setItem('notification_permission_denied', 'true');
+        
+        // 检查是否应该标记为永久拒绝
+        const deniedCount = await AsyncStorage.getItem('notification_denied_count');
+        const newCount = (parseInt(deniedCount || '0') + 1).toString();
+        await AsyncStorage.setItem('notification_denied_count', newCount);
+        
+        // 如果拒绝超过2次，标记为永久拒绝
+        if (parseInt(newCount) >= 2) {
+          await AsyncStorage.setItem('notification_permanently_denied', 'true');
+          log.info('[权限] 用户多次拒绝，标记为永久拒绝');
+        }
+        
         return false;
       }
+      
+      // 清除拒绝记录
+      await AsyncStorage.removeItem('notification_permission_denied');
+      await AsyncStorage.removeItem('notification_denied_count');
+      await AsyncStorage.removeItem('notification_permanently_denied');
       
       return true;
     } catch (error) {

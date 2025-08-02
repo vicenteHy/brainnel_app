@@ -59,8 +59,13 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
   }, [visible, onClose, onPermissionGranted]);
   
   const handleEnableNotifications = async () => {
+    console.log('[NotificationPermissionModal] handleEnableNotifications 被调用');
     try {
+      // 重置权限请求状态，允许再次请求
+      await notificationService.resetPermissionState();
+      
       // 直接请求系统通知权限
+      console.log('[NotificationPermissionModal] 调用 requestPermission...');
       const hasPermission = await notificationService.requestPermission();
       
       if (hasPermission) {
