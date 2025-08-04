@@ -57,12 +57,8 @@ export const useNotifications = (activeTab: string) => {
 
     try {
       const response = await chatService.getUnreadMessageCount();
-      console.log("Unread count response:", response);
       if (response && typeof response.unread_count === "number") {
         setUnreadCount(response.unread_count);
-        console.log("Set unread count to:", response.unread_count);
-      } else {
-        console.log("Invalid response format:", response);
       }
     } catch (error) {
       console.error("Error getting unread count:", error);
@@ -138,9 +134,6 @@ export const useNotifications = (activeTab: string) => {
     }
   }, [user.user_id, activeTab]);
 
-  useEffect(() => {
-    console.log("Unread count changed to:", unreadCount);
-  }, [unreadCount]);
 
   return {
     notifications,

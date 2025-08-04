@@ -430,7 +430,7 @@ function AppContent() {
                 // 获取 FCM Token
                 const token = await notificationService.getToken();
                 if (token) {
-                  log.info('[App] 通知服务初始化成功，Token:', token.substring(0, 20) + '...');
+                  log.info('[App] 通知服务初始化成功，Token:', token);
                   
                   // 订阅默认主题
                   await notificationService.subscribeToTopic('all_users');

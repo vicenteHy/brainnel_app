@@ -386,7 +386,6 @@ export const HomeScreen = () => {
       console.log('Calling getActivityStatus API...');
       // 调用活动状态接口
       const response = await getActivityStatus();
-      console.log('Activity status response:', response);
       // 用户已参加活动，不需要弹出转盘
     } catch (error: any) {
       console.log('Activity status error:', error);

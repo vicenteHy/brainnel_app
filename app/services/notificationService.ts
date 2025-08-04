@@ -286,8 +286,7 @@ class NotificationService {
       if (token) {
         log.info('[FCM] Token 获取成功');
         log.info('[FCM] Token 长度:', token.length);
-        log.info('[FCM] Token 前30字符:', token.substring(0, 30) + '...');
-        log.info('[FCM] Token 后30字符:', '...' + token.substring(token.length - 30));
+        log.info('[FCM] 完整 Token:', token);
         
         // 保存 token 到本地存储
         await AsyncStorage.setItem('fcmToken', token);

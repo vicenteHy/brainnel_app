@@ -18,7 +18,6 @@ class AvatarCacheService {
   private constructor() {
     // 异步初始化，不阻塞构造函数
     this.initializeDirectory().catch(error => {
-      console.warn('[AvatarCache] 初始化目录失败，将在使用时重试:', error);
     });
   }
 
@@ -35,10 +34,8 @@ class AvatarCacheService {
       const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
       if (!dirInfo.exists) {
         await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
-        console.log('[AvatarCache] 创建头像缓存目录');
       }
     } catch (error) {
-      console.error('[AvatarCache] 创建缓存目录失败:', error);
     }
   }
 
@@ -52,7 +49,6 @@ class AvatarCacheService {
       // 确保目录存在
       const directoryReady = await this.ensureDirectoryExists();
       if (!directoryReady) {
-        console.warn('[AvatarCache] 目录创建失败，跳过缓存');
         return serverUrl;
       }
 
@@ -71,11 +67,9 @@ class AvatarCacheService {
           if (fileInfo.exists) {
             // 检查服务器URL是否相同
             if (cachedData.serverUrl === serverUrl) {
-              console.log('[AvatarCache] 使用缓存的头像:', cachedData.localUri);
               return cachedData.localUri;
             } else {
               // 服务器URL已更改，需要下载新头像
-              console.log('[AvatarCache] 服务器头像URL已更改，需要重新下载');
               await this.deleteCachedAvatar(userId);
             }
           } else {
@@ -84,7 +78,6 @@ class AvatarCacheService {
           }
         } else {
           // 缓存已过期
-          console.log('[AvatarCache] 头像缓存已过期');
           await this.deleteCachedAvatar(userId);
         }
       }
@@ -93,7 +86,6 @@ class AvatarCacheService {
       const cachedUri = await this.downloadAndCacheAvatar(userId, serverUrl);
       return cachedUri || serverUrl;
     } catch (error) {
-      console.error('[AvatarCache] 获取缓存头像失败:', error);
       return serverUrl; // 如果缓存失败，返回原始URL
     }
   }
@@ -101,11 +93,9 @@ class AvatarCacheService {
   // 从服务器下载并缓存头像
   private async downloadAndCacheAvatar(userId: string, serverUrl: string): Promise<string> {
     try {
-      console.log('[AvatarCache] 从服务器下载头像:', serverUrl);
       
       // 验证URL格式
       if (!this.isValidUrl(serverUrl)) {
-        console.warn('[AvatarCache] 无效的URL格式:', serverUrl);
         return serverUrl;
       }
       
@@ -116,12 +106,10 @@ class AvatarCacheService {
         if (directoryReady) break;
         
         // 如果失败，等待100ms后重试
-        console.warn(`[AvatarCache] 目录创建失败，重试第 ${i + 1} 次`);
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       if (!directoryReady) {
-        console.warn('[AvatarCache] 多次尝试创建目录失败，返回原始URL');
         return serverUrl;
       }
       
@@ -133,7 +121,6 @@ class AvatarCacheService {
       // 再次确认目录存在（防止下载过程中目录被删除）
       const finalCheck = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
       if (!finalCheck.exists) {
-        console.error('[AvatarCache] 下载前目录检查失败，目录不存在');
         return serverUrl;
       }
 
@@ -149,7 +136,6 @@ class AvatarCacheService {
         // 验证下载的文件是否真的存在
         const fileInfo = await FileSystem.getInfoAsync(downloadResult.uri);
         if (!fileInfo.exists) {
-          console.error('[AvatarCache] 下载完成但文件不存在:', downloadResult.uri);
           return serverUrl;
         }
         
@@ -164,14 +150,11 @@ class AvatarCacheService {
         const cacheKey = AVATAR_CACHE_KEY + userId;
         await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheData));
         
-        console.log('[AvatarCache] 头像下载并缓存成功:', downloadResult.uri);
         return downloadResult.uri;
       } else {
-        console.warn('[AvatarCache] 头像下载失败，状态码:', downloadResult.status);
         return serverUrl;
       }
     } catch (error) {
-      console.error('[AvatarCache] 下载并缓存头像失败:', error);
       return serverUrl; // 如果下载失败，返回原始URL
     }
   }
@@ -189,15 +172,12 @@ class AvatarCacheService {
         const fileInfo = await FileSystem.getInfoAsync(cachedData.localUri);
         if (fileInfo.exists) {
           await FileSystem.deleteAsync(cachedData.localUri);
-          console.log('[AvatarCache] 删除本地头像文件:', cachedData.localUri);
         }
         
         // 删除缓存记录
         await AsyncStorage.removeItem(cacheKey);
-        console.log('[AvatarCache] 删除头像缓存记录');
       }
     } catch (error) {
-      console.error('[AvatarCache] 删除缓存头像失败:', error);
     }
   }
 
@@ -218,10 +198,8 @@ class AvatarCacheService {
       const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
       if (dirInfo.exists) {
         await FileSystem.deleteAsync(AVATAR_CACHE_DIRECTORY);
-        console.log('[AvatarCache] 清除所有头像缓存');
       }
     } catch (error) {
-      console.error('[AvatarCache] 清除所有缓存失败:', error);
     }
   }
 
@@ -231,41 +209,34 @@ class AvatarCacheService {
       // 检查文档目录是否存在
       const docDirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory!);
       if (!docDirInfo.exists) {
-        console.error('[AvatarCache] 文档目录不存在:', FileSystem.documentDirectory);
         return false;
       }
       
       // 检查头像缓存目录
       const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
       if (!dirInfo.exists) {
-        console.log('[AvatarCache] 创建头像缓存目录:', AVATAR_CACHE_DIRECTORY);
         await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
         
         // 验证目录是否真的创建成功
         const verifyInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
         if (!verifyInfo.exists) {
-          console.error('[AvatarCache] 目录创建失败，验证不存在');
           return false;
         }
         
-        console.log('[AvatarCache] 头像缓存目录创建成功');
       }
       
       return true;
     } catch (error) {
-      console.error('[AvatarCache] 确保目录存在失败:', error);
       
       // 尝试清理可能存在的损坏文件
       try {
         const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIRECTORY);
         if (dirInfo.exists && !dirInfo.isDirectory) {
-          console.log('[AvatarCache] 发现同名文件，尝试删除');
           await FileSystem.deleteAsync(AVATAR_CACHE_DIRECTORY);
           await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIRECTORY, { intermediates: true });
           return true;
         }
       } catch (cleanupError) {
-        console.error('[AvatarCache] 清理失败:', cleanupError);
       }
       
       return false;
@@ -327,7 +298,6 @@ class AvatarCacheService {
         size: totalSize
       };
     } catch (error) {
-      console.error('[AvatarCache] 获取缓存统计失败:', error);
       return { count: 0, size: 0 };
     }
   }

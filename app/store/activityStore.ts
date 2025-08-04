@@ -48,9 +48,7 @@ const useActivityStore = create<ActivityStore>()(
         set({ loading: true, error: null });
         
         try {
-          console.log('[ActivityStore] 获取任务列表...');
           const response = await getTasks();
-          console.log('[ActivityStore] 任务列表获取成功:', response.tasks);
           
           set({ 
             tasks: response.tasks,
@@ -59,7 +57,6 @@ const useActivityStore = create<ActivityStore>()(
             error: null
           });
         } catch (error) {
-          console.error('[ActivityStore] 获取任务列表失败:', error);
           set({ 
             loading: false, 
             error: '获取任务失败' 
@@ -87,16 +84,12 @@ const useActivityStore = create<ActivityStore>()(
         
         // 只有状态为0（待完成）的任务才能报告完成
         if (currentStatus !== 0) {
-          console.log(`[ActivityStore] 任务 ${taskId} 状态为 ${currentStatus}，无需上报完成`);
           return null;
         }
 
         try {
-          console.log(`[ActivityStore] 上报任务完成并自动领取 - taskId: ${taskId}`);
           // 直接将状态更新为2（已完成已领取）
           const taskData = await updateTaskStatus({ task_id: taskId, status: 2 });
-          
-          console.log(`[ActivityStore] API返回的任务数据:`, taskData);
           
           // 更新本地状态为已完成已领取
           updateTaskStatusLocal(taskId, 2);
@@ -107,7 +100,6 @@ const useActivityStore = create<ActivityStore>()(
           // 返回任务数据，用于显示弹窗
           return taskData;
         } catch (error) {
-          console.error(`[ActivityStore] 上报任务完成失败 - taskId: ${taskId}`, error);
           return null;
         }
       },
@@ -118,12 +110,10 @@ const useActivityStore = create<ActivityStore>()(
         
         // 可以从状态0或1领取奖励
         if (currentStatus === 2) {
-          console.log(`[ActivityStore] 任务 ${taskId} 已经领取过奖励`);
           return;
         }
 
         try {
-          console.log(`[ActivityStore] 上报任务已领取 - taskId: ${taskId}, 当前状态: ${currentStatus}`);
           await updateTaskStatus({ task_id: taskId, status: 2 });
           
           // 更新本地状态为已领取
@@ -132,7 +122,6 @@ const useActivityStore = create<ActivityStore>()(
           // 可选：重新获取任务列表以确保数据同步
           await get().fetchTasks();
         } catch (error) {
-          console.error(`[ActivityStore] 上报任务已领取失败 - taskId: ${taskId}`, error);
         }
       },
 

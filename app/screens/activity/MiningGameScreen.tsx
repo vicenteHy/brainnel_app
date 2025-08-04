@@ -224,9 +224,7 @@ const MiningGameScreen = ({ navigation }: any) => {
     // 获取活动状态数据
     const fetchActivityStatus = async () => {
       try {
-        console.log('挖矿游戏 - 获取活动状态数据...');
         const data = await getActivityStatus();
-        console.log('挖矿游戏 - 活动状态返回:', data);
         
         // 保存当前累积金额和目标金额
         const currentAmount = parseFloat(data.current_reward_amount) || 0;
@@ -242,9 +240,6 @@ const MiningGameScreen = ({ navigation }: any) => {
         setTargetGoldMasksCount(targetMasks);
         setIsActivityInitialized(true);
         
-        console.log('挖矿游戏 - 当前累积奖励金额:', currentAmount);
-        console.log('挖矿游戏 - 目标奖励金额:', targetAmount);
-        console.log('挖矿游戏 - 可用游戏次数:', gameAttempts);
         
         // 如果金额小于4500，显示礼品弹窗
         if (currentAmount < 4500 && !giftModalVisible && !maskGameModalVisible && !miningRewardVisible && !maskRewardVisible) {
@@ -270,9 +265,7 @@ const MiningGameScreen = ({ navigation }: any) => {
         // 同时刷新任务状态
         const activityStore = useActivityStore.getState();
         await activityStore.fetchTasks();
-        console.log('挖矿游戏 - 任务状态已刷新');
       } catch (error) {
-        console.error('挖矿游戏 - 获取活动状态失败:', error);
         setIsActivityInitialized(true); // 即使失败也标记为已初始化
       }
     };
@@ -370,11 +363,9 @@ const MiningGameScreen = ({ navigation }: any) => {
   // 监听页面聚焦事件，从其他页面返回时刷新数据
   useFocusEffect(
     React.useCallback(() => {
-      console.log('挖矿页面获得焦点，刷新活动状态...');
       const fetchActivityStatusOnFocus = async () => {
         try {
           const data = await getActivityStatus();
-          console.log('页面聚焦 - 活动状态返回:', data);
           
           // 更新状态
           const currentAmount = parseFloat(data.current_reward_amount) || 0;
@@ -391,7 +382,6 @@ const MiningGameScreen = ({ navigation }: any) => {
           setGoldMasksCount(goldMasks);
           setTargetGoldMasksCount(targetMasks);
           
-          console.log('页面聚焦 - 更新金额:', currentAmount);
           
           // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
           if (Math.floor(currentAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
@@ -412,7 +402,6 @@ const MiningGameScreen = ({ navigation }: any) => {
             modalTimeoutsRef.current.push(timeout);
           }
         } catch (error) {
-          console.error('页面聚焦 - 获取活动状态失败:', error);
         }
       };
       
@@ -497,9 +486,7 @@ const MiningGameScreen = ({ navigation }: any) => {
         
         try {
           // 调用游戏API获取奖励
-          console.log('挖矿游戏 - 调用游戏API...');
           const gameResult = await playGame();
-          console.log('挖矿游戏 - 游戏结果:', gameResult);
           
           // 处理奖励 (reward_type = 0: 现金, 1: 面具)
           const rewardAmount = parseFloat(gameResult.reward_amount) || 0;
@@ -519,9 +506,7 @@ const MiningGameScreen = ({ navigation }: any) => {
           
           // 无论是否获得奖励，都调用 getActivityStatus 获取最新的活动数据
           try {
-            console.log('挖矿游戏 - 调用 getActivityStatus 获取最新数据...');
             const statusData = await getActivityStatus();
-            console.log('挖矿游戏 - 状态数据返回:', statusData);
             
             // 使用API返回的最新累积金额、目标金额和游戏次数
             const updatedAmount = parseFloat(statusData.current_reward_amount) || 0;
@@ -542,15 +527,12 @@ const MiningGameScreen = ({ navigation }: any) => {
             console.log('挖矿游戏 - 更新后的目标金额:', updatedTarget);
             console.log('挖矿游戏 - 更新后的游戏次数:', updatedAttempts);
           } catch (updateError) {
-            console.error('挖矿游戏 - 获取最新状态失败:', updateError);
           }
           
           // 如果有消息，可以显示给用户
           if (gameResult.message) {
-            console.log('游戏消息:', gameResult.message);
           }
         } catch (error) {
-          console.error('挖矿游戏 - 调用游戏API失败:', error);
           Alert.alert(t('错误'), t('游戏失败，请重试'));
         }
         
@@ -577,9 +559,7 @@ const MiningGameScreen = ({ navigation }: any) => {
     }
     
     try {
-      console.log('开始兑换面具...');
       const response = await exchangeMasks();
-      console.log('兑换面具结果:', response);
       
       // 更新状态
       const updatedData = response.updated_rewards;
@@ -610,7 +590,6 @@ const MiningGameScreen = ({ navigation }: any) => {
         visibilityTime: 2000,
       });
     } catch (error) {
-      console.error('兑换面具失败:', error);
       Alert.alert('Erreur', 'Échange échoué, veuillez réessayer');
     }
   };
@@ -645,7 +624,6 @@ const MiningGameScreen = ({ navigation }: any) => {
       
       return { link: invitationLink, text: invitationText };
     } catch (error) {
-      console.error('获取邀请链接失败:', error);
       // 如果失败，返回默认链接和文案
       const inviteCode = referralCode || user?.id || 'default';
       const defaultLink = `https://brainnel.com/invite?ref=${inviteCode}`;
@@ -661,7 +639,6 @@ const MiningGameScreen = ({ navigation }: any) => {
         message: shareText + '\n\n' + shareUrl,
       });
     } catch (error) {
-      console.error('分享失败:', error);
     }
   };
 
@@ -676,7 +653,6 @@ const MiningGameScreen = ({ navigation }: any) => {
         visibilityTime: 2000,
       });
     } catch (error) {
-      console.error('复制链接失败:', error);
       Alert.alert(t('错误'), t('复制链接失败，请重试'));
     }
   };
@@ -692,7 +668,6 @@ const MiningGameScreen = ({ navigation }: any) => {
       const message = encodeURIComponent(shareText + '\n\n' + shareUrl);
       Linking.openURL(`whatsapp://send?text=${message}`);
     } catch (error) {
-      console.error('分享到WhatsApp失败:', error);
       Alert.alert(t('错误'), t('分享失败，请重试'));
     }
   };
@@ -712,12 +687,8 @@ const MiningGameScreen = ({ navigation }: any) => {
     // 调用更新奖励金额接口（累加当前金额）
     try {
       const newTotalAmount = currentTotalReward + giftAmount;
-      console.log('宝箱奖励 - 当前累积金额:', currentTotalReward);
-      console.log('宝箱奖励 - 本次奖励金额:', giftAmount);
-      console.log('宝箱奖励 - 调用更新奖励金额接口，新的总金额:', newTotalAmount);
       
       const updatedData = await updateRewardAmount(newTotalAmount);
-      console.log('宝箱奖励 - 更新奖励金额接口返回:', updatedData);
       
       // 更新本地累积金额和目标金额
       const updatedAmount = parseFloat(updatedData.current_reward_amount) || 0;
@@ -733,16 +704,6 @@ const MiningGameScreen = ({ navigation }: any) => {
       setTargetGoldMasksCount(updatedTargetMasks);
       
       // 打印详细的返回数据
-      console.log('=== 宝箱奖励更新后的活动数据 ===');
-      console.log('用户ID:', updatedData.user_id);
-      console.log('当前奖励金额:', updatedData.current_reward_amount);
-      console.log('目标奖励金额:', updatedData.target_reward_amount);
-      console.log('金币面具数量:', updatedData.gold_masks_count);
-      console.log('目标金币面具数量:', updatedData.target_gole_masks_count);
-      console.log('总邀请数:', updatedData.total_invite_count);
-      console.log('有效邀请数:', updatedData.effective_invite_count);
-      console.log('推荐人ID:', updatedData.referrer_id);
-      console.log('===========================');
       
       // 检查是否需要显示面具游戏弹窗（只在没有其他弹窗时显示）
       if (Math.floor(updatedAmount) === 4999 && !maskGameModalVisible && !giftModalVisible && !miningRewardVisible && !maskRewardVisible) {
@@ -763,11 +724,9 @@ const MiningGameScreen = ({ navigation }: any) => {
         modalTimeoutsRef.current.push(timeout);
       }
     } catch (error) {
-      console.error('宝箱奖励 - 更新奖励金额失败:', error);
     }
     
     // 已经有礼物弹窗了，不需要额外的Alert
-    console.log('领取奖励成功');
   };
 
   const digTransform = {
@@ -1085,14 +1044,7 @@ const MiningGameScreen = ({ navigation }: any) => {
         onClose={() => {
           setMiningRewardVisible(false);
           // 关闭挖矿奖励弹窗后，检查是否需要显示面具游戏弹窗
-          console.log('检查面具游戏弹窗条件:', {
-            currentTotalReward,
-            floorValue: Math.floor(currentTotalReward),
-            isEqual4999: Math.floor(currentTotalReward) === 4999,
-            maskGameModalVisible
-          });
           if (Math.floor(currentTotalReward) === 4999 && !maskGameModalVisible && !giftModalVisible) {
-            console.log('触发面具游戏弹窗！');
             const timeout = setTimeout(() => {
               if (!giftModalVisible && !maskRewardVisible) {
                 setMaskGameModalVisible(true);
@@ -1121,7 +1073,6 @@ const MiningGameScreen = ({ navigation }: any) => {
         onStart={() => {
           setMaskGameModalVisible(false);
           setIsMaskGameMode(true);
-          console.log('开始收集面具模式');
         }}
       />
       
