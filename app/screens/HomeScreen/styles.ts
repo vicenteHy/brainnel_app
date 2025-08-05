@@ -98,6 +98,8 @@ export type StylesType = {
   featureNavItem: ViewStyle;
   featureNavIcon: ViewStyle;
   featureNavText: TextStyle;
+  floatingButton: ViewStyle;
+  floatingButtonImage: ImageStyle;
 };
 
 export const styles = StyleSheet.create<StylesType>({
@@ -607,6 +609,19 @@ export const styles = StyleSheet.create<StylesType>({
     textAlign: "center",
     fontWeight: "500",
     lineHeight: fontSize(13),
+  },
+  floatingButton: {
+    position: "absolute",
+    right: 0,
+    bottom: Dimensions.get('window').height * 0.129, // 120/932 ≈ 0.129
+    width: Dimensions.get('window').width * 0.186, // 80/430 ≈ 0.186
+    height: Dimensions.get('window').width * 0.186, // 保持正方形
+    zIndex: 1000,
+    backgroundColor: 'transparent',
+  },
+  floatingButtonImage: {
+    width: "100%",
+    height: "100%",
   },
 });
 

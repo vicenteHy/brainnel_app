@@ -990,6 +990,22 @@ export const HomeScreen = () => {
             />
           </View>
 
+          {/* 悬浮窗按钮 */}
+          <TouchableOpacity
+            style={styles.floatingButton}
+            onPress={() => {
+              console.log('悬浮窗按钮被点击');
+              setShowSpinWheelModal(true);
+            }}
+          >
+            <Image
+              source={require('../../../assets/activity_2/悬浮窗.png')}
+              style={styles.floatingButtonImage}
+              resizeMode="contain"
+              onError={(error) => console.log('图片加载失败:', error)}
+            />
+          </TouchableOpacity>
+
           {/* 图片选择弹窗 */}
           {showImagePickerModal && (
             <>
