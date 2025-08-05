@@ -82,4 +82,5 @@ export type RootStackParamList = {
   MiningGameScreen: undefined;
   TaskCenter: undefined;
   WithdrawalScreen: undefined;
+  LotteryScreen: undefined;
 };

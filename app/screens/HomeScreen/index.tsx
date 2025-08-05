@@ -995,11 +995,11 @@ export const HomeScreen = () => {
             style={styles.floatingButton}
             onPress={() => {
               console.log('悬浮窗按钮被点击');
-              setShowSpinWheelModal(true);
+              navigation.navigate('LotteryScreen');
             }}
           >
             <Image
-              source={require('../../../assets/activity_2/悬浮窗.png')}
+              source={require('../../../assets/activity_2/floating_window.png')}
               style={styles.floatingButtonImage}
               resizeMode="contain"
               onError={(error) => console.log('图片加载失败:', error)}

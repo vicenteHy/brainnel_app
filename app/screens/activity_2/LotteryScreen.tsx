@@ -1,0 +1,250 @@
+import React from 'react';
+import { View, StyleSheet, ImageBackground, StatusBar, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { size } from '../../utils/size';
+
+const LotteryScreen = () => {
+  return (
+    <View style={styles.container}>
+      <StatusBar backgroundColor="transparent" translucent barStyle="light-content" />
+      <ImageBackground
+        source={require('../../../assets/activity_2/game_console_bg.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.content}>
+          <View style={styles.prizeGrid}>
+            {/* 第一行 */}
+            <View style={styles.prizeRow}>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/free_product.png')} style={styles.prizeImage} />
+              </View>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/1000fcfa.png')} style={styles.prizeImage} />
+              </View>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/thank_you.png')} style={styles.prizeImage} />
+              </View>
+            </View>
+
+            {/* 第二行 */}
+            <View style={styles.prizeRow}>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/iphone.png')} style={styles.prizeImage} />
+              </View>
+              <TouchableOpacity style={styles.startButton}>
+                <Image 
+                  source={require('../../../assets/activity_2/start_lottery.png')} 
+                  style={styles.startButtonImage}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/50000fcfa.png')} style={styles.prizeImage} />
+              </View>
+            </View>
+
+            {/* 第三行 */}
+            <View style={styles.prizeRow}>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/20000fcfa.png')} style={styles.prizeImage} />
+              </View>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/half_price_product.png')} style={styles.prizeImage} />
+              </View>
+              <View style={styles.prizeItem}>
+                <Image source={require('../../../assets/activity_2/computer.png')} style={styles.prizeImage} />
+              </View>
+            </View>
+          </View>
+
+          {/* 底部机会显示 */}
+          <View style={styles.chanceWrapper}>
+            <View style={styles.chanceItemLeft}>
+              <Text style={styles.chanceText}>CHANCES GRATUITE: 1</Text>
+            </View>
+            <View style={styles.chanceItemRight}>
+              <Text style={styles.chanceText}>CHANCES D'AIDE: 1</Text>
+            </View>
+          </View>
+
+          {/* 底部按钮 */}
+          <View style={styles.buttonWrapper}>
+            <TouchableOpacity style={styles.buttonItemLeft}>
+              <Image 
+                source={require('../../../assets/activity_2/whatsapp.png')} 
+                style={styles.buttonImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonItemRight}>
+              <Image 
+                source={require('../../../assets/activity_2/copy_link.png')} 
+                style={styles.buttonImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* 奖池按钮 */}
+          <View style={styles.poolButtonWrapper}>
+            <TouchableOpacity>
+              <Image 
+                source={require('../../../assets/activity_2/free_product_pool.png')} 
+                style={styles.poolButtonImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image 
+                source={require('../../../assets/activity_2/half_price_pool.png')} 
+                style={styles.poolButtonImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ImageBackground>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    width: size.screenWidth,
+    height: size.screenHeight,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: size.screenWidth,
+    height: size.screenHeight,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: size.w(20),
+    paddingTop: size.h(160), // 调整到游戏机屏幕位置
+    paddingBottom: size.h(40),
+    alignItems: 'center',
+  },
+  prizeGrid: {
+    marginTop: size.h(88),
+    width: size.w(345),
+    height: size.h(345),
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: size.r(15),
+    padding: size.w(3),
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  prizeRow: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginVertical: size.h(1),
+  },
+  prizeItem: {
+    width: size.w(108),
+    height: size.h(108),
+    backgroundColor: 'white',
+    borderRadius: size.r(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
+    margin: size.w(1),
+  },
+  prizeImage: {
+    width: size.w(98),
+    height: size.h(98),
+    resizeMode: 'contain',
+  },
+  startButton: {
+    width: size.w(108),
+    height: size.h(108),
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: size.w(1),
+  },
+  startButtonImage: {
+    width: size.w(108),
+    height: size.h(108),
+    resizeMode: 'contain',
+  },
+  chanceWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: size.w(370),
+    marginTop: size.h(6),
+  },
+  chanceItemLeft: {
+    width: size.w(170),
+    height: size.h(45),
+    backgroundColor: 'transparent',
+    borderTopLeftRadius: size.r(12),
+    borderTopRightRadius: size.r(12),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: size.w(5),
+  },
+  chanceItemRight: {
+    width: size.w(170),
+    height: size.h(45),
+    backgroundColor: 'transparent',
+    borderTopLeftRadius: size.r(12),
+    borderTopRightRadius: size.r(12),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: size.w(5),
+  },
+  chanceText: {
+    color: 'white',
+    fontSize: size.f(12),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  buttonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: size.w(370),
+    marginTop: size.h(10),
+  },
+  buttonItemLeft: {
+    width: size.w(170),
+    height: size.h(45),
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: size.w(5),
+  },
+  buttonItemRight: {
+    width: size.w(170),
+    height: size.h(45),
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: size.w(5),
+  },
+  buttonImage: {
+    width: size.w(210),
+    height: size.h(70),
+  },
+  poolButtonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: size.w(340),
+    marginTop: size.h(90),
+  },
+  poolButtonImage: {
+    width: size.w(160),
+    height: size.h(120),
+  },
+});
+
+export default LotteryScreen;

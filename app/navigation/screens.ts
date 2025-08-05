@@ -56,6 +56,7 @@ import { EmailOtpScreen } from '../screens/loginList/EmailOtpScreen';
 import MiningGameScreen from '../screens/activity/MiningGameScreen';
 import TaskCenterScreen from '../screens/activity/TaskCenterScreen';
 import WithdrawalScreen from '../screens/activity/WithdrawalScreen';
+import LotteryScreen from '../screens/activity_2/LotteryScreen';
 
 export {
   CountrySelect,
@@ -116,4 +117,5 @@ export {
   MiningGameScreen,
   TaskCenterScreen,
   WithdrawalScreen,
+  LotteryScreen,
 }; 

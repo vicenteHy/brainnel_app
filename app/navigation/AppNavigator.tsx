@@ -252,6 +252,10 @@ export const AppNavigator = () => {
           name="WithdrawalScreen"
           component={Screens.WithdrawalScreen}
         />
+        <Stack.Screen
+          name="LotteryScreen"
+          component={Screens.LotteryScreen}
+        />
       </Stack.Navigator>
       <Toast 
         config={{
