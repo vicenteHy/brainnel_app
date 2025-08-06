@@ -5,6 +5,7 @@ export * from './login';
 export * from './chat';
 export * from './privacyApi';
 export * from './termsApi';
+export * from './notification';
 
 // 按需导出其他API服务
 // export * from './productApi';

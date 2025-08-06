@@ -368,8 +368,27 @@ class NotificationService {
   // 订阅主题
   async subscribeToTopic(topic: string): Promise<void> {
     try {
-      await messaging().subscribeToTopic(topic);
-      log.info(`已订阅主题: ${topic}`);
+      // 获取当前的 FCM token
+      const token = await this.getToken();
+      if (!token) {
+        log.error(`订阅主题失败: 无法获取 FCM token`);
+        return;
+      }
+
+      log.info(`[订阅主题] 准备订阅 topic: ${topic}, token: ${token}`);
+      
+      // 调用后端 API 进行订阅
+      const notificationApi = require('../services/api/notification').default;
+      const { API_BASE_URL } = require('../constants/config');
+      log.info(`[订阅主题] API Base URL: ${API_BASE_URL}`);
+      log.info(`[订阅主题] 完整请求 URL: ${API_BASE_URL}/api/notification-groups/assign-group`);
+      
+      await notificationApi.assignGroup({
+        token: token,
+        type: topic // 比如 'all_users'
+      });
+      
+      log.info(`已通过后端订阅主题: ${topic}`);
     } catch (error) {
       log.error(`订阅主题失败 ${topic}:`, error);
     }
