@@ -54,6 +54,8 @@ export const CategoryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [subLoading, setSubLoading] = useState(false);
   const analyticsData = useAnalyticsStore.getState();
+  const [debugTapCount, setDebugTapCount] = useState(0);
+  const tapTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   
   // 页面访问统计
   useEffect(() => {
@@ -155,6 +157,29 @@ export const CategoryScreen = () => {
     }
   };
 
+  const handleTitleTap = () => {
+    const newCount = debugTapCount + 1;
+    setDebugTapCount(newCount);
+    
+    // 清除之前的超时
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
+    if (newCount >= 7) {
+      // 触发显示调试覆盖层事件
+      if (global.EventEmitter) {
+        global.EventEmitter.emit('SHOW_DEBUG_OVERLAY');
+      }
+      setDebugTapCount(0);
+    }
+    
+    // 3秒后重置计数
+    tapTimeoutRef.current = setTimeout(() => {
+      setDebugTapCount(0);
+    }, 3000);
+  };
+
   const renderMainCategoryItem: ListRenderItem<Category> = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -239,7 +264,9 @@ export const CategoryScreen = () => {
           >
             <BackIcon size={fontSize(24)} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Catégories</Text>
+          <TouchableOpacity onPress={handleTitleTap} activeOpacity={1}>
+            <Text style={styles.headerTitle}>Catégories</Text>
+          </TouchableOpacity>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.container}>

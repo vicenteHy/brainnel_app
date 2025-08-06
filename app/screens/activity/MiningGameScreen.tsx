@@ -421,6 +421,14 @@ const MiningGameScreen = ({ navigation }: any) => {
       setNotificationPermissionModalVisible(true);
       return;
     }
+    
+    // 权限获取成功后，订阅通知主题
+    try {
+      await notificationService.subscribeToTopic('all_users');
+      console.log('[MiningGameScreen] 已订阅 all_users 主题');
+    } catch (error) {
+      console.error('[MiningGameScreen] 订阅主题失败:', error);
+    }
 
     // 检查金额是否达到5000，显示提现引导
     if (currentTotalReward >= 5000) {
@@ -1097,8 +1105,15 @@ const MiningGameScreen = ({ navigation }: any) => {
       <NotificationPermissionModal
         visible={notificationPermissionModalVisible}
         onClose={() => setNotificationPermissionModalVisible(false)}
-        onPermissionGranted={() => {
-          // 权限授予后继续挖矿
+        onPermissionGranted={async () => {
+          // 权限授予后，订阅通知主题
+          try {
+            await notificationService.subscribeToTopic('all_users');
+            console.log('[MiningGameScreen] 权限授予后已订阅 all_users 主题');
+          } catch (error) {
+            console.error('[MiningGameScreen] 权限授予后订阅主题失败:', error);
+          }
+          // 继续挖矿
           handleDig();
         }}
       />
