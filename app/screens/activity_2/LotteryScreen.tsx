@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, ImageBackground, StatusBar, Text, TouchableOpacity, Image, ScrollView, Animated } from 'react-native';
 import { size } from '../../utils/size';
+import WinningModal from './WinningModal';
 
 const LotteryScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(3); // 默认选中iPhone位置
   const [isSpinning, setIsSpinning] = useState(false);
+  const [showWinningModal, setShowWinningModal] = useState(false);
+  const [prizeType, setPrizeType] = useState<'free' | 'halfPrice' | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 创建9个动画值用于每个奖品的缩放
@@ -12,8 +15,9 @@ const LotteryScreen = () => {
     Array.from({ length: 9 }, () => new Animated.Value(1))
   ).current;
   
-  // 九宫格位置映射（顺时针）
-  const positions = [0, 1, 2, 5, 8, 7, 6, 3];
+  // 九宫格位置映射（顺时针，暂时只包含0和7用于测试）
+  const positions = [0, 1, 2, 5, 7, 6];
+  const winningPositions = [0, 7]; // 只会中奖的位置
   
   // 当选中项改变时触发缩放动画
   useEffect(() => {
@@ -49,10 +53,14 @@ const LotteryScreen = () => {
     let speed = 100; // 初始速度
     let rounds = 0; // 转动圈数
     const targetRounds = 3 + Math.floor(Math.random() * 2); // 3-4圈
-    const finalPosition = Math.floor(Math.random() * 8); // 最终停止位置
+    
+    // 随机选择一个中奖位置（只选择索引0或7）
+    const randomWinningIndex = winningPositions[Math.floor(Math.random() * winningPositions.length)];
+    // 找到该索引在positions数组中的位置
+    const finalPosition = positions.indexOf(randomWinningIndex);
     
     const spin = () => {
-      currentPosition = (currentPosition + 1) % 8;
+      currentPosition = (currentPosition + 1) % 6;  // 改为6个位置
       setSelectedIndex(positions[currentPosition]);
       
       // 计算已转圈数
@@ -71,7 +79,19 @@ const LotteryScreen = () => {
             intervalRef.current = null;
           }
           setIsSpinning(false);
-          // 这里可以添加中奖逻辑
+          
+          // 中奖逻辑：检查最终停留的位置
+          const finalIndex = positions[finalPosition];
+          if (finalIndex === 0) {
+            // 免费商品
+            setPrizeType('free');
+            setShowWinningModal(true);
+          } else if (finalIndex === 7) {
+            // 半价商品
+            setPrizeType('halfPrice');
+            setShowWinningModal(true);
+          }
+          
           return;
         }
       }
@@ -197,6 +217,16 @@ const LotteryScreen = () => {
           </View>
         </View>
       </ImageBackground>
+      
+      {/* 中奖弹窗 */}
+      <WinningModal 
+        visible={showWinningModal}
+        prizeType={prizeType}
+        onClose={() => {
+          setShowWinningModal(false);
+          setPrizeType(null);
+        }}
+      />
     </View>
   );
 };
