@@ -7,7 +7,7 @@ const LotteryScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(3); // 默认选中iPhone位置
   const [isSpinning, setIsSpinning] = useState(false);
   const [showWinningModal, setShowWinningModal] = useState(false);
-  const [prizeType, setPrizeType] = useState<'free' | 'halfPrice' | null>(null);
+  const [prizeType, setPrizeType] = useState<'free' | 'halfPrice' | 'coin' | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 创建9个动画值用于每个奖品的缩放
@@ -15,9 +15,9 @@ const LotteryScreen = () => {
     Array.from({ length: 9 }, () => new Animated.Value(1))
   ).current;
   
-  // 九宫格位置映射（顺时针，暂时只包含0和7用于测试）
+  // 九宫格位置映射（顺时针）
   const positions = [0, 1, 2, 5, 7, 6];
-  const winningPositions = [0, 7]; // 只会中奖的位置
+  const winningPositions = [0, 1, 7]; // 只会中奖的位置：0-免费商品, 1-1000FCFA, 7-半价商品
   
   // 当选中项改变时触发缩放动画
   useEffect(() => {
@@ -54,7 +54,7 @@ const LotteryScreen = () => {
     let rounds = 0; // 转动圈数
     const targetRounds = 3 + Math.floor(Math.random() * 2); // 3-4圈
     
-    // 随机选择一个中奖位置（只选择索引0或7）
+    // 随机选择一个中奖位置（只选择索引0、1或7）
     const randomWinningIndex = winningPositions[Math.floor(Math.random() * winningPositions.length)];
     // 找到该索引在positions数组中的位置
     const finalPosition = positions.indexOf(randomWinningIndex);
@@ -85,6 +85,10 @@ const LotteryScreen = () => {
           if (finalIndex === 0) {
             // 免费商品
             setPrizeType('free');
+            setShowWinningModal(true);
+          } else if (finalIndex === 1) {
+            // 1000 FCFA
+            setPrizeType('coin');
             setShowWinningModal(true);
           } else if (finalIndex === 7) {
             // 半价商品
