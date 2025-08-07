@@ -78,23 +78,26 @@ const LotteryScreen = () => {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          setIsSpinning(false);
           
-          // 中奖逻辑：检查最终停留的位置
-          const finalIndex = positions[finalPosition];
-          if (finalIndex === 0) {
-            // 免费商品
-            setPrizeType('free');
-            setShowWinningModal(true);
-          } else if (finalIndex === 1) {
-            // 1000 FCFA
-            setPrizeType('coin');
-            setShowWinningModal(true);
-          } else if (finalIndex === 7) {
-            // 半价商品
-            setPrizeType('halfPrice');
-            setShowWinningModal(true);
-          }
+          // 延迟0.5秒后移除高亮和显示中奖弹窗
+          setTimeout(() => {
+            setIsSpinning(false);
+            // 中奖逻辑：检查最终停留的位置
+            const finalIndex = positions[finalPosition];
+            if (finalIndex === 0) {
+              // 免费商品
+              setPrizeType('free');
+              setShowWinningModal(true);
+            } else if (finalIndex === 1) {
+              // 1000 FCFA
+              setPrizeType('coin');
+              setShowWinningModal(true);
+            } else if (finalIndex === 7) {
+              // 半价商品
+              setPrizeType('halfPrice');
+              setShowWinningModal(true);
+            }
+          }, 500);
           
           return;
         }
@@ -161,7 +164,7 @@ const LotteryScreen = () => {
             <View style={styles.prizeRow}>
               <Animated.View style={[styles.prizeItem, { transform: [{ scale: scaleAnims[6] }] }]}>
                 {selectedIndex === 6 && <Image source={require('../../../assets/activity_2/selected.png')} style={styles.selectedBackground} />}
-                <Image source={require('../../../assets/activity_2/20000fcfa.png')} style={styles.prizeImage} />
+                <Image source={require('../../../assets/activity_2/500fcfa.png')} style={styles.prizeImage} />
               </Animated.View>
               <Animated.View style={[styles.prizeItem, { transform: [{ scale: scaleAnims[7] }] }]}>
                 {selectedIndex === 7 && <Image source={require('../../../assets/activity_2/selected.png')} style={styles.selectedBackground} />}
