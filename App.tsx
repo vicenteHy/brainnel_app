@@ -424,23 +424,27 @@ function AppContent() {
           const initNotifications = async () => {
             try {
               log.info('[App] 开始初始化通知服务...');
-              // 使用新的检查和请求权限方法
-              const hasPermission = await notificationService.checkAndRequestPermission();
-              if (hasPermission) {
-                // 获取 FCM Token
-                const token = await notificationService.getToken();
-                if (token) {
-                  log.info('[App] 通知服务初始化成功，Token:', token);
-                  
-                  // 订阅默认主题
-                  await notificationService.subscribeToTopic('all_users');
-                  log.info('[App] 已订阅 all_users 主题');
-                }
-              } else {
+              
+              // 打开app时，只检查 all_users 分组
+              const hasPermission = await notificationService.requestPermission();
+              
+              if (!hasPermission) {
                 log.warn('[App] 用户未授权通知权限');
-                
-                // 保存状态，下次应用启动时可以再次提醒
                 await AsyncStorage.setItem('notification_permission_denied', 'true');
+              } else {
+                // 检查并更新Token
+                await notificationService.checkAndUpdateToken();
+                
+                // 检查是否已订阅 all_users
+                const isSubscribed = await notificationService.checkGroupSubscription('all_users');
+                
+                if (!isSubscribed) {
+                  log.info('[App] 未订阅 all_users，开始订阅...');
+                  await notificationService.subscribeToTopic('all_users');
+                  log.info('[App] 订阅 all_users 成功');
+                } else {
+                  log.info('[App] all_users 已订阅，无需重复订阅');
+                }
               }
             } catch (error) {
               log.error('[App] 通知服务初始化失败:', error);
@@ -678,13 +682,13 @@ function AppContent() {
         } catch (error) {
         }
         
-        // 登录成功后重新订阅all_users主题，传递完整的用户信息
+        // 登录成功后直接重新订阅all_users（不检查，每次都订阅以更新用户信息）
         try {
-          log.info('[App] 登录成功，重新订阅all_users主题，用户ID:', userId);
+          log.info('[App] 登录成功，重新订阅all_users以更新用户信息，用户ID:', userId);
           await notificationService.subscribeToTopic('all_users');
-          log.info('[App] 重新订阅all_users主题成功');
+          log.info('[App] 重新订阅all_users成功');
         } catch (error) {
-          log.error('[App] 重新订阅all_users主题失败:', error);
+          log.error('[App] 重新订阅all_users失败:', error);
         }
         
         preloadService.clearCache().then(() => {
@@ -1177,24 +1181,22 @@ function AppContent() {
           });
         }
         
-        // 检查通知权限（Android）
-        if (Platform.OS === 'android' && previousAppState.match(/inactive|background/)) {
+        // 从后台回到前台时，不再检查订阅状态（只在打开app时检查）
+        if (previousAppState.match(/inactive|background/)) {
+          // 只检查权限变化
           const deniedBefore = await AsyncStorage.getItem('notification_permission_denied');
           if (deniedBefore === 'true') {
-            // 如果之前用户拒绝了，再次检查是否已经在设置中开启
+            // 如果之前拒绝过，检查是否现在开启了
             const hasPermission = await notificationService.requestPermission();
             if (hasPermission) {
-              // 用户已经开启了通知
               await AsyncStorage.removeItem('notification_permission_denied');
-              console.log('用户已在设置中开启通知');
+              log.info('[App] 用户已在设置中开启通知权限');
               
-              // 重新初始化通知服务
-              const token = await notificationService.getToken();
-              if (token) {
-                log.info('[App] 用户重新开启通知权限，重新订阅all_users主题');
-                // 重新订阅时会自动获取当前用户信息（如果已登录）
+              // 权限恢复后，检查并订阅 all_users
+              const isSubscribed = await notificationService.checkGroupSubscription('all_users');
+              if (!isSubscribed) {
                 await notificationService.subscribeToTopic('all_users');
-                log.info('[App] 重新订阅all_users主题成功');
+                log.info('[App] 权限恢复后订阅 all_users 成功');
               }
             }
           }

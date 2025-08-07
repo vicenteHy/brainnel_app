@@ -10,6 +10,8 @@ import { t } from '../i18n';
 class NotificationService {
   private static instance: NotificationService;
   private hasRequestedPermission: boolean = false;
+  private subscribedGroups: string[] = [];
+  private SUBSCRIBED_GROUPS_KEY = 'notification_subscribed_groups';
   
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -250,6 +252,168 @@ class NotificationService {
     }
   }
 
+  // 检查并更新Token
+  async checkAndUpdateToken(): Promise<boolean> {
+    try {
+      // 获取新token
+      const newToken = await this.getToken();
+      if (!newToken) {
+        log.error('[FCM] 无法获取新Token');
+        return false;
+      }
+
+      // 获取旧token
+      const oldToken = await AsyncStorage.getItem('fcmToken');
+      
+      // 如果token有变化，调用更新接口
+      if (oldToken && oldToken !== newToken) {
+        log.info('[FCM] Token已变化，更新中...');
+        log.info('[FCM] 旧Token:', oldToken);
+        log.info('[FCM] 新Token:', newToken);
+        
+        try {
+          await notificationApi.updateToken({
+            old_token: oldToken,
+            new_token: newToken
+          });
+          log.info('[FCM] Token更新成功');
+          
+          // 保存新token
+          await AsyncStorage.setItem('fcmToken', newToken);
+          return true;
+        } catch (error) {
+          log.error('[FCM] Token更新失败:', error);
+          return false;
+        }
+      }
+      
+      // 如果没有旧token，也保存新token
+      if (!oldToken) {
+        await AsyncStorage.setItem('fcmToken', newToken);
+      }
+      
+      return true;
+    } catch (error) {
+      log.error('[FCM] 检查并更新Token失败:', error);
+      return false;
+    }
+  }
+
+  // 获取已订阅的分组列表
+  async getSubscribedGroups(): Promise<string[]> {
+    try {
+      const groupsJson = await AsyncStorage.getItem(this.SUBSCRIBED_GROUPS_KEY);
+      if (groupsJson) {
+        this.subscribedGroups = JSON.parse(groupsJson);
+        return this.subscribedGroups;
+      }
+      return [];
+    } catch (error) {
+      log.error('[FCM] 获取订阅分组列表失败:', error);
+      return [];
+    }
+  }
+
+  // 保存订阅分组列表
+  async saveSubscribedGroups(groups: string[]): Promise<void> {
+    try {
+      this.subscribedGroups = groups;
+      await AsyncStorage.setItem(this.SUBSCRIBED_GROUPS_KEY, JSON.stringify(groups));
+      log.info('[FCM] 保存订阅分组列表:', groups);
+    } catch (error) {
+      log.error('[FCM] 保存订阅分组列表失败:', error);
+    }
+  }
+
+  // 添加订阅分组
+  async addSubscribedGroup(group: string): Promise<void> {
+    const groups = await this.getSubscribedGroups();
+    if (!groups.includes(group)) {
+      groups.push(group);
+      await this.saveSubscribedGroups(groups);
+      log.info('[FCM] 添加订阅分组:', group);
+    }
+  }
+
+  // 移除订阅分组
+  async removeSubscribedGroup(group: string): Promise<void> {
+    const groups = await this.getSubscribedGroups();
+    const index = groups.indexOf(group);
+    if (index > -1) {
+      groups.splice(index, 1);
+      await this.saveSubscribedGroups(groups);
+      log.info('[FCM] 移除订阅分组:', group);
+    }
+  }
+
+  // 检查特定分组的订阅状态
+  async checkGroupSubscription(group: string): Promise<boolean> {
+    try {
+      const groups = await this.getSubscribedGroups();
+      const isSubscribed = groups.includes(group);
+      
+      log.info(`[FCM] 检查分组 "${group}" 订阅状态:`, isSubscribed ? '已订阅' : '未订阅');
+      log.info('[FCM] 当前已订阅分组:', groups);
+      
+      return isSubscribed;
+    } catch (error) {
+      log.error('[FCM] 检查分组订阅状态失败:', error);
+      return false;
+    }
+  }
+
+  // 检查订阅状态（检查all_users分组）
+  async checkSubscriptionStatus(): Promise<boolean> {
+    return await this.checkGroupSubscription('all_users');
+  }
+
+  // 完整的初始化和检查流程
+  async initializeAndCheck(): Promise<{
+    hasPermission: boolean;
+    isSubscribed: boolean;
+    tokenUpdated: boolean;
+    needsPermissionPrompt: boolean;
+  }> {
+    const result = {
+      hasPermission: false,
+      isSubscribed: false,
+      tokenUpdated: false,
+      needsPermissionPrompt: false
+    };
+
+    try {
+      // 1. 检查权限
+      const hasPermission = await this.requestPermission();
+      result.hasPermission = hasPermission;
+      
+      if (!hasPermission) {
+        // 检查是否已经拒绝过
+        const deniedBefore = await AsyncStorage.getItem('notification_permission_denied');
+        if (deniedBefore === 'true') {
+          result.needsPermissionPrompt = true;
+        }
+        return result;
+      }
+      
+      // 2. 检查并更新Token
+      result.tokenUpdated = await this.checkAndUpdateToken();
+      
+      // 3. 检查all_users分组订阅状态
+      result.isSubscribed = await this.checkGroupSubscription('all_users');
+      
+      // 4. 如果未订阅all_users，重新订阅
+      if (!result.isSubscribed) {
+        await this.subscribeToTopic('all_users');
+        result.isSubscribed = true;
+      }
+      
+      return result;
+    } catch (error) {
+      log.error('[FCM] 初始化和检查失败:', error);
+      return result;
+    }
+  }
+  
   // 获取 FCM Token
   async getToken(): Promise<string | null> {
     try {
@@ -408,7 +572,11 @@ class NotificationService {
       
       await notificationApi.assignGroup(params);
       
+      // 添加到订阅分组列表
+      await this.addSubscribedGroup(topic);
+      
       log.info(`已通过后端订阅主题: ${topic}`);
+      log.info(`订阅信息 - Token: ${token}, UserId: ${userId || '未登录'}, Topic: ${topic}`);
     } catch (error) {
       log.error(`订阅主题失败 ${topic}:`, error);
     }
@@ -418,10 +586,42 @@ class NotificationService {
   async unsubscribeFromTopic(topic: string): Promise<void> {
     try {
       await messaging().unsubscribeFromTopic(topic);
+      
+      // 从订阅分组列表中移除
+      await this.removeSubscribedGroup(topic);
+      
       log.info(`已取消订阅主题: ${topic}`);
     } catch (error) {
       log.error(`取消订阅主题失败 ${topic}:`, error);
     }
+  }
+
+  // 清除所有订阅（用于登出时）
+  async clearAllSubscriptions(): Promise<void> {
+    try {
+      const groups = await this.getSubscribedGroups();
+      
+      // 取消所有分组的订阅
+      for (const group of groups) {
+        try {
+          await messaging().unsubscribeFromTopic(group);
+          log.info(`取消订阅分组: ${group}`);
+        } catch (error) {
+          log.error(`取消订阅分组 ${group} 失败:`, error);
+        }
+      }
+      
+      // 清空本地存储
+      await this.saveSubscribedGroups([]);
+      log.info('[FCM] 已清除所有订阅');
+    } catch (error) {
+      log.error('[FCM] 清除所有订阅失败:', error);
+    }
+  }
+
+  // 获取当前所有订阅的分组
+  async getAllSubscribedGroups(): Promise<string[]> {
+    return await this.getSubscribedGroups();
   }
 }
 

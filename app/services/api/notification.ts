@@ -13,6 +13,11 @@ export interface NotificationResponse {
   data?: any;
 }
 
+export interface UpdateTokenParams {
+  old_token: string;
+  new_token: string;
+}
+
 const notificationApi = {
   /**
    * 分配通知组
@@ -90,6 +95,19 @@ const notificationApi = {
       return response.data;
     } catch (error) {
       console.error('获取未读通知数量失败:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 更新FCM Token
+   */
+  updateToken: async (params: UpdateTokenParams): Promise<NotificationResponse> => {
+    try {
+      const response = await apiClient.post('/api/notification-groups/update-token', params);
+      return response.data;
+    } catch (error) {
+      console.error('更新Token失败:', error);
       throw error;
     }
   }
