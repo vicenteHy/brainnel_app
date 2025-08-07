@@ -139,6 +139,29 @@ const notificationApi = {
       console.error('登出取消订阅失败:', error);
       throw error;
     }
+  },
+
+  /**
+   * 上报通知点击统计
+   */
+  logOpen: async (token: string, data: { test_id?: string; variant_id?: string; group_id?: string }) => {
+    try {
+      const payload = {
+        token: token,
+        test_id: data.test_id || '',
+        variant_id: data.variant_id || '',
+        group_id: data.group_id || ''
+      };
+      
+      console.log('[NotificationAPI] 上报通知点击统计:', payload);
+      const response = await apiClient.post('/api/notification-groups/log-open', payload);
+      console.log('[NotificationAPI] 通知点击统计上报成功');
+      return response.data;
+    } catch (error) {
+      console.error('[NotificationAPI] 通知点击统计上报失败:', error);
+      // 不抛出错误，避免影响主流程
+      return null;
+    }
   }
 };
 

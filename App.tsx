@@ -31,6 +31,7 @@ import { DeviceFingerprintCollector } from "./app/utils/deviceFingerprint";
 import { useModalQueue } from "./app/hooks/useModalQueue";
 import { ModalType, ModalPriority } from "./app/utils/modalQueueManager";
 import notificationService from "./app/services/notificationService";
+import notificationApi from "./app/services/api/notification";
 import log from "./app/utils/logger";
 import GlobalDebugOverlay from "./app/components/GlobalDebugOverlay";
 type RootStackParamList = {
@@ -270,7 +271,7 @@ function AppContent() {
   const processedNotifications = useRef<Set<string>>(new Set());
   
   // 处理通知点击导航
-  const handleNotificationNavigation = (message: any) => {
+  const handleNotificationNavigation = async (message: any) => {
     // 生成消息唯一标识
     const messageId = message.messageId || `${message.sentTime}_${JSON.stringify(message.data)}`;
     
@@ -298,6 +299,27 @@ function AppContent() {
     
     const navigation = navigationRef.current;
     const data = message.data || {};
+    
+    // 上报通知点击统计
+    try {
+      const notificationToken = await AsyncStorage.getItem('fcmToken');
+      log.info('[App] 通知Token:', notificationToken ? '存在' : '不存在');
+      log.info('[App] 通知数据 - test_id:', data.test_id, 'variant_id:', data.variant_id, 'group_id:', data.group_id);
+      
+      if (notificationToken && (data.test_id || data.variant_id || data.group_id)) {
+        log.info('[App] 开始上报通知点击统计...');
+        await notificationApi.logOpen(notificationToken, {
+          test_id: data.test_id,
+          variant_id: data.variant_id,
+          group_id: data.group_id
+        });
+        log.info('[App] 通知点击统计上报完成');
+      } else {
+        log.warn('[App] 跳过通知统计上报 - Token:', notificationToken ? '有' : '无', ', 数据:', data.test_id || data.variant_id || data.group_id ? '有' : '无');
+      }
+    } catch (error) {
+      log.error('[App] 上报通知点击统计失败:', error);
+    }
 
     // 根据不同的参数导航到不同页面
     if (data.screen) {
