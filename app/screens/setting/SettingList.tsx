@@ -26,6 +26,7 @@ import { userApi } from "../../services/api/userApi";
 
 import { avatarCacheService } from "../../services/avatarCacheService";
 import useActivityStore from "../../store/activityStore";
+import notificationService from "../../services/notificationService";
 
 export const SettingList = () => {
   const { t } = useTranslation();
@@ -75,6 +76,15 @@ export const SettingList = () => {
     try {
       // 保存当前国家设置，避免重新选择
       const savedCountry = await AsyncStorage.getItem('@selected_country');
+      
+      // 清除通知订阅（需要在清除用户状态之前调用，因为需要用户ID）
+      try {
+        await notificationService.clearAllSubscriptions();
+        console.log("Notification subscriptions cleared");
+      } catch (error) {
+        console.warn("Failed to clear notification subscriptions:", error);
+        // 即使清除订阅失败，也继续登出流程
+      }
       
       // 调用退出登录接口
       await userApi.logout();
@@ -130,6 +140,14 @@ export const SettingList = () => {
       
       // 保存当前国家设置（在清除之前获取）
       const savedCountry = await AsyncStorage.getItem('@selected_country');
+      
+      // 即使接口调用失败，也要清除通知订阅
+      try {
+        await notificationService.clearAllSubscriptions();
+        console.log("Notification subscriptions cleared (in error handler)");
+      } catch (notifError) {
+        console.warn("Failed to clear notification subscriptions:", notifError);
+      }
       
       // 即使接口调用失败，也要清除本地状态
       clearUser();

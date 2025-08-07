@@ -110,6 +110,35 @@ const notificationApi = {
       console.error('更新Token失败:', error);
       throw error;
     }
+  },
+
+  /**
+   * 获取用户订阅列表
+   */
+  getSubscriptions: async (token: string) => {
+    try {
+      // 使用 apiService 的 get 方法，返回的直接是 data
+      const response = await apiClient.get('/api/notification-groups/subscriptions', { token });
+      return response;
+    } catch (error) {
+      console.error('获取用户订阅列表失败:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 登出取消订阅
+   */
+  logoutUnsubscribe: async (userId: number): Promise<NotificationResponse> => {
+    try {
+      const response = await apiClient.post('/api/notification-groups/user/logout', {
+        user_id: userId
+      });
+      return response.data;
+    } catch (error) {
+      console.error('登出取消订阅失败:', error);
+      throw error;
+    }
   }
 };
 
