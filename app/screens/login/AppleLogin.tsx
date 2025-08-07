@@ -18,7 +18,7 @@ import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
-import { BOOST_SUCCESS_EVENT } from '../../constants/events';
+import { BOOST_SUCCESS_EVENT, AUTH_EVENTS } from '../../constants/events';
 
 interface AppleLoginButtonProps {
   onLoginStart?: () => void;
@@ -165,6 +165,12 @@ export const AppleLoginButton: React.FC<AppleLoginButtonProps> = ({
 
         if (onLoginSuccess) {
           onLoginSuccess();
+        }
+        
+        // 触发登录成功事件
+        if (global.EventEmitter) {
+          console.log('[Apple] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
         }
 
         // 导航到主页

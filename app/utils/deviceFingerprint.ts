@@ -164,7 +164,7 @@ export class DeviceFingerprintCollector {
   }
   
   // 获取或生成持久化的设备ID
-  private static async getOrCreateDeviceId(): Promise<string> {
+  static async getOrCreateDeviceId(): Promise<string> {
     try {
       let deviceId = await AsyncStorage.getItem(this.DEVICE_ID_KEY);
       if (!deviceId) {

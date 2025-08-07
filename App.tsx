@@ -678,6 +678,15 @@ function AppContent() {
         } catch (error) {
         }
         
+        // 登录成功后重新订阅all_users主题，传递完整的用户信息
+        try {
+          log.info('[App] 登录成功，重新订阅all_users主题，用户ID:', userId);
+          await notificationService.subscribeToTopic('all_users');
+          log.info('[App] 重新订阅all_users主题成功');
+        } catch (error) {
+          log.error('[App] 重新订阅all_users主题失败:', error);
+        }
+        
         preloadService.clearCache().then(() => {
           preloadService.startPreloading(userId);
         });
@@ -1182,7 +1191,10 @@ function AppContent() {
               // 重新初始化通知服务
               const token = await notificationService.getToken();
               if (token) {
+                log.info('[App] 用户重新开启通知权限，重新订阅all_users主题');
+                // 重新订阅时会自动获取当前用户信息（如果已登录）
                 await notificationService.subscribeToTopic('all_users');
+                log.info('[App] 重新订阅all_users主题成功');
               }
             }
           }

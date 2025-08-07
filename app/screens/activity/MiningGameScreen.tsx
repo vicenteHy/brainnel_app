@@ -422,7 +422,7 @@ const MiningGameScreen = ({ navigation }: any) => {
       return;
     }
     
-    // 权限获取成功后，订阅通知主题
+    // 权限获取成功后，订阅通知主题（会自动传递用户信息）
     try {
       await notificationService.subscribeToTopic('all_users');
       console.log('[MiningGameScreen] 已订阅 all_users 主题');
@@ -1106,7 +1106,7 @@ const MiningGameScreen = ({ navigation }: any) => {
         visible={notificationPermissionModalVisible}
         onClose={() => setNotificationPermissionModalVisible(false)}
         onPermissionGranted={async () => {
-          // 权限授予后，订阅通知主题
+          // 权限授予后，订阅通知主题（会自动传递用户信息）
           try {
             await notificationService.subscribeToTopic('all_users');
             console.log('[MiningGameScreen] 权限授予后已订阅 all_users 主题');

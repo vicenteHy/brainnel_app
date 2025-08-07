@@ -20,7 +20,7 @@ import fontSize from '../../utils/fontsizeUtils';
 import { settingApi } from '../../services/api/setting';
 import { handleLoginSettingsCheck } from '../../utils/userSettingsUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
-import { BOOST_SUCCESS_EVENT } from '../../constants/events';
+import { BOOST_SUCCESS_EVENT, AUTH_EVENTS } from '../../constants/events';
 
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
@@ -203,6 +203,12 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         }
         
         setUser(user);
+        
+        // 触发登录成功事件
+        if (global.EventEmitter) {
+          console.log('[Google] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
+        }
         
         // 导航到主页
         console.log("🏠 导航到主页...");

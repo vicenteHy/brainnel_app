@@ -2,6 +2,10 @@ import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform, Linking, AppState, NativeModules } from 'react-native';
 import log from '../utils/logger';
+import notificationApi from './api/notification';
+import useUserStore from '../store/user';
+import { API_BASE_URL } from '../constants/config';
+import { t } from '../i18n';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -168,9 +172,6 @@ class NotificationService {
   
   // 显示通知权限提示
   async showNotificationPermissionAlert(): Promise<void> {
-    // 导入 i18n
-    const { t } = require('../i18n');
-    
     Alert.alert(
       t('notification.permission.title'),
       t('notification.permission.message'),
@@ -377,16 +378,35 @@ class NotificationService {
 
       log.info(`[订阅主题] 准备订阅 topic: ${topic}, token: ${token}`);
       
-      // 调用后端 API 进行订阅
-      const notificationApi = require('../services/api/notification').default;
-      const { API_BASE_URL } = require('../constants/config');
+      // 获取当前用户ID（如果已登录）
+      const currentUser = useUserStore.getState().user;
+      const userId = currentUser?.user_id;
+      
+      // 获取设备ID - 使用与埋点相同的device_id
+      let deviceId = await AsyncStorage.getItem('analytics_device_id');
+      if (!deviceId) {
+        // 如果没有，生成一个新的（与埋点保持一致的格式）
+        deviceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await AsyncStorage.setItem('analytics_device_id', deviceId);
+      }
+      
       log.info(`[订阅主题] API Base URL: ${API_BASE_URL}`);
       log.info(`[订阅主题] 完整请求 URL: ${API_BASE_URL}/api/notification-groups/assign-group`);
+      log.info(`[订阅主题] 用户ID: ${userId || '未登录'}, 设备ID: ${deviceId}`);
       
-      await notificationApi.assignGroup({
+      // 构建请求参数
+      const params: any = {
         token: token,
-        type: topic // 比如 'all_users'
-      });
+        type: topic, // 比如 'all_users'
+        device_id: deviceId
+      };
+      
+      // 如果用户已登录，添加 user_id
+      if (userId) {
+        params.user_id = userId;
+      }
+      
+      await notificationApi.assignGroup(params);
       
       log.info(`已通过后端订阅主题: ${topic}`);
     } catch (error) {

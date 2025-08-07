@@ -3,6 +3,8 @@ import apiClient from './apiClient';
 export interface NotificationGroup {
   token: string;
   type: 'all_users' | 'specific_group' | string;
+  user_id?: number;
+  device_id?: string;
 }
 
 export interface NotificationResponse {

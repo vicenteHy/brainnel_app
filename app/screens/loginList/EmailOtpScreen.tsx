@@ -26,6 +26,7 @@ import useAnalyticsStore from '../../store/analytics';
 import { changeLanguage } from '../../i18n';
 import fontSize from '../../utils/fontsizeUtils';
 import { DeviceFingerprintCollector } from '../../utils/deviceFingerprint';
+import { AUTH_EVENTS } from '../../constants/events';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -200,6 +201,12 @@ export const EmailOtpScreen = () => {
         // 确保设置最终的用户信息
         console.log("📱 [邮箱登录] 设置最终用户信息到状态中");
         setUser(finalUser);
+        
+        // 触发登录成功事件
+        if (global.EventEmitter) {
+          console.log('[Email] 发送 LOGIN_SUCCESS 事件');
+          global.EventEmitter.emit(AUTH_EVENTS.LOGIN_SUCCESS);
+        }
         
         analyticsStore.logLogin(true, "email");
         

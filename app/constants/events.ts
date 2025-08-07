@@ -4,3 +4,8 @@ export const PAYMENT_FAILURE_EVENT = "PAYMENT_FAILURE_EVENT";
 
 // 助力相关事件常量
 export const BOOST_SUCCESS_EVENT = "BOOST_SUCCESS_EVENT";
+
+// 认证相关事件常量
+export const AUTH_EVENTS = {
+  LOGIN_SUCCESS: 'LOGIN_SUCCESS'
+};
