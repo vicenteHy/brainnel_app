@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { enterActivity, updateRewardAmount, getActivityStatus } from '../../services/api/activity';
+import notificationService from '../../services/notificationService';
 
 interface SpinWheelModalProps {
   visible: boolean;
@@ -179,6 +180,14 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({
               console.log('总邀请数:', data.total_invite_count);
               console.log('有效邀请数:', data.effective_invite_count);
               console.log('推荐人ID:', data.referrer_id);
+              
+              // 订阅 mini_start 通知（enterActivity 只会调用一次，无需检查重复）
+              try {
+                console.log('[SpinWheelModal] 订阅 mini_start 通知');
+                await notificationService.subscribeToTopic('mini_start');
+              } catch (notifyError) {
+                console.error('[SpinWheelModal] 订阅通知失败:', notifyError);
+              }
             } catch (enterError) {
               console.error('初始化活动失败:', enterError);
               setIsProcessing(false);

@@ -55,6 +55,9 @@ if (!global.EventEmitter) {
 // 定义全局事件处理支付成功
 import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT, BOOST_SUCCESS_EVENT } from "./app/constants/events";
 
+// 创建内存缓存存储订阅列表
+let subscriptionCache: Set<string> = new Set();
+
 function AppContent() {
   const analyticsData = useAnalyticsStore();
   const userStore = useUserStore();
@@ -457,12 +460,33 @@ function AppContent() {
                 // 检查并更新Token
                 await notificationService.checkAndUpdateToken();
                 
+                // 获取并缓存订阅列表
+                try {
+                  const fcmToken = await notificationService.getToken();
+                  if (fcmToken) {
+                    const response = await notificationApi.getSubscriptions(fcmToken);
+                    // 清空旧缓存并添加新的订阅列表
+                    subscriptionCache.clear();
+                    if (response && Array.isArray(response)) {
+                      response.forEach((group: any) => {
+                        if (group.name) {
+                          subscriptionCache.add(group.name);
+                        }
+                      });
+                    }
+                    log.info('[App] 已缓存订阅列表:', Array.from(subscriptionCache));
+                  }
+                } catch (error) {
+                  log.error('[App] 获取订阅列表失败:', error);
+                }
+                
                 // 检查是否已订阅 all_users
                 const isSubscribed = await notificationService.checkGroupSubscription('all_users');
                 
                 if (!isSubscribed) {
                   log.info('[App] 未订阅 all_users，开始订阅...');
                   await notificationService.subscribeToTopic('all_users');
+                  subscriptionCache.add('all_users'); // 添加到缓存
                   log.info('[App] 订阅 all_users 成功');
                 } else {
                   log.info('[App] all_users 已订阅，无需重复订阅');
@@ -480,7 +504,7 @@ function AppContent() {
           });
           
           // 设置 WebSocket 消息处理器
-          websocketService.onMessage((data) => {
+          websocketService.onMessage(async (data) => {
             
             // 处理 invitation 类型的消息 - 被别人助力
             if (data.type === 'invitation' && data.invitee_name) {
@@ -491,6 +515,39 @@ function AppContent() {
                 userId: data.invitee_name,
                 isAlreadyBoosted: false
               });
+              
+              // 查询有效邀请人数并订阅相应的通知组
+              try {
+                const { getEffectiveInviteCount } = await import('./app/services/api/activity');
+                const notificationService = (await import('./app/services/notificationService')).default;
+                
+                const result = await getEffectiveInviteCount();
+                const count = result.effective_invite_count;
+                console.log('[App] 当前有效邀请人数:', count);
+                
+                let notificationType = '';
+                if (count >= 1 && count < 3) {
+                  notificationType = 'mini_top';
+                } else if (count >= 3 && count < 10) {
+                  notificationType = 'mini_medium';
+                } else if (count >= 10) {
+                  notificationType = 'mini_bottom';
+                }
+                
+                if (notificationType) {
+                  // 检查缓存，避免重复订阅
+                  if (subscriptionCache.has(notificationType)) {
+                    console.log(`[App] 通知组 ${notificationType} 已订阅，跳过重复订阅`);
+                  } else {
+                    console.log(`[App] 订阅通知组: ${notificationType}`);
+                    await notificationService.subscribeToTopic(notificationType);
+                    subscriptionCache.add(notificationType); // 添加到缓存
+                    console.log('[App] 当前缓存的订阅列表:', Array.from(subscriptionCache));
+                  }
+                }
+              } catch (error) {
+                console.error('[App] 查询邀请人数或订阅通知失败:', error);
+              }
             }
             
             // 处理 broadcast 类型的消息 - 好友提现成功
@@ -1226,6 +1283,9 @@ function AppContent() {
       } else if (nextAppState === 'background') {
         // 应用进入后台，断开 WebSocket 连接
         websocketService.disconnect();
+        // 清除订阅列表缓存
+        subscriptionCache.clear();
+        log.info('[App] 应用进入后台，已清除订阅列表缓存');
       }
     };
 

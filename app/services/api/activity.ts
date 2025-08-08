@@ -293,3 +293,20 @@ export const getGameLogs = async (page: number = 1, page_size: number = 20): Pro
     throw error;
   }
 };
+
+// 获取有效邀请人数接口返回类型
+export interface EffectiveInviteCountResponse {
+  effective_invite_count: number;
+}
+
+// 获取有效邀请人数接口
+export const getEffectiveInviteCount = async (): Promise<EffectiveInviteCountResponse> => {
+  try {
+    const data = await apiService.get<EffectiveInviteCountResponse>('/api/activity/invitations/effective-count');
+    console.log('[Activity] 获取有效邀请人数成功:', data);
+    return data;
+  } catch (error) {
+    console.error('获取有效邀请人数失败:', error);
+    throw error;
+  }
+};
