@@ -1419,6 +1419,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenWidth * 0.037,
     paddingTop: Platform.OS === 'ios' ? getStatusBarHeight() + screenHeight * 0.021 : (StatusBar.currentHeight || 0) - screenHeight * 0.021,
     paddingBottom: screenHeight * 0.011,
+    zIndex: 1000,
   },
   headerTitle: {
     alignItems: 'center',
@@ -1929,7 +1930,7 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'android' ? screenHeight * 0.011 : screenHeight * 0.064,
     left: screenWidth * 0.047,
     right: screenWidth * 0.047,
-    zIndex: 999,
+    zIndex: 900,
   },
   notificationContent: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
