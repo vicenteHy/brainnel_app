@@ -6,6 +6,7 @@ import notificationApi from './api/notification';
 import useUserStore from '../store/user';
 import { API_BASE_URL } from '../constants/config';
 import { t } from '../i18n';
+import subscriptionCache from './subscriptionCache';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -315,7 +316,15 @@ class NotificationService {
   // 从后端获取已订阅的分组列表
   async getSubscribedGroups(): Promise<string[]> {
     try {
-      log.info('[FCM] 从后端获取订阅分组列表...');
+      // 先检查缓存是否有效
+      if (subscriptionCache.isValid()) {
+        const cachedGroups = subscriptionCache.getAll();
+        log.info('[FCM] 使用缓存的订阅列表:', cachedGroups);
+        log.info('[FCM] 缓存年龄:', Math.floor((subscriptionCache.getAge() || 0) / 1000), '秒');
+        return cachedGroups;
+      }
+      
+      log.info('[FCM] 缓存无效或不存在，从后端获取订阅分组列表...');
       
       // 先获取最新的 FCM token
       const fcmToken = await this.getToken();
@@ -346,8 +355,12 @@ class NotificationService {
         groups.forEach((group, index) => {
           log.info(`[FCM] 订阅分组[${index}]:`, group);
         });
+        // 更新缓存
+        subscriptionCache.setCache(groups);
       } else {
         log.info('[FCM] 当前没有任何订阅分组');
+        // 即使没有订阅，也更新缓存为空
+        subscriptionCache.setCache([]);
       }
       
       return Array.isArray(groups) ? groups : [];
@@ -588,6 +601,9 @@ class NotificationService {
       
       await notificationApi.assignGroup(params);
       
+      // 订阅成功后，更新缓存
+      subscriptionCache.add(topic);
+      
       log.info(`已通过后端订阅主题: ${topic}`);
       log.info(`订阅信息 - Token: ${token}, UserId: ${userId || '未登录'}, Topic: ${topic}`);
     } catch (error) {
@@ -601,6 +617,9 @@ class NotificationService {
       // 注意：后端的取消订阅应该在 logoutUnsubscribe 中处理
       // 这里只是本地 Firebase 的取消订阅
       await messaging().unsubscribeFromTopic(topic);
+      
+      // 从缓存中移除
+      subscriptionCache.remove(topic);
       
       log.info(`已取消订阅主题: ${topic}`);
     } catch (error) {
@@ -652,6 +671,9 @@ class NotificationService {
       } else {
         log.info('[FCM] 没有需要本地取消的订阅分组');
       }
+      
+      // 清空缓存
+      subscriptionCache.clear();
       
       log.info('[FCM] ========== 清除所有订阅完成 ==========');
     } catch (error) {

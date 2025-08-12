@@ -422,12 +422,25 @@ const MiningGameScreen = ({ navigation }: any) => {
       return;
     }
     
-    // 权限获取成功后，订阅通知主题（会自动传递用户信息）
+    // 权限获取成功后，检查并订阅通知主题
     try {
-      await notificationService.subscribeToTopic('all_users');
-      console.log('[MiningGameScreen] 已订阅 all_users 主题');
-      await notificationService.subscribeToTopic('mini_start');
-      console.log('[MiningGameScreen] 已订阅 mini_start 主题');
+      // 检查 all_users 主题是否已订阅
+      const isAllUsersSubscribed = await notificationService.checkGroupSubscription('all_users');
+      if (!isAllUsersSubscribed) {
+        await notificationService.subscribeToTopic('all_users');
+        console.log('[MiningGameScreen] 已订阅 all_users 主题');
+      } else {
+        console.log('[MiningGameScreen] all_users 主题已订阅，跳过');
+      }
+      
+      // 检查 mini_start 主题是否已订阅
+      const isMiniStartSubscribed = await notificationService.checkGroupSubscription('mini_start');
+      if (!isMiniStartSubscribed) {
+        await notificationService.subscribeToTopic('mini_start');
+        console.log('[MiningGameScreen] 已订阅 mini_start 主题');
+      } else {
+        console.log('[MiningGameScreen] mini_start 主题已订阅，跳过');
+      }
     } catch (error) {
       console.error('[MiningGameScreen] 订阅主题失败:', error);
     }
@@ -1108,12 +1121,25 @@ const MiningGameScreen = ({ navigation }: any) => {
         visible={notificationPermissionModalVisible}
         onClose={() => setNotificationPermissionModalVisible(false)}
         onPermissionGranted={async () => {
-          // 权限授予后，订阅通知主题（会自动传递用户信息）
+          // 权限授予后，检查并订阅通知主题
           try {
-            await notificationService.subscribeToTopic('all_users');
-            console.log('[MiningGameScreen] 权限授予后已订阅 all_users 主题');
-            await notificationService.subscribeToTopic('mini_start');
-            console.log('[MiningGameScreen] 权限授予后已订阅 mini_start 主题');
+            // 检查 all_users 主题是否已订阅
+            const isAllUsersSubscribed = await notificationService.checkGroupSubscription('all_users');
+            if (!isAllUsersSubscribed) {
+              await notificationService.subscribeToTopic('all_users');
+              console.log('[MiningGameScreen] 权限授予后已订阅 all_users 主题');
+            } else {
+              console.log('[MiningGameScreen] 权限授予后 all_users 主题已订阅，跳过');
+            }
+            
+            // 检查 mini_start 主题是否已订阅
+            const isMiniStartSubscribed = await notificationService.checkGroupSubscription('mini_start');
+            if (!isMiniStartSubscribed) {
+              await notificationService.subscribeToTopic('mini_start');
+              console.log('[MiningGameScreen] 权限授予后已订阅 mini_start 主题');
+            } else {
+              console.log('[MiningGameScreen] 权限授予后 mini_start 主题已订阅，跳过');
+            }
           } catch (error) {
             console.error('[MiningGameScreen] 权限授予后订阅主题失败:', error);
           }
