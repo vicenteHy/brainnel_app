@@ -252,6 +252,22 @@ export const AppNavigator = () => {
           name="WithdrawalScreen"
           component={Screens.WithdrawalScreen}
         />
+        <Stack.Screen
+          name="LocalProductList"
+          component={Screens.LocalProductListScreen}
+        />
+        <Stack.Screen
+          name="LocalProductDetail"
+          component={Screens.LocalProductDetail}
+        />
+        <Stack.Screen
+          name="LocalAddressForm"
+          component={Screens.LocalAddressForm}
+        />
+        <Stack.Screen
+          name="PickUp"
+          component={Screens.PickUp}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

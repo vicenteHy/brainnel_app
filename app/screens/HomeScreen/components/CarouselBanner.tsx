@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { View, TouchableOpacity, Image, Dimensions } from "react-native";
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import { View, TouchableOpacity, Image, Dimensions, ScrollView } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { styles } from "../styles";
@@ -25,13 +25,21 @@ export const CarouselBanner = React.memo(
     const [currentRewardAmount, setCurrentRewardAmount] = useState(0);
     const [isActivityFinished, setIsActivityFinished] = useState(false);
     const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollViewRef = useRef<ScrollView>(null);
     const userStore = useUserStore();
     
     const bannerData = useMemo(
-      () => ({
-        imgUrl: require("../../../../assets/img/activity1.png"),
-        add: "TikTokScreen",
-      }),
+      () => [
+        {
+          imgUrl: require("../../../../assets/img/activity1.png"),
+          add: "TikTokScreen",
+        },
+        {
+          imgUrl: require("../../../../assets/local/banner.png"),
+          add: "PromoScreen",
+        },
+      ],
       [],
     );
 
@@ -61,12 +69,41 @@ export const CarouselBanner = React.memo(
       }, [fetchActivityStatus])
     );
 
-    const handleBannerPress = useCallback(async () => {
+    // 自动轮播
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % bannerData.length;
+          scrollViewRef.current?.scrollTo({
+            x: nextIndex * screenWidth,
+            animated: true,
+          });
+          return nextIndex;
+        });
+      }, 3000);
+
+      return () => clearInterval(timer);
+    }, [bannerData.length, screenWidth]);
+
+    const handleScroll = (event: any) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / screenWidth);
+      setCurrentIndex(index);
+    };
+
+    const handleBannerPress = useCallback(async (index: number) => {
       // 如果正在刷新或正在检查状态，禁用点击
       if (isRefreshing || isCheckingStatus) {
         return;
       }
       
+      // 第二个 banner 的点击处理 - 跳转到本地货盘
+      if (index === 1) {
+        navigation.navigate('LocalProductList');
+        return;
+      }
+      
+      // 第一个 banner (活动) 的原有逻辑
       // 检查用户是否已登录
       if (!userStore.user?.user_id) {
         // 用户未登录，显示登录弹窗
@@ -128,31 +165,63 @@ export const CarouselBanner = React.memo(
     
     return (
       <View style={styles.swiperContainer}>
-        <TouchableOpacity
-          onPress={handleBannerPress}
-          activeOpacity={1}
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#f2f2f2",
-            borderRadius: 0,
-            overflow: "hidden",
-            height: 240,
-            
-          }}
-          disabled={isRefreshing || isCheckingStatus}
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          style={{ height: 240 }}
         >
-          <Image
-            source={bannerData.imgUrl}
-            style={{ 
-              width: "100%", 
-              height: "100%"
-            }}
-            resizeMode="cover"
-            defaultSource={require("../../../../assets/img/activity1.png")}
-          />
-        </TouchableOpacity>
+          {bannerData.map((banner, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleBannerPress(index)}
+              activeOpacity={1}
+              style={{
+                width: screenWidth,
+                height: 240,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f2f2f2",
+              }}
+              disabled={isRefreshing || isCheckingStatus}
+            >
+              <Image
+                source={banner.imgUrl}
+                style={{ 
+                  width: "100%", 
+                  height: "100%"
+                }}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        
+        <View style={{
+          position: 'absolute',
+          bottom: 10,
+          left: 0,
+          right: 0,
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          {bannerData.map((_, index) => (
+            <View
+              key={index}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: currentIndex === index ? '#FF6600' : 'rgba(255, 255, 255, 0.5)',
+                marginHorizontal: 4,
+              }}
+            />
+          ))}
+        </View>
         
         <SpinWheelModal
           visible={showSpinWheel}

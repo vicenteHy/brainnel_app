@@ -55,6 +55,7 @@ interface CategoryPageProps {
   // 新增：智能预加载相关
   checkAndTriggerPreload?: (categoryId: number, visibleIndex: number) => void;
   loadingStrategy?: any;
+  renderHeaderComponent?: () => React.ReactNode; // 新增：自定义头部组件
 }
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({
@@ -74,6 +75,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   onViewAllSubcategories,
   checkAndTriggerPreload,
   loadingStrategy,
+  renderHeaderComponent,
 }) => {
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
@@ -362,6 +364,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
               onLoginRequired={onLoginRequired} 
               isRefreshing={pageData.loading}
             />
+            {/* 添加自定义头部组件（如本地货盘） */}
+            {renderHeaderComponent && renderHeaderComponent()}
           </>
         ) : (
           // 分类页面显示二级分类
@@ -369,7 +373,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         )}
       </>
     ),
-    [categoryId, onCameraPress, onLoginRequired, subcategoryComponent, pageData.loading],
+    [categoryId, onCameraPress, onLoginRequired, subcategoryComponent, pageData.loading, renderHeaderComponent],
   );
 
   // 处理用户下拉刷新

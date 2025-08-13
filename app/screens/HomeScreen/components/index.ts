@@ -5,3 +5,4 @@ export { FeatureNavigationBar } from './FeatureNavigationBar';
 export { ProductSkeleton } from './ProductSkeleton';
 export { CategoryPage } from './CategoryPage';
 export { MultiPageContainer } from './MultiPageContainer';
+export { default as LocalFlashSection } from './LocalFlashSection';

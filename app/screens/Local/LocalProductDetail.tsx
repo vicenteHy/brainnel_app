@@ -1,0 +1,968 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Dimensions,
+  SafeAreaView,
+  Alert,
+} from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Colors } from '../../constants/Colors';
+import fontSize from '../../utils/fontsizeUtils';
+import { 
+  LocalProduct, 
+  LocalProductSku,
+  parseProductImages,
+  fetchLocalProducts 
+} from '../../services/local/productList';
+import { productCacheManager } from '../../services/local/productCache';
+import { useTranslation } from 'react-i18next';
+import PagerView from 'react-native-pager-view';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// 自适应高度的图片组件
+const AutoHeightImage = ({ uri, style }: { uri: string; style?: any }) => {
+  const [imageHeight, setImageHeight] = useState(screenWidth); // 默认高度
+  
+  useEffect(() => {
+    Image.getSize(uri, (width, height) => {
+      // 计算图片在屏幕宽度下的实际高度
+      const scaledHeight = (screenWidth / width) * height;
+      setImageHeight(scaledHeight);
+    }, (error) => {
+      console.error('获取图片尺寸失败:', error);
+    });
+  }, [uri]);
+  
+  return (
+    <Image
+      source={{ uri }}
+      style={[style, { width: screenWidth, height: imageHeight }]}
+      resizeMode="contain"
+    />
+  );
+};
+
+export default function LocalProductDetail() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { t, i18n } = useTranslation();
+  const { productId } = route.params as { productId: number };
+  
+  const [product, setProduct] = useState<LocalProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+  
+  const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
+  const pagerRef = useRef<PagerView>(null);
+
+  // 倒计时逻辑
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      
+      const difference = midnight.getTime() - now.getTime();
+      
+      if (difference > 0) {
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+        
+        setTimeLeft({ hours, minutes, seconds });
+      } else {
+        setTimeLeft({ hours: 23, minutes: 59, seconds: 59 });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // 加载商品数据
+  useEffect(() => {
+    loadProduct();
+  }, [productId]);
+
+  const loadProduct = async () => {
+    try {
+      setLoading(true);
+      
+      // 先尝试从缓存获取
+      const cachedProduct = productCacheManager.getProduct(productId);
+      if (cachedProduct) {
+        setProduct(cachedProduct);
+        setLoading(false);
+        return;
+      }
+      
+      // 如果缓存没有，从API获取
+      const response = await fetchLocalProducts({ page: 1, page_size: 100 });
+      const foundProduct = response.items.find(p => p.product_id === productId);
+      
+      if (foundProduct) {
+        setProduct(foundProduct);
+        // 更新缓存
+        productCacheManager.setProduct(productId, foundProduct);
+      } else {
+        Alert.alert('错误', '商品不存在');
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('获取商品详情失败:', error);
+      Alert.alert('错误', '获取商品详情失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTime = (value: number) => {
+    return value.toString().padStart(2, '0');
+  };
+
+  // 获取商品轮播图片（使用image_url字段）
+  const getProductImages = (): string[] => {
+    if (!product) return [];
+    // image_url 是轮播图
+    const images = parseProductImages(product.image_url);
+    return images.length > 0 ? images : [];
+  };
+  
+  // 获取商品详情图片（使用description_fr/description_cn字段）
+  const getDescriptionImages = (): string[] => {
+    if (!product) return [];
+    const description = isChineseLanguage ? product.description_cn : product.description_fr;
+    if (!description) return [];
+    
+    // description可能是字符串数组或JSON字符串
+    if (Array.isArray(description)) {
+      return description;
+    } else if (typeof description === 'string') {
+      try {
+        const parsed = JSON.parse(description);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        // 如果不是JSON，可能是单个URL
+        return description.startsWith('http') ? [description] : [];
+      }
+    }
+    return [];
+  };
+
+  // 获取颜色选项（包含图片）
+  const getColorOptions = (): Array<{ color: string; image?: string }> => {
+    if (!product || !product.skus) return [];
+    const colorMap = new Map<string, string>();
+    
+    product.skus.forEach(sku => {
+      if (sku.attr_key_1 === 'Couleur' && sku.attr_value_1) {
+        colorMap.set(sku.attr_value_1, sku.image_url || '');
+      } else if (sku.attr_key_2 === 'Couleur' && sku.attr_value_2) {
+        colorMap.set(sku.attr_value_2, sku.image_url || '');
+      }
+    });
+    
+    return Array.from(colorMap.entries()).map(([color, image]) => ({
+      color,
+      image: image || undefined
+    }));
+  };
+
+  // 获取尺码选项
+  const getSizeOptions = (): string[] => {
+    if (!product || !product.skus) return [];
+    const sizes = new Set<string>();
+    product.skus.forEach(sku => {
+      if (sku.attr_key_1 === 'Taille' && sku.attr_value_1) {
+        sizes.add(sku.attr_value_1);
+      } else if (sku.attr_key_2 === 'Taille' && sku.attr_value_2) {
+        sizes.add(sku.attr_value_2);
+      }
+    });
+    return Array.from(sizes);
+  };
+
+  // 获取当前选择的SKU
+  const getSelectedSku = (): LocalProductSku | undefined => {
+    if (!product || !product.skus) return undefined;
+    
+    const selectedColor = getColorOptions()[selectedColorIndex]?.color;
+    const selectedSize = getSizeOptions()[selectedSizeIndex];
+    
+    return product.skus.find(sku => {
+      const colorMatch = !selectedColor || 
+        (sku.attr_value_1 === selectedColor && sku.attr_key_1 === 'Couleur') ||
+        (sku.attr_value_2 === selectedColor && sku.attr_key_2 === 'Couleur');
+      const sizeMatch = !selectedSize ||
+        (sku.attr_value_1 === selectedSize && sku.attr_key_1 === 'Taille') ||
+        (sku.attr_value_2 === selectedSize && sku.attr_key_2 === 'Taille');
+      
+      return colorMatch && sizeMatch;
+    });
+  };
+
+  // 获取当前价格
+  const getCurrentPrice = (): number => {
+    const sku = getSelectedSku();
+    return sku ? sku.price : (product?.price || 0);
+  };
+
+  // 获取当前库存
+  const getCurrentStock = (): number => {
+    const sku = getSelectedSku();
+    return sku ? sku.stock : (product?.stock || 0);
+  };
+
+  const handleAddToCart = () => {
+    Alert.alert('提示', '加入购物车功能待实现');
+  };
+
+  const handleBuyNow = () => {
+    // 导航到本地地址填写页面
+    navigation.navigate('LocalAddressForm' as never);
+  };
+
+  const handleFavorite = () => {
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    const newQuantity = quantity + delta;
+    const maxStock = getCurrentStock();
+    if (newQuantity >= 1 && newQuantity <= maxStock) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!product) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>商品不存在</Text>
+      </View>
+    );
+  }
+
+  const colorOptions = getColorOptions();
+  const sizeOptions = getSizeOptions();
+  const currentPrice = getCurrentPrice();
+  const discount = Math.round(product.off * 100);
+  const productName = isChineseLanguage ? product.name_cn : product.name_fr;
+  const productContent = isChineseLanguage ? product.content_cn : product.content_fr; // 文字详情
+  const descriptionImages = getDescriptionImages(); // 详情图片
+  
+  // 获取显示的图片（包含选中SKU的图片）
+  const getDisplayImages = (): string[] => {
+    const baseImages = getProductImages();
+    const selectedOption = colorOptions[selectedColorIndex];
+    
+    // 如果选中的颜色有图片，将其添加到轮播图开头
+    if (selectedOption?.image && !baseImages.includes(selectedOption.image)) {
+      return [selectedOption.image, ...baseImages];
+    }
+    
+    return baseImages;
+  };
+  
+  const images = getDisplayImages();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* 图片轮播 */}
+        {images.length > 0 && (
+          <View style={styles.imageContainer}>
+            <PagerView 
+              ref={pagerRef}
+              style={styles.pagerView} 
+              initialPage={0}
+              onPageSelected={(e) => setSelectedImageIndex(e.nativeEvent.position)}
+            >
+              {images.map((image, index) => (
+                <View key={index} style={styles.imageSlide}>
+                  <Image source={{ uri: image }} style={styles.productImage} />
+                </View>
+              ))}
+            </PagerView>
+            
+            {/* 顶部导航栏 - 覆盖在图片上 */}
+            <View style={styles.overlayHeader}>
+              <TouchableOpacity 
+                onPress={() => navigation.goBack()} 
+                style={styles.overlayHeaderButton}
+              >
+                <Ionicons name="chevron-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleFavorite} 
+                style={styles.overlayHeaderButton}
+              >
+                <Ionicons 
+                  name={isFavorite ? "heart" : "heart-outline"} 
+                  size={24} 
+                  color={isFavorite ? "#FF5100" : "#333"} 
+                />
+              </TouchableOpacity>
+            </View>
+            
+            {/* 图片指示器 */}
+            <View style={styles.imageIndicators}>
+              {images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    index === selectedImageIndex && styles.activeIndicator
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 商品信息 */}
+        <View style={styles.infoSection}>
+          <Text style={styles.productId}>ID:{product.product_id}</Text>
+          
+          {/* 商品标题 */}
+          <Text style={styles.productTitle}>{productName}</Text>
+          
+          {/* 销量信息 */}
+          <Text style={styles.salesInfo}>
+            {isChineseLanguage ? '1k+ 上月销量' : '1k+ vendus au cours du dernier mois'}
+          </Text>
+        </View>
+
+        {/* Flash Local价格区域 */}
+        <View style={styles.flashLocalContainer}>
+          <LinearGradient
+            colors={['#FF5100', '#FF8C00']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.flashHeader}
+          >
+            <View style={styles.flashHeaderContent}>
+              <View style={styles.flashTitleRow}>
+                <View style={styles.iconWrapper}>
+                  <Ionicons name="flash" size={20} color="#FFB700" />
+                </View>
+                <Text style={styles.flashTitle}>Flash Local</Text>
+              </View>
+              
+              <View style={styles.countdown}>
+                <Text style={styles.countdownLabel}>TEMPS RESTANT</Text>
+                <View style={styles.countdownTime}>
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeText}>{formatTime(timeLeft.hours)}</Text>
+                  </View>
+                  <Text style={styles.timeSeparator}>:</Text>
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeText}>{formatTime(timeLeft.minutes)}</Text>
+                  </View>
+                  <Text style={styles.timeSeparator}>:</Text>
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeText}>{formatTime(timeLeft.seconds)}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
+
+          <View style={styles.flashContent}>
+            {/* 配送信息 */}
+            <View style={styles.deliveryInfo}>
+              <View style={styles.deliveryItem}>
+                <Ionicons name="car-outline" size={18} color="#FF6600" />
+                <Text style={styles.deliveryText}>
+                  {isChineseLanguage ? '免费配送' : 'Livraison gratuite en '}
+                  <Text style={styles.deliveryHighlight}>
+                    {isChineseLanguage ? '72小时' : '72h'}
+                  </Text>
+                </Text>
+              </View>
+              <View style={styles.deliveryItem}>
+                <Ionicons name="cash-outline" size={18} color="#FF6600" />
+                <Text style={styles.deliveryText}>
+                  {isChineseLanguage ? '货到付款' : 'Paiement à la livraison'}
+                </Text>
+              </View>
+            </View>
+
+            {/* 价格信息 */}
+            <View style={styles.priceRow}>
+              <View style={styles.priceContainer}>
+                <Text style={styles.currentPrice}>{currentPrice}</Text>
+                <Text style={styles.currency}>FCFA</Text>
+              </View>
+              
+              {discount > 0 && (
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>-{discount}%</Text>
+                </View>
+              )}
+              
+              {product.original_price > currentPrice && (
+                <Text style={styles.originalPrice}>
+                  Prix d'origine: {product.original_price}FCFA
+                </Text>
+              )}
+            </View>
+
+            {/* 剩余库存 */}
+            <View style={styles.stockRow}>
+              <Text style={styles.stockLabel}>PLUS QUE {getCurrentStock()}</Text>
+              <View style={styles.stockBar}>
+                <View style={[styles.stockFill, { width: '30%' }]} />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* 颜色选择 */}
+        {colorOptions.length > 0 && (
+          <View style={styles.optionSection}>
+            <Text style={styles.optionTitle}>
+              Couleur: <Text style={styles.optionValue}>{colorOptions[selectedColorIndex]?.color}</Text>
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+              {colorOptions.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.colorOption,
+                    index === selectedColorIndex && styles.selectedColorOption
+                  ]}
+                  onPress={() => {
+                    setSelectedColorIndex(index);
+                    // 选择新颜色时，重置轮播图到第一张
+                    setSelectedImageIndex(0);
+                    pagerRef.current?.setPage(0);
+                  }}
+                >
+                  {option.image ? (
+                    <Image source={{ uri: option.image }} style={styles.colorImage} />
+                  ) : (
+                    <View style={[styles.colorSample, { backgroundColor: getColorHex(option.color) }]} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* 尺码选择 */}
+        {sizeOptions.length > 0 && (
+          <View style={styles.optionSection}>
+            <Text style={styles.optionTitle}>
+              Taille: <Text style={styles.optionValue}>Sélectionner la taille</Text>
+            </Text>
+            <View style={styles.sizeGrid}>
+              {sizeOptions.map((size, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.sizeOption,
+                    index === selectedSizeIndex && styles.selectedSizeOption
+                  ]}
+                  onPress={() => setSelectedSizeIndex(index)}
+                >
+                  <Text style={[
+                    styles.sizeText,
+                    index === selectedSizeIndex && styles.selectedSizeText
+                  ]}>
+                    {size}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 数量选择 */}
+        <View style={styles.optionSection}>
+          <Text style={styles.optionTitle}>Quantité:</Text>
+          <View style={styles.quantityContainer}>
+            <TouchableOpacity 
+              style={styles.quantityButton}
+              onPress={() => handleQuantityChange(-1)}
+              disabled={quantity <= 1}
+            >
+              <Ionicons name="remove" size={20} color={quantity <= 1 ? '#ccc' : '#333'} />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{quantity}</Text>
+            <TouchableOpacity 
+              style={styles.quantityButton}
+              onPress={() => handleQuantityChange(1)}
+              disabled={quantity >= getCurrentStock()}
+            >
+              <Ionicons name="add" size={20} color={quantity >= getCurrentStock() ? '#ccc' : '#333'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 商品详情 */}
+        {(productContent || descriptionImages.length > 0) && (
+          <>
+            <View style={styles.detailSection}>
+              <Text style={styles.detailTitle}>
+                {isChineseLanguage ? '商品详情' : 'Détails du produit'}
+              </Text>
+              
+              {/* 文字详情 */}
+              {productContent && (
+                <Text style={styles.detailContent}>{productContent}</Text>
+              )}
+            </View>
+            
+            {/* 详情图片 - 放在detailSection外面实现全宽 */}
+            {descriptionImages.length > 0 && (
+              <View style={styles.descriptionImagesContainer}>
+                {descriptionImages.map((imageUrl, index) => (
+                  <AutoHeightImage 
+                    key={index}
+                    uri={imageUrl}
+                    style={styles.descriptionImage}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
+
+      {/* 底部操作栏 */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity style={styles.buyButton} onPress={handleBuyNow}>
+          <Text style={styles.buyButtonText}>
+            {isChineseLanguage ? '立即购买' : 'Acheter maintenant'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+// 获取颜色的十六进制值（示例函数）
+function getColorHex(colorName: string): string {
+  const colorMap: { [key: string]: string } = {
+    'Marine': '#001F3F',
+    'Rouge': '#FF0000',
+    'Vert': '#00FF00',
+    'Noir': '#000000',
+    'Blanc': '#FFFFFF',
+    'Bleu': '#0000FF',
+    // 添加更多颜色映射
+  };
+  return colorMap[colorName] || '#999999';
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: fontSize(16),
+    color: '#999',
+  },
+  overlayHeader: {
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    zIndex: 1,
+  },
+  overlayHeaderButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  imageContainer: {
+    position: 'relative',
+    height: screenWidth,
+    backgroundColor: '#f5f5f5',
+  },
+  pagerView: {
+    width: screenWidth,
+    height: screenWidth,
+  },
+  imageSlide: {
+    width: screenWidth,
+    height: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImage: {
+    width: screenWidth,
+    height: screenWidth,
+    resizeMode: 'contain',
+  },
+  imageIndicators: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ccc',
+  },
+  activeIndicator: {
+    backgroundColor: '#FF5100',
+    width: 20,
+  },
+  infoSection: {
+    padding: 15,
+    backgroundColor: '#fff',
+  },
+  productId: {
+    fontSize: fontSize(12),
+    color: '#999',
+    marginBottom: 8,
+  },
+  productTitle: {
+    fontSize: fontSize(16),
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  productDescription: {
+    fontSize: fontSize(14),
+    color: '#666',
+    lineHeight: fontSize(20),
+    marginBottom: 8,
+  },
+  salesInfo: {
+    fontSize: fontSize(12),
+    color: '#999',
+  },
+  flashLocalContainer: {
+    marginHorizontal: 10,
+    marginVertical: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#FF8C00',
+  },
+  flashHeader: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  flashHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  flashTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  flashTitle: {
+    fontSize: fontSize(16),
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  countdown: {
+    alignItems: 'flex-end',
+  },
+  countdownLabel: {
+    fontSize: fontSize(10),
+    color: '#FFF',
+    marginBottom: 4,
+  },
+  countdownTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeBlock: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: fontSize(14),
+    fontWeight: 'bold',
+    color: '#FF6600',
+  },
+  timeSeparator: {
+    fontSize: fontSize(14),
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginHorizontal: 2,
+  },
+  flashContent: {
+    backgroundColor: '#FFF8F0',
+    padding: 15,
+  },
+  deliveryInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 15,
+  },
+  deliveryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  deliveryText: {
+    marginLeft: 6,
+    fontSize: fontSize(12),
+    color: '#666',
+  },
+  deliveryHighlight: {
+    fontWeight: 'bold',
+    color: '#FF5100',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginRight: 10,
+  },
+  currentPrice: {
+    fontSize: fontSize(24),
+    fontWeight: 'bold',
+    color: '#FF5100',
+  },
+  currency: {
+    fontSize: fontSize(14),
+    fontWeight: 'bold',
+    color: '#FF5100',
+    marginLeft: 4,
+  },
+  discountBadge: {
+    backgroundColor: '#ff4444',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 10,
+  },
+  discountText: {
+    color: '#fff',
+    fontSize: fontSize(12),
+    fontWeight: 'bold',
+  },
+  originalPrice: {
+    fontSize: fontSize(12),
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  stockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stockLabel: {
+    fontSize: fontSize(12),
+    color: '#FF5100',
+    fontWeight: 'bold',
+    marginRight: 10,
+  },
+  stockBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: '#FFE5D9',
+    borderRadius: 2,
+  },
+  stockFill: {
+    height: '100%',
+    backgroundColor: '#FF5100',
+    borderRadius: 2,
+  },
+  optionSection: {
+    padding: 15,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  optionTitle: {
+    fontSize: fontSize(14),
+    color: '#333',
+    marginBottom: 10,
+    fontWeight: '500',
+  },
+  optionValue: {
+    fontWeight: 'bold',
+  },
+  optionScroll: {
+    marginTop: 10,
+  },
+  colorOption: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    marginRight: 10,
+    padding: 2,
+    overflow: 'hidden',
+  },
+  selectedColorOption: {
+    borderColor: '#FF5100',
+  },
+  colorImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 6,
+  },
+  colorSample: {
+    flex: 1,
+    borderRadius: 4,
+  },
+  sizeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+  },
+  sizeOption: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  selectedSizeOption: {
+    borderColor: '#FF5100',
+    backgroundColor: '#FFF8F0',
+  },
+  sizeText: {
+    fontSize: fontSize(14),
+    color: '#333',
+  },
+  selectedSizeText: {
+    color: '#FF5100',
+    fontWeight: 'bold',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  quantityButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: fontSize(16),
+    fontWeight: 'bold',
+    marginHorizontal: 30,
+    minWidth: 40,
+    textAlign: 'center',
+  },
+  detailSection: {
+    padding: 15,
+    backgroundColor: '#fff',
+    marginTop: 10,
+  },
+  detailTitle: {
+    fontSize: fontSize(16),
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  detailContent: {
+    fontSize: fontSize(14),
+    color: '#666',
+    lineHeight: fontSize(22),
+    marginBottom: 15,
+  },
+  descriptionImagesContainer: {
+    marginTop: 0,
+    backgroundColor: '#fff',
+  },
+  descriptionImage: {
+    marginBottom: 5, // 添加图片之间的间距，避免遮挡
+  },
+  bottomBar: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  buyButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: 24,
+    backgroundColor: '#FF5100',
+  },
+  buyButtonText: {
+    fontSize: fontSize(16),
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+});

@@ -56,6 +56,10 @@ import { EmailOtpScreen } from '../screens/loginList/EmailOtpScreen';
 import MiningGameScreen from '../screens/activity/MiningGameScreen';
 import TaskCenterScreen from '../screens/activity/TaskCenterScreen';
 import WithdrawalScreen from '../screens/activity/WithdrawalScreen';
+import LocalProductListScreen from '../screens/Local/ProductListScreen';
+import LocalProductDetail from '../screens/Local/LocalProductDetail';
+import { LocalAddressForm } from '../screens/Local/LocalAddressForm';
+import PickUp from '../screens/Local/PickUp';
 
 export {
   CountrySelect,
@@ -116,4 +120,8 @@ export {
   MiningGameScreen,
   TaskCenterScreen,
   WithdrawalScreen,
+  LocalProductListScreen,
+  LocalProductDetail,
+  LocalAddressForm,
+  PickUp,
 }; 

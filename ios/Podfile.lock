@@ -78,6 +78,8 @@ PODS:
     - ExpoModulesCore
   - ExpoLocalization (16.1.6):
     - ExpoModulesCore
+  - ExpoLocation (18.1.6):
+    - ExpoModulesCore
   - ExpoModulesCore (2.4.2):
     - DoubleConversion
     - glog
@@ -1578,6 +1580,57 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-maps (1.25.3):
+    - react-native-maps/Maps (= 1.25.3)
+  - react-native-maps/Generated (1.25.3):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - react-native-maps/Maps (1.25.3):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - react-native-maps/Generated
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-netinfo (11.4.1):
     - React-Core
   - react-native-pager-view (6.7.1):
@@ -2212,6 +2265,7 @@ DEPENDENCIES:
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoLocalization (from `../node_modules/expo-localization/ios`)
+  - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoVideo (from `../node_modules/expo-video/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
@@ -2256,6 +2310,7 @@ DEPENDENCIES:
   - react-native-fbsdk-next (from `../node_modules/react-native-fbsdk-next`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
+  - react-native-maps (from `../node_modules/react-native-maps`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-render-html (from `../node_modules/react-native-render-html`)
@@ -2381,6 +2436,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-linking/ios"
   ExpoLocalization:
     :path: "../node_modules/expo-localization/ios"
+  ExpoLocation:
+    :path: "../node_modules/expo-location/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
   ExpoVideo:
@@ -2466,6 +2523,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-get-random-values"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
+  react-native-maps:
+    :path: "../node_modules/react-native-maps"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-pager-view:
@@ -2592,6 +2651,7 @@ SPEC CHECKSUMS:
   ExpoLinearGradient: 7734c8059972fcf691fb4330bcdf3390960a152d
   ExpoLinking: d5c183998ca6ada66ff45e407e0f965b398a8902
   ExpoLocalization: 999a1ff61a7f5917d65c2bd9234883009019ca9f
+  ExpoLocation: a43df2ff15f2fae9504b23a77060e7cd16b3e326
   ExpoModulesCore: 8c0f063166cf06e907d6d136d69352b717d9e3ae
   ExpoVideo: ada534976cfd4a6bf082cc61aa1b17920a251e32
   ExpoWebBrowser: 06fb5f767f53ad53944b068cdd207984cb998712
@@ -2656,6 +2716,7 @@ SPEC CHECKSUMS:
   react-native-fbsdk-next: 52f81e60eb3e8e0e06cf9728b4572d3509ca9d01
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-image-picker: 95948cfcac306acef77a31d6e7de4edc78450ead
+  react-native-maps: 6637c10f4975a96d659639e251a186b0194b7232
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-pager-view: 5d74caaf2930623b258e3e8ee3e4692f5f4ae846
   react-native-render-html: 5afc4751f1a98621b3009432ef84c47019dcb2bd

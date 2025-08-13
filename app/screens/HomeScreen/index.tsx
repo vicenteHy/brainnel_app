@@ -47,6 +47,7 @@ import {
   SearchBar,
   MultiPageContainer,
   CarouselBanner,
+  LocalFlashSection,
 } from "./components";
 
 // 导入样式
@@ -987,6 +988,12 @@ export const HomeScreen = () => {
               subcategoriesLoading={subcategoriesLoading}
               onSubcategoryPress={handleSubcategoryPress}
               onViewAllSubcategories={handleViewAllSubcategories}
+              renderHeaderComponent={() => (
+                <>
+                  {/* 只在推荐页面显示本地货盘 */}
+                  {selectedCategoryId === -1 && <LocalFlashSection />}
+                </>
+              )}
             />
           </View>
 

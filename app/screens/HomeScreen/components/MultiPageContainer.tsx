@@ -31,6 +31,7 @@ interface MultiPageContainerProps {
   subcategoriesLoading?: boolean;
   onSubcategoryPress?: (subcategoryId: number) => void;
   onViewAllSubcategories?: (categoryId: number) => void;
+  renderHeaderComponent?: () => React.ReactNode; // 新增：自定义头部组件
 }
 
 export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
@@ -49,6 +50,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
   subcategoriesLoading = false,
   onSubcategoryPress,
   onViewAllSubcategories,
+  renderHeaderComponent,
 }) => {
   const pagerRef = useRef<PagerView>(null);
   const [pagesData, setPagesData] = useState<Record<number, PageData>>({});
@@ -144,6 +146,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
           subcategoriesLoading={subcategoriesLoading}
           onSubcategoryPress={onSubcategoryPress}
           onViewAllSubcategories={onViewAllSubcategories}
+          renderHeaderComponent={renderHeaderComponent}
         />
       </View>
     );
@@ -189,6 +192,7 @@ export const MultiPageContainer: React.FC<MultiPageContainerProps> = ({
               subcategoriesLoading={isActive ? subcategoriesLoading : false}
               onSubcategoryPress={onSubcategoryPress}
               onViewAllSubcategories={onViewAllSubcategories}
+              renderHeaderComponent={isActive ? renderHeaderComponent : undefined}
             />
           </View>
         );

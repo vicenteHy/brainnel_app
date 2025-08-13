@@ -24,7 +24,11 @@
       ],
       "buildNumber": "581",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "config": {
+        "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_API_KEY"
+      },
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "此应用需要访问您的位置以显示附近的自提点。",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
@@ -69,8 +73,15 @@
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.VIBRATE",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_API_KEY"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo/logo.png",
         "backgroundColor": "#ffffff"

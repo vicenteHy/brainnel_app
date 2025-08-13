@@ -82,4 +82,8 @@ export type RootStackParamList = {
   MiningGameScreen: undefined;
   TaskCenter: undefined;
   WithdrawalScreen: undefined;
+  LocalProductList: undefined;
+  LocalProductDetail: { productId: number };
+  LocalAddressForm: { address?: any };
+  PickUp: undefined;
 };
