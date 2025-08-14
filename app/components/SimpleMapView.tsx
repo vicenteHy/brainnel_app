@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
+import { getMapConfig } from '../config/maps';
 
 interface MapLocation {
   id?: string;
@@ -68,6 +69,25 @@ export default function SimpleMapView({
   // 生成地图 HTML - 只在组件挂载时生成一次
   useEffect(() => {
     const generateMapHTML = () => {
+    // 获取地图配置
+    const mapConfig = getMapConfig();
+    
+    if (!mapConfig.isConfigured) {
+      console.error('Google Maps API key is not configured. Please set EXPO_PUBLIC_GOOGLE_MAPS_API_KEY in your .env file');
+      return `
+        <html>
+          <body style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
+            <div style="text-align: center; color: #666;">
+              <p>地图配置错误</p>
+              <p style="font-size: 12px;">请配置 Google Maps API 密钥</p>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+    
+    const apiKey = mapConfig.apiKey;
+    
     // 默认中心点（科特迪瓦阿比让）
     const defaultCenter = { latitude: 5.345, longitude: -4.024 };
     const center = userLocation || (locations.length > 0 ? locations[0] : defaultCenter);
@@ -405,7 +425,7 @@ export default function SimpleMapView({
           };
         </script>
         <script async defer
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCLIB8hG6P0hx64A4f5OZlQEyemZ3SzEgs&callback=initMap"
+          src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap"
           onerror="if(window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: 'Google Maps 脚本加载失败' })); }">
         </script>
       </body>
