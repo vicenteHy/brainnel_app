@@ -54,6 +54,17 @@ target 'brainnel' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
+    # Fix for use_frameworks! compatibility
+    installer.pods_project.targets.each do |target|
+      
+      # Fix for Fabric compatibility
+      if target.name == 'React-Codegen'
+        target.build_configurations.each do |config|
+          config.build_settings['SWIFT_VERSION'] = '5.0'
+        end
+      end
+    end
+
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results

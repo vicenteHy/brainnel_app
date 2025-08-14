@@ -11,8 +11,11 @@ import {
   ActivityIndicator,
   SafeAreaView,
   Dimensions,
+  PanResponder,
+  Animated,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+// import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import SimpleMapView from '../../components/SimpleMapView';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,13 +23,15 @@ import { pickupApi, PickupLocation } from '../../services/local/pickupApi';
 import fontSize from '../../utils/fontsizeUtils';
 import { useTranslation } from 'react-i18next';
 import BackIcon from '../../components/BackIcon';
+import { Image } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function PickUp() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
-  const mapRef = useRef<MapView>(null);
+  // const mapRef = useRef<MapView>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
   
   const [loading, setLoading] = useState(true);
@@ -37,12 +42,87 @@ export default function PickUp() {
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [selectedPickup, setSelectedPickup] = useState<PickupLocation | null>(null);
   const [nearestPickup, setNearestPickup] = useState<PickupLocation | null>(null);
-  const [region, setRegion] = useState<Region>({
+  const [region, setRegion] = useState<any>({
     latitude: 5.3484, // 默认阿比让中心
     longitude: -4.0167,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
+  // 底部面板动画相关
+  const [panelHeight] = useState(new Animated.Value(screenHeight * 0.4));
+  const [isExpanded, setIsExpanded] = useState(false);
+  const minPanelHeight = screenHeight * 0.4; // 最小高度（折叠状态）
+  const maxPanelHeight = screenHeight * 0.8; // 最大高度（展开状态）
+  
+  // 切换面板展开/折叠状态
+  const togglePanel = () => {
+    const toValue = isExpanded ? minPanelHeight : maxPanelHeight;
+    
+    Animated.spring(panelHeight, {
+      toValue,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 10,
+    }).start();
+    
+    setIsExpanded(!isExpanded);
+  };
+  
+  // 创建手势响应器
+  const lastGestureY = useRef(0);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 5;
+      },
+      onPanResponderGrant: () => {
+        lastGestureY.current = 0;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // 计算从上次位置的变化
+        const deltaY = gestureState.dy - lastGestureY.current;
+        lastGestureY.current = gestureState.dy;
+        
+        // 获取当前高度并计算新高度
+        const currentHeight = (panelHeight as any)._value;
+        let newHeight = currentHeight - deltaY;
+        
+        // 限制高度范围
+        newHeight = Math.max(minPanelHeight, Math.min(maxPanelHeight, newHeight));
+        
+        panelHeight.setValue(newHeight);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const velocity = gestureState.vy;
+        const currentHeight = (panelHeight as any)._value;
+        
+        // 根据速度和当前位置决定最终状态
+        let shouldExpand = false;
+        
+        if (Math.abs(velocity) > 0.5) {
+          // 快速滑动，根据方向决定
+          shouldExpand = velocity < 0; // 向上滑动展开
+        } else {
+          // 慢速滑动，根据位置决定
+          const threshold = (minPanelHeight + maxPanelHeight) / 2;
+          shouldExpand = currentHeight > threshold;
+        }
+        
+        const toValue = shouldExpand ? maxPanelHeight : minPanelHeight;
+        
+        Animated.spring(panelHeight, {
+          toValue,
+          useNativeDriver: false,
+          tension: 50,
+          friction: 10,
+        }).start();
+        
+        setIsExpanded(shouldExpand);
+      },
+    })
+  ).current;
 
   useEffect(() => {
     initializeMap();
@@ -52,36 +132,39 @@ export default function PickUp() {
     try {
       setLoading(true);
       
+      // 模拟用户位置（科特迪瓦坐标）
+      const simulatedCoords = {
+        latitude: 5.341806,  // 5°20'30.5"N
+        longitude: -3.971889, // 3°58'18.8"W
+      };
+      
       // 请求位置权限
       const { status } = await Location.requestForegroundPermissionsAsync();
       
-      let userCoords = null;
-      if (status === 'granted') {
-        // 获取用户当前位置
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        
-        userCoords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-        
-        setUserLocation(userCoords);
-        
-        // 更新地图区域到用户位置
-        setRegion({
-          latitude: userCoords.latitude,
-          longitude: userCoords.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        });
-      } else {
-        Alert.alert(
-          t('permission.location.title'),
-          t('permission.location.message'),
-        );
-      }
+      let userCoords = simulatedCoords; // 使用模拟位置
+      
+      // 注释掉真实位置获取，使用模拟位置
+      // if (status === 'granted') {
+      //   // 获取用户当前位置
+      //   const location = await Location.getCurrentPositionAsync({
+      //     accuracy: Location.Accuracy.High,
+      //   });
+      //   
+      //   userCoords = {
+      //     latitude: location.coords.latitude,
+      //     longitude: location.coords.longitude,
+      //   };
+      // }
+      
+      setUserLocation(userCoords);
+      
+      // 更新地图区域到用户位置
+      setRegion({
+        latitude: userCoords.latitude,
+        longitude: userCoords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
       
       // 获取自提点列表
       const locations = await pickupApi.getPickupLocations(
@@ -93,17 +176,11 @@ export default function PickUp() {
       
       setPickupLocations(locations);
       
-      // 找到最近的自提点
-      if (userCoords && locations.length > 0) {
-        const nearest = pickupApi.getNearestPickupLocation(
-          userCoords.latitude,
-          userCoords.longitude,
-          locations
-        );
+      // 后端返回的第一个就是最近的自提点
+      if (locations.length > 0) {
+        const nearest = locations[0]; // 第一个就是最近的
         setNearestPickup(nearest);
         setSelectedPickup(nearest);
-      } else if (locations.length > 0) {
-        setSelectedPickup(locations[0]);
       }
       
       // 如果有自提点，调整地图显示所有标记
@@ -123,29 +200,17 @@ export default function PickUp() {
   };
 
   const fitMapToMarkers = (locations: PickupLocation[], userCoords: any) => {
-    if (!mapRef.current) return;
-    
-    const coordinates = locations.map(loc => ({
-      latitude: loc.latitude,
-      longitude: loc.longitude,
-    }));
-    
-    if (userCoords) {
-      coordinates.push(userCoords);
-    }
-    
-    // 延迟执行以确保地图已加载
-    setTimeout(() => {
-      mapRef.current?.fitToCoordinates(coordinates, {
-        edgePadding: {
-          top: 100,
-          right: 50,
-          bottom: 200,
-          left: 50,
-        },
-        animated: true,
-      });
-    }, 1000);
+    // 地图功能暂时禁用
+    // if (!mapRef.current) return;
+    // 
+    // const coordinates = locations.map(loc => ({
+    //   latitude: loc.latitude,
+    //   longitude: loc.longitude,
+    // }));
+    // 
+    // if (userCoords) {
+    //   coordinates.push(userCoords);
+    // }
   };
 
   const openGoogleMaps = (location: PickupLocation) => {
@@ -174,14 +239,6 @@ export default function PickUp() {
 
   const handleSelectPickup = (location: PickupLocation) => {
     setSelectedPickup(location);
-    
-    // 将地图中心移动到选中的自提点
-    mapRef.current?.animateToRegion({
-      latitude: location.latitude,
-      longitude: location.longitude,
-      latitudeDelta: 0.02,
-      longitudeDelta: 0.02,
-    }, 500);
   };
 
   const handleConfirm = () => {
@@ -230,70 +287,75 @@ export default function PickUp() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* 地图 */}
-      <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={region}
-          onRegionChangeComplete={setRegion}
+      {/* 地图 - 全屏 */}
+      <View style={styles.fullMapContainer}>
+        <SimpleMapView
+          locations={pickupLocations.map(loc => ({
+            id: loc.id,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            title: loc.name,
+            address: loc.address,
+          }))}
+          userLocation={userLocation || undefined}
+          selectedLocationId={selectedPickup?.id?.toString()}
           showsUserLocation={true}
-          showsMyLocationButton={true}
-          showsCompass={true}
-        >
-          {/* 用户位置标记 */}
-          {userLocation && (
-            <Marker
-              coordinate={userLocation}
-              title={isChineseLanguage ? '我的位置' : 'Ma position'}
-              pinColor="#4169E1"
-            >
-              <View style={styles.userMarker}>
-                <Ionicons name="person-circle" size={30} color="#4169E1" />
-              </View>
-            </Marker>
-          )}
-          
-          {/* 自提点标记 */}
-          {pickupLocations.map((location) => (
-            <Marker
-              key={location.id}
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title={location.name}
-              description={location.address}
-              onPress={() => handleSelectPickup(location)}
-              pinColor={getMarkerColor(location)}
-            >
-              <View style={[
-                styles.customMarker,
-                { backgroundColor: getMarkerColor(location) }
-              ]}>
-                <Ionicons name="location" size={24} color="#fff" />
-              </View>
-            </Marker>
-          ))}
-        </MapView>
-
-        {/* 地图上的提示 */}
-        {nearestPickup && (
-          <View style={styles.mapTip}>
-            <Ionicons name="information-circle" size={16} color="#4CAF50" />
-            <Text style={styles.mapTipText}>
-              {isChineseLanguage ? '绿色标记为最近自提点' : 'Le marqueur vert est le plus proche'}
-            </Text>
-          </View>
-        )}
+          onMarkerPress={(locationId) => {
+            const location = pickupLocations.find(loc => loc.id === locationId);
+            if (location) {
+              handleSelectPickup(location);
+            }
+          }}
+          onMapReady={() => {}}
+        />
       </View>
 
-      {/* 自提点列表 */}
-      <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
-        {pickupLocations.map((location) => {
+      {/* 可拖动的底部面板 */}
+      <Animated.View 
+        style={[
+          styles.bottomPanel,
+          {
+            height: panelHeight,
+          }
+        ]}
+      >
+        {/* 拖动手柄 */}
+        <View 
+          style={styles.dragHandle}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.dragBar} />
+        </View>
+
+        {/* 自提点列表 */}
+        <ScrollView 
+          ref={scrollViewRef}
+          style={styles.listContainer} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+        {/* 通知条 */}
+        <View style={styles.noticeBar}>
+          <Image 
+            source={require('../../../assets/local/notice.png')} 
+            style={styles.noticeIcon}
+          />
+          <View style={styles.noticeContent}>
+            <Text style={styles.noticeTitle}>
+              {isChineseLanguage ? '重要提醒' : 'Rappel important'}
+            </Text>
+            <Text style={styles.noticeText}>
+              {isChineseLanguage 
+                ? '订单将在取货点保留3天。超过期限后，如未取货，订单将自动取消。请合理安排您的时间。'
+                : 'La commande sera conservée au point de retrait pendant 3 jours. Passé ce délai, elle sera automatiquement annulée si elle n\'est pas récupérée. Veuillez organiser votre temps en conséquence.'
+              }
+            </Text>
+          </View>
+        </View>
+
+        {pickupLocations.map((location, index) => {
           const isSelected = selectedPickup?.id === location.id;
-          const isNearest = nearestPickup?.id === location.id;
+          const isNearest = index === 0; // 第一个就是最近的
           const isOpen = pickupApi.isOpen(location.timetables);
           
           return (
@@ -371,19 +433,20 @@ export default function PickUp() {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+        </ScrollView>
 
-      {/* 底部确认按钮 */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={handleConfirm}
-        >
-          <Text style={styles.confirmButtonText}>
-            {isChineseLanguage ? '确认选择' : 'Confirmer la sélection'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        {/* 底部确认按钮 - 放在面板内部 */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={handleConfirm}
+          >
+            <Text style={styles.confirmButtonText}>
+              {isChineseLanguage ? '确认选择' : 'Confirmer la sélection'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -413,6 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    zIndex: 5,
   },
   backButton: {
     width: 40,
@@ -425,9 +489,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  mapContainer: {
-    height: screenHeight * 0.4,
-    position: 'relative',
+  fullMapContainer: {
+    height: screenHeight * 0.5,
   },
   map: {
     flex: 1,
@@ -472,14 +535,42 @@ const styles = StyleSheet.create({
     fontSize: fontSize(12),
     color: '#666',
   },
+  bottomPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+    zIndex: 10,
+  },
+  dragHandle: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  dragBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#DDD',
+    borderRadius: 2,
+  },
   listContainer: {
     flex: 1,
-    padding: 15,
+  },
+  scrollContent: {
+    paddingBottom: 120, // 为底部按钮和手机底部留出空间
   },
   locationCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
+    marginHorizontal: 15,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -572,7 +663,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   bottomBar: {
-    padding: 15,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    paddingBottom: 30, // 增加底部间距，适配手机底部
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
@@ -587,5 +684,36 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     color: '#fff',
     fontWeight: 'bold',
+  },
+  noticeBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(173, 216, 230, 0.3)', // 浅蓝色透明背景
+    marginHorizontal: 15,
+    marginBottom: 15,
+    marginTop: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    alignItems: 'flex-start',
+    borderRadius: 8,
+  },
+  noticeIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    marginTop: 2,
+  },
+  noticeContent: {
+    flex: 1,
+  },
+  noticeTitle: {
+    fontSize: fontSize(14),
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  noticeText: {
+    fontSize: fontSize(12),
+    color: '#666',
+    lineHeight: fontSize(18),
   },
 });

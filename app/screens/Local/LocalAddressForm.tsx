@@ -35,6 +35,7 @@ type LocalAddressFormRouteProp = RouteProp<RootStackParamList, "LocalAddressForm
 type NavigationParams = {
   LocalProductList: undefined;
   AddressList: undefined;
+  PickUp: undefined;
 };
 
 export const LocalAddressForm = () => {
@@ -336,12 +337,12 @@ export const LocalAddressForm = () => {
           await fetchDefaultAddress();
         }
 
-        // 返回到本地产品列表页面
-        navigation.goBack();
+        // 跳转到取货点页面
+        navigation.navigate("PickUp");
       } catch (error) {
         console.error('Error saving address:', error);
-        // 即使保存地址失败，也返回上一页
-        navigation.goBack();
+        // 即使保存地址失败，也跳转到取货点页面
+        navigation.navigate("PickUp");
       }
     }
   };
@@ -570,7 +571,7 @@ export const LocalAddressForm = () => {
                         style={styles.primaryButtonStyle}
                         onPress={handleSubmit}
                       >
-                        <Text style={styles.buttonText}>{t("address.submit")}</Text>
+                        <Text style={styles.buttonText}>{t("common.next_step")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

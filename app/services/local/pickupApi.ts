@@ -54,16 +54,39 @@ class PickupApi {
       
       const url = `${this.baseURL}/api/flash-local/pickup-locations/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       
+      console.log('请求自提点列表 URL:', url);
+      console.log('请求参数:', params);
+      
       const response = await fetch(url, {
         method: 'GET',
         headers,
       });
 
+      console.log('API 响应状态:', response.status);
+      console.log('API 响应 headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API 错误响应内容:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log('API 原始响应内容:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('解析后的自提点列表:', data);
+        console.log('自提点数量:', data.length);
+        if (data.length > 0) {
+          console.log('第一个自提点示例:', data[0]);
+        }
+      } catch (parseError) {
+        console.error('JSON 解析失败:', parseError);
+        throw new Error('Invalid JSON response from API');
+      }
+      
       return data;
     } catch (error) {
       console.error('获取自提点列表失败:', error);
@@ -85,7 +108,7 @@ class PickupApi {
   ): PickupLocation | null {
     if (!locations || locations.length === 0) return null;
     
-    // 如果后端已经返回了距离信息，直接使用
+    // 如果后端已经返回了距离信息（单位：公里），直接使用
     const locationsWithDistance = locations.filter(loc => loc.distance !== null);
     if (locationsWithDistance.length > 0) {
       return locationsWithDistance.reduce((nearest, current) => 
@@ -93,12 +116,12 @@ class PickupApi {
       );
     }
     
-    // 否则在前端计算距离
+    // 否则在前端计算距离（米），然后转换为公里
     let nearestLocation = locations[0];
-    let minDistance = this.calculateDistance(userLat, userLng, nearestLocation.latitude, nearestLocation.longitude);
+    let minDistance = this.calculateDistance(userLat, userLng, nearestLocation.latitude, nearestLocation.longitude) / 1000; // 转换为公里
     
     for (let i = 1; i < locations.length; i++) {
-      const distance = this.calculateDistance(userLat, userLng, locations[i].latitude, locations[i].longitude);
+      const distance = this.calculateDistance(userLat, userLng, locations[i].latitude, locations[i].longitude) / 1000; // 转换为公里
       if (distance < minDistance) {
         minDistance = distance;
         nearestLocation = locations[i];
@@ -129,14 +152,18 @@ class PickupApi {
 
   /**
    * 格式化距离显示
+   * @param distance 距离（后端返回的单位是公里）
    */
   formatDistance(distance: number | null): string {
     if (distance === null) return '';
     
-    if (distance < 1000) {
-      return `${Math.round(distance)}m`;
+    // 后端返回的距离单位已经是公里
+    if (distance < 1) {
+      // 小于1公里时，转换为米显示
+      return `${Math.round(distance * 1000)}m`;
     } else {
-      return `${(distance / 1000).toFixed(1)}km`;
+      // 大于等于1公里时，显示公里
+      return `${distance.toFixed(1)}km`;
     }
   }
 
