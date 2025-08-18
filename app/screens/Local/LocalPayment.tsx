@@ -14,6 +14,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import fontSize from '../../utils/fontsizeUtils';
+import getPayMap from '../../utils/payMap';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -32,7 +33,7 @@ const LocalPayment = ({ navigation }: any) => {
     {
       id: 'brainnel_pay',
       name: 'Brainnel Pay',
-      icons: ['brainnel', 'orange', 'mtn', 'airtel'],
+      icons: ['orange', 'mtn', 'moov', 'airtel'],
       discount: '-10%',
     },
     {
@@ -94,68 +95,51 @@ const LocalPayment = ({ navigation }: any) => {
           <View style={styles.paymentLeft}>
             {method.id === 'brainnel_pay' && (
               <View style={styles.multiIconContainer}>
-                <View style={[styles.iconWrapper, { backgroundColor: '#FF6B35' }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(10), fontWeight: 'bold' }]}>B</Text>
-                </View>
-                <View style={[styles.iconWrapper, { backgroundColor: '#FF8C00' }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(10), fontWeight: 'bold' }]}>O</Text>
-                </View>
-                <View style={[styles.iconWrapper, { backgroundColor: '#FFD700' }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(10), fontWeight: 'bold' }]}>M</Text>
-                </View>
-                <View style={[styles.iconWrapper, { backgroundColor: '#FF6B35' }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(8) }]}>MTN</Text>
-                </View>
+                {getPayMap('mobile_money') && <Image source={getPayMap('mobile_money')} style={[styles.payIcon, { width: 50, height: 30 }]} />}
+                {getPayMap('Orange') && <Image source={getPayMap('Orange')} style={[styles.payIcon, { width: 40, height: 25 }]} />}
+                {getPayMap('MTN') && <Image source={getPayMap('MTN')} style={[styles.payIcon, { width: 40, height: 25 }]} />}
               </View>
             )}
             
-            {method.id === 'wave' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#0066CC', width: 45 }]}>
-                <Text style={[styles.iconText, { fontSize: fontSize(10), fontWeight: 'bold' }]}>wave</Text>
-              </View>
+            {method.id === 'wave' && getPayMap('wave') && (
+              <Image source={getPayMap('wave')} style={[styles.payIcon, { width: 60, height: 30 }]} />
             )}
             
-            {method.id === 'paypal' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#003087', width: 50 }]}>
-                <Text style={[styles.iconText, { fontSize: fontSize(10), fontWeight: 'bold' }]}>PayPal</Text>
-              </View>
+            {method.id === 'paypal' && getPayMap('paypal') && (
+              <Image source={getPayMap('paypal')} style={[styles.payIcon, { width: 65, height: 30 }]} />
             )}
             
             {method.id === 'cards' && (
               <View style={styles.multiIconContainer}>
-                <View style={[styles.iconWrapper, { backgroundColor: '#EB001B', width: 40 }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(9), fontWeight: 'bold' }]}>MC</Text>
-                </View>
-                <View style={[styles.iconWrapper, { backgroundColor: '#1A1F71', width: 45 }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(9), fontWeight: 'bold' }]}>VISA</Text>
-                </View>
-                <View style={[styles.iconWrapper, { backgroundColor: '#006FCF', width: 50 }]}>
-                  <Text style={[styles.iconText, { fontSize: fontSize(9), fontWeight: 'bold' }]}>AMEX</Text>
-                </View>
+                {getPayMap('mastercard') && <Image source={getPayMap('mastercard')} style={[styles.payIcon, { width: 50, height: 30 }]} />}
+                {getPayMap('visa') && <Image source={getPayMap('visa')} style={[styles.payIcon, { width: 55, height: 30 }]} />}
+                {getPayMap('amex') && <Image source={getPayMap('amex')} style={[styles.payIcon, { width: 60, height: 30 }]} />}
               </View>
             )}
             
             {method.id === 'account_balance' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#FF6B35', width: 35 }]}>
-                <Ionicons name="wallet-outline" size={18} color="white" />
+              <View style={[styles.iconWrapper, { backgroundColor: '#FF6B35', width: 45, height: 28, marginRight: 10 }]}>
+                <Ionicons name="wallet-outline" size={22} color="white" />
               </View>
             )}
             
             {method.id === 'cash_on_delivery' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#4CAF50', width: 35 }]}>
-                <Ionicons name="cash-outline" size={18} color="white" />
+              <View style={[styles.iconWrapper, { backgroundColor: '#4CAF50', width: 45, height: 28, marginRight: 10 }]}>
+                <Ionicons name="cash-outline" size={22} color="white" />
               </View>
             )}
 
-            <View style={styles.paymentInfo}>
-              <Text style={styles.paymentName}>{method.name}</Text>
-              {method.balance && (
-                <Text style={styles.balanceText}>Votre solde est de {method.balance}</Text>
-              )}
-              {method.description && (
-                <Text style={styles.descriptionText}>{method.description}</Text>
-              )}
-            </View>
+            {(method.id === 'account_balance' || method.id === 'cash_on_delivery') && (
+              <View style={styles.paymentInfo}>
+                <Text style={styles.paymentName}>{method.name}</Text>
+                {method.balance && (
+                  <Text style={styles.balanceText}>Votre solde est de {method.balance}</Text>
+                )}
+                {method.description && (
+                  <Text style={styles.descriptionText}>{method.description}</Text>
+                )}
+              </View>
+            )}
           </View>
 
           <View style={styles.paymentRight}>
@@ -312,7 +296,8 @@ const styles = StyleSheet.create({
   multiIconContainer: {
     flexDirection: 'row',
     marginRight: 12,
-    gap: 4,
+    gap: 2,
+    alignItems: 'center',
   },
   iconWrapper: {
     width: 30,
@@ -324,6 +309,11 @@ const styles = StyleSheet.create({
   iconText: {
     color: 'white',
     fontSize: fontSize(8),
+  },
+  payIcon: {
+    width: 45,
+    height: 28,
+    resizeMode: 'contain',
   },
   paymentInfo: {
     flex: 1,
