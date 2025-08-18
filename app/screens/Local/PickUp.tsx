@@ -250,8 +250,8 @@ export default function PickUp() {
       return;
     }
     
-    // TODO: 保存选中的自提点并返回
-    navigation.goBack();
+    // 跳转到支付页面
+    (navigation as any).navigate('LocalPayment');
   };
 
   const getMarkerColor = (location: PickupLocation) => {

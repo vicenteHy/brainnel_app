@@ -1,5 +1,4 @@
-import { API_BASE_URL } from '../../constants/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiService } from '../api/apiClient';
 
 export interface PickupTimetable {
   day_of_week: string;
@@ -24,15 +23,6 @@ export interface PickupLocationsParams {
 }
 
 class PickupApi {
-  private baseURL = API_BASE_URL;
-
-  private async getHeaders() {
-    const token = await AsyncStorage.getItem('userToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
 
   /**
    * 获取自提点列表
@@ -41,50 +31,23 @@ class PickupApi {
    */
   async getPickupLocations(params?: PickupLocationsParams): Promise<PickupLocation[]> {
     try {
-      const headers = await this.getHeaders();
-      
       // 构建查询参数
-      const queryParams = new URLSearchParams();
+      const queryParams: any = {};
       if (params?.latitude !== undefined && params?.latitude !== null) {
-        queryParams.append('latitude', params.latitude.toString());
+        queryParams.latitude = params.latitude.toString();
       }
       if (params?.longitude !== undefined && params?.longitude !== null) {
-        queryParams.append('longitude', params.longitude.toString());
+        queryParams.longitude = params.longitude.toString();
       }
       
-      const url = `${this.baseURL}/api/flash-local/pickup-locations/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      console.log('请求自提点列表参数:', params);
       
-      console.log('请求自提点列表 URL:', url);
-      console.log('请求参数:', params);
+      const data = await apiService.get<PickupLocation[]>('/api/flash-local/pickup-locations/', queryParams);
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      });
-
-      console.log('API 响应状态:', response.status);
-      console.log('API 响应 headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API 错误响应内容:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-      }
-
-      const responseText = await response.text();
-      console.log('API 原始响应内容:', responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('解析后的自提点列表:', data);
-        console.log('自提点数量:', data.length);
-        if (data.length > 0) {
-          console.log('第一个自提点示例:', data[0]);
-        }
-      } catch (parseError) {
-        console.error('JSON 解析失败:', parseError);
-        throw new Error('Invalid JSON response from API');
+      console.log('解析后的自提点列表:', data);
+      console.log('自提点数量:', data.length);
+      if (data.length > 0) {
+        console.log('第一个自提点示例:', data[0]);
       }
       
       return data;

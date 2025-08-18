@@ -86,4 +86,6 @@ export type RootStackParamList = {
   LocalProductDetail: { productId: number };
   LocalAddressForm: { address?: any };
   PickUp: undefined;
+  Verify: undefined;
+  LocalPayment: undefined;
 };

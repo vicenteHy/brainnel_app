@@ -268,6 +268,14 @@ export const AppNavigator = () => {
           name="PickUp"
           component={Screens.PickUp}
         />
+        <Stack.Screen
+          name="Verify"
+          component={Screens.Verify}
+        />
+        <Stack.Screen
+          name="LocalPayment"
+          component={Screens.LocalPayment}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

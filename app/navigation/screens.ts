@@ -60,6 +60,8 @@ import LocalProductListScreen from '../screens/Local/ProductListScreen';
 import LocalProductDetail from '../screens/Local/LocalProductDetail';
 import { LocalAddressForm } from '../screens/Local/LocalAddressForm';
 import PickUp from '../screens/Local/PickUp';
+import Verify from '../screens/Local/Verify';
+import LocalPayment from '../screens/Local/LocalPayment';
 
 export {
   CountrySelect,
@@ -124,4 +126,6 @@ export {
   LocalProductDetail,
   LocalAddressForm,
   PickUp,
+  Verify,
+  LocalPayment,
 }; 
