@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,8 +7,8 @@ import {
   Text,
   Image,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Searchbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -21,21 +21,24 @@ import {
 } from '../../services/local/productList';
 import { productCacheManager } from '../../services/local/productCache';
 import { useTranslation } from 'react-i18next';
+import fontSize from '../../utils/fontsizeUtils';
 
 export default function LocalProductListScreen() {
   const navigation = useNavigation();
   const { i18n } = useTranslation();
   const [products, setProducts] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<LocalProduct[]>([]);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isChineseLanguage = i18n.language === 'zh';
+  
+  // 使用ref来跟踪下一页，避免状态更新的异步问题
+  const nextPageRef = useRef(1);
 
   useEffect(() => {
-    loadProducts();
+    loadInitialProducts();
   }, []);
 
   useEffect(() => {
@@ -50,57 +53,152 @@ export default function LocalProductListScreen() {
     }
   }, [searchQuery, products, isChineseLanguage]);
 
-  const loadProducts = async (isRefresh = false) => {
+  const loadInitialProducts = async () => {
     try {
-      if (isRefresh) {
-        setPage(1);
-        setHasMore(true);
-      }
+      setLoading(true);
+      console.log('\n========== ProductListScreen: 开始加载初始商品 ==========');
+      console.log('请求参数: { page: 1, page_size: 20 }');
+      console.log('调用时间:', new Date().toISOString());
       
-      console.log('开始加载商品, page:', isRefresh ? 1 : page);
       const response = await fetchLocalProducts({ 
-        page: isRefresh ? 1 : page,
+        page: 1,
         page_size: 20 
       });
       
-      console.log('API 响应:', response);
+      console.log('\n========== ProductListScreen: 接收到响应 ==========');
+      console.log('响应对象:', response);
+      console.log('响应 total:', response?.total);
+      console.log('响应 page:', response?.page);
+      console.log('响应 page_size:', response?.page_size);
       
-      // 确保 response 和 response.items 存在
       const items = response?.items || [];
-      console.log('商品数量:', items.length);
-      
-      if (isRefresh) {
-        setProducts(items);
-        setFilteredProducts(items);
-        // 将商品存入缓存
-        productCacheManager.setProducts(items);
-      } else {
-        const newProducts = [...products, ...items];
-        setProducts(newProducts);
-        setFilteredProducts(prev => [...prev, ...items]);
-        // 将商品存入缓存
-        productCacheManager.setProducts(items);
+      console.log('商品数组长度:', items.length);
+      if (items.length > 0) {
+        console.log('第一个商品ID:', items[0].product_id);
+        console.log('第一个商品名称:', items[0].name_cn);
       }
       
-      setHasMore(items.length === 20);
-      if (!isRefresh) setPage(prev => prev + 1);
+      setProducts(items);
+      setFilteredProducts(items);
+      productCacheManager.setProducts(items);
+      
+      // 重置页码
+      nextPageRef.current = 2;
+      
+      // 判断是否还有更多
+      const hasMoreData = items.length === 20;
+      setHasMore(hasMoreData);
+      
+      console.log('设置 hasMore:', hasMoreData);
+      console.log('下一页页码:', nextPageRef.current);
+      console.log('========== 初始加载完成 ==========\n');
     } catch (error) {
-      console.error('获取本地商品失败:', error);
-      console.error('错误详情:', error.response?.data || error.message);
+      console.error('\n========== ProductListScreen: 加载失败 ==========');
+      console.error('错误对象:', error);
+      console.error('错误消息:', error?.message);
+      console.error('==========================================\n');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadProducts(true);
+  const loadMoreProducts = async () => {
+    // 防止重复加载
+    if (isLoadingMore || !hasMore) {
+      return;
+    }
+    
+    try {
+      setIsLoadingMore(true);
+      const currentPage = nextPageRef.current;
+      
+      console.log('\n========== ProductListScreen: 加载更多商品 ==========');
+      console.log('当前页码:', currentPage);
+      console.log('当前已有商品数:', products.length);
+      console.log('请求参数: { page:', currentPage, ', page_size: 20 }');
+      console.log('调用时间:', new Date().toISOString());
+      
+      const response = await fetchLocalProducts({ 
+        page: currentPage,
+        page_size: 20 
+      });
+      
+      console.log('\n========== ProductListScreen: 加载更多 - 接收到响应 ==========');
+      console.log('响应 total:', response?.total);
+      console.log('响应 page:', response?.page);
+      console.log('响应 page_size:', response?.page_size);
+      
+      const items = response?.items || [];
+      console.log('新返回商品数:', items.length);
+      if (items.length > 0) {
+        console.log('新商品ID列表:', items.map(item => item.product_id));
+      }
+      
+      let newItemsAdded = 0;
+      
+      if (items.length > 0) {
+        // 过滤重复的产品
+        const existingIds = new Set(products.map(p => p.product_id));
+        console.log('现有商品ID集合:', Array.from(existingIds));
+        
+        const newItems = items.filter(item => !existingIds.has(item.product_id));
+        newItemsAdded = newItems.length;
+        
+        console.log('过滤后新增商品数:', newItemsAdded);
+        if (newItemsAdded > 0) {
+          console.log('新增商品ID:', newItems.map(item => item.product_id));
+        }
+        
+        if (newItems.length > 0) {
+          const updatedProducts = [...products, ...newItems];
+          setProducts(updatedProducts);
+          
+          // 如果没有搜索，更新过滤后的产品列表
+          if (!searchQuery) {
+            setFilteredProducts(updatedProducts);
+          }
+          
+          productCacheManager.setProducts(newItems);
+          
+          // 只有真正添加了新产品才更新页码
+          nextPageRef.current = currentPage + 1;
+          
+          // 判断是否还有更多（基于total和当前产品数）
+          if (response.total && updatedProducts.length >= response.total) {
+            setHasMore(false);
+          }
+        } else {
+          // 如果所有产品都是重复的，说明没有更多数据了
+          console.log('警告: 所有返回的商品都是重复的！');
+          console.log('设置 hasMore: false (全部重复)');
+          setHasMore(false);
+        }
+      } else {
+        // 没有返回任何产品
+        console.log('警告: API返回空数组！');
+        console.log('设置 hasMore: false (空数组)');
+        setHasMore(false);
+      }
+      
+      console.log('当前总商品数:', products.length);
+      console.log('当前 hasMore 状态:', hasMore);
+      console.log('下一页页码:', nextPageRef.current);
+      console.log('========== 加载更多完成 ==========\n');
+    } catch (error) {
+      console.error('\n========== ProductListScreen: 加载更多失败 ==========');
+      console.error('错误对象:', error);
+      console.error('错误消息:', error?.message);
+      console.log('设置 hasMore: false (错误)');
+      setHasMore(false); // 出错时停止加载
+      console.error('==========================================\n');
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      loadProducts();
+  const handleEndReached = () => {
+    if (!isLoadingMore && hasMore && !loading) {
+      loadMoreProducts();
     }
   };
 
@@ -133,19 +231,54 @@ export default function LocalProductListScreen() {
           <Text style={styles.productName} numberOfLines={2}>
             {name}
           </Text>
+          <View style={styles.stockContainer}>
+            <Text style={styles.productStock}>PLUS QUE {item.stock}</Text>
+            <View style={styles.progressBarWrapper}>
+              <View style={styles.progressBarBackground}>
+                <LinearGradient
+                  colors={['#FF8C00', '#FF5100']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.progressBarFill, { width: `${Math.min((item.stock / 10) * 100, 100)}%` }]}
+                />
+              </View>
+              <Image 
+                source={require('../../../assets/local/inventory.png')} 
+                style={[styles.stockIcon, { left: `${Math.min((item.stock / 10) * 100, 100)}%` }]}
+              />
+            </View>
+          </View>
           <View style={styles.priceRow}>
-            <Text style={styles.productPrice}>{item.price} FCFA</Text>
+            <Text style={styles.productPrice}>
+              {item.price} <Text style={styles.currencyText}>FCFA</Text>
+            </Text>
             {item.original_price > item.price && (
               <Text style={styles.originalPrice}>{item.original_price} FCFA</Text>
             )}
           </View>
-          <Text style={styles.productStock}>库存: {item.stock}</Text>
+          <TouchableOpacity style={styles.buyButton}>
+            <Text style={styles.buyButtonText}>Acheter</Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
   };
 
-  if (loading && !refreshing) {
+  const renderFooter = () => {
+    if (!hasMore) return null;
+    
+    if (isLoadingMore) {
+      return (
+        <View style={styles.footerLoader}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+        </View>
+      );
+    }
+    
+    return null;
+  };
+
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -172,23 +305,14 @@ export default function LocalProductListScreen() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>暂无商品</Text>
           </View>
         }
-        ListFooterComponent={
-          hasMore && !refreshing ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color={Colors.primary} />
-            </View>
-          ) : null
-        }
+        ListFooterComponent={renderFooter}
       />
     </SafeAreaView>
   );
@@ -210,7 +334,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
+    fontSize: fontSize(24),
     fontWeight: 'bold',
     marginBottom: 10,
     color: Colors.text,
@@ -230,7 +354,7 @@ const styles = StyleSheet.create({
   productCard: {
     flex: 0.48,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 8, // 统一使用8px圆角
     marginBottom: 15,
     overflow: 'hidden',
     elevation: 2,
@@ -241,14 +365,16 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 150,
+    aspectRatio: 1, // 1:1 正方形比例
     resizeMode: 'cover',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
   productInfo: {
     padding: 10,
   },
   productName: {
-    fontSize: 14,
+    fontSize: fontSize(14),
     fontWeight: '600',
     color: Colors.text,
     marginBottom: 4,
@@ -259,19 +385,54 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: fontSize(18),
     fontWeight: 'bold',
     color: Colors.primary,
     marginRight: 8,
   },
+  currencyText: {
+    fontSize: fontSize(12),
+    fontWeight: 'normal',
+    color: Colors.primary,
+  },
   originalPrice: {
-    fontSize: 14,
+    fontSize: fontSize(12),
     color: '#999',
     textDecorationLine: 'line-through',
   },
+  stockContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  stockIcon: {
+    width: 16,
+    height: 16,
+    position: 'absolute',
+    top: -6,
+    marginLeft: -8, // 让图标居中在进度条末端
+  },
   productStock: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: fontSize(10),
+    color: '#BF6D47',
+    marginRight: 8,
+    fontWeight: '600',
+  },
+  progressBarWrapper: {
+    flex: 1,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  progressBarBackground: {
+    height: 4,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   placeholderImage: {
     backgroundColor: '#f0f0f0',
@@ -279,15 +440,15 @@ const styles = StyleSheet.create({
   discountBadge: {
     position: 'absolute',
     top: 8,
-    right: 8,
-    backgroundColor: '#ff4444',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    left: 8,
+    backgroundColor: '#FF5100',
+    borderRadius: 11,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   discountText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: fontSize(12),
     fontWeight: 'bold',
   },
   footerLoader: {
@@ -301,7 +462,21 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: fontSize(16),
     color: '#999',
+  },
+  buyButton: {
+    backgroundColor: '#FF5100',
+    borderRadius: 25,
+    paddingVertical: 8,
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%', // 与图片宽度一致
+  },
+  buyButtonText: {
+    color: '#fff',
+    fontSize: fontSize(14),
+    fontWeight: '600',
   },
 });

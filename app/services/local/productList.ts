@@ -50,16 +50,27 @@ export interface LocalProductListParams {
 
 export const fetchLocalProducts = async (params?: LocalProductListParams): Promise<LocalProductListResponse> => {
   try {
-    console.log('调用 API: /api/flash-local/', params);
-    const response = await apiService.get('/api/flash-local/', {
-      params: {
-        page: params?.page || 1,
-        page_size: params?.page_size || 20,
-      }
-    });
+    const requestParams = {
+      page: params?.page || 1,
+      page_size: params?.page_size || 20,
+      is_top: 0,
+      sort_order: 'asc'
+    };
     
-    console.log('API 原始响应类型:', typeof response);
-    console.log('API 原始响应:', response);
+    console.log('========== 开始请求本地产品列表 ==========');
+    console.log('请求URL: /api/flash-local/');
+    console.log('请求参数:', JSON.stringify(requestParams, null, 2));
+    console.log('请求时间:', new Date().toISOString());
+    
+    // 注意：apiService.get 的第二个参数会被放入 params 对象中
+    // 所以直接传递参数对象，不要再包装
+    const response = await apiService.get('/api/flash-local/', requestParams);
+    
+    console.log('========== API 响应信息 ==========');
+    console.log('响应时间:', new Date().toISOString());
+    console.log('响应类型:', typeof response);
+    console.log('响应对象键:', response ? Object.keys(response) : 'null');
+    console.log('完整响应数据:', JSON.stringify(response, null, 2));
     
     // 检查 response 是否直接就是数据对象
     // 从日志看，response 直接就是包含 items 的对象
@@ -67,22 +78,42 @@ export const fetchLocalProducts = async (params?: LocalProductListParams): Promi
     
     // 如果 response 有 data 属性，使用 data
     if (response && typeof response === 'object' && 'data' in response) {
+      console.log('响应包含 data 属性，提取 data');
       data = response.data;
+    } else {
+      console.log('响应直接就是数据对象');
     }
     
-    console.log('提取的数据:', data);
+    console.log('========== 处理后的数据 ==========');
+    console.log('数据类型:', typeof data);
+    console.log('数据对象键:', data ? Object.keys(data) : 'null');
+    if (data && data.items) {
+      console.log('items 数组长度:', data.items.length);
+      console.log('第一个商品示例:', data.items[0] ? JSON.stringify(data.items[0], null, 2) : '无商品');
+    }
     
     // 确保返回正确的数据格式
     if (data && data.items && Array.isArray(data.items)) {
-      return {
+      const result = {
         total: data.total || 0,
         page: data.page || 1,
         page_size: data.page_size || 20,
         items: data.items
       };
+      console.log('========== 返回数据 ==========');
+      console.log('返回数据结构:', {
+        total: result.total,
+        page: result.page,
+        page_size: result.page_size,
+        items_count: result.items.length
+      });
+      console.log('==========================================\n');
+      return result;
     }
     
     // 如果没有数据，返回空结构
+    console.log('========== 警告：没有有效数据，返回空结构 ==========');
+    console.log('==========================================\n');
     return {
       total: 0,
       page: 1,
@@ -90,8 +121,16 @@ export const fetchLocalProducts = async (params?: LocalProductListParams): Promi
       items: []
     };
   } catch (error) {
-    console.error('fetchLocalProducts 错误:', error);
-    console.error('错误响应:', error.response);
+    console.log('========== 请求失败 ==========');
+    console.error('错误类型:', error?.constructor?.name);
+    console.error('错误消息:', error?.message);
+    console.error('错误堆栈:', error?.stack);
+    if (error?.response) {
+      console.error('错误响应状态:', error.response.status);
+      console.error('错误响应数据:', JSON.stringify(error.response.data, null, 2));
+      console.error('错误响应头:', error.response.headers);
+    }
+    console.log('==========================================\n');
     throw error;
   }
 };
