@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,17 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
+import type { StyleProp, ImageStyle } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '../../constants/Colors';
 import fontSize from '../../utils/fontsizeUtils';
-import { 
+import type { 
   LocalProduct, 
   LocalProductSku,
+} from '../../services/local/productList';
+import { 
   parseProductImages,
   fetchLocalProducts 
 } from '../../services/local/productList';
@@ -29,7 +32,7 @@ import PagerView from 'react-native-pager-view';
 const { width: screenWidth } = Dimensions.get('window');
 
 // 自适应高度的图片组件
-const AutoHeightImage = ({ uri, style }: { uri: string; style?: any }) => {
+const AutoHeightImage = ({ uri, style }: { uri: string; style?: StyleProp<ImageStyle> }) => {
   const [imageHeight, setImageHeight] = useState(screenWidth); // 默认高度
   
   useEffect(() => {
@@ -54,7 +57,7 @@ const AutoHeightImage = ({ uri, style }: { uri: string; style?: any }) => {
 export default function LocalProductDetail() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { productId } = route.params as { productId: number };
   
   const [product, setProduct] = useState<LocalProduct | null>(null);
@@ -96,29 +99,19 @@ export default function LocalProductDetail() {
   }, []);
 
   // 加载商品数据
-  useEffect(() => {
-    loadProduct();
-  }, [productId]);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // 先尝试从缓存获取
       const cachedProduct = productCacheManager.getProduct(productId);
       if (cachedProduct) {
         setProduct(cachedProduct);
         setLoading(false);
         return;
       }
-      
-      // 如果缓存没有，从API获取
       const response = await fetchLocalProducts({ page: 1, page_size: 100 });
       const foundProduct = response.items.find(p => p.product_id === productId);
-      
       if (foundProduct) {
         setProduct(foundProduct);
-        // 更新缓存
         productCacheManager.setProduct(productId, foundProduct);
       } else {
         Alert.alert('错误', '商品不存在');
@@ -130,7 +123,11 @@ export default function LocalProductDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId, navigation]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
 
   const formatTime = (value: number) => {
     return value.toString().padStart(2, '0');
@@ -229,9 +226,7 @@ export default function LocalProductDetail() {
     return sku ? sku.stock : (product?.stock || 0);
   };
 
-  const handleAddToCart = () => {
-    Alert.alert('提示', '加入购物车功能待实现');
-  };
+  // 保留占位：加入购物车逻辑后续补充
 
   const handleBuyNow = () => {
     // 导航到本地地址填写页面
@@ -288,7 +283,23 @@ export default function LocalProductDetail() {
   };
   
   const images = getDisplayImages();
+  // 构建稳定 key 的辅助函数
+  const buildKeys = (arr: string[]) => {
+    const counts = new Map<string, number>();
+    return arr.map((item) => {
+      const prev = counts.get(item) || 0;
+      const next = prev + 1;
+      counts.set(item, next);
+      return next === 1 ? item : `${item}__${next}`;
+    });
+  };
 
+  const imageKeys = buildKeys(images);
+  const colorKeyBases = colorOptions.map(o => `${o.color}-${o.image ?? 'noimg'}`);
+  const colorKeys = buildKeys(colorKeyBases);
+  const sizeKeys = buildKeys(sizeOptions);
+  const descImageKeys = buildKeys(descriptionImages);
+ 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -301,8 +312,8 @@ export default function LocalProductDetail() {
               initialPage={0}
               onPageSelected={(e) => setSelectedImageIndex(e.nativeEvent.position)}
             >
-              {images.map((image, index) => (
-                <View key={index} style={styles.imageSlide}>
+              {images.map((image, i) => (
+                <View key={`img-${imageKeys[i]}`} style={styles.imageSlide}>
                   <Image source={{ uri: image }} style={styles.productImage} />
                 </View>
               ))}
@@ -330,12 +341,12 @@ export default function LocalProductDetail() {
             
             {/* 图片指示器 */}
             <View style={styles.imageIndicators}>
-              {images.map((_, index) => (
+              {images.map((_, i) => (
                 <View
-                  key={index}
+                  key={`ind-${imageKeys[i]}`}
                   style={[
                     styles.indicator,
-                    index === selectedImageIndex && styles.activeIndicator
+                    i === selectedImageIndex && styles.activeIndicator
                   ]}
                 />
               ))}
@@ -448,15 +459,15 @@ export default function LocalProductDetail() {
               Couleur: <Text style={styles.optionValue}>{colorOptions[selectedColorIndex]?.color}</Text>
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
-              {colorOptions.map((option, index) => (
+              {colorOptions.map((option, i) => (
                 <TouchableOpacity
-                  key={index}
+                  key={`color-${colorKeys[i]}`}
                   style={[
                     styles.colorOption,
-                    index === selectedColorIndex && styles.selectedColorOption
+                    i === selectedColorIndex && styles.selectedColorOption
                   ]}
                   onPress={() => {
-                    setSelectedColorIndex(index);
+                    setSelectedColorIndex(i);
                     // 选择新颜色时，重置轮播图到第一张
                     setSelectedImageIndex(0);
                     pagerRef.current?.setPage(0);
@@ -480,18 +491,18 @@ export default function LocalProductDetail() {
               Taille: <Text style={styles.optionValue}>Sélectionner la taille</Text>
             </Text>
             <View style={styles.sizeGrid}>
-              {sizeOptions.map((size, index) => (
+              {sizeOptions.map((size, i) => (
                 <TouchableOpacity
-                  key={index}
+                  key={`size-${sizeKeys[i]}`}
                   style={[
                     styles.sizeOption,
-                    index === selectedSizeIndex && styles.selectedSizeOption
+                    i === selectedSizeIndex && styles.selectedSizeOption
                   ]}
-                  onPress={() => setSelectedSizeIndex(index)}
+                  onPress={() => setSelectedSizeIndex(i)}
                 >
                   <Text style={[
                     styles.sizeText,
-                    index === selectedSizeIndex && styles.selectedSizeText
+                    i === selectedSizeIndex && styles.selectedSizeText
                   ]}>
                     {size}
                   </Text>
@@ -503,23 +514,25 @@ export default function LocalProductDetail() {
 
         {/* 数量选择 */}
         <View style={styles.optionSection}>
-          <Text style={styles.optionTitle}>Quantité:</Text>
-          <View style={styles.quantityContainer}>
-            <TouchableOpacity 
-              style={styles.quantityButton}
-              onPress={() => handleQuantityChange(-1)}
-              disabled={quantity <= 1}
-            >
-              <Ionicons name="remove" size={20} color={quantity <= 1 ? '#ccc' : '#333'} />
-            </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
-            <TouchableOpacity 
-              style={styles.quantityButton}
-              onPress={() => handleQuantityChange(1)}
-              disabled={quantity >= getCurrentStock()}
-            >
-              <Ionicons name="add" size={20} color={quantity >= getCurrentStock() ? '#ccc' : '#333'} />
-            </TouchableOpacity>
+          <View style={styles.quantityRow}>
+            <Text style={styles.quantityTitle}>Quantité:</Text>
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity 
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
+              >
+                <Ionicons name="remove" size={14} color={quantity <= 1 ? '#ccc' : '#333'} />
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{quantity}</Text>
+              <TouchableOpacity 
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(1)}
+                disabled={quantity >= getCurrentStock()}
+              >
+                <Ionicons name="add" size={14} color={quantity >= getCurrentStock() ? '#ccc' : '#333'} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -531,18 +544,69 @@ export default function LocalProductDetail() {
                 {isChineseLanguage ? '商品详情' : 'Détails du produit'}
               </Text>
               
-              {/* 文字详情 */}
-              {productContent && (
+              {/* 文字详情（已替换为结构化渲染，保留但不显示） */}
+              {false && productContent && (
                 <Text style={styles.detailContent}>{productContent}</Text>
+              )}
+              {/* 文字详情（按换行与冒号拆分，字段加粗） */}
+              {productContent && (
+                Array.isArray(productContent)
+                  ? (() => {
+                      const pcLines = productContent.map(s => String(s));
+                      const pcKeys = buildKeys(pcLines);
+                      return pcLines.map((line, i) => (
+                        <View key={`pc-line-${pcKeys[i]}`} style={styles.detailItemRow}>
+                          <Text style={styles.bullet}>•</Text>
+                          <Text style={styles.detailContent}>{line}</Text>
+                        </View>
+                      ));
+                    })()
+                  : (() => {
+                      const lines = String(productContent)
+                        .split(/\r?\n/)
+                        .map(l => l.trim())
+                        .filter(l => l.length > 0);
+                      const parsed = lines.map(l => {
+                        const parts = l.split(/[:：]\s*/);
+                        if (parts.length >= 2) {
+                          const key = parts.shift() || '';
+                          const value = parts.join(': ').trim();
+                          return { key: key.trim(), value };
+                        }
+                        return { key: '', value: l };
+                      });
+                      const hasStructured = parsed.some(p => p.key);
+                      if (!hasStructured) {
+                        const lineKeys = buildKeys(lines);
+                        return lines.map((l, i) => (
+                          <View key={`pc-plain-${lineKeys[i]}`} style={styles.detailItemRow}>
+                            <Text style={styles.bullet}>•</Text>
+                            <Text style={styles.detailContent}>{l}</Text>
+                          </View>
+                        ));
+                      }
+                      const pairBases = parsed.map(p => (p.key ? `${p.key}-${p.value}` : p.value));
+                      const pairKeys = buildKeys(pairBases);
+                      return parsed.map((item, i) => (
+                        <View key={`pc-pair-${pairKeys[i]}`} style={styles.detailItemRow}>
+                          <Text style={styles.bullet}>•</Text>
+                          <Text style={styles.detailContent}>
+                            {item.key ? <Text style={styles.detailKey}>{item.key}</Text> : null}
+                            {item.key ? <Text style={styles.detailColon}>: </Text> : null}
+                            <Text style={styles.detailValue}>{item.value}</Text>
+                          </Text>
+                        </View>
+                      ));
+                    })()
               )}
             </View>
             
             {/* 详情图片 - 放在detailSection外面实现全宽 */}
             {descriptionImages.length > 0 && (
               <View style={styles.descriptionImagesContainer}>
-                {descriptionImages.map((imageUrl, index) => (
+                {descriptionImages.map((imageUrl, i) => (
                   <AutoHeightImage 
-                    key={index}
+                    key={`desc-${descImageKeys[i]}`}
                     uri={imageUrl}
                     style={styles.descriptionImage}
                   />
@@ -847,6 +911,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: '500',
   },
+  quantityTitle: {
+    fontSize: fontSize(14),
+    color: '#333',
+    marginBottom: 0,
+    fontWeight: '500',
+  },
   optionValue: {
     fontWeight: 'bold',
   },
@@ -901,25 +971,30 @@ const styles = StyleSheet.create({
     color: '#FF5100',
     fontWeight: 'bold',
   },
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 0,
   },
   quantityButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   quantityText: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(15),
     fontWeight: 'bold',
-    marginHorizontal: 30,
-    minWidth: 40,
+    marginHorizontal: 12,
+    minWidth: 30,
     textAlign: 'center',
   },
   detailSection: {
@@ -936,8 +1011,35 @@ const styles = StyleSheet.create({
   detailContent: {
     fontSize: fontSize(14),
     color: '#666',
-    lineHeight: fontSize(22),
-    marginBottom: 15,
+    lineHeight: fontSize(20),
+    marginBottom: 0,
+    flex: 1,
+    flexShrink: 1,
+  },
+  detailItemRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  bullet: {
+    width: 14,
+    textAlign: 'center',
+    color: '#333',
+    marginTop: 6,
+    marginRight: 8,
+  },
+  detailKey: {
+    fontSize: fontSize(14),
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  detailColon: {
+    fontSize: fontSize(14),
+    color: '#333',
+  },
+  detailValue: {
+    fontSize: fontSize(14),
+    color: '#666',
   },
   descriptionImagesContainer: {
     marginTop: 0,

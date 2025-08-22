@@ -1,77 +1,61 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
+  TouchableWithoutFeedback,
   ScrollView,
   Image,
   Dimensions,
   StatusBar as RNStatusBar,
   Platform,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, type RouteProp } from '@react-navigation/native';
+import { performCurrencyConversion, getConvertedAmountByKey } from '../previewOrder/payment/utils';
 import fontSize from '../../utils/fontsizeUtils';
-import getPayMap from '../../utils/payMap';
+import userApi from '../../services/api/userApi';
+import type { User } from '../../services/api/userApi';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { productCacheManager } from '../../services/local/productCache';
+import type { LocalProduct } from '../../services/local/productList';
+import { getFirstProductImage } from '../../services/local/productList';
+import { orderApi, type CreateLocalOrderRequest } from '../../services/local/orderApi';
+import { useAddressStore } from '../../store/address';
+import type { RootStackParamList } from '../../navigation/types';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  icons: string[];
-  discount?: string;
-  selected?: boolean;
-}
+type LocalPaymentNav = NativeStackNavigationProp<Record<string, object | undefined>>;
 
-const LocalPayment = ({ navigation }: any) => {
-  const [selectedPayment, setSelectedPayment] = useState<string>('wave');
+const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
+  const route = useRoute<RouteProp<RootStackParamList, 'LocalPayment'>>();
+  const pickupLocationIdFromRoute = route.params?.pickup_location_id;
+  const { defaultAddress, addresses, fetchDefaultAddress, fetchAddresses } = useAddressStore();
+  const [selectedPayment, setSelectedPayment] = useState<string>('mobile_money');
+  const [userBalance, setUserBalance] = useState<number | null>(null);
+  const [userBalanceCurrency, setUserBalanceCurrency] = useState<string>('FCFA');
+  const [orderProduct, setOrderProduct] = useState<LocalProduct | null>(null);
+  // 货币选择（分别为 paypal 与 bank_card 独立保存）
+  const [paypalCurrency, setPaypalCurrency] = useState<'USD' | 'EUR'>('USD');
+  const [bankCardCurrency, setBankCardCurrency] = useState<'USD' | 'EUR'>('USD');
+  // 参考 PaymentMethod.tsx 的汇率（FCFA -> 外币）
+  const EXCHANGE_RATES = { USD: 580, EUR: 655.96 } as const; // 1 外币 = X FCFA
 
-  const paymentMethods: PaymentMethod[] = [
-    {
-      id: 'brainnel_pay',
-      name: 'Brainnel Pay',
-      icons: ['orange', 'mtn', 'moov', 'airtel'],
-      discount: '-10%',
-    },
-    {
-      id: 'wave',
-      name: 'Wave',
-      icons: ['wave'],
-      discount: '-10%',
-      selected: true,
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      icons: ['paypal'],
-      discount: '-10%',
-    },
-    {
-      id: 'cards',
-      name: 'Cards',
-      icons: ['mastercard', 'visa', 'amex'],
-      discount: '-10%',
-    },
-    {
-      id: 'account_balance',
-      name: 'solde du compte',
-      icons: [],
-      discount: '-10%',
-      balance: '22678FCFA',
-    },
-    {
-      id: 'cash_on_delivery',
-      name: 'Paiement à la livraison',
-      icons: [],
-      description: 'Paiement en espèces à la réception',
-    },
-  ];
+  const convertFcfa = (amountFcfa: number, target: 'USD' | 'EUR'): number => {
+    const rate = EXCHANGE_RATES[target];
+    if (!rate || amountFcfa <= 0) return 0;
+    return Number((amountFcfa / rate).toFixed(2));
+  };
+  // 转换结果（使用系统已有转换工具）
+  const [convertedAmounts, setConvertedAmounts] = useState<any[]>([]);
+  const [isConverting, setIsConverting] = useState(false);
 
   const orderSummary = {
-    productName: 'Une sélection de hauts de sport sport Form Flex butter',
+    productName: 'Une sélection de hauts de sport sport Form Flex butter s...',
     productDetails: 'Marine | hauUne sélection de hauts...',
     quantity: 2,
     originalPrice: 3889,
@@ -82,80 +66,87 @@ const LocalPayment = ({ navigation }: any) => {
     finalTotal: 2664,
   };
 
-  const renderPaymentOption = (method: PaymentMethod) => {
-    const isSelected = selectedPayment === method.id;
+  useEffect(() => {
+    let isMounted = true;
+    const fetchProfile = async () => {
+      try {
+        const resp = await userApi.getProfile();
+        const data = (resp as unknown as User) as User;
+        if (!isMounted) return;
+        setUserBalance(typeof data.balance === 'number' ? data.balance : 0);
+        setUserBalanceCurrency(data.balance_currency || data.currency || 'FCFA');
+      } catch {
+        if (!isMounted) return;
+        setUserBalance(0);
+        setUserBalanceCurrency('FCFA');
+      }
+    };
+    fetchProfile();
+    // 确保地址数据已加载
+    (async () => {
+      try {
+        if (!defaultAddress) {
+          await fetchDefaultAddress();
+        }
+        if (!addresses || addresses.length === 0) {
+          await fetchAddresses();
+        }
+      } catch {}
+    })();
+    // 读取缓存的商品信息作为订单展示
+    const cached = productCacheManager.getLastProduct();
+    if (cached) {
+      setOrderProduct(cached);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [defaultAddress, addresses, fetchDefaultAddress, fetchAddresses]);
 
-    return (
-      <TouchableOpacity
-        key={method.id}
-        style={styles.paymentOption}
-        onPress={() => setSelectedPayment(method.id)}
-      >
-        <View style={styles.paymentContent}>
-          <View style={styles.paymentLeft}>
-            {method.id === 'brainnel_pay' && (
-              <View style={styles.multiIconContainer}>
-                {getPayMap('mobile_money') && <Image source={getPayMap('mobile_money')} style={[styles.payIcon, { width: 50, height: 30 }]} />}
-                {getPayMap('Orange') && <Image source={getPayMap('Orange')} style={[styles.payIcon, { width: 40, height: 25 }]} />}
-                {getPayMap('MTN') && <Image source={getPayMap('MTN')} style={[styles.payIcon, { width: 40, height: 25 }]} />}
-              </View>
-            )}
-            
-            {method.id === 'wave' && getPayMap('wave') && (
-              <Image source={getPayMap('wave')} style={[styles.payIcon, { width: 60, height: 30 }]} />
-            )}
-            
-            {method.id === 'paypal' && getPayMap('paypal') && (
-              <Image source={getPayMap('paypal')} style={[styles.payIcon, { width: 65, height: 30 }]} />
-            )}
-            
-            {method.id === 'cards' && (
-              <View style={styles.multiIconContainer}>
-                {getPayMap('mastercard') && <Image source={getPayMap('mastercard')} style={[styles.payIcon, { width: 50, height: 30 }]} />}
-                {getPayMap('visa') && <Image source={getPayMap('visa')} style={[styles.payIcon, { width: 55, height: 30 }]} />}
-                {getPayMap('amex') && <Image source={getPayMap('amex')} style={[styles.payIcon, { width: 60, height: 30 }]} />}
-              </View>
-            )}
-            
-            {method.id === 'account_balance' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#FF6B35', width: 45, height: 28, marginRight: 10 }]}>
-                <Ionicons name="wallet-outline" size={22} color="white" />
-              </View>
-            )}
-            
-            {method.id === 'cash_on_delivery' && (
-              <View style={[styles.iconWrapper, { backgroundColor: '#4CAF50', width: 45, height: 28, marginRight: 10 }]}>
-                <Ionicons name="cash-outline" size={22} color="white" />
-              </View>
-            )}
+  // 价格计算（前5种方式均为10%折扣）
+  const DISCOUNT_RATE = 0.1;
+  // 仅前几种在线支付享受折扣，货到付款（cod）不打折
+  const discountablePayments = new Set(['mobile_money', 'wave', 'paypal', 'bank_card', 'balance']);
+  const isDiscountPayment = discountablePayments.has(selectedPayment);
+  const baseUnitPrice = orderProduct ? orderProduct.price : orderSummary.productTotal;
+  const discountAmount = isDiscountPayment ? Math.round(baseUnitPrice * DISCOUNT_RATE) : 0;
+  const finalUnitPrice = baseUnitPrice - discountAmount;
+  const isCardOrPaypal = selectedPayment === 'paypal' || selectedPayment === 'bank_card';
+  const activeCurrency: 'USD' | 'EUR' = selectedPayment === 'paypal' ? paypalCurrency : bankCardCurrency;
+  const displayCurrency = isCardOrPaypal ? activeCurrency : 'FCFA';
+  // 优先使用接口换算结果，否则退回静态速率
+  const finalUnitPriceDisplay = isCardOrPaypal
+    ? ((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, activeCurrency))
+    : finalUnitPrice;
+  const baseUnitPriceDisplay = isCardOrPaypal
+    ? ((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'product_total')) || convertFcfa(baseUnitPrice, activeCurrency))
+    : baseUnitPrice;
+  const discountAmountDisplay = isCardOrPaypal
+    ? ((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'discount_amount')) || convertFcfa(discountAmount, activeCurrency))
+    : discountAmount;
 
-            {(method.id === 'account_balance' || method.id === 'cash_on_delivery') && (
-              <View style={styles.paymentInfo}>
-                <Text style={styles.paymentName}>{method.name}</Text>
-                {method.balance && (
-                  <Text style={styles.balanceText}>Votre solde est de {method.balance}</Text>
-                )}
-                {method.description && (
-                  <Text style={styles.descriptionText}>{method.description}</Text>
-                )}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.paymentRight}>
-            {method.discount && (
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>{method.discount}</Text>
-              </View>
-            )}
-            <View style={[styles.radioButton, isSelected && styles.radioButtonSelected]}>
-              {isSelected && <View style={styles.radioButtonInner} />}
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  // 当选择 paypal/bank_card 或金额/货币变化时，调用换算工具
+  useEffect(() => {
+    if (!isCardOrPaypal) {
+      setConvertedAmounts([]);
+      return;
+    }
+    setIsConverting(true);
+    performCurrencyConversion(
+      'FCFA',
+      activeCurrency,
+      {
+        total_amount: finalUnitPrice,
+        product_total: baseUnitPrice,
+        discount_amount: discountAmount,
+      }
+    ).then((res) => {
+      setConvertedAmounts((Array.isArray(res) ? res : []) as any);
+      setIsConverting(false);
+    }).catch(() => {
+      setIsConverting(false);
+    });
+  }, [isCardOrPaypal, activeCurrency, finalUnitPrice, baseUnitPrice, discountAmount]);
 
   return (
     <View style={styles.container}>
@@ -170,12 +161,140 @@ const LocalPayment = ({ navigation }: any) => {
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Please select payment method</Text>
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Payment Methods */}
-        <View style={styles.paymentSection}>
-          {paymentMethods.map(renderPaymentOption)}
+        {/* 6行容器 */}
+        <View style={styles.rowsContainer}>
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('mobile_money')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/mobilepay.png')} style={styles.mobilePayIcon} />
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-10%</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'mobile_money' && styles.radioButtonSelected]}>
+                {selectedPayment === 'mobile_money' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('wave')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/wavepay.png')} style={styles.waveIcon} />
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-10%</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'wave' && styles.radioButtonSelected]}>
+                {selectedPayment === 'wave' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('paypal')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/paypalpay.png')} style={styles.paypalIcon} />
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-10%</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'paypal' && styles.radioButtonSelected]}>
+                {selectedPayment === 'paypal' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+          {/* PayPal 的币种选择（独立状态） */}
+          {selectedPayment === 'paypal' && (
+            <View style={styles.currencyRow}>
+              <Text style={styles.currencyLabel}>Devise:</Text>
+              <View style={styles.currencyOptions}>
+                <TouchableOpacity
+                  style={[styles.currencyChip, paypalCurrency === 'USD' && styles.currencyChipActive]}
+                  onPress={() => setPaypalCurrency('USD')}
+                >
+                  <Text style={[styles.currencyChipText, paypalCurrency === 'USD' && styles.currencyChipTextActive]}>USD</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.currencyChip, paypalCurrency === 'EUR' && styles.currencyChipActive]}
+                  onPress={() => setPaypalCurrency('EUR')}
+                >
+                  <Text style={[styles.currencyChipText, paypalCurrency === 'EUR' && styles.currencyChipTextActive]}>EUR</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('bank_card')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/cardpay.png')} style={styles.cardIcon} />
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-10%</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'bank_card' && styles.radioButtonSelected]}>
+                {selectedPayment === 'bank_card' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+          {/* Bank Card 的币种选择（独立状态） */}
+          {selectedPayment === 'bank_card' && (
+            <View style={styles.currencyRow}>
+              <Text style={styles.currencyLabel}>Devise:</Text>
+              <View style={styles.currencyOptions}>
+                <TouchableOpacity
+                  style={[styles.currencyChip, bankCardCurrency === 'USD' && styles.currencyChipActive]}
+                  onPress={() => setBankCardCurrency('USD')}
+                >
+                  <Text style={[styles.currencyChipText, bankCardCurrency === 'USD' && styles.currencyChipTextActive]}>USD</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.currencyChip, bankCardCurrency === 'EUR' && styles.currencyChipActive]}
+                  onPress={() => setBankCardCurrency('EUR')}
+                >
+                  <Text style={[styles.currencyChipText, bankCardCurrency === 'EUR' && styles.currencyChipTextActive]}>EUR</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('balance')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/balancepay.png')} style={styles.balanceIcon} />
+              <View style={styles.balanceTextContainer}>
+                <Text style={styles.balanceTitle}>solde du compte</Text>
+                <Text style={styles.balanceAmount}>
+                  Solde : 
+                  <Text style={styles.balanceAmountValue}>
+                    {userBalance !== null ? `${userBalance}${userBalanceCurrency}` : '—'}
+                  </Text>
+                </Text>
+              </View>
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-10%</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'balance' && styles.radioButtonSelected]}>
+                {selectedPayment === 'balance' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+          <View style={styles.separator} />
+          <TouchableWithoutFeedback onPress={() => setSelectedPayment('cod')}>
+            <View style={styles.row}>
+              <Image source={require('../../../assets/local/COD.png')} style={styles.codIcon} />
+              <View style={styles.codTextContainer}>
+                <Text style={styles.codTitle}>Paiement à la livraison</Text>
+                <Text style={styles.codDescription}>Paiement en espèces à la réception</Text>
+              </View>
+              <View style={styles.spacer} />
+              <View style={[styles.radioButton, selectedPayment === 'cod' && styles.radioButtonSelected]}>
+                {selectedPayment === 'cod' && <View style={styles.radioButtonInner} />}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
 
         {/* Promotion Banner */}
@@ -189,16 +308,27 @@ const LocalPayment = ({ navigation }: any) => {
           
           <View style={styles.productItem}>
             <Image 
-              source={{ uri: 'https://via.placeholder.com/80x80' }}
+              source={{ uri: orderProduct ? (getFirstProductImage(orderProduct) || 'https://via.placeholder.com/80x80') : 'https://via.placeholder.com/80x80' }}
               style={styles.productImage}
             />
             <View style={styles.productDetails}>
-              <Text style={styles.productName}>{orderSummary.productName}</Text>
-              <Text style={styles.productVariant}>{orderSummary.productDetails}</Text>
-              <Text style={styles.productQuantity}>Quantité: {orderSummary.quantity}</Text>
+              <View style={styles.productTexts}>
+                <Text style={styles.productName} numberOfLines={2}>
+                  {orderProduct ? (orderProduct.name_fr || orderProduct.name_cn) : orderSummary.productName}
+                </Text>
+                {!!orderProduct?.content_fr && (
+                  <Text style={styles.productVariant} numberOfLines={1}>{orderProduct.content_fr}</Text>
+                )}
+                <Text style={styles.productQuantity} numberOfLines={1}>Quantité: 1</Text>
+              </View>
               <View style={styles.priceContainer}>
-                <Text style={styles.currentPrice}>{orderSummary.discountedPrice}FCFA</Text>
-                <Text style={styles.originalPrice}>{orderSummary.originalPrice}FCFA</Text>
+                <Text style={styles.currentPrice}>
+                  {finalUnitPriceDisplay}
+                  <Text style={styles.currencyCode}>{displayCurrency}</Text>
+                </Text>
+                <Text style={styles.originalPrice}>
+                  {baseUnitPriceDisplay}{displayCurrency}
+                </Text>
               </View>
             </View>
           </View>
@@ -206,23 +336,29 @@ const LocalPayment = ({ navigation }: any) => {
           {/* Price Breakdown */}
           <View style={styles.priceBreakdown}>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Total <Text style={styles.itemCount}>({orderSummary.totalItems} items)</Text></Text>
-              <Text style={[styles.priceValue, styles.totalPrice]}>{orderSummary.finalTotal}FCFA</Text>
+              <Text style={styles.priceLabel}>Total</Text>
+              <Text style={[styles.priceValue, styles.totalPrice]}>
+                {isCardOrPaypal ? finalUnitPriceDisplay : finalUnitPrice}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+              </Text>
             </View>
             
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Product Total</Text>
-              <Text style={styles.priceValue}>{orderSummary.productTotal}FCFA</Text>
+              <Text style={styles.priceLabel}>Total produit</Text>
+              <Text style={styles.priceValue}>
+                {isCardOrPaypal ? baseUnitPriceDisplay : baseUnitPrice}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+              </Text>
             </View>
             
             <View style={styles.priceRow}>
               <View style={styles.discountRow}>
-                <Text style={styles.priceLabel}>Discount</Text>
+                <Text style={styles.priceLabel}>Remise</Text>
                 <View style={styles.discountBadgeSmall}>
                   <Text style={styles.discountTextSmall}>-10%</Text>
                 </View>
               </View>
-              <Text style={[styles.priceValue, styles.discountValue]}>{orderSummary.discount}FCFA</Text>
+              <Text style={[styles.priceValue, styles.discountValue]}>
+                -{isCardOrPaypal ? discountAmountDisplay : discountAmount}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+              </Text>
             </View>
           </View>
         </View>
@@ -232,13 +368,138 @@ const LocalPayment = ({ navigation }: any) => {
       <View style={styles.submitContainer}>
         <TouchableOpacity 
           style={styles.submitButton}
-          onPress={() => {
-            // Handle payment submission
-            console.log('Payment method selected:', selectedPayment);
+          onPress={async () => {
+            try {
+              console.log('[LocalPayment] Create order - start', {
+                time: new Date().toISOString(),
+                selectedPayment,
+              });
+              const product = orderProduct || productCacheManager.getLastProduct();
+              if (!product) {
+                Alert.alert('Erreur', "Aucun produit n'est sélectionné");
+                return;
+              }
+
+              const quantity = 1;
+              const skuId = product.skus?.[0]?.sku_id ?? '';
+
+              // 处理地址与自提点
+              const addressId = defaultAddress?.address_id ?? (addresses && addresses.length > 0 ? addresses[0].address_id : undefined);
+              if (!addressId) {
+                Alert.alert('Adresse requise', "Veuillez ajouter une adresse de réception.", [
+                  { text: 'OK', onPress: () => navigation.navigate('LocalAddressForm' as never) }
+                ]);
+                return;
+              }
+              const pickupId = pickupLocationIdFromRoute ?? 0;
+              if (!pickupId) {
+                Alert.alert('Point de retrait', 'Veuillez choisir un point de retrait.', [
+                  { text: 'OK', onPress: () => navigation.navigate('PickUp' as never) }
+                ]);
+                return;
+              }
+
+              console.log('[LocalPayment] Create order - inputs', {
+                product_id: product.product_id,
+                skuId,
+                quantity,
+                addressId,
+                pickupId,
+                baseUnitPrice,
+                discountAmount,
+                finalUnitPrice,
+                userBalanceCurrency,
+              });
+
+              const requestBody: CreateLocalOrderRequest = {
+                items: [
+                  {
+                    product_id: String(product.product_id ?? ''),
+                    sku_id: String(skuId),
+                    quantity,
+                    unit_price: finalUnitPrice,
+                    total_price: finalUnitPrice * quantity,
+                  },
+                ],
+                address_id: addressId,
+                pickup_location_id: pickupId,
+                payment_method: selectedPayment,
+                buyer_message: '',
+                total_amount: baseUnitPrice * quantity,
+                actual_amount: finalUnitPrice * quantity,
+                discount_amount: discountAmount * quantity,
+                currency: userBalanceCurrency || 'FCFA',
+              };
+
+              console.log('[LocalPayment] Create order - request body', requestBody);
+              const res = await orderApi.createOrder(requestBody);
+              console.log('[LocalPayment] Create order - success response', res);
+
+              if (selectedPayment === 'cod') {
+                console.log('[LocalPayment] Navigating to OrderSuccess (COD)');
+                navigation.navigate('OrderSuccess');
+              } else {
+                // 发起支付
+                try {
+                  const amountForPayment = (selectedPayment === 'paypal' || selectedPayment === 'bank_card')
+                    ? (((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, activeCurrency)))
+                    : res.actual_amount;
+                  const currencyForPayment = (selectedPayment === 'paypal' || selectedPayment === 'bank_card')
+                    ? activeCurrency
+                    : (res.currency || (userBalanceCurrency || 'FCFA'));
+
+                  const payRes = await orderApi.initiatePayment({
+                    order_id: res.order_id,
+                    amount: amountForPayment,
+                    method: selectedPayment as any,
+                    currency: currencyForPayment,
+                    extra: {},
+                  });
+                  console.log('[LocalPayment] initiatePayment response', payRes);
+
+                  // wave / paypal / bank_card 直接走统一 PaymentFlow
+                  if (selectedPayment === 'wave' || selectedPayment === 'paypal' || selectedPayment === 'bank_card') {
+                    const paymentId = String(res.order_id);
+                    const payUrl = String(payRes?.payment_url || '');
+                    console.log('[LocalPayment] Go PaymentFlow with', { paymentId, payUrl, method: selectedPayment });
+                    // 复用订单支付入口 Pay.tsx 所使用的路由
+                    // 约定：Pay.tsx 从 route.params 读取 { order_id, payUrl, method }
+                    (navigation as any).navigate('Pay', { order_id: paymentId, payUrl, method: selectedPayment });
+                    return;
+                  }
+
+                  if (selectedPayment === 'mobile_money') {
+                    console.log('[LocalPayment] Navigating to LocalMobileMoneyConfirm');
+                    navigation.navigate('LocalMobileMoneyConfirm');
+                  } else if (payRes?.payment_url) {
+                    console.log('[LocalPayment] payment_url:', payRes.payment_url);
+                    Alert.alert('Paiement', 'Veuillez suivre les instructions de paiement.');
+                  } else {
+                    Alert.alert('Paiement', 'Demande de paiement envoyée.');
+                  }
+                } catch (err) {
+                  console.error('[LocalPayment] initiatePayment error:', err);
+                  Alert.alert('Paiement', "Échec de l'initialisation du paiement");
+                }
+              }
+            } catch (e: unknown) {
+              console.error('[LocalPayment] Create order error raw:', e);
+              const msg = (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string')
+                ? (e as { message: string }).message
+                : 'Échec de la création de la commande';
+              Alert.alert('Erreur', msg);
+              try {
+                const anyErr = e as any;
+                if (anyErr?.response) {
+                  console.error('[LocalPayment] error.response.status', anyErr.response.status);
+                  console.error('[LocalPayment] error.response.data', anyErr.response.data);
+                }
+              } catch {}
+            }
           }}
         >
           <Text style={styles.submitButtonText}>
-            Submit Order({orderSummary.finalTotal}FCFA)
+            Submit Order({finalUnitPrice}FCFA)
           </Text>
         </TouchableOpacity>
       </View>
@@ -249,7 +510,7 @@ const LocalPayment = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -273,80 +534,66 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  paymentSection: {
-  },
-  paymentOption: {
-    marginBottom: 0,
+  rowsContainer: {
     backgroundColor: '#fff',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e8e8e8',
-    overflow: 'hidden',
   },
-  paymentContent: {
+  row: {
+    width: screenWidth,
+    height: 60,
+    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    justifyContent: 'space-between',
+    paddingLeft: 16,
   },
-  paymentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  separator: {
+    width: screenWidth,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#e8e8e8',
   },
-  multiIconContainer: {
-    flexDirection: 'row',
-    marginRight: 12,
-    gap: 2,
-    alignItems: 'center',
-  },
-  iconWrapper: {
-    width: 30,
-    height: 20,
-    borderRadius: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconText: {
-    color: 'white',
-    fontSize: fontSize(8),
-  },
-  payIcon: {
-    width: 45,
-    height: 28,
+  mobilePayIcon: {
+    height: 40,
+    width: 200,
     resizeMode: 'contain',
   },
-  paymentInfo: {
-    flex: 1,
+  waveIcon: {
+    height: 40,
+    width: 80,
+    resizeMode: 'contain',
   },
-  paymentName: {
-    fontSize: fontSize(15),
-    fontWeight: '500',
-    color: '#000',
-    marginBottom: 2,
+  paypalIcon: {
+    height: 40,
+    width: 120,
+    resizeMode: 'contain',
   },
-  balanceText: {
-    fontSize: fontSize(13),
-    color: '#FF6B35',
+  cardIcon: {
+    height:40,
+    width:140,
+    resizeMode: 'contain',
   },
-  descriptionText: {
-    fontSize: fontSize(13),
-    color: '#666',
+  balanceIcon: {
+    height:40,
+    width:40,
+    resizeMode: 'contain',
   },
-  paymentRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  codIcon: {
+    height:40,
+    width:40,
+    resizeMode: 'contain',
   },
   discountBadge: {
     backgroundColor: '#FF6B35',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
   },
   discountText: {
     color: 'white',
-    fontSize: fontSize(13),
+    fontSize: fontSize(12),
     fontWeight: '600',
+  },
+  spacer: {
+    flex: 1,
   },
   radioButton: {
     width: 22,
@@ -356,6 +603,7 @@ const styles = StyleSheet.create({
     borderColor: '#d0d0d0',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 16,
   },
   radioButtonSelected: {
     borderColor: '#FF6B35',
@@ -366,11 +614,45 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#FF6B35',
   },
+  balanceTextContainer: {
+    marginLeft: 12,
+    flexDirection: 'column',
+  },
+  balanceTitle: {
+    fontSize: fontSize(15),
+    fontWeight: '500',
+    color: '#000',
+    marginBottom: 2,
+  },
+  balanceAmount: {
+    fontSize: fontSize(13),
+    color: '#FF6B35',
+  },
+  balanceAmountValue: {
+    fontSize: fontSize(13),
+    color: '#FF6B35',
+    fontWeight: '700',
+  },
+  codTextContainer: {
+    marginLeft: 12,
+    flexDirection: 'column',
+  },
+  codTitle: {
+    fontSize: fontSize(15),
+    fontWeight: '500',
+    color: '#000',
+    marginBottom: 2,
+  },
+  codDescription: {
+    fontSize: fontSize(13),
+    color: '#666',
+  },
+
   promotionBanner: {
     marginHorizontal: 16,
     marginVertical: 16,
     padding: 12,
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFADE',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#FF6B35',
@@ -384,6 +666,8 @@ const styles = StyleSheet.create({
   orderSummarySection: {
     paddingHorizontal: 16,
     paddingBottom: 20,
+    backgroundColor: '#fff',
+    marginTop: 8,
   },
   sectionTitle: {
     fontSize: fontSize(17),
@@ -394,6 +678,9 @@ const styles = StyleSheet.create({
   productItem: {
     flexDirection: 'row',
     marginBottom: 20,
+    backgroundColor: '#f8f8f8',
+    padding: 12,
+    borderRadius: 8,
   },
   productImage: {
     width: 75,
@@ -403,23 +690,29 @@ const styles = StyleSheet.create({
   },
   productDetails: {
     flex: 1,
+    height: 75,
+    justifyContent: 'space-between',
+  },
+  productTexts: {
+    maxHeight: 46,
+    overflow: 'hidden',
   },
   productName: {
-    fontSize: fontSize(14),
+    fontSize: fontSize(13),
     fontWeight: '500',
     color: '#000',
-    marginBottom: 4,
-    lineHeight: 18,
+    marginBottom: 2,
+    lineHeight: 16,
   },
   productVariant: {
-    fontSize: fontSize(12),
+    fontSize: fontSize(11),
     color: '#666',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   productQuantity: {
-    fontSize: fontSize(12),
+    fontSize: fontSize(11),
     color: '#666',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -430,6 +723,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize(17),
     fontWeight: '700',
     color: '#FF6B35',
+  },
+  currencyCode: {
+    fontSize: fontSize(12),
+    color: '#FF6B35',
+    marginLeft: 4,
   },
   originalPrice: {
     fontSize: fontSize(13),
@@ -502,6 +800,42 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: 'white',
     fontSize: fontSize(16),
+    fontWeight: '600',
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+  },
+  currencyLabel: {
+    fontSize: fontSize(13),
+    color: '#333',
+    marginRight: 10,
+  },
+  currencyOptions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  currencyChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  currencyChipActive: {
+    borderColor: '#FF6B35',
+    backgroundColor: '#FFF3EC',
+  },
+  currencyChipText: {
+    fontSize: fontSize(12),
+    color: '#333',
+  },
+  currencyChipTextActive: {
+    color: '#FF6B35',
     fontWeight: '600',
   },
 });

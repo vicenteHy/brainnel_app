@@ -62,6 +62,8 @@ import { LocalAddressForm } from '../screens/Local/LocalAddressForm';
 import PickUp from '../screens/Local/PickUp';
 import Verify from '../screens/Local/Verify';
 import LocalPayment from '../screens/Local/LocalPayment';
+import LocalMobileMoneyConfirm from '../screens/Local/LocalMobileMoneyConfirm';
+import LocalOrderSuccess from '../screens/Local/OrderSuccess';
 
 export {
   CountrySelect,
@@ -128,4 +130,6 @@ export {
   PickUp,
   Verify,
   LocalPayment,
+  LocalMobileMoneyConfirm,
+  LocalOrderSuccess as OrderSuccess,
 }; 

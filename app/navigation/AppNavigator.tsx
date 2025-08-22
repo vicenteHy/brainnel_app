@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import { NavigationContainer, NavigationState, PartialState } from "@react-navigation/native";
+// React import not required with new JSX transform
+import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { RootStackParamList } from './types';
+import type { RootStackParamList } from './types';
 import * as Screens from './screens';
 import Toast from "react-native-toast-message";
 import { View, Text, Dimensions } from 'react-native';
@@ -275,6 +275,14 @@ export const AppNavigator = () => {
         <Stack.Screen
           name="LocalPayment"
           component={Screens.LocalPayment}
+        />
+        <Stack.Screen
+          name="LocalMobileMoneyConfirm"
+          component={Screens.LocalMobileMoneyConfirm}
+        />
+        <Stack.Screen
+          name="OrderSuccess"
+          component={Screens.OrderSuccess}
         />
       </Stack.Navigator>
       <Toast 

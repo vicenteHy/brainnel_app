@@ -1,4 +1,4 @@
-import { MySetting } from '../services/api/setting';
+import type { MySetting } from '../services/api/setting';
 
 export type RootStackParamList = {
   CountrySelect: undefined;
@@ -68,7 +68,7 @@ export type RootStackParamList = {
   AddAddress: undefined;
   EditAddress: undefined;
   PaymentMethod: undefined;
-  ShippingFee: { cart_item_id: any; totalAmount?: number; isCOD?: boolean; isToc?: number };
+  ShippingFee: { cart_item_id: number | string; totalAmount?: number; isCOD?: boolean; isToc?: number };
   PreviewOrder: undefined;
   ForgotPhonePassword: undefined;
   PhoneLoginScreen: undefined;
@@ -84,8 +84,10 @@ export type RootStackParamList = {
   WithdrawalScreen: undefined;
   LocalProductList: undefined;
   LocalProductDetail: { productId: number };
-  LocalAddressForm: { address?: any };
+  LocalAddressForm: { address?: unknown };
   PickUp: undefined;
   Verify: undefined;
-  LocalPayment: undefined;
+  LocalPayment: { pickup_location_id?: number };
+  LocalMobileMoneyConfirm: undefined;
+  OrderSuccess: undefined;
 };

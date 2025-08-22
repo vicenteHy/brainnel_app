@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,18 +18,21 @@ import {
 import SimpleMapView from '../../components/SimpleMapView';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { pickupApi, PickupLocation } from '../../services/local/pickupApi';
+import { pickupApi } from '../../services/local/pickupApi';
+import type { PickupLocation } from '../../services/local/pickupApi';
 import fontSize from '../../utils/fontsizeUtils';
 import { useTranslation } from 'react-i18next';
+import type { RootStackParamList } from '../../navigation/types';
 import BackIcon from '../../components/BackIcon';
 import { Image } from 'react-native';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 export default function PickUp() {
-  const navigation = useNavigation();
-  const { t, i18n } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { i18n } = useTranslation();
   // const mapRef = useRef<MapView>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
@@ -41,52 +44,31 @@ export default function PickUp() {
   } | null>(null);
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [selectedPickup, setSelectedPickup] = useState<PickupLocation | null>(null);
-  const [nearestPickup, setNearestPickup] = useState<PickupLocation | null>(null);
-  const [region, setRegion] = useState<any>({
-    latitude: 5.3484, // 默认阿比让中心
-    longitude: -4.0167,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  // 地图区域状态暂未使用，移除以避免未使用告警
 
   // 底部面板动画相关
   const [panelHeight] = useState(new Animated.Value(screenHeight * 0.4));
-  const [isExpanded, setIsExpanded] = useState(false);
   const minPanelHeight = screenHeight * 0.4; // 最小高度（折叠状态）
   const maxPanelHeight = screenHeight * 0.8; // 最大高度（展开状态）
-  
-  // 切换面板展开/折叠状态
-  const togglePanel = () => {
-    const toValue = isExpanded ? minPanelHeight : maxPanelHeight;
-    
-    Animated.spring(panelHeight, {
-      toValue,
-      useNativeDriver: false,
-      tension: 50,
-      friction: 10,
-    }).start();
-    
-    setIsExpanded(!isExpanded);
-  };
   
   // 创建手势响应器
   const lastGestureY = useRef(0);
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
+      onMoveShouldSetPanResponder: (_evt, gestureState) => {
         return Math.abs(gestureState.dy) > 5;
       },
       onPanResponderGrant: () => {
         lastGestureY.current = 0;
       },
-      onPanResponderMove: (_, gestureState) => {
+      onPanResponderMove: (_evt, gestureState) => {
         // 计算从上次位置的变化
         const deltaY = gestureState.dy - lastGestureY.current;
         lastGestureY.current = gestureState.dy;
         
         // 获取当前高度并计算新高度
-        const currentHeight = (panelHeight as any)._value;
+        const currentHeight = (panelHeight as unknown as { _value: number })._value;
         let newHeight = currentHeight - deltaY;
         
         // 限制高度范围
@@ -94,9 +76,9 @@ export default function PickUp() {
         
         panelHeight.setValue(newHeight);
       },
-      onPanResponderRelease: (_, gestureState) => {
+      onPanResponderRelease: (_evt, gestureState) => {
         const velocity = gestureState.vy;
-        const currentHeight = (panelHeight as any)._value;
+        const currentHeight = (panelHeight as unknown as { _value: number })._value;
         
         // 根据速度和当前位置决定最终状态
         let shouldExpand = false;
@@ -119,16 +101,16 @@ export default function PickUp() {
           friction: 10,
         }).start();
         
-        setIsExpanded(shouldExpand);
+        // 展开状态由动画高度隐式表达，无需独立状态
       },
     })
   ).current;
 
-  useEffect(() => {
-    initializeMap();
+  const fitMapToMarkers = useCallback((locations: PickupLocation[]) => {
+    // 地图功能暂时禁用
   }, []);
 
-  const initializeMap = async () => {
+  const initializeMap = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -139,32 +121,11 @@ export default function PickUp() {
       };
       
       // 请求位置权限
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status: _status } = await Location.requestForegroundPermissionsAsync();
       
-      let userCoords = simulatedCoords; // 使用模拟位置
-      
-      // 注释掉真实位置获取，使用模拟位置
-      // if (status === 'granted') {
-      //   // 获取用户当前位置
-      //   const location = await Location.getCurrentPositionAsync({
-      //     accuracy: Location.Accuracy.High,
-      //   });
-      //   
-      //   userCoords = {
-      //     latitude: location.coords.latitude,
-      //     longitude: location.coords.longitude,
-      //   };
-      // }
+      const userCoords = simulatedCoords; // 使用模拟位置
       
       setUserLocation(userCoords);
-      
-      // 更新地图区域到用户位置
-      setRegion({
-        latitude: userCoords.latitude,
-        longitude: userCoords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      });
       
       // 获取自提点列表
       const locations = await pickupApi.getPickupLocations(
@@ -179,13 +140,12 @@ export default function PickUp() {
       // 后端返回的第一个就是最近的自提点
       if (locations.length > 0) {
         const nearest = locations[0]; // 第一个就是最近的
-        setNearestPickup(nearest);
         setSelectedPickup(nearest);
       }
       
       // 如果有自提点，调整地图显示所有标记
       if (locations.length > 0) {
-        fitMapToMarkers(locations, userCoords);
+        fitMapToMarkers(locations);
       }
       
     } catch (error) {
@@ -197,21 +157,12 @@ export default function PickUp() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isChineseLanguage, fitMapToMarkers]);
 
-  const fitMapToMarkers = (locations: PickupLocation[], userCoords: any) => {
-    // 地图功能暂时禁用
-    // if (!mapRef.current) return;
-    // 
-    // const coordinates = locations.map(loc => ({
-    //   latitude: loc.latitude,
-    //   longitude: loc.longitude,
-    // }));
-    // 
-    // if (userCoords) {
-    //   coordinates.push(userCoords);
-    // }
-  };
+  // 在定义 initializeMap 之后调用，避免使用前定义
+  useEffect(() => {
+    initializeMap();
+  }, [initializeMap]);
 
   const openGoogleMaps = (location: PickupLocation) => {
     const scheme = Platform.select({
@@ -251,14 +202,10 @@ export default function PickUp() {
     }
     
     // 跳转到支付页面
-    (navigation as any).navigate('LocalPayment');
+    navigation.navigate('LocalPayment', { pickup_location_id: selectedPickup.id });
   };
 
-  const getMarkerColor = (location: PickupLocation) => {
-    if (location.id === selectedPickup?.id) return '#FF5100';
-    if (location.id === nearestPickup?.id) return '#4CAF50';
-    return '#666666';
-  };
+  // 标记颜色逻辑当前未使用，移除以避免未使用告警
 
   if (loading) {
     return (
@@ -415,7 +362,7 @@ export default function PickUp() {
                 </View>
                 
                 {location.timetables.map((time, index) => (
-                  <Text key={index} style={styles.timetable}>
+                  <Text key={`${location.id}-tt-${time.day_of_week}-${time.start_time}-${time.end_time}-${index}`} style={styles.timetable}>
                     {pickupApi.formatTimetable(time)}
                   </Text>
                 ))}

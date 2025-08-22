@@ -70,22 +70,18 @@ export const LocalAddressForm = () => {
   const [phoneNumbersMatch, setPhoneNumbersMatch] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // 当前选中国家（用于展示国旗）
+  const currentSelectedCountry = countryList.find(item => item.country === formData.country_code);
+
   // Get selected country data and set country code
   const fetchSelectedCountry = async () => {
     try {
-      const countryData = await AsyncStorage.getItem("@selected_country");
-      if (countryData) {
-        const parsedData = JSON.parse(countryData);
-        setSelectedCountry(parsedData);
-        setValue(parsedData.name);
-        // 设置国家区号
-        if (parsedData.country_code) {
-          setFormData(prev => ({
-            ...prev,
-            country_code: parsedData.country_code
-          }));
-        }
-      }
+      setSelectedCountry({ name: "Côte d'Ivoire", country_code: "225" });
+      setValue("Côte d'Ivoire");
+      setFormData(prev => ({
+        ...prev,
+        country_code: "225"
+      }));
     } catch (error) {
     }
   };
@@ -103,13 +99,8 @@ export const LocalAddressForm = () => {
         const phoneNumber = address.receiver_phone || "";
         const whatsappPhone = address.whatsapp_phone || "";
         
-        // 先获取用户选择的国家区号
-        const selectedCountryData = await AsyncStorage.getItem("@selected_country");
-        let countryCode = "225"; // 默认区号
-        if (selectedCountryData) {
-          const parsedData = JSON.parse(selectedCountryData);
-          countryCode = parsedData.country_code || "225";
-        }
+        // 本地货盘仅支持科特迪瓦
+        const countryCode = "225";
         
         // Check if WhatsApp is same as phone with country code
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
@@ -199,13 +190,8 @@ export const LocalAddressForm = () => {
         const phoneNumber = addressToUse.receiver_phone || "";
         const whatsappPhone = addressToUse.whatsapp_phone || "";
         
-        // 获取用户选择的国家区号
-        const selectedCountryData = await AsyncStorage.getItem("@selected_country");
-        let countryCode = "225"; // 默认区号
-        if (selectedCountryData) {
-          const parsedData = JSON.parse(selectedCountryData);
-          countryCode = parsedData.country_code || "225";
-        }
+        // 本地货盘仅支持科特迪瓦
+        const countryCode = "225";
         
         // Check if WhatsApp is same as phone with country code
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
@@ -242,19 +228,11 @@ export const LocalAddressForm = () => {
         setItems(formattedCountries);
         setCountryList(formattedCountries);
         
-        // 如果用户还没有设置国家代码，设置默认值
-        if (!formData.country_code) {
-          const selectedCountryData = await AsyncStorage.getItem("@selected_country");
-          let countryCode = "225"; // 默认区号
-          if (selectedCountryData) {
-            const parsedData = JSON.parse(selectedCountryData);
-            countryCode = parsedData.country_code || "225";
-          }
-          setFormData(prev => ({
-            ...prev,
-            country_code: countryCode
-          }));
-        }
+        // 强制设置为科特迪瓦
+        setFormData(prev => ({
+          ...prev,
+          country_code: "225"
+        }));
       } catch (error) {
         console.error('Error fetching country list:', error);
       }
@@ -276,18 +254,29 @@ export const LocalAddressForm = () => {
     if (!formData.receiver_phone) {
       newErrors.receiver_phone = t("address.errors.phone_required");
     }
+    // 校验手机号为8或10位数字（不包含区号）
+    const isValidLocalPhone = (p: string) => /^\d{8}$|^\d{10}$/.test(p);
+    if (formData.receiver_phone && !isValidLocalPhone(formData.receiver_phone)) {
+      newErrors.receiver_phone = "Le numéro doit contenir 8 ou 10 chiffres";
+    }
     if (!formData.receiver_phone_again) {
       newErrors.receiver_phone_again = t("address.errors.confirm_phone_required");
     }
-    if (formData.receiver_phone !== formData.receiver_phone_again) {
-      newErrors.receiver_phone_again = t("address.errors.phone_mismatch");
+    if (formData.receiver_phone_again && !isValidLocalPhone(formData.receiver_phone_again)) {
+      newErrors.receiver_phone_again = "Le numéro doit contenir 8 ou 10 chiffres";
     }
+    // 不在此处添加“号码不一致”的字段错误，避免与实时提示重复显示
+    const isMismatch =
+      !!formData.receiver_phone &&
+      !!formData.receiver_phone_again &&
+      formData.receiver_phone !== formData.receiver_phone_again;
+
     if (!whatsappSameAsPhone && !formData.whatsapp_phone) {
       newErrors.whatsapp_phone = t("address.errors.whatsapp_required");
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0 && !isMismatch;
   };
 
   const handleSubmit = async () => {
@@ -350,7 +339,7 @@ export const LocalAddressForm = () => {
   const handleCountrySelect = (item: any) => {
     setFormData(prev => ({
       ...prev,
-      country_code: item.country
+      country_code: item.country,
     }));
     setOpen(false);
   };
@@ -443,17 +432,15 @@ export const LocalAddressForm = () => {
                             </Text>
                           </View>
                           <View style={styles.phoneInputContainer}>
-                            <TouchableOpacity
+                            <View
                               style={styles.countryCodeSelector}
-                              onPress={() => setOpen(true)}
                             >
                               <Image 
                                 source={flagMap.get("Côte d'Ivoire")} 
                                 style={styles.flagIcon}
                               />
-                              <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
-                              <Text style={styles.dropdownArrow}>▼</Text>
-                            </TouchableOpacity>
+                              <Text style={styles.countryCodeText}>+225</Text>
+                          </View>
                             <TextInput
                               style={styles.phoneInput}
                               placeholder={t("address.placeholder.phone_number")}
@@ -462,8 +449,8 @@ export const LocalAddressForm = () => {
                               onChangeText={(text) =>
                                 setFormData({
                                   ...formData,
-                                  receiver_phone: text,
-                                })
+                                  receiver_phone: text.replace(/\D/g, ""),
+                                 })
                               }
                               keyboardType="numeric"
                             />
@@ -487,7 +474,7 @@ export const LocalAddressForm = () => {
                                 source={flagMap.get("Côte d'Ivoire")} 
                                 style={styles.flagIcon}
                               />
-                              <Text style={styles.countryCodeText}>+{formData.country_code}</Text>
+                              <Text style={styles.countryCodeText}>+225</Text>
                             </View>
                             <TextInput
                               style={styles.phoneInput}
@@ -497,8 +484,8 @@ export const LocalAddressForm = () => {
                               onChangeText={(text) =>
                                 setFormData({
                                   ...formData,
-                                  receiver_phone_again: text,
-                                })
+                                  receiver_phone_again: text.replace(/\D/g, ""),
+                                 })
                               }
                               keyboardType="numeric"
                             />
@@ -571,7 +558,7 @@ export const LocalAddressForm = () => {
                         style={styles.primaryButtonStyle}
                         onPress={handleSubmit}
                       >
-                        <Text style={styles.buttonText}>{t("common.next_step")}</Text>
+                        <Text style={styles.buttonText}>Étape suivante</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -579,46 +566,48 @@ export const LocalAddressForm = () => {
               </View>
             </View>
           )}
-          <Modal
-            visible={open}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={() => setOpen(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{t("address.select_country_code")}</Text>
-                  <TouchableOpacity onPress={() => setOpen(false)}>
-                    <Text style={styles.closeButton}>{t("address.close")}</Text>
-                  </TouchableOpacity>
-                </View>
-                <FlatList
-                  data={countryList}
-                  keyExtractor={(item) => item.value}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.countryItem}
-                      onPress={() => handleCountrySelect(item)}
-                    >
-                      {item.flag && (
-                        <Image 
-                          source={item.flag} 
-                          style={styles.flagImage} 
-                        />
-                      )}
-                      <Text style={styles.countryItemText}>{item.name_en} (+{item.country})</Text>
-                      {formData.country_code === item.country && (
-                        <Text style={styles.checkIcon}>✓</Text>
-                      )}
+          {false && (
+            <Modal
+              visible={open}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setOpen(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Sélectionner l'indicatif du pays</Text>
+                    <TouchableOpacity onPress={() => setOpen(false)}>
+                      <Text style={styles.closeButton}>Fermer</Text>
                     </TouchableOpacity>
-                  )}
-                  style={styles.flatList}
-                  contentContainerStyle={styles.flatListContent}
-                />
+                  </View>
+                  <FlatList
+                    data={countryList}
+                    keyExtractor={(item) => `${item.value}-${item.country}`}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.countryItem}
+                        onPress={() => handleCountrySelect(item)}
+                      >
+                        {item.flag && (
+                          <Image 
+                            source={item.flag} 
+                            style={styles.flagImage} 
+                          />
+                        )}
+                        <Text style={styles.countryItemText}>{item.name_en} (+{item.country})</Text>
+                        {formData.country_code === item.country && (
+                          <Text style={styles.checkIcon}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    style={styles.flatList}
+                    contentContainerStyle={styles.flatListContent}
+                  />
+                </View>
               </View>
-            </View>
-          </Modal>
+            </Modal>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
