@@ -327,8 +327,13 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
         console.log("App从后台切换到前台");
         
-        // 如果已经打开过支付页面且未在轮询，则开始轮询
-        if (hasOpenedPayment && paymentStatus !== 'checking' && paymentStatus !== 'completed') {
+        // 如果支付状态已经是完成，对于本地订单需要触发成功跳转
+        if (paymentStatus === 'completed' && is_local === 1 && paymentType === 'order') {
+          console.log("本地订单已支付成功，触发成功跳转...");
+          // 立即触发一次支付状态查询以获取订单详情并跳转
+          checkPaymentStatus();
+        } else if (hasOpenedPayment && paymentStatus !== 'checking' && paymentStatus !== 'completed') {
+          // 如果已经打开过支付页面且未在轮询，则开始轮询
           console.log("开始轮询支付状态...");
           
           // Mobile Money 需要特殊处理
@@ -352,7 +357,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     return () => {
       subscription.remove();
     };
-  }, [hasOpenedPayment, paymentStatus, startPolling]);
+  }, [hasOpenedPayment, paymentStatus, startPolling, checkPaymentStatus, is_local, paymentType]);
 
   // 组件挂载时的处理
   useEffect(() => {
