@@ -9,14 +9,17 @@ import {
   StatusBar,
   SafeAreaView,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import BackIcon from '../../components/BackIcon';
 import fontSize from '../../utils/fontsizeUtils';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import { productCacheManager } from '../../services/local/productCache';
 import type { LocalProduct } from '../../services/local/productList';
+import { orderApi } from '../../services/local/orderApi';
 
 type LocalMobileMoneyConfirmNav = NativeStackNavigationProp<RootStackParamList, 'LocalMobileMoneyConfirm'>;
 
@@ -29,10 +32,15 @@ const isValidE164PhoneNumber = (phoneNumber: string): boolean => {
 
 const LocalMobileMoneyConfirm = () => {
   const navigation = useNavigation<LocalMobileMoneyConfirmNav>();
+  const route = useRoute<RouteProp<RootStackParamList, 'LocalMobileMoneyConfirm'>>();
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneNumberError, setPhoneNumberError] = useState(false);
   const [orderProduct, setOrderProduct] = useState<LocalProduct | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // 从路由参数获取订单信息
+  const { orderId, orderNo, amount, currency } = route.params || {};
 
   // 保持与 previewOrder 一致的导航体验（无需额外设置）
 
@@ -71,19 +79,74 @@ const LocalMobileMoneyConfirm = () => {
   const discountAmount = useMemo(() => Math.round(baseUnitPrice * DISCOUNT_RATE), [baseUnitPrice]);
   const finalUnitPrice = useMemo(() => baseUnitPrice - discountAmount, [baseUnitPrice, discountAmount]);
 
-  const onSubmit = () => {
-    if (!phoneNumber) return;
+  const onSubmit = async () => {
+    if (!phoneNumber) {
+      Alert.alert('Erreur', 'Veuillez entrer votre numéro de téléphone');
+      return;
+    }
     if (!validatePhoneNumber(phoneNumber)) {
       setPhoneNumberError(true);
+      Alert.alert('Erreur', 'Numéro de téléphone invalide');
       return;
     }
 
     const formattedPhone = formatPhoneNumber(phoneNumber);
     if (!isValidE164PhoneNumber(formattedPhone)) {
       setPhoneNumberError(true);
+      Alert.alert('Erreur', 'Le numéro de téléphone doit être au format E.164');
       return;
     }
-    navigation.navigate('OrderSuccess' as never);
+
+    if (!orderId) {
+      Alert.alert('Erreur', 'Informations de commande manquantes');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const requestData = {
+        order_id: orderId,
+        amount: amount || finalUnitPrice,
+        method: 'mobile_money',
+        currency: currency || 'FCFA',
+        extra: {
+          phone_number: formattedPhone  // 传递格式化的电话号码
+        }
+      };
+      
+      console.log('[LocalMobileMoneyConfirm] Initiating payment:', {
+        phone: formattedPhone,
+        orderId: orderId,
+        orderIdType: typeof orderId,
+        amount: amount || finalUnitPrice,
+        currency: currency || 'FCFA',
+        requestData: requestData
+      });
+      
+      // 调用支付接口，传递电话号码
+      const paymentResponse = await orderApi.initiatePayment(requestData);
+
+      console.log('[LocalMobileMoneyConfirm] Payment response:', paymentResponse);
+
+      // 始终跳转到支付轮询页面，即使没有payment_url也要轮询状态
+      // 参考PreviewOrder的处理方式，mobile money需要轮询支付状态
+      navigation.navigate('Pay' as never, {
+        order_id: String(orderId),
+        payUrl: paymentResponse?.payment_url || '',  // 即使为空也传递空字符串
+        method: 'mobile_money'
+      } as never);
+      
+      console.log('[LocalMobileMoneyConfirm] Navigated to Pay page for polling with:', {
+        order_id: String(orderId),
+        payUrl: paymentResponse?.payment_url || '(empty)',
+        method: 'mobile_money'
+      });
+    } catch (error) {
+      console.error('[LocalMobileMoneyConfirm] Payment initiation failed:', error);
+      Alert.alert('Erreur', 'Échec de l\'initialisation du paiement');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -159,9 +222,13 @@ const LocalMobileMoneyConfirm = () => {
                   : {},
               ]}
               onPress={onSubmit}
-              disabled={!phoneNumber || phoneNumberError}
+              disabled={!phoneNumber || phoneNumberError || loading}
             >
-              <Text style={styles.buttonText}>Confirmer le paiement</Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.buttonText}>Confirmer le paiement</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

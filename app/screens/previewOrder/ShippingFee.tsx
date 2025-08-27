@@ -270,7 +270,9 @@ export const ShippingFee = () => {
                   <Text style={styles.timeValue}>
                     {shippingMethod === "sea"
                       ? t("order.shipping.sea_time")
-                      : t("order.shipping.air_time")}
+                      : userStore.user?.country_code === 225 
+                        ? "7 jours"
+                        : t("order.shipping.air_time")}
                   </Text>
                 </View>
               </View>

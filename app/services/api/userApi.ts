@@ -28,7 +28,10 @@ export interface User {
   theme:string,
   timezone:string,
   next_level_points_threshold:number,
-  is_leader:number
+  is_leader:number,
+  id_card?: string,
+  passport?: string,
+  is_bind_referrer_code: number
 }
 
 export interface UserSettings {
@@ -169,6 +172,18 @@ export const userApi = {
       ...(fingerprintHash && { fingerprint_hash: fingerprintHash })
     };
     return apiService.post<AuthResponse>('/api/users/verify-email-otp/', requestData);
+  },
+
+  // 绑定邀请码
+  bindReferrerCode: (referrerCode: string) => {
+    console.log('[UserAPI] 绑定邀请码请求, 邀请码:', referrerCode);
+    const requestData = { referrer_code: referrerCode };
+    return apiService.post<{ success: boolean; message: string }>('/api/users/me/bind-referrer-code/', requestData);
+  },
+
+  // 获取用户详细信息（包含邀请码绑定状态）
+  getUserProfile: () => {
+    return apiService.get<User>('/api/users/me/');
   }
 
 };

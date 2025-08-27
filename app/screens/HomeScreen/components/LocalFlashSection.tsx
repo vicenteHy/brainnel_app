@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
   ActivityIndicator,
@@ -11,30 +10,38 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Colors } from '../../../constants/Colors';
-import { 
-  fetchLocalProducts, 
-  LocalProduct, 
-  getFirstProductImage 
-} from '../../../services/local/productList';
-import { productCacheManager } from '../../../services/local/productCache';
-import { useTranslation } from 'react-i18next';
+import { fetchLevel1Categories, LocalCategory } from '../../../services/local/categoryApi';
 import fontSize from '../../../utils/fontsizeUtils';
 
 export default function LocalFlashSection() {
-  const navigation = useNavigation();
-  const { t, i18n } = useTranslation();
-  const [products, setProducts] = useState<LocalProduct[]>([]);
+  const navigation = useNavigation<any>();
+  const [categories, setCategories] = useState<LocalCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
-  const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
+  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 39 });
+
+  // 分类图标映射
+  const categoryIcons: { [key: number]: any } = {
+    4: require('../../../../assets/local/4.png'),
+    5: require('../../../../assets/local/5.png'),
+    6: require('../../../../assets/local/6.png'),
+    7: require('../../../../assets/local/7.png'),
+    8: require('../../../../assets/local/8.png'),
+    9: require('../../../../assets/local/9.png'),
+    10: require('../../../../assets/local/10.png'),
+    11: require('../../../../assets/local/11.png'),
+    12: require('../../../../assets/local/12.png'),
+    13: require('../../../../assets/local/13.png'),
+  };
+
+  // 要显示的分类ID顺序
+  const displayCategoryIds = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
   // 倒计时逻辑
   useEffect(() => {
     const calculateTimeLeft = () => {
       const now = new Date();
       const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0); // 设置为今天午夜
+      midnight.setHours(24, 0, 0, 0);
       
       const difference = midnight.getTime() - now.getTime();
       
@@ -45,7 +52,6 @@ export default function LocalFlashSection() {
         
         setTimeLeft({ hours, minutes, seconds });
       } else {
-        // 重置为23:59:59
         setTimeLeft({ hours: 23, minutes: 59, seconds: 59 });
       }
     };
@@ -56,108 +62,77 @@ export default function LocalFlashSection() {
     return () => clearInterval(timer);
   }, []);
 
-  // 加载产品数据
+  // 加载分类数据
   useEffect(() => {
-    loadProducts();
+    loadCategories();
   }, []);
 
-  const loadProducts = async () => {
+  const loadCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetchLocalProducts({ 
-        page: 1,
-        page_size: 10 // 只获取前10个产品
-      });
+      const response = await fetchLevel1Categories();
       
-      if (response?.items) {
-        setProducts(response.items);
-        // 将商品存入缓存
-        productCacheManager.setProducts(response.items);
-      }
+      // 筛选并排序要显示的分类
+      const filteredCategories = displayCategoryIds
+        .map(id => response.find(cat => cat.category_id === id))
+        .filter(cat => cat !== undefined) as LocalCategory[];
+      
+      setCategories(filteredCategories);
     } catch (error) {
-      console.error('获取本地货盘商品失败:', error);
+      console.error('获取分类失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProductPress = useCallback((product: LocalProduct) => {
-    // 将商品数据存入缓存
-    productCacheManager.setProduct(product.product_id, product);
-    // 跳转到详情页
-    navigation.navigate('LocalProductDetail', { productId: product.product_id });
-  }, [navigation]);
+  const handleCategoryPress = (category: LocalCategory) => {
+    navigation.navigate('LocalProductList', { 
+      category_id: category.category_id,
+      categoryName: category.name_fr 
+    });
+  };
 
-  const handleViewAll = useCallback(() => {
+  const handleViewAll = () => {
     navigation.navigate('LocalProductList');
-  }, [navigation]);
+  };
 
   const formatTime = (value: number) => {
     return value.toString().padStart(2, '0');
   };
 
-  const renderProduct = (item: LocalProduct) => {
-    const name = isChineseLanguage ? item.name_cn : item.name_fr;
-    const imageUrl = getFirstProductImage(item);
-    const discount = Math.round(item.off * 100);
-    
+  if (loading) {
     return (
-      <TouchableOpacity
-        key={item.product_id}
-        style={styles.productCard}
-        onPress={() => handleProductPress(item)}
-      >
-        <View style={styles.imageContainer}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.productImage} />
-          ) : (
-            <View style={[styles.productImage, styles.placeholderImage]}>
-              <Ionicons name="image-outline" size={30} color="#ccc" />
-            </View>
-          )}
-          {discount > 0 && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>-{discount}%</Text>
-            </View>
-          )}
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF5100" />
         </View>
-        <Text style={styles.productName} numberOfLines={2}>
-          {name}
-        </Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>{item.price}</Text>
-          <Text style={styles.currency}>FCFA</Text>
-        </View>
-        {item.original_price > item.price && (
-          <Text style={styles.originalPrice}>{item.original_price}FCFA</Text>
-        )}
-      </TouchableOpacity>
+      </View>
     );
-  };
+  }
 
-  if (products.length === 0 && !loading) {
-    return null; // 如果没有产品，不显示组件
+  if (categories.length === 0) {
+    return null;
   }
 
   return (
     <View style={styles.container}>
       {/* 顶部橙色区域 */}
       <LinearGradient
-        colors={['#FF5100', '#FF8C00']}
+        colors={['#FF5100', '#FF5100']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          {/* 闪电图标 */}
-          <View style={styles.iconWrapper}>
-            <Ionicons name="flash" size={20} color="#FFB700" />
+          {/* 左侧：闪电图标和标题 */}
+          <View style={styles.headerLeft}>
+            <View style={styles.iconWrapper}>
+              <Ionicons name="flash" size={20} color="#FF5100" />
+            </View>
+            <Text style={styles.title}>Flash Local</Text>
           </View>
-          
-          {/* 标题 */}
-          <Text style={styles.title}>Flash Local</Text>
-          
-          {/* 倒计时 */}
+
+          {/* 中间：倒计时 */}
           <View style={styles.countdown}>
             <View style={styles.timeBlock}>
               <Text style={styles.timeText}>{formatTime(timeLeft.hours)}</Text>
@@ -171,66 +146,82 @@ export default function LocalFlashSection() {
               <Text style={styles.timeText}>{formatTime(timeLeft.seconds)}</Text>
             </View>
           </View>
-          
-          {/* 查看全部按钮 */}
+
+          {/* 右侧：查看全部 */}
           <TouchableOpacity onPress={handleViewAll} style={styles.viewAllButton}>
-            <Text style={styles.viewAllText}>
-              {isChineseLanguage ? '查看全部' : 'Voir tout'} &gt;
-            </Text>
+            <Text style={styles.viewAllText}>VOIR TOUT</Text>
+            <Ionicons name="chevron-forward" size={12} color="#FFF" style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
-      {/* 信息横幅 */}
-      <View style={styles.infoBanner}>
-        <View style={styles.infoBannerContent}>
+      {/* 主内容区域 */}
+      <View style={styles.contentContainer}>
+        {/* 信息横幅 */}
+        <View style={styles.infoBanner}>
           <View style={styles.infoItem}>
-            <Ionicons name="car-outline" size={20} color="#FF6600" />
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTextNormal}>
-                {isChineseLanguage ? '免费配送' : 'Livraison gratuite en '}
-              </Text>
-              <Text style={styles.infoTextBold}>
-                {isChineseLanguage ? '72小时' : '72h'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoItem}>
-            <Ionicons name="cash-outline" size={20} color="#FF6600" />
-            <Text style={[styles.infoTextNormal, { marginLeft: 6 }]}>
-              {isChineseLanguage ? '货到付款' : 'Paiement à la livraison'}
+            <Image 
+              source={require('../../../../assets/local/delivery.png')} 
+              style={styles.infoIcon}
+            />
+            <Text style={styles.infoText}>
+              Livraison en <Text style={styles.infoTextBold}>3 - 7 jours</Text>
             </Text>
           </View>
-        </View>
-      </View>
-
-      {/* 产品列表 */}
-      <View style={styles.productSection}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+          
+          <View style={styles.infoItem}>
+            <Image 
+              source={require('../../../../assets/local/cash.png')} 
+              style={styles.infoIcon}
+            />
+            <Text style={styles.infoText}>Paiement à la livraison</Text>
           </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productList}
-          >
-            {products.slice(0, 10).map(renderProduct)}
-            
-            {/* 查看更多按钮 */}
-            <TouchableOpacity 
-              style={styles.viewMoreCard}
-              onPress={handleViewAll}
-            >
-              <Ionicons name="arrow-forward-circle" size={40} color={Colors.primary} />
-              <Text style={styles.viewMoreText}>
-                {isChineseLanguage ? '查看更多' : 'Voir plus'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        )}
+        </View>
+
+        {/* 分类网格 */}
+        <View style={styles.categoriesGrid}>
+          {/* 第一行 */}
+          <View style={styles.categoryRow}>
+            {categories.slice(0, 5).map((category) => (
+              <TouchableOpacity
+                key={category.category_id}
+                style={styles.categoryItem}
+                onPress={() => handleCategoryPress(category)}
+              >
+                {categoryIcons[category.category_id] && (
+                  <Image 
+                    source={categoryIcons[category.category_id]} 
+                    style={styles.categoryIcon}
+                  />
+                )}
+                <Text style={styles.categoryName} numberOfLines={2}>
+                  {category.name_fr}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* 第二行 */}
+          <View style={styles.categoryRow}>
+            {categories.slice(5, 10).map((category) => (
+              <TouchableOpacity
+                key={category.category_id}
+                style={styles.categoryItem}
+                onPress={() => handleCategoryPress(category)}
+              >
+                {categoryIcons[category.category_id] && (
+                  <Image 
+                    source={categoryIcons[category.category_id]} 
+                    style={styles.categoryIcon}
+                  />
+                )}
+                <Text style={styles.categoryName} numberOfLines={2}>
+                  {category.name_fr}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -238,202 +229,136 @@ export default function LocalFlashSection() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
-    marginTop: 0,
-    marginBottom: 8,
-    borderRadius: 12,
+    marginTop: 6,
+    marginBottom: 6,
+    marginHorizontal: 8,
+    borderRadius: 20,
     overflow: 'hidden',
-    marginHorizontal: 5,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: '#FF5100',
     borderWidth: 2,
-    borderColor: '#FF8C00',
+    borderColor: '#FF5100',
+  },
+  loadingContainer: {
+    height: 280,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
   },
   header: {
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingHorizontal:5,
+    paddingVertical: 16,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconWrapper: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: fontSize(16),
+    fontSize: fontSize(15),
     fontWeight: 'bold',
     color: '#FFF',
-    marginLeft: 8,
-    flex: 0,
+    marginLeft: 10,
   },
   countdown: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    marginHorizontal: 5,
-  },
-  viewAllButton: {
-    paddingLeft: 5,
-  },
-  viewAllText: {
-    color: '#FFF',
-    fontSize: fontSize(12),
-    fontWeight: '500',
   },
   timeBlock: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 4,
+    backgroundColor: '#FFF',
+    borderRadius: 5,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
     minWidth: 28,
     alignItems: 'center',
   },
   timeText: {
     fontSize: fontSize(14),
     fontWeight: 'bold',
-    color: '#FF6600',
+    color: '#FF5100',
   },
   timeSeparator: {
     fontSize: fontSize(14),
     fontWeight: 'bold',
     color: '#FFF',
-    marginHorizontal: 2,
+    marginHorizontal: 3,
   },
-  infoBanner: {
-    backgroundColor: '#FFF8F0',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  infoBannerContent: {
+  viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  viewAllText: {
+    color: '#FFF',
+    fontSize: fontSize(11),
+    fontWeight: '600',
+  },
+  contentContainer: {
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingBottom: 16,
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFEBD4',
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
   },
-  infoTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 6,
+  infoIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+    resizeMode: 'contain',
   },
-  infoTextNormal: {
-    fontSize: fontSize(12),
-    color: '#666',
+  infoText: {
+    fontSize: fontSize(13),
+    color: '#333',
   },
   infoTextBold: {
-    fontSize: fontSize(12),
     fontWeight: 'bold',
     color: '#FF5100',
   },
-  infoDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: '#E0E0E0',
-    marginHorizontal: 10,
+  categoriesGrid: {
+    paddingHorizontal: 15,
+    paddingTop: 10,
   },
-  productSection: {
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  loadingContainer: {
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  productList: {
-    paddingHorizontal: 5,
-  },
-  productCard: {
-    width: 120,
-    marginRight: 12,
-  },
-  imageContainer: {
-    position: 'relative',
-    width: 120,
-    height: 120,
-    marginBottom: 8,
-  },
-  productImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderImage: {
-    backgroundColor: '#F0F0F0',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#FF5100',
-    borderRadius: 11,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  discountText: {
-    color: '#fff',
-    fontSize: fontSize(11),
-    fontWeight: 'bold',
-  },
-  productName: {
-    fontSize: fontSize(12),
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-    height: 32,
-  },
-  priceContainer: {
+  categoryRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  currentPrice: {
-    fontSize: fontSize(16),
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  currency: {
-    fontSize: fontSize(13),
-    fontWeight: 'bold',
-    color: Colors.primary,
-    marginLeft: 2,
-  },
-  originalPrice: {
-    fontSize: fontSize(11),
-    color: '#999',
-    textDecorationLine: 'line-through',
-  },
-  viewMoreCard: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
+  categoryItem: {
+    width: '18%',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderStyle: 'dashed',
   },
-  viewMoreText: {
-    marginTop: 8,
-    fontSize: fontSize(13),
-    color: Colors.primary,
-    fontWeight: '500',
+  categoryIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 14,
+    marginBottom: 8,
+    resizeMode: 'cover',
+  },
+  categoryName: {
+    fontSize: fontSize(11),
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 14,
   },
 });

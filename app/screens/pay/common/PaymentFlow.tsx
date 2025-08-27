@@ -83,6 +83,8 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       order_id: response.order_id || response.id || paymentId,
       orderId: response.order_id || response.id || paymentId,
       payment_method: method,
+      // 传递 is_local 字段
+      is_local: response.is_local || 0,
       // 如果是充值，确保标记
       ...(paymentType === 'recharge' && { 
         isRecharge: true,
@@ -94,6 +96,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       paymentType,
       paymentId,
       method,
+      is_local: response.is_local,
       originalResponse: response,
       finalParams: successParams
     });
@@ -104,7 +107,12 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   // 处理支付错误
   const handleError = useCallback((errorData: any) => {
     setPaymentStatus('failed');
-    safeNavigate(config.errorRoute, errorData);
+    // 确保错误数据中包含 is_local 字段
+    const errorParams = {
+      ...errorData,
+      is_local: errorData.is_local || 0
+    };
+    safeNavigate(config.errorRoute, errorParams);
   }, [safeNavigate, config.errorRoute]);
 
   // 处理支付取消 - 所有支付方式都跳转到失败页面
@@ -115,6 +123,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     safeNavigate(config.errorRoute, {
       msg: t(`${config.translationPrefix}.payment_cancelled`),
       [config.idFieldName]: paymentId,
+      is_local: 0, // 取消时默认传 0
       ...(paymentType === 'recharge' && { isRecharge: true })
     });
   }, [paymentType, paymentId, safeNavigate, stopPolling, t, config]);

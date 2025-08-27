@@ -40,6 +40,7 @@ export const usePaymentPolling = ({
 
       if (response.status === 1) {
         console.log(`✅ ${method}${paymentType === 'order' ? '支付' : '充值'}成功！`);
+        console.log(`is_local 字段值: ${response.is_local}`);
         onSuccess(response);
         stopPolling();
       } else {

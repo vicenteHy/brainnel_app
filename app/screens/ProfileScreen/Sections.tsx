@@ -5,6 +5,7 @@ import LeftArrowIcon from '../../components/DownArrowIcon';
 import fontSize from '../../utils/fontsizeUtils';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import InviteCodeModal from '../../components/InviteCodeModal';
 
 interface SectionProps {
   t: (key: string) => string;
@@ -29,6 +30,7 @@ const serviceItems = [
   { nameKey: 'profile.services.item.collection', iconName: 'heart-outline', screen: 'Collection' },
   { nameKey: 'profile.services.item.history', iconName: 'time-outline', screen: 'BrowseHistoryScreen' },
   { nameKey: 'profile.services.item.address', iconName: 'location-outline', screen: 'AddressList' },
+  { nameKey: null, hardcodedName: 'Inviter', iconName: 'people-outline', screen: 'Invite' },
 ];
 
 const SectionCard: React.FC<{title: string | React.ReactNode, onAllPress?: () => void, children: React.ReactNode, allText?: string}> = ({ title, onAllPress, allText, children }) => (
@@ -56,7 +58,7 @@ const SectionItem: React.FC<{item: any, onPress: () => void, hasBadge?: boolean,
       </View>
     )}
     <Ionicons name={item.iconName as any} style={styles.sectionItemIcon} />
-    <Text style={styles.sectionItemText}>{t(item.nameKey)}</Text>
+    <Text style={styles.sectionItemText}>{item.hardcodedName || t(item.nameKey)}</Text>
   </TouchableOpacity>
 );
 
@@ -138,16 +140,31 @@ export const OrderSection: React.FC<SectionProps> = ({ t, navigation }) => {
 };
 
 export const ToolSection: React.FC<SectionProps> = ({ t, navigation }) => {
+  const [showInviteModal, setShowInviteModal] = useState(false);
+
   return (
-    <SectionCard title={t("profile.services.title")}>
-      {serviceItems.map((item, index) => (
-        <SectionItem
-          key={index}
-          item={item}
-          t={t}
-          onPress={() => navigation.navigate(item.screen)}
-        />
-      ))}
-    </SectionCard>
+    <>
+      <SectionCard title={t("profile.services.title")}>
+        {serviceItems.map((item, index) => (
+          <SectionItem
+            key={index}
+            item={item}
+            t={t}
+            onPress={() => {
+              if (item.screen === 'Invite') {
+                setShowInviteModal(true);
+              } else {
+                navigation.navigate(item.screen);
+              }
+            }}
+          />
+        ))}
+      </SectionCard>
+      
+      <InviteCodeModal 
+        visible={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
+    </>
   );
 }; 

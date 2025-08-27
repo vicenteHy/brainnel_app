@@ -12,10 +12,10 @@ import {
   Modal,
   FlatList,
   Dimensions,
-  StatusBar,
   SafeAreaView,
   ScrollView
 } from "react-native";
+import { StatusBar } from 'expo-status-bar';
 import { useState } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -345,13 +345,26 @@ export const LocalAddressForm = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <BackIcon size={fontSize(20)} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t("address.select_recipient")}</Text>
+        <View style={{ width: 20 }} />
+      </View>
+
       <KeyboardAvoidingView 
         behavior="padding"
-        style={styles.safeAreaContent}
+        style={styles.keyboardView}
       >
-        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContainer}>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#f77f3a" />
@@ -361,15 +374,6 @@ export const LocalAddressForm = () => {
               <View>
                 <View style={styles.recipientFormContainer1}>
                   <View style={styles.recipientFormContainer2}>
-                    <View style={styles.titleContainer}>
-                      <View style={styles.backIconContainer}>
-                        <TouchableOpacity onPress={() => navigation.goBack()}>
-                          <BackIcon size={fontSize(20)} />
-                        </TouchableOpacity>
-                      </View>
-
-                      <Text style={styles.titleHeading}>{t("address.select_recipient")}</Text>
-                    </View>
                     <View style={styles.recipientInfoForm}>
                       <View style={styles.recipientInfoHeadingContainer}>
                         <Text style={styles.recipientInfoHeading}>{t("address.preview.default_address")}</Text>
@@ -610,22 +614,43 @@ export const LocalAddressForm = () => {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeAreaContent: {
-    flex: 1,
-    paddingTop: 0,
-  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'ios' ? 44 : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    zIndex: 5,
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: fontSize(20),
+    fontWeight: '600',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    flex: 1,
+    letterSpacing: 0.3,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -644,8 +669,9 @@ const styles = StyleSheet.create({
   },
   recipientFormContainer1: {
     width: "100%",
-    padding: 20,
+    paddingHorizontal: 20,
     paddingBottom: 32,
+    paddingTop: 0,
   },
 
   recipientFormContainer2: {
@@ -653,26 +679,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "flex-start",
-  },
-  titleContainer: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    paddingVertical: 10,
-  },
-  backIconContainer: {
-    position: "absolute",
-    left: 0,
-  },
-  titleHeading: {
-    fontWeight: "600",
-    fontSize: fontSize(20),
-    lineHeight: 28,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: "#1a1a1a",
-    letterSpacing: 0.3,
   },
   recipientInfoForm: {
     marginTop: 30,

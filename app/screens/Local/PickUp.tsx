@@ -9,11 +9,11 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
-  SafeAreaView,
   Dimensions,
   PanResponder,
   Animated,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 // import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import SimpleMapView from '../../components/SimpleMapView';
 import * as Location from 'expo-location';
@@ -106,7 +106,7 @@ export default function PickUp() {
     })
   ).current;
 
-  const fitMapToMarkers = useCallback((locations: PickupLocation[]) => {
+  const fitMapToMarkers = useCallback((_locations: PickupLocation[]) => {
     // 地图功能暂时禁用
   }, []);
 
@@ -188,6 +188,60 @@ export default function PickUp() {
     }
   };
 
+  const formatTimetableDisplay = useCallback((time: { start_time: string; end_time: string; day_of_week: string }) => {
+    const formatTime = (t: string) => {
+      if (!t) return '';
+      const parts = t.split(':');
+      if (parts.length < 2) return t;
+      const hour = parts[0].padStart(2, '0');
+      const minute = parts[1].padStart(2, '0');
+      return `${hour}:${minute}`;
+    };
+
+    const normalizeDay = (d: string) => (d || '').toString().trim().toLowerCase();
+
+  
+
+    const frDayMap: Record<string, string> = {
+      monday: 'Lun',
+      tuesday: 'Mar',
+      wednesday: 'Mer',
+      thursday: 'Jeu',
+      friday: 'Ven',
+      saturday: 'Sam',
+      sunday: 'Dim',
+      weekday: 'Lun-Ven',
+      everyday: 'Tous les jours',
+    };
+
+    const dayKey = normalizeDay(time.day_of_week);
+    const dayLabel = frDayMap[dayKey] || time.day_of_week;
+    const start = formatTime(time.start_time);
+    const end = formatTime(time.end_time);
+
+    if (start && end) return `${dayLabel} ${start} - ${end}`;
+    if (start || end) return `${dayLabel} ${start || end}`;
+    return dayLabel;
+  }, []);
+
+  const getTodayLabel = useCallback(() => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[new Date().getDay()];
+  }, []);
+
+  const getDisplayTimetableForToday = useCallback((timetables: { start_time: string; end_time: string; day_of_week: string }[]) => {
+    if (!Array.isArray(timetables) || timetables.length === 0) return '';
+    const todayKey = getTodayLabel();
+    const normalizeDay = (d: string) => (d || '').toString().trim().toLowerCase();
+    const isWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(todayKey);
+    const todayItem =
+      timetables.find(t => normalizeDay(t.day_of_week) === todayKey) ||
+      (isWeekday ? timetables.find(t => normalizeDay(t.day_of_week) === 'weekday') : undefined) ||
+      timetables.find(t => normalizeDay(t.day_of_week) === 'everyday') ||
+      timetables[0];
+    return formatTimetableDisplay(todayItem);
+  }, [formatTimetableDisplay, getTodayLabel]);
+
   const handleSelectPickup = (location: PickupLocation) => {
     setSelectedPickup(location);
   };
@@ -219,7 +273,8 @@ export default function PickUp() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar style="dark" />
       {/* 顶部导航栏 */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -231,14 +286,14 @@ export default function PickUp() {
         <Text style={styles.headerTitle}>
           {isChineseLanguage ? '选择自提点' : 'Choisir un point de retrait'}
         </Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 20 }} />
       </View>
 
       {/* 地图 - 全屏 */}
       <View style={styles.fullMapContainer}>
         <SimpleMapView
           locations={pickupLocations.map(loc => ({
-            id: loc.id,
+            id: String(loc.id),
             latitude: loc.latitude,
             longitude: loc.longitude,
             title: loc.name,
@@ -248,7 +303,7 @@ export default function PickUp() {
           selectedLocationId={selectedPickup?.id?.toString()}
           showsUserLocation={true}
           onMarkerPress={(locationId) => {
-            const location = pickupLocations.find(loc => loc.id === locationId);
+            const location = pickupLocations.find(loc => String(loc.id) === locationId);
             if (location) {
               handleSelectPickup(location);
             }
@@ -294,7 +349,7 @@ export default function PickUp() {
             <Text style={styles.noticeText}>
               {isChineseLanguage 
                 ? '订单将在取货点保留3天。超过期限后，如未取货，订单将自动取消。请合理安排您的时间。'
-                : 'La commande sera conservée au point de retrait pendant 3 jours. Passé ce délai, elle sera automatiquement annulée si elle n\'est pas récupérée. Veuillez organiser votre temps en conséquence.'
+                : 'La commande sera livrée à deux reprises. Si vous ne la récupérez pas lors de ces deux tentatives, la commande sera annulée.'
               }
             </Text>
           </View>
@@ -303,7 +358,6 @@ export default function PickUp() {
         {pickupLocations.map((location, index) => {
           const isSelected = selectedPickup?.id === location.id;
           const isNearest = index === 0; // 第一个就是最近的
-          const isOpen = pickupApi.isOpen(location.timetables);
           
           return (
             <TouchableOpacity
@@ -314,69 +368,63 @@ export default function PickUp() {
               ]}
               onPress={() => handleSelectPickup(location)}
             >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTitleRow}>
-                  <Text style={[
-                    styles.locationName,
-                    isSelected && styles.selectedText,
-                  ]}>
-                    {location.name}
-                  </Text>
-                  {isNearest && (
-                    <View style={styles.nearestBadge}>
-                      <Text style={styles.nearestText}>
-                        {isChineseLanguage ? '最近' : 'Plus proche'}
-                      </Text>
-                    </View>
+              <>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardTitleRow}>
+                    <Text style={[
+                      styles.locationName,
+                      isSelected && styles.selectedText,
+                    ]}>
+                      {location.name}
+                    </Text>
+                    {isNearest && (
+                      <View style={styles.nearestBadge}>
+                        <Text style={styles.nearestText}>
+                          {isChineseLanguage ? '最近' : 'Plus proche'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  
+                  {isSelected && (
+                    <Ionicons name="checkmark-circle" size={24} color="#FF5100" />
                   )}
                 </View>
                 
-                {isSelected && (
-                  <Ionicons name="checkmark-circle" size={24} color="#FF5100" />
-                )}
-              </View>
-              
-              <Text style={styles.locationAddress}>
-                <Ionicons name="location-outline" size={14} color="#666" />
-                {' '}{location.address}
-              </Text>
-              
-              {location.distance !== null && (
-                <Text style={styles.distance}>
-                  <Ionicons name="navigate-outline" size={14} color="#666" />
-                  {' '}{pickupApi.formatDistance(location.distance)}
+                <Text style={styles.locationAddress}>
+                  <Ionicons name="location-outline" size={14} color="#666" />
+                  {' '}{location.address}
                 </Text>
-              )}
-              
-              <View style={styles.timetableRow}>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: isOpen ? '#4CAF50' : '#FF5722' }
-                ]}>
-                  <Text style={styles.statusText}>
-                    {isOpen ? 
-                      (isChineseLanguage ? '营业中' : 'Ouvert') : 
-                      (isChineseLanguage ? '已关闭' : 'Fermé')
-                    }
+                
+                {location.distance !== null && (
+                  <Text style={styles.distance}>
+                    <Ionicons name="navigate-outline" size={14} color="#666" />
+                    {' '}{pickupApi.formatDistance(location.distance)}
+                  </Text>
+                )}
+                
+                <View style={styles.timetableRow}>
+                  <View style={[styles.statusBadge, { backgroundColor: '#FFAE11' }]}>
+                    <Text style={styles.statusText}>
+                      {isChineseLanguage ? '取货时间' : 'Heure de retrait'}
+                    </Text>
+                  </View>
+                  
+                  <Text style={styles.timetable}>
+                    {getDisplayTimetableForToday(location.timetables)}
                   </Text>
                 </View>
                 
-                {location.timetables.map((time, index) => (
-                  <Text key={`${location.id}-tt-${time.day_of_week}-${time.start_time}-${time.end_time}-${index}`} style={styles.timetable}>
-                    {pickupApi.formatTimetable(time)}
+                <TouchableOpacity
+                  style={styles.navigateButton}
+                  onPress={() => openGoogleMaps(location)}
+                >
+                  <Ionicons name="navigate" size={16} color="#FF5100" />
+                  <Text style={styles.navigateText}>
+                    {isChineseLanguage ? '导航' : 'Navigation'}
                   </Text>
-                ))}
-              </View>
-              
-              <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={() => openGoogleMaps(location)}
-              >
-                <Ionicons name="navigate" size={16} color="#FF5100" />
-                <Text style={styles.navigateText}>
-                  {isChineseLanguage ? '导航' : 'Navigation'}
-                </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </>
             </TouchableOpacity>
           );
         })}
@@ -394,7 +442,7 @@ export default function PickUp() {
           </TouchableOpacity>
         </View>
       </Animated.View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -402,6 +450,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'ios' ? 44 : 0,
   },
   loadingContainer: {
     flex: 1,
@@ -419,22 +468,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     zIndex: 5,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 4,
   },
   headerTitle: {
-    fontSize: fontSize(18),
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: fontSize(20),
+    fontWeight: '600',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    flex: 1,
+    letterSpacing: 0.3,
   },
   fullMapContainer: {
     height: screenHeight * 0.5,
@@ -662,5 +711,34 @@ const styles = StyleSheet.create({
     fontSize: fontSize(12),
     color: '#666',
     lineHeight: fontSize(18),
+  },
+  collapsedCard: {
+    padding: 8,
+    marginBottom: 8,
+  },
+  collapsedCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFF0E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  nearestDot: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
 });

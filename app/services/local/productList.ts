@@ -26,6 +26,8 @@ export interface LocalProduct {
   content_cn: string | null;
   content_fr: string | null;
   stock: number;
+  // 1: 本地现货(3天); 0: 仓储(7天)
+  is_local_stock?: 0 | 1;
   description_cn: string | string[] | null;  // 可以是字符串或字符串数组（详情图片）
   description_fr: string | string[] | null;  // 可以是字符串或字符串数组（详情图片）
   price: number;
@@ -46,16 +48,22 @@ export interface LocalProductListResponse {
 export interface LocalProductListParams {
   page?: number;
   page_size?: number;
+  category_id?: number;  // 添加分类ID参数
 }
 
 export const fetchLocalProducts = async (params?: LocalProductListParams): Promise<LocalProductListResponse> => {
   try {
-    const requestParams = {
+    const requestParams: any = {
       page: params?.page || 1,
       page_size: params?.page_size || 20,
       is_top: 0,
       sort_order: 'asc'
     };
+    
+    // 如果提供了 category_id，添加到请求参数中
+    if (params?.category_id) {
+      requestParams.category_id = params.category_id;
+    }
     
     console.log('========== 开始请求本地产品列表 ==========');
     console.log('请求URL: /api/flash-local/');

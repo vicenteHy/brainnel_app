@@ -27,8 +27,9 @@ import { useState } from "react";
 
 type RootStackParamList = {
   MainTabs: { screen: string } | undefined;
-  PaymentSuccessScreen: { order_id?: string; order_no?: string; recharge_id?: string; isRecharge?: boolean; [key: string]: any };
+  PaymentSuccessScreen: { order_id?: string; order_no?: string; recharge_id?: string; isRecharge?: boolean; is_local?: number; [key: string]: any };
   OrderDetails: { orderId?: number; status?: number };
+  LocalOrderDetails: { orderId: string };
   RechargeDetails: { rechargeId?: string };
   Status: { status: number | null };
   Balance: undefined;
@@ -234,12 +235,13 @@ export const PaymentSuccessScreen = () => {
               style={styles.secondaryButton}
               onPress={() => {
                 const isRecharge = route.params?.isRecharge;
+                const is_local = route.params?.is_local;
                 
                 if (isRecharge) {
                   // 充值支付，跳转到余额详情页面
                   navigation.navigate("Balance");
                 } else {
-                  // 订单支付，参考PayError.tsx的逻辑跳转到订单详情页面
+                  // 订单支付
                   const { order_id, order_no, orderId } = route.params || {};
                   
                   console.log('🔍 支付成功页面 - 准备跳转到订单详情');
@@ -247,21 +249,36 @@ export const PaymentSuccessScreen = () => {
                   console.log('🔍 - order_id:', order_id);
                   console.log('🔍 - order_no:', order_no);
                   console.log('🔍 - orderId:', orderId);
+                  console.log('🔍 - is_local:', is_local);
                   
-                  // 参考PayError.tsx的逻辑：优先使用order_id，然后是order_no
-                  if (order_id) {
-                    console.log('🔍 - 使用order_id跳转到订单详情:', order_id);
-                    navigation.navigate("OrderDetails", { orderId: order_id, status: 1 });
-                  } else if (order_no) {
-                    console.log('🔍 - 使用order_no跳转到订单详情:', order_no);
-                    navigation.navigate("OrderDetails", { orderId: order_no, status: 1 });
-                  } else if (orderId) {
-                    console.log('🔍 - 使用orderId跳转到订单详情:', orderId);
-                    navigation.navigate("OrderDetails", { orderId: orderId.toString(), status: 1 });
+                  // 检查是否是本地订单
+                  if (is_local === 1) {
+                    // 本地订单，跳转到 LocalOrderDetails
+                    const finalOrderId = order_id || order_no || orderId;
+                    if (finalOrderId) {
+                      console.log('🔍 - 本地订单，跳转到 LocalOrderDetails:', finalOrderId);
+                      navigation.navigate("LocalOrderDetails", { orderId: String(finalOrderId) });
+                    } else {
+                      console.log('🔍 - 未找到订单ID，跳转到订单列表');
+                      navigation.navigate("Status", { status: null });
+                    }
                   } else {
-                    console.log('🔍 - 未找到任何订单ID，跳转到订单列表');
-                    // 如果真的没有订单ID，跳转到订单列表页面
-                    navigation.navigate("Status", { status: null });
+                    // 普通订单，原有逻辑
+                    // 参考PayError.tsx的逻辑：优先使用order_id，然后是order_no
+                    if (order_id) {
+                      console.log('🔍 - 使用order_id跳转到订单详情:', order_id);
+                      navigation.navigate("OrderDetails", { orderId: order_id, status: 1 });
+                    } else if (order_no) {
+                      console.log('🔍 - 使用order_no跳转到订单详情:', order_no);
+                      navigation.navigate("OrderDetails", { orderId: order_no, status: 1 });
+                    } else if (orderId) {
+                      console.log('🔍 - 使用orderId跳转到订单详情:', orderId);
+                      navigation.navigate("OrderDetails", { orderId: orderId.toString(), status: 1 });
+                    } else {
+                      console.log('🔍 - 未找到任何订单ID，跳转到订单列表');
+                      // 如果真的没有订单ID，跳转到订单列表页面
+                      navigation.navigate("Status", { status: null });
+                    }
                   }
                 }
               }}

@@ -35,10 +35,6 @@ export const CarouselBanner = React.memo(
           imgUrl: require("../../../../assets/img/activity1.png"),
           add: "TikTokScreen",
         },
-        {
-          imgUrl: require("../../../../assets/local/banner.png"),
-          add: "PromoScreen",
-        },
       ],
       [],
     );
@@ -97,13 +93,7 @@ export const CarouselBanner = React.memo(
         return;
       }
       
-      // 第二个 banner 的点击处理 - 跳转到本地货盘
-      if (index === 1) {
-        navigation.navigate('LocalProductList');
-        return;
-      }
-      
-      // 第一个 banner (活动) 的原有逻辑
+      // 活动 banner 的点击逻辑
       // 检查用户是否已登录
       if (!userStore.user?.user_id) {
         // 用户未登录，显示登录弹窗

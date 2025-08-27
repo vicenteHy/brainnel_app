@@ -10,7 +10,9 @@ import {
   Dimensions,
   SafeAreaView,
   Alert,
+  Modal,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import type { StyleProp, ImageStyle } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +30,8 @@ import {
 import { productCacheManager } from '../../services/local/productCache';
 import { useTranslation } from 'react-i18next';
 import PagerView from 'react-native-pager-view';
+import useUserStore from '../../store/user';
+import { loginModalStyles } from '../HomeScreen/styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -59,6 +63,7 @@ export default function LocalProductDetail() {
   const route = useRoute();
   const { i18n } = useTranslation();
   const { productId } = route.params as { productId: number };
+  const { user } = useUserStore();
   
   const [product, setProduct] = useState<LocalProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,6 +73,7 @@ export default function LocalProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
   const pagerRef = useRef<PagerView>(null);
@@ -229,9 +235,17 @@ export default function LocalProductDetail() {
   // 保留占位：加入购物车逻辑后续补充
 
   const handleBuyNow = () => {
+    if (!user?.user_id) {
+      setShowLoginModal(true);
+      return;
+    }
     // 导航到本地地址填写页面
     navigation.navigate('LocalAddressForm' as never);
   };
+
+  const handleDismissLoginModal = useCallback(() => {
+    setShowLoginModal(false);
+  }, []);
 
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
@@ -283,6 +297,9 @@ export default function LocalProductDetail() {
   };
   
   const images = getDisplayImages();
+  // 基于库存类型的配送时长文案（仅文案，不增加图标）
+  const isLocalStock = product?.is_local_stock === 1;
+  const deliveryDurationText = isChineseLanguage ? (isLocalStock ? '3天' : '7天') : (isLocalStock ? '3 jours' : '7 jours');
   // 构建稳定 key 的辅助函数
   const buildKeys = (arr: string[]) => {
     const counts = new Map<string, number>();
@@ -302,6 +319,7 @@ export default function LocalProductDetail() {
  
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* 图片轮播 */}
         {images.length > 0 && (
@@ -410,7 +428,7 @@ export default function LocalProductDetail() {
                 <Text style={styles.deliveryText}>
                   {isChineseLanguage ? '免费配送' : 'Livraison gratuite en '}
                   <Text style={styles.deliveryHighlight}>
-                    {isChineseLanguage ? '72小时' : '72h'}
+                    {deliveryDurationText}
                   </Text>
                 </Text>
               </View>
@@ -445,8 +463,19 @@ export default function LocalProductDetail() {
             {/* 剩余库存 */}
             <View style={styles.stockRow}>
               <Text style={styles.stockLabel}>PLUS QUE {getCurrentStock()}</Text>
-              <View style={styles.stockBar}>
-                <View style={[styles.stockFill, { width: '30%' }]} />
+              <View style={styles.stockBarWrapper}>
+                <View style={styles.stockBar}>
+                  <LinearGradient
+                    colors={['#FF8C00', '#FF5100']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.stockFill, { width: `${Math.max(Math.min(((10 - getCurrentStock()) / 10) * 100, 100), 0)}%` }]}
+                  />
+                </View>
+                <Image 
+                  source={require('../../../assets/local/inventory.png')} 
+                  style={[styles.stockIcon, { left: `${Math.max(Math.min(((10 - getCurrentStock()) / 10) * 100, 100), 0)}%` }]}
+                />
               </View>
             </View>
           </View>
@@ -616,6 +645,38 @@ export default function LocalProductDetail() {
           </>
         )}
       </ScrollView>
+
+      {/* 登录弹窗 */}
+      {showLoginModal && !user?.user_id && (
+        <Modal
+          animationType="none"
+          transparent={true}
+          visible={showLoginModal}
+          onRequestClose={handleDismissLoginModal}
+        >
+          <View style={loginModalStyles.overlay}>
+            <View style={loginModalStyles.bottomSheet}>
+              <TouchableOpacity
+                style={loginModalStyles.closeButton}
+                onPress={handleDismissLoginModal}
+              >
+                <Text style={loginModalStyles.closeButtonText}>×</Text>
+              </TouchableOpacity>
+              <Text style={loginModalStyles.title}>Veuillez vous connecter</Text>
+              <Text style={loginModalStyles.subtitle}>Connectez-vous pour profiter de plus de services</Text>
+              <TouchableOpacity
+                style={loginModalStyles.loginButton}
+                onPress={() => {
+                  handleDismissLoginModal();
+                  navigation.navigate('Login' as never);
+                }}
+              >
+                <Text style={loginModalStyles.loginButtonText}>Se connecter maintenant</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* 底部操作栏 */}
       <View style={styles.bottomBar}>
@@ -888,16 +949,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: 10,
   },
-  stockBar: {
+  stockBarWrapper: {
     flex: 1,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  stockBar: {
     height: 4,
     backgroundColor: '#FFE5D9',
     borderRadius: 2,
   },
   stockFill: {
     height: '100%',
-    backgroundColor: '#FF5100',
     borderRadius: 2,
+  },
+  stockIcon: {
+    width: 16,
+    height: 16,
+    position: 'absolute',
+    top: -6,
+    marginLeft: -8,
   },
   optionSection: {
     padding: 15,

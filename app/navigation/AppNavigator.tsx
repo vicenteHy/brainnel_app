@@ -284,6 +284,14 @@ export const AppNavigator = () => {
           name="OrderSuccess"
           component={Screens.OrderSuccess}
         />
+        <Stack.Screen
+          name="PaymentSuccess"
+          component={Screens.PaymentSuccess}
+        />
+        <Stack.Screen
+          name="LocalOrderDetails"
+          component={Screens.LocalOrderDetails}
+        />
       </Stack.Navigator>
       <Toast 
         config={{

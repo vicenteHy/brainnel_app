@@ -64,6 +64,8 @@ import Verify from '../screens/Local/Verify';
 import LocalPayment from '../screens/Local/LocalPayment';
 import LocalMobileMoneyConfirm from '../screens/Local/LocalMobileMoneyConfirm';
 import LocalOrderSuccess from '../screens/Local/OrderSuccess';
+import LocalPaymentSuccess from '../screens/Local/PaymentSuccess';
+import LocalOrderDetails from '../screens/Local/LocalOrderDetails';
 
 export {
   CountrySelect,
@@ -132,4 +134,6 @@ export {
   LocalPayment,
   LocalMobileMoneyConfirm,
   LocalOrderSuccess as OrderSuccess,
+  LocalPaymentSuccess as PaymentSuccess,
+  LocalOrderDetails,
 }; 

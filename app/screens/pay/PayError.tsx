@@ -31,7 +31,9 @@ type PayErrorStackParamList = {
   PreviewOrder: { orderData?: any } | undefined;
   OrderList: undefined;
   OrderDetails: { orderId?: string } | undefined;
+  LocalOrderDetails: { orderId: string };
   ConfirmOrder: { orderData?: any } | undefined;
+  Balance: undefined;
 };
 
 interface PayErrorRouteParams {
@@ -44,6 +46,7 @@ interface PayErrorRouteParams {
   orderData?: any;
   msg?: string;
   isRecharge?: boolean;
+  is_local?: number;
 }
 
 export const PayError = () => {
@@ -92,7 +95,8 @@ export const PayError = () => {
     errorReason = t("payment.error.payment_interrupted"),
     orderData,
     msg,
-    isRecharge = false
+    isRecharge = false,
+    is_local = 0
   } = params;
   
   console.log("解析后的参数:");
@@ -102,6 +106,7 @@ export const PayError = () => {
   console.log("- currency:", currency);
   console.log("- errorReason:", errorReason);
   console.log("- msg:", msg);
+  console.log("- is_local:", is_local);
   console.log("- orderData:", orderData);
   console.log("========================");
 
@@ -122,6 +127,7 @@ export const PayError = () => {
     console.log("PayError - viewOrderDetails clicked");
     console.log("PayError - params:", params);
     console.log("PayError - isRecharge:", isRecharge);
+    console.log("PayError - is_local:", is_local);
     console.log("PayError - order_no:", order_no);
     console.log("PayError - order_id:", order_id);
     console.log("PayError - recharge_id:", recharge_id);
@@ -132,24 +138,45 @@ export const PayError = () => {
       console.log("PayError - Recharge failed, going to BalanceScreen");
       navigation.navigate("Balance");
     } else {
-      // 订单支付失败，原有逻辑
-      // 检查是否有真实的订单号，优先使用order_id
-      if (order_id) {
-        console.log("PayError - Navigating to OrderDetails with order_id:", order_id);
-        navigation.navigate("OrderDetails", { orderId: order_id, status: 0 });
-      } else if (order_no) {
-        console.log("PayError - Navigating to OrderDetails with order_no:", order_no);
-        navigation.navigate("OrderDetails", { orderId: order_no, status: 0 });
+      // 订单支付失败
+      
+      // 检查是否是本地订单
+      if (is_local === 1) {
+        // 本地订单，跳转到 LocalOrderDetails
+        const finalOrderId = order_id || order_no;
+        if (finalOrderId) {
+          console.log("PayError - Local order, navigating to LocalOrderDetails:", finalOrderId);
+          navigation.navigate("LocalOrderDetails", { orderId: String(finalOrderId) });
+        } else {
+          console.log("PayError - No valid order number, going to My tab");
+          navigation.reset({
+            index: 0,
+            routes: [{ 
+              name: 'MainTabs',
+              params: { screen: 'My' }
+            }],
+          });
+        }
       } else {
-        console.log("PayError - No valid order number, going to My tab");
-        // 没有订单号时，返回个人中心查看订单列表
-        navigation.reset({
-          index: 0,
-          routes: [{ 
-            name: 'MainTabs',
-            params: { screen: 'My' }
-          }],
-        });
+        // 普通订单，原有逻辑
+        // 检查是否有真实的订单号，优先使用order_id
+        if (order_id) {
+          console.log("PayError - Navigating to OrderDetails with order_id:", order_id);
+          navigation.navigate("OrderDetails", { orderId: order_id, status: 0 });
+        } else if (order_no) {
+          console.log("PayError - Navigating to OrderDetails with order_no:", order_no);
+          navigation.navigate("OrderDetails", { orderId: order_no, status: 0 });
+        } else {
+          console.log("PayError - No valid order number, going to My tab");
+          // 没有订单号时，返回个人中心查看订单列表
+          navigation.reset({
+            index: 0,
+            routes: [{ 
+              name: 'MainTabs',
+              params: { screen: 'My' }
+            }],
+          });
+        }
       }
     }
   };

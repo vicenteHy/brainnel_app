@@ -72,6 +72,7 @@ export interface PaymentStatusResponse {
   status: number; // 0: unpaid, 1: paid, 2: processing, 3: failed
   msg?: string; // 失败原因
   payment_type?: 'order' | 'recharge'; // 支付类型
+  is_local?: number; // 0: 普通订单, 1: 本地订单
   // 兼容旧接口
   order_id?: number;
   recharge_id?: string;

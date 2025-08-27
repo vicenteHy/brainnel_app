@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
-import * as Location from 'expo-location';
+import type { WebViewMessageEvent } from 'react-native-webview';
 import { getMapConfig } from '../config/maps';
 
 interface MapLocation {
@@ -66,7 +66,7 @@ export default function SimpleMapView({
     }
   }, [showsUserLocation, initialUserLocation]);
 
-  // 生成地图 HTML - 只在组件挂载时生成一次
+  // 根据依赖生成地图 HTML（位置/选中项变化时更新）
   useEffect(() => {
     const generateMapHTML = () => {
     // 获取地图配置
@@ -225,29 +225,29 @@ export default function SimpleMapView({
               const div = document.createElement('div');
               div.style.position = 'absolute';
               div.style.cursor = 'pointer';
+              const isSelected = this.isSelected;
               div.innerHTML = \`
-                <div style="
+                <div class="marker-container" style="
                   display: flex;
                   align-items: center;
-                  background-color: \${this.isSelected ? '#FF5100' : '#FFAE11'};
+                  \${isSelected ? 'background-color: #FF5100; padding: 8px 14px; box-shadow: 0 3px 8px rgba(0,0,0,0.3);' : 'background-color: transparent; padding: 0; box-shadow: none;'}
                   border-radius: 20px;
-                  padding: 8px 14px;
-                  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
                   white-space: nowrap;
                   position: relative;
                   transform: translate(-50%, -100%);
                   margin-bottom: 8px;
                 ">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF5100" stroke="white" stroke-width="1.5" style="margin-right: 6px;">
+                  <svg class="marker-icon" width="24" height="24" viewBox="0 0 24 24" fill="#FF5100" stroke="white" stroke-width="1.5" \${isSelected ? 'style="margin-right: 6px;"' : ''}>
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                   </svg>
-                  <span style="
+                  <span class="marker-title" style="
                     color: white;
                     font-size: 14px;
                     font-weight: 600;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    \${isSelected ? '' : 'display:none;'}
                   ">\${this.title}</span>
-                  <div style="
+                  <div class="marker-triangle" style="
                     position: absolute;
                     bottom: -6px;
                     left: 50%;
@@ -256,7 +256,8 @@ export default function SimpleMapView({
                     height: 0;
                     border-left: 6px solid transparent;
                     border-right: 6px solid transparent;
-                    border-top: 6px solid \${this.isSelected ? '#FF5100' : '#FFAE11'};
+                    border-top: 6px solid #FF5100;
+                    \${isSelected ? '' : 'display:none;'}
                   "></div>
                 </div>
               \`;
@@ -435,10 +436,10 @@ export default function SimpleMapView({
     
     const html = generateMapHTML();
     setMapHtml(html);
-  }, []); // 空依赖，只在组件挂载时执行一次
+  }, [locations, userLocation, selectedLocationId]);
 
   // 处理 WebView 消息
-  const handleMessage = (event: any) => {
+  const handleMessage = (event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       
@@ -470,37 +471,48 @@ export default function SimpleMapView({
     }
   }, [userLocation, loading]);
 
-  // 监听选中位置的变化 - 只更新标记颜色，不聚焦
+  // 监听选中位置的变化 - 更新标记 UI（选中显示标题，未选中仅显示图标）
   useEffect(() => {
     if (webViewRef.current && mapReady) {
-      const selectedIndex = selectedLocationId ? locations.findIndex(loc => loc.id === selectedLocationId) : -1;
+      // const selectedIndex = selectedLocationId ? locations.findIndex(loc => loc.id === selectedLocationId) : -1;
       
-      // 更新所有标记的颜色
+      // 更新所有标记的显示
       const jsCode = `
         (function() {
           try {
             if (typeof markers !== 'undefined' && markers && markers.length > 0) {
               const selectedId = '${selectedLocationId || ''}';
               
-              // 更新所有标记的颜色
+              // 更新所有标记的显示
               markers.forEach((marker) => {
                 if (marker && marker.div) {
                   // 使用 markerId 来判断是否选中
                   const isSelected = selectedId && (marker.markerId == selectedId || String(marker.markerId) === selectedId);
-                  const bgColor = isSelected ? '#FF5100' : '#FFAE11';
-                  
-                  console.log('Updating marker', marker.markerId, 'selected:', isSelected, 'selectedId:', selectedId);
-                  
-                  // 更新背景颜色
-                  const container = marker.div.querySelector('div');
+                  const container = marker.div.querySelector('.marker-container');
+                  const titleEl = marker.div.querySelector('.marker-title');
+                  const triangle = marker.div.querySelector('.marker-triangle');
+                  const iconEl = marker.div.querySelector('.marker-icon');
+
                   if (container) {
-                    container.style.backgroundColor = bgColor;
-                    
-                    // 更新三角形颜色
-                    const triangle = container.querySelector('div[style*="border-top"]');
-                    if (triangle) {
-                      triangle.style.borderTopColor = bgColor;
+                    if (isSelected) {
+                      container.style.backgroundColor = '#FF5100';
+                      container.style.padding = '8px 14px';
+                      container.style.boxShadow = '0 3px 8px rgba(0,0,0,0.3)';
+                    } else {
+                      container.style.backgroundColor = 'transparent';
+                      container.style.padding = '0';
+                      container.style.boxShadow = 'none';
                     }
+                  }
+
+                  if (titleEl) {
+                    titleEl.style.display = isSelected ? 'inline' : 'none';
+                  }
+                  if (triangle) {
+                    triangle.style.display = isSelected ? 'block' : 'none';
+                  }
+                  if (iconEl) {
+                    iconEl.setAttribute('style', isSelected ? 'margin-right: 6px;' : '');
                   }
                 }
               });
@@ -517,7 +529,7 @@ export default function SimpleMapView({
       
       webViewRef.current.injectJavaScript(jsCode);
     }
-  }, [selectedLocationId, mapReady, locations]);
+  }, [selectedLocationId, mapReady]);
 
   return (
     <View style={styles.container}>
@@ -525,7 +537,7 @@ export default function SimpleMapView({
         <WebView
           ref={webViewRef}
           source={{ html: mapHtml }}
-          style={styles.webview}
+          style={{ flex: 1 }}
           onMessage={handleMessage}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -540,7 +552,7 @@ export default function SimpleMapView({
         />
       ) : null}
       {loading && (
-        <View style={styles.loadingContainer}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#FF5100" />
         </View>
       )}

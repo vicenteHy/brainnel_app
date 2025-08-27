@@ -2,7 +2,7 @@ import { StyleSheet, View, Dimensions, TouchableOpacity, Text, Platform, StatusB
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import fontSize from '../../utils/fontsizeUtils';
 
@@ -11,6 +11,8 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const LocalOrderSuccess = () => {
 	const headerHeight = screenHeight * 0.3;
 	const navigation = useNavigation();
+	const route = useRoute<RouteProp<any, any>>();
+	const orderId = route.params?.orderId;
 	const topInset = (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 44) + 12;
 	const barHeight = screenHeight * 0.03;
 	const [panelTop, setPanelTop] = useState<number>(headerHeight - (barHeight / 2));
@@ -96,7 +98,13 @@ const LocalOrderSuccess = () => {
 
 			{/* Bottom fixed actions */}
 			<View style={styles.actionsContainer}>
-				<TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Status' as never)}>
+				<TouchableOpacity style={styles.primaryButton} onPress={() => {
+					if (orderId) {
+						navigation.navigate('LocalOrderDetails' as never, { orderId } as never);
+					} else {
+						navigation.navigate('Status' as never);
+					}
+				}}>
 					<Text style={styles.primaryButtonText}>Voir la commande</Text>
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Home' as never)}>

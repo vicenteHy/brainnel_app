@@ -19,10 +19,14 @@ import fontSize from '../../utils/fontsizeUtils';
 import { LinearGradient } from 'expo-linear-gradient';
 import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { documentApi } from '../../services/local/documentApi';
+import { useRoute, type RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../../navigation/types';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const Verify = ({ navigation }: any) => {
+  const route = useRoute<RouteProp<RootStackParamList, 'Verify'>>();
+  const orderId = route.params?.orderId;
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -44,7 +48,7 @@ const Verify = ({ navigation }: any) => {
       
       if (response.errorMessage) {
         console.log('Camera Error: ', response.errorMessage);
-        Alert.alert('错误', '拍照失败，请重试');
+        Alert.alert('Erreur', 'Échec de la prise de photo, veuillez réessayer');
         return;
       }
 
@@ -73,7 +77,7 @@ const Verify = ({ navigation }: any) => {
       
       if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
-        Alert.alert('错误', '选择图片失败，请重试');
+        Alert.alert('Erreur', 'Échec de la sélection de l\'image, veuillez réessayer');
         return;
       }
 
@@ -87,7 +91,7 @@ const Verify = ({ navigation }: any) => {
 
   const handleSubmitAuthentication = async () => {
     if (!selectedImage || !selectedImageBase64) {
-      Alert.alert('提示', '请先选择或拍摄身份证照片');
+      Alert.alert('Avis', 'Veuillez d\'abord sélectionner ou prendre une photo de votre pièce d\'identité');
       return;
     }
 
@@ -99,22 +103,29 @@ const Verify = ({ navigation }: any) => {
       });
 
       if (response.success) {
-        Alert.alert(
-          '上传成功',
-          `文档类型: ${response.document_type}\n文档号码: ${response.document_number}\n${response.message}`,
-          [
-            {
-              text: '确定',
-              onPress: () => navigation.goBack(),
-            },
-          ]
-        );
+        // 验证成功后跳转到支付成功页面，传递完整参数
+        const pickupDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+        
+        navigation.navigate('PaymentSuccess', {
+          paymentMethod: 'Paiement à la livraison',
+          amount: 0, // COD 不需要显示金额
+          currency: 'FCFA',
+          pickupLocation: 'Shopping Center East Side Market Square, Downtown',
+          pickupDate: pickupDate,
+          pickupTime: '09:00-17:00',
+          orderId: orderId
+        });
       } else {
-        Alert.alert('上传失败', response.message || '上传失败，请重试');
+        Alert.alert('Échec du téléchargement', response.message || 'Échec du téléchargement, veuillez réessayer');
       }
     } catch (error) {
-      console.error('上传失败:', error);
-      Alert.alert('上传失败', '网络错误或服务器异常，请稍后重试');
+      console.error('Échec du téléchargement:', error);
+      Alert.alert('Échec du téléchargement', 'Erreur réseau ou serveur, veuillez réessayer plus tard');
     } finally {
       setIsUploading(false);
     }
@@ -233,7 +244,7 @@ const Verify = ({ navigation }: any) => {
             {isUploading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="white" />
-                <Text style={styles.submitButtonText}>上传中...</Text>
+                <Text style={styles.submitButtonText}>Téléchargement...</Text>
               </View>
             ) : (
               <Text style={styles.submitButtonText}>Soumettre l'authentification</Text>

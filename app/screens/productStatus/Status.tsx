@@ -11,6 +11,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import PagerView from 'react-native-pager-view';
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { productStatus } from "../../constants/productStatus";
@@ -199,6 +200,7 @@ export function Status() {
           status: route.params.status,
         };
         await getAllOrders(data, page);
+        console.log('[Status] 获取订单数据:', JSON.stringify(orders, null, 2));
         setLoading(false);
       } finally {
         setLoading(false);
@@ -268,14 +270,21 @@ export function Status() {
 
       try {
         await getAllOrders(data, 1);
+        console.log('[Status] changeStatus 获取订单数据:', JSON.stringify(orders, null, 2));
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const handleOrderDetailsPress = (orderId: string, orderStatus: number) => {
-    navigation.navigate("OrderDetails", { orderId, status: orderStatus });
+  const handleOrderDetailsPress = (item: any) => {
+    if (item.is_flash_local === 1) {
+      // 本地订单跳转到本地订单详情页面
+      navigation.navigate("LocalOrderDetails", { orderId: item.order_id });
+    } else {
+      // 普通订单跳转到普通订单详情页面
+      navigation.navigate("OrderDetails", { orderId: item.order_id, status: item.status });
+    }
   };
 
   return (
@@ -367,7 +376,8 @@ export function Status() {
                             page_size: pageSize,
                             status: statusItem.status,
                           };
-                          getAllOrders(data, page);
+                          await getAllOrders(data, page);
+                          console.log('[Status] 分页加载订单数据:', JSON.stringify(orders, null, 2));
                         }
                       }
                     }}
@@ -436,9 +446,17 @@ export function Status() {
                           <View style={styles.orderItemContainer}>
                             <View style={styles.orderItem}>
                               <View style={styles.orderStatus}>
-                                <Text style={styles.orderStatusOrderText}>
-                                  {item.order_no}
-                                </Text>
+                                <View style={styles.orderNumberContainer}>
+                                  <Text style={styles.orderStatusOrderText}>
+                                    {item.order_no}
+                                  </Text>
+                                  {item.is_flash_local === 1 && (
+                                    <View style={styles.localBadgeContainer}>
+                                      <Ionicons name="flash" size={12} color="#0BB505" />
+                                      <Text style={styles.localBadge}>Local</Text>
+                                    </View>
+                                  )}
+                                </View>
                                 <Text style={styles.orderStatusText}>
                                   {getStatus(item.status)}
                                 </Text>
@@ -453,9 +471,11 @@ export function Status() {
                                       />
                                     </TouchableOpacity>
                                     <View style={styles.orderProductItemInfo}>
-                                      <Text style={styles.orderProductItemInfoName}>
-                                        {getOrderTransLanguage(item) || item.product_name_fr}
-                                      </Text>
+                                      <View style={styles.productNameContainer}>
+                                        <Text style={styles.orderProductItemInfoName}>
+                                          {getOrderTransLanguage(item) || item.product_name_fr}
+                                        </Text>
+                                      </View>
                                       {item.sku_attributes?.map((attr, index) => (
                                         <Text
                                           style={styles.orderProductItemInfoPrice}
@@ -477,7 +497,7 @@ export function Status() {
                                 </View>
                                 <TouchableOpacity
                                   style={styles.orderProductView}
-                                  onPress={() => handleOrderDetailsPress(item.order_id, item.status)}
+                                  onPress={() => handleOrderDetailsPress(item)}
                                 >
                                   <Text style={styles.orderProductViewText}>
                                     {t("order.view_details")}
@@ -595,11 +615,17 @@ const styles = StyleSheet.create({
     borderColor: "#f5f5f5",
     justifyContent: "space-between",
   },
+  orderNumberContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "70%",
+    flexWrap: "wrap",
+  },
   orderStatusOrderText: {
     fontSize: fontSize(16),
     fontWeight: "600",
-    width: "70%",
     color: "#000000",
+    marginRight: 8,
   },
   orderStatusText: {
     color: "#FF5100",
@@ -626,10 +652,27 @@ const styles = StyleSheet.create({
   orderProductItemInfo: {
     flex: 1,
   },
+  productNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
   orderProductItemInfoName: {
     fontSize: fontSize(16),
     fontWeight: "600",
     color: "#000000",
+    marginRight: 8,
+  },
+  localBadgeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 4,
+  },
+  localBadge: {
+    fontSize: fontSize(12),
+    fontWeight: "600",
+    color: "#0BB505",
+    marginLeft: 2,
   },
   orderProductItemInfoPrice: {
     fontSize: fontSize(14),

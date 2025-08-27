@@ -2,20 +2,33 @@ import { StyleSheet, View, Dimensions, TouchableOpacity, Text, Platform, StatusB
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import fontSize from '../../utils/fontsizeUtils';
+import type { RootStackParamList } from '../../navigation/types';
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 const LocalPaymentSuccess = () => {
 	const headerHeight = screenHeight * 0.3;
 	const navigation = useNavigation();
+	const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccess'>>();
 	const topInset = (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 44) + 12;
 	const barHeight = screenHeight * 0.03;
 	const [panelTop, setPanelTop] = useState<number>(headerHeight - (barHeight / 2));
-	const barOffset = 6;
-	const extraOffset = 105;
+	const barOffset = 6; // slight downward adjustment
+	const extraOffset = 105; // always applied after measurement
+
+	// 从路由参数获取数据
+	const {
+		paymentMethod,
+		amount,
+		currency,
+		pickupLocation,
+		pickupDate,
+		pickupTime,
+		orderId
+	} = route.params;
 
 	return (
 		<View style={styles.container}>
@@ -27,11 +40,11 @@ const LocalPaymentSuccess = () => {
 					end={{ x: 0, y: 1 }}
 					style={styles.headerGradient}
 				>
-					<View style={[styles.headerContent, { paddingTop: topInset }]}> 
+					<View style={[styles.headerContent, { paddingTop: topInset }]}>
 						<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
 							<Ionicons name="chevron-back" size={24} color="#fff" />
 						</TouchableOpacity>
-						<Text style={styles.headerTitle}>Paiement PayPal</Text>
+						<Text style={styles.headerTitle}>Paiement réussi</Text>
 						<View style={styles.backButton} />
 					</View>
 					<View style={[styles.titleBarContainer, { paddingHorizontal: 20 }]}>
@@ -46,36 +59,77 @@ const LocalPaymentSuccess = () => {
 				</LinearGradient>
 			</View>
 
-			{/* White Panel */}
+			{/* White Panel from the brown bar down */}
 			<View style={[styles.contentCard, { top: panelTop + extraOffset }]}> 
 				<View style={styles.successBadge}>
 					<Ionicons name="checkmark" size={38} color="#FF5100" />
 				</View>
-				<Text style={styles.successTitle}>Paiement Réussi</Text>
-				<Text style={styles.successSubtitle}>Votre commande a été traitée avec succès</Text>
+				<Text style={styles.successTitle}>Paiement effectué avec succès</Text>
+				<Text style={styles.successSubtitle}>Votre commande a été confirmée. Vous recevrez une notification bientôt.</Text>
 
-				<Text style={styles.amountText}><Text style={styles.amountNumber}>15.12</Text><Text style={styles.amountCurrency}>USD</Text></Text>
-
-				<View style={styles.sectionDivider} />
-				<Text style={styles.sectionTitle}>Informations d'Expédition</Text>
-				<Text style={styles.sectionParagraph}>Nous expédierons votre commande dèsque possible. Merci pour votre achat.</Text>
-
-				<View style={styles.sectionDivider} />
-				<Text style={styles.sectionTitle}>Conseils Importants:</Text>
-				<View style={styles.bullets}>
-					<Text style={styles.bulletItem}>• Vous pouvez demander des informations survotre commande via le Chat.</Text>
-					<Text style={styles.bulletItem}>• Les mises à jour du statut de votre commande vous seront envoyées immédiatement dans l'application,</Text>
-					<Text style={styles.bulletItem}>• Vous pouvez consulter les détails de votre commande dans 'Mes Commandes'.</Text>
+				<View style={styles.divider} />
+				<View style={styles.sectionHeaderRow}>
+					<View style={styles.sectionIcon}>
+						<Ionicons name="card-outline" size={18} color="#FF5100" />
+					</View>
+					<Text style={styles.sectionHeaderText}>Informations de paiement</Text>
 				</View>
+
+				<View style={styles.sectionBody}>
+					<View style={styles.subSection}>
+						<Text style={styles.sectionLabel}>Mode de paiement</Text>
+						<Text style={styles.sectionValue}>{paymentMethod}</Text>
+					</View>
+
+					<View style={styles.divider} />
+
+					<View style={styles.subSection}>
+						<Text style={styles.sectionLabel}>Montant payé</Text>
+						<Text style={styles.paymentValue}>{amount?.toLocaleString()} {currency}</Text>
+					</View>
+
+					<View style={styles.divider} />
+
+					<View style={styles.subSection}>
+						<Text style={styles.sectionLabel}>Date de paiement</Text>
+						<Text style={styles.sectionValue}>{pickupDate}</Text>
+					</View>
+
+					<View style={styles.divider} />
+
+					<View style={styles.subSection}>
+						<Text style={styles.sectionLabel}>Lieu de retrait</Text>
+						<View style={styles.locationRow}>
+							<Text style={styles.locationValue}>{pickupLocation}</Text>
+							<TouchableOpacity>
+								<Text style={styles.navigationText}>Navigation</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+
+					<View style={styles.divider} />
+
+					<View style={styles.subSection}>
+						<Text style={styles.sectionLabel}>Heure de retrait</Text>
+						<Text style={styles.timeValue}>{pickupTime}</Text>
+					</View>
+				</View>
+
 			</View>
 
-			{/* Bottom actions */}
+			{/* Bottom fixed actions */}
 			<View style={styles.actionsContainer}>
-				<TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Home' as never)}>
-					<Text style={styles.primaryButtonText}>Retour à l'Accueil</Text>
+				<TouchableOpacity style={styles.primaryButton} onPress={() => {
+					if (orderId) {
+						navigation.navigate('LocalOrderDetails' as never, { orderId } as never);
+					} else {
+						navigation.navigate('Status' as never);
+					}
+				}}>
+					<Text style={styles.primaryButtonText}>Voir la commande</Text>
 				</TouchableOpacity>
-				<TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Status' as never)}>
-					<Text style={styles.secondaryButtonText}>Voir Mes Commandes</Text>
+				<TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Home' as never)}>
+					<Text style={styles.secondaryButtonText}>Retour à l'accueil</Text>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -137,6 +191,7 @@ const styles = StyleSheet.create({
 		borderTopRightRadius: 0,
 		borderBottomLeftRadius: 16,
 		borderBottomRightRadius: 16,
+
 		alignSelf: 'center',
 	},
 	successBadge: {
@@ -149,7 +204,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		marginTop: 30,
 		marginBottom: 12,
-	},
+	},  
 	successTitle: {
 		fontSize: fontSize(18),
 		fontWeight: '600',
@@ -161,49 +216,109 @@ const styles = StyleSheet.create({
 		fontSize: fontSize(13),
 		textAlign: 'center',
 		color: '#666',
-		marginBottom: 12,
+		marginBottom: 16,
 	},
-	amountText: {
-		textAlign: 'center',
-		marginBottom: 12,
+	infoCard: {
+		backgroundColor: '#fff',
+		borderRadius: 12,
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		borderWidth: 1,
+		borderColor: '#F0F0F0',
 	},
-	amountNumber: {
-		fontSize: fontSize(40),
-		fontWeight: '700',
-		color: '#FF5100',
+	infoRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingVertical: 10,
 	},
-	amountCurrency: {
-		fontSize: fontSize(20),
-		fontWeight: '700',
-		color: '#FF5100',
-		marginLeft: 6,
+	infoLabel: {
+		fontSize: 14,
+		color: '#444',
 	},
-	sectionDivider: {
-		height: 1,
-		backgroundColor: '#EFEFEF',
-		marginVertical: 12,
-	},
-	sectionTitle: {
-		fontSize: fontSize(15),
-		fontWeight: '700',
+	infoValue: {
+		fontSize: 14,
 		color: '#111',
-		textAlign: 'center',
+		fontWeight: '600',
+	},
+	sectionHeaderRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
 		marginBottom: 8,
 	},
-	sectionParagraph: {
+	sectionIcon: {
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		backgroundColor: '#FFE8DD',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginRight: 6,
+        marginTop: 6,
+	},
+	sectionHeaderText: {
+		fontSize: fontSize(16),
+		fontWeight: '600',
+		color: '#111',
+        paddingTop: 5,
+	},
+	subSection: {
+		paddingBottom: 10,
+	},
+	sectionLabel: {
 		fontSize: fontSize(13),
 		color: '#666',
-		textAlign: 'center',
-		paddingHorizontal: 8,
-	},
-	bullets: {
-		marginTop: 10,
-	},
-	bulletItem: {
-		fontSize: fontSize(13),
-		color: '#555',
-		lineHeight: fontSize(18),
 		marginBottom: 6,
+	},
+	sectionBody: {
+		paddingLeft: 35,
+	},
+	locationRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		flexWrap: 'wrap',
+		justifyContent: 'flex-start',
+	},
+	locationValue: {
+		flexShrink: 1,
+		fontSize: fontSize(16),
+		fontWeight: '400',
+		color: '#111',
+		marginRight: 8,
+	},
+	navigationText: {
+		color: '#FF5100',
+		fontWeight: '500',
+		textDecorationLine: 'underline',
+		textTransform: 'uppercase',
+		fontSize: fontSize(14),
+	},
+	sectionValue: {
+		fontSize: fontSize(16),
+		color: '#111',
+		fontWeight: '400',
+	},
+	paymentValue: {
+		fontSize: fontSize(22),
+		fontWeight: '600',
+		color: '#FF5100',
+	},
+	tipBox: {
+		marginTop: 12,
+		backgroundColor: '#FFF5DB',
+		borderRadius: 12,
+		paddingHorizontal: 12,
+		paddingVertical: 12,
+	},
+	tipText: {
+		color: '#FF5100',
+		fontSize: fontSize(14),
+        fontWeight: '600',
+	},
+	divider: {
+		height: 1,
+		backgroundColor: '#EFEFEF',
+        marginVertical: 5,
 	},
 	actionsContainer: {
 		position: 'absolute',
@@ -232,6 +347,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 		borderWidth: 1,
 		borderColor: '#FF5100',
+        marginBottom: 10,
 	},
 	secondaryButtonText: {
 		color: '#FF5100',

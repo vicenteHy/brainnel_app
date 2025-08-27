@@ -8,7 +8,6 @@ import {
   ScrollView,
   Image,
   Dimensions,
-  StatusBar as RNStatusBar,
   Platform,
   Alert,
 } from 'react-native';
@@ -25,6 +24,7 @@ import type { LocalProduct } from '../../services/local/productList';
 import { getFirstProductImage } from '../../services/local/productList';
 import { orderApi, type CreateLocalOrderRequest } from '../../services/local/orderApi';
 import { useAddressStore } from '../../store/address';
+import { pickupApi, type PickupLocation } from '../../services/local/pickupApi';
 import type { RootStackParamList } from '../../navigation/types';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -39,6 +39,8 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   const [userBalance, setUserBalance] = useState<number | null>(null);
   const [userBalanceCurrency, setUserBalanceCurrency] = useState<string>('FCFA');
   const [orderProduct, setOrderProduct] = useState<LocalProduct | null>(null);
+  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+  const [selectedPickupLocation, setSelectedPickupLocation] = useState<PickupLocation | null>(null);
   // 货币选择（分别为 paypal 与 bank_card 独立保存）
   const [paypalCurrency, setPaypalCurrency] = useState<'USD' | 'EUR'>('USD');
   const [bankCardCurrency, setBankCardCurrency] = useState<'USD' | 'EUR'>('USD');
@@ -98,6 +100,25 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
     if (cached) {
       setOrderProduct(cached);
     }
+    // 获取自提点列表
+    (async () => {
+      try {
+        const locations = await pickupApi.getPickupLocations({
+          latitude: 5.341806,
+          longitude: -3.971889
+        });
+        setPickupLocations(locations);
+        // 根据pickupLocationIdFromRoute选择对应的自提点
+        if (pickupLocationIdFromRoute && locations.length > 0) {
+          const selectedLocation = locations.find(loc => loc.id === pickupLocationIdFromRoute);
+          setSelectedPickupLocation(selectedLocation || locations[0]);
+        } else if (locations.length > 0) {
+          setSelectedPickupLocation(locations[0]);
+        }
+      } catch (error) {
+        console.error('获取自提点失败:', error);
+      }
+    })();
     return () => {
       isMounted = false;
     };
@@ -160,7 +181,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
         >
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Please select payment method</Text>
+        <Text style={styles.headerTitle}>Mode de paiement</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -352,9 +373,11 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
             <View style={styles.priceRow}>
               <View style={styles.discountRow}>
                 <Text style={styles.priceLabel}>Remise</Text>
-                <View style={styles.discountBadgeSmall}>
-                  <Text style={styles.discountTextSmall}>-10%</Text>
-                </View>
+                {selectedPayment !== 'cod' && (
+                  <View style={styles.discountBadgeSmall}>
+                    <Text style={styles.discountTextSmall}>-10%</Text>
+                  </View>
+                )}
               </View>
               <Text style={[styles.priceValue, styles.discountValue]}>
                 -{isCardOrPaypal ? discountAmountDisplay : discountAmount}{isCardOrPaypal ? displayCurrency : 'FCFA'}
@@ -374,6 +397,8 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 time: new Date().toISOString(),
                 selectedPayment,
               });
+              
+              
               const product = orderProduct || productCacheManager.getLastProduct();
               if (!product) {
                 Alert.alert('Erreur', "Aucun produit n'est sélectionné");
@@ -397,6 +422,23 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                   { text: 'OK', onPress: () => navigation.navigate('PickUp' as never) }
                 ]);
                 return;
+              }
+
+              // 如果选择余额支付，先检查余额是否充足
+              if (selectedPayment === 'balance') {
+                const totalAmount = finalUnitPrice * quantity;
+                if (userBalance === null || userBalance < totalAmount) {
+                  console.log('[LocalPayment] Insufficient balance:', {
+                    userBalance,
+                    totalAmount,
+                    currency: userBalanceCurrency
+                  });
+                  Alert.alert(
+                    'Solde insuffisant', 
+                    `Votre solde actuel (${userBalance || 0} ${userBalanceCurrency}) est insuffisant pour cette commande (${totalAmount} ${userBalanceCurrency}). Veuillez recharger votre compte.`
+                  );
+                  return;
+                }
               }
 
               console.log('[LocalPayment] Create order - inputs', {
@@ -436,10 +478,40 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
               console.log('[LocalPayment] Create order - success response', res);
 
               if (selectedPayment === 'cod') {
+                // 检查是否需要身份验证
+                try {
+                  const profileResp = await userApi.getProfile();
+                  const profileData = (profileResp as unknown as User) as User;
+                  
+                  if (!profileData.id_card && !profileData.passport) {
+                    // 需要身份验证，跳转到验证页面
+                    console.log('[LocalPayment] Navigating to Verify (COD needs verification)');
+                    navigation.navigate('Verify', { orderId: res.order_id } as never);
+                    return;
+                  }
+                } catch (error) {
+                  console.error('[LocalPayment] Failed to check user profile:', error);
+                }
+                
                 console.log('[LocalPayment] Navigating to OrderSuccess (COD)');
-                navigation.navigate('OrderSuccess');
+                navigation.navigate('OrderSuccess', { orderId: res.order_id });
               } else {
                 // 发起支付
+                
+                // Mobile Money 需要电话号码，先跳转到确认页面收集电话
+                if (selectedPayment === 'mobile_money') {
+                  console.log('[LocalPayment] Navigating to LocalMobileMoneyConfirm (skip first payment init)');
+                  const currencyForPayment = res.currency || userBalanceCurrency || 'FCFA';
+                  navigation.navigate('LocalMobileMoneyConfirm', {
+                    orderId: res.order_id,
+                    orderNo: res.order_no,
+                    amount: res.actual_amount,
+                    currency: currencyForPayment,
+                  } as never);
+                  return;
+                }
+
+                // 其他支付方式正常处理
                 try {
                   const amountForPayment = (selectedPayment === 'paypal' || selectedPayment === 'bank_card')
                     ? (((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, activeCurrency)))
@@ -466,11 +538,23 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                     // 约定：Pay.tsx 从 route.params 读取 { order_id, payUrl, method }
                     (navigation as any).navigate('Pay', { order_id: paymentId, payUrl, method: selectedPayment });
                     return;
-                  }
-
-                  if (selectedPayment === 'mobile_money') {
-                    console.log('[LocalPayment] Navigating to LocalMobileMoneyConfirm');
-                    navigation.navigate('LocalMobileMoneyConfirm');
+                  } else if (selectedPayment === 'balance') {
+                    // 余额支付，如果走到这里说明余额充足且支付成功
+                    console.log('[LocalPayment] Navigating to PaymentSuccess (Balance)');
+                    navigation.navigate('PaymentSuccess', {
+                      paymentMethod: 'Solde de compte',
+                      amount: finalUnitPrice,
+                      currency: 'FCFA',
+                      pickupLocation: selectedPickupLocation?.address || 'Shopping Center East Side Market Square, Downtown',
+                      pickupDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      }),
+                      pickupTime: selectedPickupLocation?.timetables?.[0]?.description || '09:00-17:00',
+                      orderId: res.order_id
+                    });
                   } else if (payRes?.payment_url) {
                     console.log('[LocalPayment] payment_url:', payRes.payment_url);
                     Alert.alert('Paiement', 'Veuillez suivre les instructions de paiement.');
@@ -499,7 +583,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
           }}
         >
           <Text style={styles.submitButtonText}>
-            Submit Order({finalUnitPrice}FCFA)
+            Valider la commande ({finalUnitPrice} FCFA)
           </Text>
         </TouchableOpacity>
       </View>
@@ -511,25 +595,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'ios' ? 44 : 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : (RNStatusBar.currentHeight || 0) + 10,
-    paddingBottom: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 15,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    zIndex: 5,
   },
   backButton: {
     padding: 4,
   },
   headerTitle: {
-    fontSize: fontSize(17),
-    fontWeight: '500',
-    color: '#000',
+    fontSize: fontSize(20),
+    fontWeight: '600',
+    color: '#1a1a1a',
     textAlign: 'center',
     flex: 1,
+    letterSpacing: 0.3,
   },
   content: {
     flex: 1,

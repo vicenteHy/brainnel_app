@@ -32,7 +32,7 @@ class PickupApi {
   async getPickupLocations(params?: PickupLocationsParams): Promise<PickupLocation[]> {
     try {
       // 构建查询参数
-      const queryParams: any = {};
+      const queryParams: Record<string, string> = {};
       if (params?.latitude !== undefined && params?.latitude !== null) {
         queryParams.latitude = params.latitude.toString();
       }
@@ -74,9 +74,11 @@ class PickupApi {
     // 如果后端已经返回了距离信息（单位：公里），直接使用
     const locationsWithDistance = locations.filter(loc => loc.distance !== null);
     if (locationsWithDistance.length > 0) {
-      return locationsWithDistance.reduce((nearest, current) => 
-        (current.distance! < nearest.distance!) ? current : nearest
-      );
+      return locationsWithDistance.reduce((nearest, current) => {
+        const nearestDistance = nearest.distance ?? Number.POSITIVE_INFINITY;
+        const currentDistance = current.distance ?? Number.POSITIVE_INFINITY;
+        return currentDistance < nearestDistance ? current : nearest;
+      });
     }
     
     // 否则在前端计算距离（米），然后转换为公里
@@ -134,7 +136,21 @@ class PickupApi {
    * 格式化营业时间
    */
   formatTimetable(timetable: PickupTimetable): string {
-    return timetable.description || `${timetable.start_time} - ${timetable.end_time}`;
+    const formatTime = (t: string): string => {
+      // 期望输入形如 "9:00:00" 或 "09:00:00"
+      if (!t) return '';
+      const parts = t.split(':');
+      if (parts.length < 2) return t;
+      const hour = parts[0].padStart(2, '0');
+      const minute = parts[1].padStart(2, '0');
+      return `${hour}:${minute}`;
+    };
+
+    const start = formatTime(timetable.start_time);
+    const end = formatTime(timetable.end_time);
+    if (!start && !end) return '';
+    if (start && end) return `${start} - ${end}`;
+    return start || end;
   }
 
   /**

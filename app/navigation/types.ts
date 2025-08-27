@@ -82,12 +82,29 @@ export type RootStackParamList = {
   MiningGameScreen: undefined;
   TaskCenter: undefined;
   WithdrawalScreen: undefined;
-  LocalProductList: undefined;
+  LocalProductList: { category_id?: number; categoryName?: string } | undefined;
   LocalProductDetail: { productId: number };
   LocalAddressForm: { address?: unknown };
   PickUp: undefined;
   Verify: undefined;
   LocalPayment: { pickup_location_id?: number };
-  LocalMobileMoneyConfirm: undefined;
+  LocalMobileMoneyConfirm: {
+    orderId?: number;
+    orderNo?: string;
+    amount?: number;
+    currency?: string;
+    paymentUrl?: string;
+  } | undefined;
   OrderSuccess: undefined;
+  PaymentSuccess: { 
+    paymentMethod?: string;
+    amount?: number;
+    currency?: string;
+    pickupLocation?: string;
+    pickupDate?: string;
+    pickupTime?: string;
+  };
+  LocalOrderDetails: {
+    orderId: string | number;
+  };
 };
