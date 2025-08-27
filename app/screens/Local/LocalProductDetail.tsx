@@ -70,8 +70,7 @@ export default function LocalProductDetail() {
   const [product, setProduct] = useState<LocalProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
-  const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
+  const [selectedAttributes, setSelectedAttributes] = useState<{ [key: string]: number }>({});
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
@@ -170,55 +169,76 @@ export default function LocalProductDetail() {
     return [];
   };
 
-  // 获取颜色选项（包含图片）
-  const getColorOptions = (): Array<{ color: string; image?: string }> => {
+  // 获取所有属性类型
+  const getAttributeTypes = (): string[] => {
     if (!product || !product.skus) return [];
-    const colorMap = new Map<string, string>();
+    const attrTypes = new Set<string>();
     
     product.skus.forEach(sku => {
-      if (sku.attr_key_1 === 'Couleur' && sku.attr_value_1) {
-        colorMap.set(sku.attr_value_1, sku.image_url || '');
-      } else if (sku.attr_key_2 === 'Couleur' && sku.attr_value_2) {
-        colorMap.set(sku.attr_value_2, sku.image_url || '');
-      }
+      if (sku.attr_key_1) attrTypes.add(sku.attr_key_1);
+      if (sku.attr_key_2) attrTypes.add(sku.attr_key_2);
     });
     
-    return Array.from(colorMap.entries()).map(([color, image]) => ({
-      color,
-      image: image || undefined
-    }));
+    return Array.from(attrTypes);
   };
 
-  // 获取尺码选项
-  const getSizeOptions = (): string[] => {
+  // 获取指定属性的所有选项
+  const getAttributeOptions = (attrKey: string): Array<{ value: string; image?: string; sku?: LocalProductSku }> => {
     if (!product || !product.skus) return [];
-    const sizes = new Set<string>();
+    const optionsMap = new Map<string, { image?: string; sku?: LocalProductSku }>();
+    
     product.skus.forEach(sku => {
-      if (sku.attr_key_1 === 'Taille' && sku.attr_value_1) {
-        sizes.add(sku.attr_value_1);
-      } else if (sku.attr_key_2 === 'Taille' && sku.attr_value_2) {
-        sizes.add(sku.attr_value_2);
+      if (sku.attr_key_1 === attrKey && sku.attr_value_1) {
+        const existing = optionsMap.get(sku.attr_value_1);
+        if (!existing || sku.image_url) {
+          optionsMap.set(sku.attr_value_1, { 
+            image: sku.image_url || existing?.image,
+            sku: sku
+          });
+        }
+      }
+      if (sku.attr_key_2 === attrKey && sku.attr_value_2) {
+        const existing = optionsMap.get(sku.attr_value_2);
+        if (!existing || sku.image_url) {
+          optionsMap.set(sku.attr_value_2, { 
+            image: sku.image_url || existing?.image,
+            sku: sku
+          });
+        }
       }
     });
-    return Array.from(sizes);
+    
+    return Array.from(optionsMap.entries()).map(([value, data]) => ({
+      value,
+      image: data.image,
+      sku: data.sku
+    }));
   };
 
   // 获取当前选择的SKU
   const getSelectedSku = (): LocalProductSku | undefined => {
     if (!product || !product.skus) return undefined;
     
-    const selectedColor = getColorOptions()[selectedColorIndex]?.color;
-    const selectedSize = getSizeOptions()[selectedSizeIndex];
+    const attributeTypes = getAttributeTypes();
     
+    // 如果只有一个SKU，直接返回
+    if (product.skus.length === 1) {
+      return product.skus[0];
+    }
+    
+    // 查找匹配所有选中属性的SKU
     return product.skus.find(sku => {
-      const colorMatch = !selectedColor || 
-        (sku.attr_value_1 === selectedColor && sku.attr_key_1 === 'Couleur') ||
-        (sku.attr_value_2 === selectedColor && sku.attr_key_2 === 'Couleur');
-      const sizeMatch = !selectedSize ||
-        (sku.attr_value_1 === selectedSize && sku.attr_key_1 === 'Taille') ||
-        (sku.attr_value_2 === selectedSize && sku.attr_key_2 === 'Taille');
-      
-      return colorMatch && sizeMatch;
+      return attributeTypes.every(attrType => {
+        const selectedIndex = selectedAttributes[attrType];
+        if (selectedIndex === undefined) return true; // 未选择该属性，跳过
+        
+        const options = getAttributeOptions(attrType);
+        const selectedValue = options[selectedIndex]?.value;
+        if (!selectedValue) return true;
+        
+        return (sku.attr_key_1 === attrType && sku.attr_value_1 === selectedValue) ||
+               (sku.attr_key_2 === attrType && sku.attr_value_2 === selectedValue);
+      });
     });
   };
 
@@ -277,8 +297,7 @@ export default function LocalProductDetail() {
     );
   }
 
-  const colorOptions = getColorOptions();
-  const sizeOptions = getSizeOptions();
+  const attributeTypes = getAttributeTypes();
   const currentPrice = getCurrentPrice();
   const discount = Math.round(product.off * 100);
   const productName = isChineseLanguage ? product.name_cn : product.name_fr;
@@ -288,11 +307,11 @@ export default function LocalProductDetail() {
   // 获取显示的图片（包含选中SKU的图片）
   const getDisplayImages = (): string[] => {
     const baseImages = getProductImages();
-    const selectedOption = colorOptions[selectedColorIndex];
+    const selectedSku = getSelectedSku();
     
-    // 如果选中的颜色有图片，将其添加到轮播图开头
-    if (selectedOption?.image && !baseImages.includes(selectedOption.image)) {
-      return [selectedOption.image, ...baseImages];
+    // 如果选中的SKU有图片，将其添加到轮播图开头
+    if (selectedSku?.image_url && !baseImages.includes(selectedSku.image_url)) {
+      return [selectedSku.image_url, ...baseImages];
     }
     
     return baseImages;
@@ -314,10 +333,15 @@ export default function LocalProductDetail() {
   };
 
   const imageKeys = buildKeys(images);
-  const colorKeyBases = colorOptions.map(o => `${o.color}-${o.image ?? 'noimg'}`);
-  const colorKeys = buildKeys(colorKeyBases);
-  const sizeKeys = buildKeys(sizeOptions);
   const descImageKeys = buildKeys(descriptionImages);
+  
+  // 为每个属性类型的选项构建keys
+  const attributeOptionsKeys: { [key: string]: string[] } = {};
+  attributeTypes.forEach(attrType => {
+    const options = getAttributeOptions(attrType);
+    const keyBases = options.map(o => `${o.value}-${o.image ?? 'noimg'}`);
+    attributeOptionsKeys[attrType] = buildKeys(keyBases);
+  });
  
   return (
     <SafeAreaView style={styles.container}>
@@ -483,65 +507,88 @@ export default function LocalProductDetail() {
           </View>
         </View>
 
-        {/* 颜色选择 */}
-        {colorOptions.length > 0 && (
-          <View style={styles.optionSection}>
-            <Text style={styles.optionTitle}>
-              Couleur: <Text style={styles.optionValue}>{colorOptions[selectedColorIndex]?.color}</Text>
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
-              {colorOptions.map((option, i) => (
-                <TouchableOpacity
-                  key={`color-${colorKeys[i]}`}
-                  style={[
-                    styles.colorOption,
-                    i === selectedColorIndex && styles.selectedColorOption
-                  ]}
-                  onPress={() => {
-                    setSelectedColorIndex(i);
-                    // 选择新颜色时，重置轮播图到第一张
-                    setSelectedImageIndex(0);
-                    pagerRef.current?.setPage(0);
-                  }}
-                >
-                  {option.image ? (
-                    <Image source={{ uri: option.image }} style={styles.colorImage} />
-                  ) : (
-                    <View style={[styles.colorSample, { backgroundColor: getColorHex(option.color) }]} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* 尺码选择 */}
-        {sizeOptions.length > 0 && (
-          <View style={styles.optionSection}>
-            <Text style={styles.optionTitle}>
-              Taille: <Text style={styles.optionValue}>Sélectionner la taille</Text>
-            </Text>
-            <View style={styles.sizeGrid}>
-              {sizeOptions.map((size, i) => (
-                <TouchableOpacity
-                  key={`size-${sizeKeys[i]}`}
-                  style={[
-                    styles.sizeOption,
-                    i === selectedSizeIndex && styles.selectedSizeOption
-                  ]}
-                  onPress={() => setSelectedSizeIndex(i)}
-                >
-                  <Text style={[
-                    styles.sizeText,
-                    i === selectedSizeIndex && styles.selectedSizeText
-                  ]}>
-                    {size}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+        {/* 动态属性选择 */}
+        {attributeTypes.map(attrType => {
+          const options = getAttributeOptions(attrType);
+          const selectedIndex = selectedAttributes[attrType] || 0;
+          const keys = attributeOptionsKeys[attrType] || [];
+          
+          if (options.length === 0) return null;
+          
+          // 如果只有一个选项，自动选中且不显示选择器
+          if (options.length === 1) {
+            if (selectedAttributes[attrType] === undefined) {
+              setSelectedAttributes(prev => ({ ...prev, [attrType]: 0 }));
+            }
+            return null;
+          }
+          
+          const hasImages = options.some(o => o.image);
+          
+          return (
+            <View key={attrType} style={styles.optionSection}>
+              <Text style={styles.optionTitle}>
+                {attrType}: <Text style={styles.optionValue}>
+                  {options[selectedIndex]?.value || (isChineseLanguage ? '请选择' : 'Sélectionner')}
+                </Text>
+              </Text>
+              
+              {hasImages ? (
+                // 有图片的属性使用横向滚动
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+                  {options.map((option, i) => (
+                    <TouchableOpacity
+                      key={`${attrType}-${keys[i]}`}
+                      style={[
+                        styles.colorOption,
+                        i === selectedIndex && styles.selectedColorOption
+                      ]}
+                      onPress={() => {
+                        setSelectedAttributes(prev => ({ ...prev, [attrType]: i }));
+                        // 如果选择的属性有图片，重置轮播图
+                        if (option.image) {
+                          setSelectedImageIndex(0);
+                          pagerRef.current?.setPage(0);
+                        }
+                      }}
+                    >
+                      {option.image ? (
+                        <Image source={{ uri: option.image }} style={styles.colorImage} />
+                      ) : (
+                        <View style={styles.textOptionInner}>
+                          <Text style={styles.optionImageText} numberOfLines={2}>
+                            {option.value}
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                // 无图片的属性使用网格布局
+                <View style={styles.sizeGrid}>
+                  {options.map((option, i) => (
+                    <TouchableOpacity
+                      key={`${attrType}-${keys[i]}`}
+                      style={[
+                        styles.sizeOption,
+                        i === selectedIndex && styles.selectedSizeOption
+                      ]}
+                      onPress={() => setSelectedAttributes(prev => ({ ...prev, [attrType]: i }))}
+                    >
+                      <Text style={[
+                        styles.sizeText,
+                        i === selectedIndex && styles.selectedSizeText
+                      ]} numberOfLines={2}>
+                        {option.value}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-          </View>
-        )}
+          );
+        })}
 
         {/* 数量选择 */}
         <View style={styles.optionSection}>
@@ -692,19 +739,6 @@ export default function LocalProductDetail() {
   );
 }
 
-// 获取颜色的十六进制值（示例函数）
-function getColorHex(colorName: string): string {
-  const colorMap: { [key: string]: string } = {
-    'Marine': '#001F3F',
-    'Rouge': '#FF0000',
-    'Vert': '#00FF00',
-    'Noir': '#000000',
-    'Blanc': '#FFFFFF',
-    'Bleu': '#0000FF',
-    // 添加更多颜色映射
-  };
-  return colorMap[colorName] || '#999999';
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -1017,6 +1051,17 @@ const styles = StyleSheet.create({
   colorSample: {
     flex: 1,
     borderRadius: 4,
+  },
+  textOptionInner: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 4,
+  },
+  optionImageText: {
+    fontSize: fontSize(10),
+    color: '#333',
+    textAlign: 'center',
   },
   sizeGrid: {
     flexDirection: 'row',
