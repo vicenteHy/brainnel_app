@@ -53,9 +53,7 @@ const ProductSkeleton = () => {
       ])
     );
     animation.start();
-    return () => {
-      animation.stop();
-    };
+    return () => animation.stop();
   }, [animatedValue]);
 
   const opacity = animatedValue.interpolate({
@@ -87,45 +85,35 @@ export default function LocalProductListScreen() {
   const route = useRoute();
   const { i18n } = useTranslation();
   
-  // 从路由参数获取分类ID（必须在useState之前定义）
   type LocalRouteParams = { category_id?: number };
   const initialCategoryId = (route as unknown as { params?: LocalRouteParams }).params?.category_id;
   
   const [products, setProducts] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categoryLoading, setCategoryLoading] = useState(false); // 分类切换加载状态
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [searchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<LocalProduct[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [categories, setCategories] = useState<LocalCategory[]>([]);
-  // 如果有初始分类ID，直接使用它作为初始值
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     typeof initialCategoryId === 'number' ? initialCategoryId : null
   );
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const isChineseLanguage = i18n.language === 'zh';
   const scrollViewRef = useRef<ScrollView>(null);
-  const categoryPositionsRef = useRef<Map<number, number>>(new Map());
-  const categoryWidthsRef = useRef<Map<number, number>>(new Map());
-  const isScrollingRef = useRef(false);
-  const currentScrollXRef = useRef(0);
   const justOpenedRef = useRef(false);
-  // const categoryName = (route as unknown as { params?: { categoryName?: string } }).params?.categoryName; // 未使用
   
-  // 调试日志
-  console.log('========== ProductListScreen 初始化 ==========');
-  console.log('route.params:', (route as any).params);
-  console.log('解析的 initialCategoryId:', initialCategoryId);
-  console.log('initialCategoryId 类型:', typeof initialCategoryId);
-  console.log('==========================================');
-  
-  // 使用ref来跟踪下一页，避免状态更新的异步问题
   const nextPageRef = useRef(1);
   const isInitialLoad = useRef(true);
   const previousCategoryId = useRef<number | null | undefined>(undefined);
+  
+  // Refs for category scrolling
+  const categoryWidthsRef = useRef<Map<number, number>>(new Map());
+  const categoryPositionsRef = useRef<Map<number, number>>(new Map());
+  const isScrollingRef = useRef(false);
+  const currentScrollXRef = useRef(0);
 
-  // 加载分类数据
   const loadCategories = useCallback(async () => {
     try {
       const response = await fetchLevel1Categories();
@@ -262,10 +250,6 @@ export default function LocalProductListScreen() {
   const loadInitialProducts = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('\n========== ProductListScreen: 开始加载初始商品 ==========');
-      console.log('选中的分类ID:', selectedCategoryId);
-      console.log('请求参数: { page: 1, page_size: 20, category_id:', selectedCategoryId, '}');
-      console.log('调用时间:', new Date().toISOString());
       
       const response = await fetchLocalProducts({ 
         page: 1,
@@ -273,59 +257,26 @@ export default function LocalProductListScreen() {
         category_id: selectedCategoryId ?? undefined,
       });
       
-      console.log('\n========== ProductListScreen: 接收到响应 ==========');
-      console.log('响应对象:', response);
-      console.log('响应 total:', response?.total);
-      console.log('响应 page:', response?.page);
-      console.log('响应 page_size:', response?.page_size);
-      
       const items = response?.items || [];
-      console.log('商品数组长度:', items.length);
-      if (items.length > 0) {
-        console.log('第一个商品ID:', items[0].product_id);
-        console.log('第一个商品名称:', items[0].name_cn);
-      }
       
       setProducts(items);
       setFilteredProducts(items);
       productCacheManager.setProducts(items);
-      // 确保标签在数据加载后仍保持居中（先恢复之前的偏移，再居中）
-      requestAnimationFrame(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollTo({ x: currentScrollXRef.current, animated: false });
-        }
-        requestAnimationFrame(() => {
-          scrollCategoryToCenter(selectedCategoryId, true);
-        });
-      });
       
-      // 重置页码
       nextPageRef.current = 2;
-      
-      // 判断是否还有更多
       const hasMoreData = items.length === 20;
       setHasMore(hasMoreData);
-      
-      console.log('设置 hasMore:', hasMoreData);
-      console.log('下一页页码:', nextPageRef.current);
-      console.log('========== 初始加载完成 ==========\n');
     } catch (error) {
-      console.error('\n========== ProductListScreen: 加载失败 ==========');
-      console.error('错误对象:', error);
-      const message = (error as Error)?.message ?? 'Unknown error';
-      console.error('错误消息:', message);
-      console.error('==========================================\n');
+      console.error('Failed to load products:', error);
     } finally {
       setLoading(false);
     }
-  }, [selectedCategoryId, scrollCategoryToCenter]);
+  }, [selectedCategoryId]);
 
   // 分类切换时的加载（使用骨架图）
   const loadProductsWithSkeleton = useCallback(async () => {
     try {
       setCategoryLoading(true);
-      console.log('\n========== 切换分类，使用骨架图加载 ==========');
-      console.log('选中的分类ID:', selectedCategoryId);
       
       const response = await fetchLocalProducts({ 
         page: 1,
@@ -334,40 +285,22 @@ export default function LocalProductListScreen() {
       });
       
       const items = response?.items || [];
-      console.log('加载商品数量:', items.length);
       
       setProducts(items);
       setFilteredProducts(items);
       productCacheManager.setProducts(items);
-      // 确保分类切换加载完成后标签仍保持居中（先恢复之前的偏移，再居中）
-      requestAnimationFrame(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollTo({ x: currentScrollXRef.current, animated: false });
-        }
-        requestAnimationFrame(() => {
-          scrollCategoryToCenter(selectedCategoryId, true);
-        });
-      });
       
-      // 重置页码
       nextPageRef.current = 2;
-      
-      // 判断是否有更多数据
       const hasMoreData = items.length === 20;
       setHasMore(hasMoreData);
-      
-      console.log('========== 分类切换加载完成 ==========\n');
     } catch (error) {
-      console.error('\n========== 分类切换加载失败 ==========');
-      console.error('错误:', error);
-      console.error('==========================================\n');
+      console.error('Failed to load products:', error);
     } finally {
       setCategoryLoading(false);
     }
-  }, [selectedCategoryId, scrollCategoryToCenter]);
+  }, [selectedCategoryId]);
 
   const loadMoreProducts = async () => {
-    // 防止重复加载
     if (isLoadingMore || !hasMore) {
       return;
     }
@@ -376,25 +309,13 @@ export default function LocalProductListScreen() {
       setIsLoadingMore(true);
       const currentPage = nextPageRef.current;
       
-      console.log('\n========== ProductListScreen: 加载更多商品 ==========');
-      console.log('当前页码:', currentPage);
-      console.log('当前已有商品数:', products.length);
-      console.log('请求参数: { page:', currentPage, ', page_size: 20 }');
-      console.log('调用时间:', new Date().toISOString());
-      
       const response = await fetchLocalProducts({ 
         page: currentPage,
         page_size: 20,
         category_id: selectedCategoryId ?? undefined,
       });
       
-      console.log('\n========== ProductListScreen: 加载更多 - 接收到响应 ==========');
-      console.log('响应 total:', response?.total);
-      console.log('响应 page:', response?.page);
-      console.log('响应 page_size:', response?.page_size);
-      
       const newItems = response?.items || [];
-      console.log('新商品数量:', newItems.length);
       
       if (newItems.length > 0) {
         const updatedProducts = [...products, ...newItems];
@@ -402,26 +323,14 @@ export default function LocalProductListScreen() {
         setFilteredProducts(updatedProducts);
         productCacheManager.setProducts(updatedProducts);
         
-        // 更新页码
         nextPageRef.current = currentPage + 1;
-        
-        // 判断是否还有更多
         const hasMoreData = newItems.length === 20;
         setHasMore(hasMoreData);
-        
-        console.log('更新后商品总数:', updatedProducts.length);
-        console.log('下一页页码:', nextPageRef.current);
-        console.log('还有更多数据:', hasMoreData);
       } else {
         setHasMore(false);
-        console.log('没有更多商品了');
       }
-      
-      console.log('========== 加载更多完成 ==========\n');
     } catch (error) {
-      console.error('\n========== ProductListScreen: 加载更多失败 ==========');
-      console.error('错误:', error);
-      console.error('==========================================\n');
+      console.error('Failed to load more products:', error);
     } finally {
       setIsLoadingMore(false);
     }
@@ -433,74 +342,31 @@ export default function LocalProductListScreen() {
     }
   };
 
-  // 初始化时滚动到选中的分类（放在依赖都已声明之后）
-  useEffect(() => {
-    console.log('========== 初始化选中分类滚动 effect ==========');
-    console.log('initialCategoryId:', initialCategoryId);
-    console.log('typeof initialCategoryId:', typeof initialCategoryId);
-    
-    if (typeof initialCategoryId === 'number') {
-      console.log('滚动到分类:', initialCategoryId);
-      setTimeout(() => {
-        scrollToTab(`cat-${initialCategoryId}`, true);
-      }, 300);
-    } else {
-      console.log('没有初始分类ID，不需要滚动');
-    }
-    console.log('==========================================');
-  }, [initialCategoryId, scrollToTab]);
 
-  // 当选中的分类改变时，重新加载产品（放在依赖都已声明之后）
   useEffect(() => {
-    console.log('========== selectedCategoryId 变化 ==========');
-    console.log('当前 selectedCategoryId:', selectedCategoryId);
-    console.log('之前 previousCategoryId:', previousCategoryId.current);
-    console.log('isInitialLoad:', isInitialLoad.current);
-    console.log('==========================================');
-    
-    // 如果是初始加载
     if (isInitialLoad.current) {
-      console.log('执行初始加载');
       loadInitialProducts();
       isInitialLoad.current = false;
-    } 
-    // 如果不是初始加载，且分类确实发生了改变
-    else if (previousCategoryId.current !== selectedCategoryId) {
-      console.log('执行分类切换加载');
+    } else if (previousCategoryId.current !== selectedCategoryId) {
       loadProductsWithSkeleton();
     }
-    
     previousCategoryId.current = selectedCategoryId;
   }, [selectedCategoryId, loadProductsWithSkeleton, loadInitialProducts]);
 
-  // 分类列表加载完成后（或布局完成后），如果来自首页并带有初始分类，则再次确保标签居中
-  useEffect(() => {
-    if (typeof initialCategoryId === 'number' && selectedCategoryId === initialCategoryId && categories.length > 0) {
-      requestAnimationFrame(() => {
-        const hasLayout = categoryPositionsRef.current.has(initialCategoryId);
-        if (hasLayout) {
-          scrollCategoryToCenter(initialCategoryId, true);
-        } else {
-          setTimeout(() => scrollCategoryToCenter(initialCategoryId, true), 80);
-        }
-      });
-    }
-  }, [categories, initialCategoryId, selectedCategoryId, scrollCategoryToCenter]);
 
   const renderProduct = ({ item }: { item: LocalProduct }) => {
     const name = isChineseLanguage ? item.name_cn : item.name_fr;
     const imageUrl = getFirstProductImage(item);
     const discount = Math.round(item.off * 100);
-    const localStock = item.is_local_stock === 1; // 后端可选字段
+    const localStock = item.is_local_stock === 1;
     const deliveryDays = localStock ? '3 jours' : '7 jours';
     
     return (
       <TouchableOpacity
         style={styles.productCard}
+        activeOpacity={1}
         onPress={() => {
-          // 将商品数据存入缓存
           productCacheManager.setProduct(item.product_id, item);
-          // 跳转到详情页
           // @ts-expect-error navigation type generic not specified in this file
           navigation.navigate('LocalProductDetail' as never, { productId: item.product_id } as never);
         }}
@@ -559,9 +425,7 @@ export default function LocalProductListScreen() {
           <TouchableOpacity 
             style={styles.buyButton}
             onPress={() => {
-              // 将商品数据存入缓存
               productCacheManager.setProduct(item.product_id, item);
-              // 跳转到详情页
               // @ts-expect-error navigation type generic not specified in this file
               navigation.navigate('LocalProductDetail' as never, { productId: item.product_id } as never);
             }}
@@ -574,17 +438,11 @@ export default function LocalProductListScreen() {
   };
 
   const renderFooter = () => {
-    if (!isLoadingMore) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={Colors.primary} />
-      </View>
-    );
+    return null;
   };
 
   // 渲染分类模态框
   const renderCategoryModal = () => {
-    console.log('渲染分类模态框, showCategoryModal:', showCategoryModal, 'categories.length:', categories.length);
     return (
     <Modal
       visible={showCategoryModal}
@@ -599,7 +457,6 @@ export default function LocalProductListScreen() {
           activeOpacity={1} 
           onPress={() => {
             if (justOpenedRef.current) {
-              console.log('忽略刚打开时的遮罩点击');
               return;
             }
             setShowCategoryModal(false);
@@ -671,116 +528,84 @@ export default function LocalProductListScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {renderCategoryModal()}
       
-      {/* 固定的头部 */}
-      <View style={styles.fixedHeader}>
-        {/* 白色标题栏 */}
-        <SafeAreaView edges={['top']} style={styles.whiteHeaderBar}>
-          <View style={styles.headerTopRow}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Liste des produits</Text>
-            <View style={styles.backButton} />
-          </View>
-        </SafeAreaView>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Liste des produits</Text>
+        <View style={styles.backButton} />
+      </View>
 
-        {/* 固定的分类标签和筛选 - 直接连接标题栏 */}
-        <View style={styles.filterSection}>
-          <ScrollView 
-            ref={scrollViewRef}
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesScrollView}
-            contentContainerStyle={styles.categoriesContent}
-            onScroll={(e) => {
-              currentScrollXRef.current = e.nativeEvent.contentOffset.x;
+      {/* Category Tabs */}
+      <View style={styles.categoryTabs}>
+        <ScrollView 
+          ref={scrollViewRef}
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          <TouchableOpacity 
+            style={[styles.tab, selectedCategoryId === null && styles.activeTab]}
+            onPress={() => {
+              if (!categoryLoading) {
+                setSelectedCategoryId(null);
+              }
             }}
-            scrollEventThrottle={16}
           >
-            {/* 全部分类 */}
+            <Text 
+              style={[styles.tabText, selectedCategoryId === null && styles.activeTabText]}
+              numberOfLines={1}
+            >
+              Tous
+            </Text>
+          </TouchableOpacity>
+          
+          {categories.map((category) => (
             <TouchableOpacity 
-              style={[styles.tab, selectedCategoryId === null && styles.activeTab]}
-              onLayout={(e) => handleCategoryLayout(-1, e)}
+              key={category.category_id}
+              style={[styles.tab, selectedCategoryId === category.category_id && styles.activeTab]}
               onPress={() => {
                 if (!categoryLoading) {
-                  setSelectedCategoryId(null);
-                  requestAnimationFrame(() => {
-                    if (scrollViewRef.current) {
-                      scrollViewRef.current.scrollTo({ x: currentScrollXRef.current, animated: false });
-                    }
-                    requestAnimationFrame(() => {
-                      scrollToTab('all');
-                    });
-                  });
+                  setSelectedCategoryId(category.category_id);
                 }
               }}
             >
               <Text 
-                style={[styles.tabText, selectedCategoryId === null && styles.activeTabText]}
+                style={[styles.tabText, selectedCategoryId === category.category_id && styles.activeTabText]}
                 numberOfLines={1}
               >
-                Tous
+                {category.name_fr}
               </Text>
             </TouchableOpacity>
-            
-            {/* 动态分类列表 */}
-            {categories.map((category) => (
-              <TouchableOpacity 
-                key={category.category_id}
-                style={[styles.tab, selectedCategoryId === category.category_id && styles.activeTab]}
-                onLayout={(e) => handleCategoryLayout(category.category_id, e)}
-                onPress={() => {
-                  if (!categoryLoading) {
-                    setSelectedCategoryId(category.category_id);
-                    requestAnimationFrame(() => {
-                      if (scrollViewRef.current) {
-                        scrollViewRef.current.scrollTo({ x: currentScrollXRef.current, animated: false });
-                      }
-                      requestAnimationFrame(() => {
-                        scrollToTab(`cat-${category.category_id}`);
-                      });
-                    });
-                  }
-                }}
-              >
-                <Text 
-                  style={[styles.tabText, selectedCategoryId === category.category_id && styles.activeTabText]}
-                  numberOfLines={1}
-                >
-                  {category.name_fr}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          
-          <TouchableOpacity 
-            style={styles.categoryDropdownButton}
-            onPress={() => {
-              console.log('分类按钮被点击，当前分类数量:', categories.length);
-              setShowCategoryModal(true);
-              justOpenedRef.current = true;
-              setTimeout(() => {
-                justOpenedRef.current = false;
-              }, 200);
-            }}
-          >
-            <Ionicons name="grid-outline" size={18} color="#333" />
-          </TouchableOpacity>
-        </View>
+          ))}
+        </ScrollView>
+        
+        <TouchableOpacity 
+          style={styles.categoryDropdownButton}
+          onPress={() => {
+            setShowCategoryModal(true);
+            justOpenedRef.current = true;
+            setTimeout(() => {
+              justOpenedRef.current = false;
+            }, 200);
+          }}
+        >
+          <Ionicons name="grid-outline" size={18} color="#333" />
+        </TouchableOpacity>
       </View>
 
-      {/* 可滑动的商品列表 */}
-      <View style={styles.scrollableContent}>
+      {/* Product List Container */}
+      <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />
           </View>
         ) : categoryLoading ? (
-          // 分类切换时显示骨架图
           <FlatList
             data={Array(6).fill(null).map((_, index) => ({ id: `skeleton-${index}` }))}
             renderItem={() => <ProductSkeleton />}
@@ -804,45 +629,22 @@ export default function LocalProductListScreen() {
           />
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5', // 恢复灰色背景
-  },
-  whiteHeaderBar: {
     backgroundColor: '#fff',
-    width: '100%',
   },
-  headerWrapper: {
-    width: '100%',
-  },
-  headerBackground: {
-    width: '100%',
-    height: 220, // 调整高度
-    justifyContent: 'flex-start',
-  },
-  headerOverlay: {
-    position: 'absolute',
-    top: 50, // 考虑paddingTop
-    left: 0,
-    right: 0,
-    zIndex: 1,
-  },
-  headerSafeArea: {
-    flex: 1,
-  },
-  headerTopRow: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    height: 48,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
   },
   backButton: {
     width: 40,
@@ -857,23 +659,18 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-  filterSection: {
-    backgroundColor: '#fff',
+  categoryTabs: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
+    backgroundColor: '#fff',
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  categoriesScrollView: {
-    flex: 1,
-  },
   categoriesContent: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
   },
   tab: {
     marginHorizontal: 6,
@@ -895,9 +692,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   categoryDropdownButton: {
-    position: 'relative',
     marginRight: 16,
-    marginLeft: 8,
     padding: 8,
     borderRadius: 20,
     borderWidth: 1,
@@ -928,23 +723,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   productList: {
     paddingHorizontal: 8,
-    paddingTop: 10, // 增加顶部内边距，确保第一排产品完全显示
+    paddingTop: 8,
     paddingBottom: 20,
+    backgroundColor: '#f5f5f5',
   },
   columnWrapper: {
     justifyContent: 'space-between',
     paddingHorizontal: 0,
   },
   productCard: {
-    width: screenWidth / 2 - 12, // 调整宽度以适应新的内边距
+    width: screenWidth / 2 - 12,
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
     overflow: 'hidden',
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -953,7 +749,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     width: '100%',
-    height: screenWidth / 2 - 12, // 调整高度以保持正方形比例
+    height: screenWidth / 2 - 12,
   },
   productImage: {
     width: '100%',
@@ -1084,11 +880,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     fontWeight: '600',
   },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  // 骨架图样式
   skeletonImage: {
     backgroundColor: '#f0f0f0',
   },
@@ -1102,22 +893,6 @@ const styles = StyleSheet.create({
   skeletonButton: {
     backgroundColor: '#f0f0f0',
   },
-  // 新增固定头部样式
-  fixedHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    backgroundColor: 'transparent',
-    pointerEvents: 'box-none', // 允许触摸事件穿透，解决TestFlight滑动问题
-  },
-  // 新增可滚动内容样式
-  scrollableContent: {
-    flex: 1,
-    marginTop: 165, // 调整顶部边距，因为减少了头部高度
-  },
-  // 模态框样式
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -1165,8 +940,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     zIndex: 1001,
-    elevation: 10, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    elevation: 10,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -1208,9 +983,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f8f8f8',
   },
-  categoryModalItemActive: {
-    // 选中态只改变文本颜色与显示勾选，不修改背景和下划线
-  },
+  categoryModalItemActive: {},
   categoryModalItemText: {
     fontSize: fontSize(15),
     color: '#333',
