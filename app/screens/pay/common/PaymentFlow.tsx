@@ -26,13 +26,15 @@ interface PaymentFlowProps {
   paymentId: string;
   payUrl: string;
   method: PaymentMethod;
+  is_local?: number;
 }
 
 export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   paymentType,
   paymentId,
   payUrl,
-  method
+  method,
+  is_local
 }) => {
   const { t } = useTranslation();
   const navigation = useNavigation();
@@ -73,8 +75,11 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   }, [navigation, t, config.translationPrefix]);
 
   // 处理支付成功
-  const handleSuccess = useCallback((response: any) => {
+  const handleSuccess = useCallback(async (response: any) => {
     setPaymentStatus('completed');
+    
+    // 优先使用路由传入的 is_local 值，如果没有才使用API返回的
+    const isLocalOrder = is_local !== undefined ? is_local : (response.is_local || 0);
     
     // 确保传递正确的订单ID和支付方式信息
     const successParams = {
@@ -83,8 +88,8 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       order_id: response.order_id || response.id || paymentId,
       orderId: response.order_id || response.id || paymentId,
       payment_method: method,
-      // 传递 is_local 字段
-      is_local: response.is_local || 0,
+      // 传递 is_local 字段 - 使用路由传入的值
+      is_local: isLocalOrder,
       // 如果是充值，确保标记
       ...(paymentType === 'recharge' && { 
         isRecharge: true,
@@ -96,13 +101,54 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       paymentType,
       paymentId,
       method,
-      is_local: response.is_local,
+      is_local_from_route: is_local,
+      is_local_from_api: response.is_local,
+      is_local_used: isLocalOrder,
       originalResponse: response,
       finalParams: successParams
     });
     
-    safeNavigate(config.successRoute, successParams);
-  }, [safeNavigate, config.successRoute, paymentType, paymentId, method]);
+    // 根据is_local决定跳转到哪个成功页面
+    let successRoute = config.successRoute;  // 默认是 'PaymentSuccessScreen'
+    if (paymentType === 'order' && isLocalOrder === 1) {
+      // 本地订单需要先获取订单详情，然后跳转到本地支付成功页面
+      try {
+        const { orderApi } = await import('../../../services/local/orderApi');
+        const orderDetail = await orderApi.getOrderDetail(paymentId);
+        console.log('[PaymentFlow] 获取本地订单详情成功:', orderDetail);
+        
+        // 本地订单使用 LocalPaymentSuccess
+        successRoute = 'LocalPaymentSuccess';
+        
+        // 从订单详情中提取本地支付成功页面需要的参数
+        successParams.paymentMethod = method === 'paypal' ? 'PayPal' : 
+                                     method === 'wave' ? 'Wave' : 
+                                     method === 'mobile_money' ? 'Mobile Money' : 
+                                     method === 'bank_card' ? 'Bank Card' : method;
+        successParams.amount = orderDetail.actual_amount || orderDetail.total_amount || 0;
+        successParams.currency = orderDetail.currency || 'FCFA';
+        successParams.pickupLocation = orderDetail.receiver_address || '';
+        successParams.pickupDate = orderDetail.pickup_date || '';
+        successParams.pickupTime = orderDetail.pickup_time?.[0] || '';
+        successParams.orderId = orderDetail.order_id;
+      } catch (error) {
+        console.error('[PaymentFlow] 获取本地订单详情失败:', error);
+        // 如果获取失败，仍然跳转到本地支付成功页面
+        successRoute = 'LocalPaymentSuccess';
+        successParams.paymentMethod = method === 'paypal' ? 'PayPal' : 
+                                     method === 'wave' ? 'Wave' : 
+                                     method === 'mobile_money' ? 'Mobile Money' : 
+                                     method === 'bank_card' ? 'Bank Card' : method;
+        successParams.amount = 0;
+        successParams.currency = 'FCFA';
+        successParams.pickupLocation = '';
+        successParams.pickupDate = '';
+        successParams.pickupTime = '';
+      }
+    }
+    
+    safeNavigate(successRoute, successParams);
+  }, [safeNavigate, config.successRoute, paymentType, paymentId, method, is_local]);
 
   // 处理支付错误
   const handleError = useCallback((errorData: any) => {
@@ -110,10 +156,10 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     // 确保错误数据中包含 is_local 字段
     const errorParams = {
       ...errorData,
-      is_local: errorData.is_local || 0
+      is_local: errorData.is_local !== undefined ? errorData.is_local : (is_local || 0)
     };
     safeNavigate(config.errorRoute, errorParams);
-  }, [safeNavigate, config.errorRoute]);
+  }, [safeNavigate, config.errorRoute, is_local]);
 
   // 处理支付取消 - 所有支付方式都跳转到失败页面
   const handleCancel = useCallback(() => {
@@ -123,10 +169,10 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     safeNavigate(config.errorRoute, {
       msg: t(`${config.translationPrefix}.payment_cancelled`),
       [config.idFieldName]: paymentId,
-      is_local: 0, // 取消时默认传 0
+      is_local: is_local || 0, // 使用传入的 is_local 值
       ...(paymentType === 'recharge' && { isRecharge: true })
     });
-  }, [paymentType, paymentId, safeNavigate, stopPolling, t, config]);
+  }, [paymentType, paymentId, safeNavigate, stopPolling, t, config, is_local]);
 
   // 处理超时
   const handleTimeout = useCallback(() => {
@@ -161,6 +207,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     paymentType,
     paymentId,
     method,
+    is_local,
     onSuccess: handleSuccess,
     onError: handleError,
     onCancel: handleCancel,

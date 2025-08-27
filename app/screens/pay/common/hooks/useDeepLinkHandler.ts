@@ -2,11 +2,13 @@ import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 import { payApi } from '../../../../services/api/payApi';
 import { PaymentType, PaymentMethod } from './usePaymentPolling';
+import { PAYMENT_SUCCESS_EVENT, PAYMENT_FAILURE_EVENT } from '../../../../constants/events';
 
 interface UseDeepLinkHandlerProps {
   paymentType: PaymentType;
   paymentId: string;
   method: PaymentMethod;
+  is_local?: number;
   onSuccess: (response: any) => void;
   onError: (error: any) => void;
   onCancel: () => void;
@@ -18,6 +20,7 @@ export const useDeepLinkHandler = ({
   paymentType,
   paymentId,
   method,
+  is_local,
   onSuccess,
   onError,
   onCancel,
@@ -25,6 +28,114 @@ export const useDeepLinkHandler = ({
   setPaymentStatus
 }: UseDeepLinkHandlerProps) => {
   useEffect(() => {
+    // 监听全局支付成功事件
+    const handlePaymentSuccessEvent = async (data: any) => {
+      console.log('[useDeepLinkHandler] 收到支付成功事件:', data);
+      
+      // 检查是否有PayPal回调参数
+      if (data.paymentId && data.PayerID && method === "paypal") {
+        console.log('[useDeepLinkHandler] 处理PayPal支付回调');
+        stopPolling();
+        setPaymentStatus('checking');
+        
+        try {
+          const res = await payApi.paySuccessCallback(
+            data.paymentId as string,
+            data.PayerID as string
+          );
+          
+          console.log('PayPal回调验证结果:', res);
+          
+          // 检查响应是否是HTML（错误响应）
+          if (typeof res === 'string' || !res || !res.hasOwnProperty('status')) {
+            console.log('PayPal回调返回非JSON响应，尝试查询支付状态...');
+            // 如果回调验证失败，尝试直接查询支付状态
+            try {
+              const statusRes = await payApi.getPaymentStatus(paymentType, paymentId);
+              console.log('支付状态查询结果:', statusRes);
+              if (statusRes.status === 1) {
+                setPaymentStatus('completed');
+                // 如果是本地订单，不在深度链接中处理跳转，让轮询处理
+                if (is_local === 1 && paymentType === 'order') {
+                  console.log('[useDeepLinkHandler] 本地订单支付成功，不处理跳转，由轮询处理');
+                  return;
+                }
+                const successData = paymentType === 'recharge' 
+                  ? { ...statusRes, isRecharge: true }
+                  : { ...statusRes, is_local: is_local !== undefined ? is_local : statusRes.is_local };
+                onSuccess(successData);
+              } else {
+                setPaymentStatus('failed');
+                onError({
+                  msg: `${paymentType}.status.payment_not_completed`,
+                  [`${paymentType}_id`]: paymentId,
+                  is_local: is_local || 0,
+                  ...(paymentType === 'recharge' && { isRecharge: true })
+                });
+              }
+            } catch (statusError) {
+              console.error('支付状态查询失败:', statusError);
+              setPaymentStatus('failed');
+              onError({
+                msg: `${paymentType}.status.verification_failed`,
+                [`${paymentType}_id`]: paymentId,
+                is_local: is_local || 0,
+                ...(paymentType === 'recharge' && { isRecharge: true })
+              });
+            }
+          } else if (res.status === 1) {
+            setPaymentStatus('completed');
+            // 如果是本地订单，不在深度链接中处理跳转，让轮询处理
+            if (is_local === 1 && paymentType === 'order') {
+              console.log('[useDeepLinkHandler] 本地订单PayPal支付成功，不处理跳转，由轮询处理');
+              return;
+            }
+            const successData = paymentType === 'recharge' 
+              ? { ...res, isRecharge: true }
+              : { ...res, is_local: is_local !== undefined ? is_local : res.is_local };
+            onSuccess(successData);
+          } else {
+            setPaymentStatus('failed');
+            onError({
+              msg: res.msg || `${paymentType}.status.verification_failed`,
+              [`${paymentType}_id`]: paymentId,
+              is_local: is_local || 0,
+              ...(paymentType === 'recharge' && { isRecharge: true })
+            });
+          }
+        } catch (error) {
+          console.error('PayPal回调验证错误:', error);
+          setPaymentStatus('failed');
+          onError({
+            msg: `${paymentType}.status.verification_failed_contact_support`,
+            [`${paymentType}_id`]: paymentId,
+            is_local: is_local || 0,
+            ...(paymentType === 'recharge' && { isRecharge: true })
+          });
+        }
+      }
+    };
+    
+    // 监听支付失败事件
+    const handlePaymentFailureEvent = (data: any) => {
+      console.log('[useDeepLinkHandler] 收到支付失败事件:', data);
+      stopPolling();
+      setPaymentStatus('failed');
+      onCancel();
+    };
+    
+    // 注册全局事件监听器
+    
+    if ((global as any).EventEmitter) {
+      console.log('[useDeepLinkHandler] 注册全局事件监听器');
+      console.log('[useDeepLinkHandler] PAYMENT_SUCCESS_EVENT:', PAYMENT_SUCCESS_EVENT);
+      console.log('[useDeepLinkHandler] PAYMENT_FAILURE_EVENT:', PAYMENT_FAILURE_EVENT);
+      (global as any).EventEmitter.on(PAYMENT_SUCCESS_EVENT, handlePaymentSuccessEvent);
+      (global as any).EventEmitter.on(PAYMENT_FAILURE_EVENT, handlePaymentFailureEvent);
+    } else {
+      console.warn('[useDeepLinkHandler] 全局 EventEmitter 不存在！');
+    }
+    
     const handleDeepLink = async ({ url }: { url: string }) => {
       console.log("收到深度链接:", url);
 
@@ -115,11 +226,54 @@ export const useDeepLinkHandler = ({
             );
 
             console.log(`${method === "paypal" ? "PayPal" : "Bank Card"}回调验证结果:`, res);
-            if (res.status === 1) {
+            
+            // 检查响应是否是HTML（错误响应）
+            if (typeof res === 'string' || !res || !res.hasOwnProperty('status')) {
+              console.log(`${method === "paypal" ? "PayPal" : "Bank Card"}回调返回非JSON响应，尝试查询支付状态...`);
+              // 如果回调验证失败，尝试直接查询支付状态
+              try {
+                const statusRes = await payApi.getPaymentStatus(paymentType, paymentId);
+                console.log('支付状态查询结果:', statusRes);
+                if (statusRes.status === 1) {
+                  setPaymentStatus('completed');
+                  // 如果是本地订单，不在深度链接中处理跳转，让轮询处理
+                  if (is_local === 1 && paymentType === 'order') {
+                    console.log('[useDeepLinkHandler] 本地订单支付成功，不处理跳转，由轮询处理');
+                    return;
+                  }
+                  const successData = paymentType === 'recharge' 
+                    ? { ...statusRes, isRecharge: true }
+                    : { ...statusRes, is_local: is_local !== undefined ? is_local : statusRes.is_local };
+                  onSuccess(successData);
+                } else {
+                  setPaymentStatus('failed');
+                  onError({
+                    msg: `${paymentType}.status.payment_not_completed`,
+                    [`${paymentType}_id`]: paymentId,
+                    is_local: is_local || 0,
+                    ...(paymentType === 'recharge' && { isRecharge: true })
+                  });
+                }
+              } catch (statusError) {
+                console.error('支付状态查询失败:', statusError);
+                setPaymentStatus('failed');
+                onError({
+                  msg: `${paymentType}.status.verification_failed`,
+                  [`${paymentType}_id`]: paymentId,
+                  is_local: is_local || 0,
+                  ...(paymentType === 'recharge' && { isRecharge: true })
+                });
+              }
+            } else if (res.status === 1) {
               setPaymentStatus('completed');
+              // 如果是本地订单，不在深度链接中处理跳转，让轮询处理
+              if (is_local === 1 && paymentType === 'order') {
+                console.log('[useDeepLinkHandler] 本地订单支付成功，不处理跳转，由轮询处理');
+                return;
+              }
               const successData = paymentType === 'recharge' 
                 ? { ...res, isRecharge: true }
-                : res;
+                : { ...res, is_local: is_local !== undefined ? is_local : res.is_local }; // 优先使用路由传入的is_local
               onSuccess(successData);
             } else {
               setPaymentStatus('failed');
@@ -195,6 +349,11 @@ export const useDeepLinkHandler = ({
 
     return () => {
       subscription.remove();
+      // 清理全局事件监听器
+      if ((global as any).EventEmitter) {
+        (global as any).EventEmitter.off(PAYMENT_SUCCESS_EVENT, handlePaymentSuccessEvent);
+        (global as any).EventEmitter.off(PAYMENT_FAILURE_EVENT, handlePaymentFailureEvent);
+      }
     };
-  }, [paymentType, paymentId, method, onSuccess, onError, onCancel, stopPolling, setPaymentStatus]);
+  }, [paymentType, paymentId, method, is_local, onSuccess, onError, onCancel, stopPolling, setPaymentStatus]);
 };

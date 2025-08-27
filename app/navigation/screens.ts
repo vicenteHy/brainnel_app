@@ -64,7 +64,7 @@ import Verify from '../screens/Local/Verify';
 import LocalPayment from '../screens/Local/LocalPayment';
 import LocalMobileMoneyConfirm from '../screens/Local/LocalMobileMoneyConfirm';
 import LocalOrderSuccess from '../screens/Local/OrderSuccess';
-import LocalPaymentSuccess from '../screens/Local/PaymentSuccess';
+import LocalPaymentSuccess from '../screens/Local/LocalPaymentSuccess';
 import LocalOrderDetails from '../screens/Local/LocalOrderDetails';
 
 export {
@@ -134,6 +134,6 @@ export {
   LocalPayment,
   LocalMobileMoneyConfirm,
   LocalOrderSuccess as OrderSuccess,
-  LocalPaymentSuccess as PaymentSuccess,
+  LocalPaymentSuccess,  // 本地支付成功页面
   LocalOrderDetails,
 }; 

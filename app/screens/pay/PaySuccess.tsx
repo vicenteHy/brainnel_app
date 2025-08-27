@@ -85,6 +85,12 @@ export const PaymentSuccessScreen = () => {
         return;
       }
 
+      // 如果是本地订单，不需要获取订单详情（会404）
+      if (route.params?.is_local === 1) {
+        console.log('[PaymentSuccess] 本地订单支付成功，不触发 Purchase 事件');
+        return;
+      }
+
       const { order_id, order_no, orderId, payment_method } = route.params || {};
       const finalOrderId = order_id || order_no || orderId;
       

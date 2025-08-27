@@ -96,13 +96,14 @@ export type RootStackParamList = {
     paymentUrl?: string;
   } | undefined;
   OrderSuccess: undefined;
-  PaymentSuccess: { 
+  LocalPaymentSuccess: { 
     paymentMethod?: string;
     amount?: number;
     currency?: string;
     pickupLocation?: string;
     pickupDate?: string;
     pickupTime?: string;
+    orderId?: number;
   };
   LocalOrderDetails: {
     orderId: string | number;

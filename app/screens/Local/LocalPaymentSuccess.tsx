@@ -12,7 +12,7 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const LocalPaymentSuccess = () => {
 	const headerHeight = screenHeight * 0.3;
 	const navigation = useNavigation();
-	const route = useRoute<RouteProp<RootStackParamList, 'PaymentSuccess'>>();
+	const route = useRoute<RouteProp<RootStackParamList, 'LocalPaymentSuccess'>>();
 	const topInset = (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 44) + 12;
 	const barHeight = screenHeight * 0.03;
 	const [panelTop, setPanelTop] = useState<number>(headerHeight - (barHeight / 2));

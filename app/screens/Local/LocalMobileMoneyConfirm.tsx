@@ -133,13 +133,15 @@ const LocalMobileMoneyConfirm = () => {
       navigation.navigate('Pay' as never, {
         order_id: String(orderId),
         payUrl: paymentResponse?.payment_url || '',  // 即使为空也传递空字符串
-        method: 'mobile_money'
+        method: 'mobile_money',
+        is_local: 1  // 标识本地订单
       } as never);
       
       console.log('[LocalMobileMoneyConfirm] Navigated to Pay page for polling with:', {
         order_id: String(orderId),
         payUrl: paymentResponse?.payment_url || '(empty)',
-        method: 'mobile_money'
+        method: 'mobile_money',
+        is_local: 1
       });
     } catch (error) {
       console.error('[LocalMobileMoneyConfirm] Payment initiation failed:', error);

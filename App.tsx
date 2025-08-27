@@ -925,6 +925,36 @@ function AppContent() {
         return;
       }
       
+      // 处理 PayPal 支付回调 URL
+      if (url.includes("/api/payment/paypal/execute")) {
+        log.info("[App] 检测到PayPal支付回调深度链接:", url);
+        log.info("[App] === PayPal支付深度链接调试信息 ===");
+        log.info("[App] URL:", url);
+        
+        // 解析URL参数
+        const urlObj = new URL(url);
+        const paymentId = urlObj.searchParams.get('paymentId');
+        const token = urlObj.searchParams.get('token');
+        const payerId = urlObj.searchParams.get('PayerID');
+        
+        log.info("[App] PayPal支付参数:", { paymentId, token, payerId });
+        
+        // 转换为内部深度链接格式并处理
+        const internalUrl = `myapp://payment-success?paymentId=${paymentId}&token=${token}&PayerID=${payerId}`;
+        log.info("[App] 转换为内部URL:", internalUrl);
+        
+        // 发送支付成功事件，让当前页面处理
+        global.EventEmitter.emit(PAYMENT_SUCCESS_EVENT, {
+          paymentId,
+          token,
+          PayerID: payerId,
+          url: internalUrl
+        });
+        
+        // 不做任何导航，让支付页面处理
+        return;
+      }
+      
       // 处理 Wave 支付回调 URL
       if (url.includes("/api/payment/wave/callback/success") || 
           url.includes("/api/payment/wave/callback/failed") ||

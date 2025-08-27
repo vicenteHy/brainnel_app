@@ -4,14 +4,14 @@ import { PaymentFlow } from "./common/PaymentFlow";
 
 type PayScreenRouteProp = RouteProp<
   {
-    Pay: { payUrl: string; method: string; order_id: string };
+    Pay: { payUrl: string; method: string; order_id: string; is_local?: number };
   },
   "Pay"
 >;
 
 export const Pay = () => {
   const route = useRoute<PayScreenRouteProp>();
-  const { payUrl, method, order_id } = route.params;
+  const { payUrl, method, order_id, is_local } = route.params;
 
   return (
     <PaymentFlow
@@ -19,6 +19,7 @@ export const Pay = () => {
       paymentId={order_id}
       payUrl={payUrl}
       method={method as "wave" | "mobile_money" | "paypal" | "bank_card"}
+      is_local={is_local}
     />
   );
 };

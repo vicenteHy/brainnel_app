@@ -453,24 +453,46 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 userBalanceCurrency,
               });
 
+              // 根据支付方式决定订单货币
+              let orderCurrency = userBalanceCurrency || 'FCFA';
+              let orderAmount = finalUnitPrice;
+              let orderTotalAmount = baseUnitPrice;
+              let orderDiscountAmount = discountAmount;
+              
+              if (selectedPayment === 'paypal') {
+                orderCurrency = paypalCurrency;  // USD 或 EUR
+                // 如果是 PayPal，需要转换金额
+                const convertedAmount = (Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, paypalCurrency);
+                orderAmount = convertedAmount;
+                orderTotalAmount = convertedAmount * 1.111;  // 按比例计算原价（10%折扣）
+                orderDiscountAmount = orderTotalAmount - orderAmount;
+              } else if (selectedPayment === 'bank_card') {
+                orderCurrency = bankCardCurrency;  // USD 或 EUR
+                // 如果是 Bank Card，需要转换金额
+                const convertedAmount = (Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, bankCardCurrency);
+                orderAmount = convertedAmount;
+                orderTotalAmount = convertedAmount * 1.111;  // 按比例计算原价（10%折扣）
+                orderDiscountAmount = orderTotalAmount - orderAmount;
+              }
+              
               const requestBody: CreateLocalOrderRequest = {
                 items: [
                   {
                     product_id: String(product.product_id ?? ''),
                     sku_id: String(skuId),
                     quantity,
-                    unit_price: finalUnitPrice,
-                    total_price: finalUnitPrice * quantity,
+                    unit_price: orderAmount,
+                    total_price: orderAmount * quantity,
                   },
                 ],
                 address_id: addressId,
                 pickup_location_id: pickupId,
                 payment_method: selectedPayment,
                 buyer_message: '',
-                total_amount: baseUnitPrice * quantity,
-                actual_amount: finalUnitPrice * quantity,
-                discount_amount: discountAmount * quantity,
-                currency: userBalanceCurrency || 'FCFA',
+                total_amount: orderTotalAmount * quantity,
+                actual_amount: orderAmount * quantity,
+                discount_amount: orderDiscountAmount * quantity,
+                currency: orderCurrency,
               };
 
               console.log('[LocalPayment] Create order - request body', requestBody);
@@ -513,12 +535,9 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
 
                 // 其他支付方式正常处理
                 try {
-                  const amountForPayment = (selectedPayment === 'paypal' || selectedPayment === 'bank_card')
-                    ? (((Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, activeCurrency)))
-                    : res.actual_amount;
-                  const currencyForPayment = (selectedPayment === 'paypal' || selectedPayment === 'bank_card')
-                    ? activeCurrency
-                    : (res.currency || (userBalanceCurrency || 'FCFA'));
+                  // 直接使用订单中的金额和货币，因为创建订单时已经转换好了
+                  const amountForPayment = res.actual_amount;  // 使用 actual_amount（折扣后价格）
+                  const currencyForPayment = res.currency;
 
                   const payRes = await orderApi.initiatePayment({
                     order_id: res.order_id,
@@ -533,15 +552,16 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                   if (selectedPayment === 'wave' || selectedPayment === 'paypal' || selectedPayment === 'bank_card') {
                     const paymentId = String(res.order_id);
                     const payUrl = String(payRes?.payment_url || '');
-                    console.log('[LocalPayment] Go PaymentFlow with', { paymentId, payUrl, method: selectedPayment });
+                    console.log('[LocalPayment] Go PaymentFlow with', { paymentId, payUrl, method: selectedPayment, is_local: 1 });
                     // 复用订单支付入口 Pay.tsx 所使用的路由
                     // 约定：Pay.tsx 从 route.params 读取 { order_id, payUrl, method }
-                    (navigation as any).navigate('Pay', { order_id: paymentId, payUrl, method: selectedPayment });
+                    // 添加 is_local: 1 标识本地订单
+                    (navigation as any).navigate('Pay', { order_id: paymentId, payUrl, method: selectedPayment, is_local: 1 });
                     return;
                   } else if (selectedPayment === 'balance') {
                     // 余额支付，如果走到这里说明余额充足且支付成功
                     console.log('[LocalPayment] Navigating to PaymentSuccess (Balance)');
-                    navigation.navigate('PaymentSuccess', {
+                    navigation.navigate('LocalPaymentSuccess', {
                       paymentMethod: 'Solde de compte',
                       amount: finalUnitPrice,
                       currency: 'FCFA',
@@ -583,7 +603,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
           }}
         >
           <Text style={styles.submitButtonText}>
-            Valider la commande ({finalUnitPrice} FCFA)
+            Valider la commande
           </Text>
         </TouchableOpacity>
       </View>

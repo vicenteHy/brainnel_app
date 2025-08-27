@@ -22,6 +22,9 @@ const LocalOrderDetails = () => {
 		try {
 			setLoading(true);
 			const detail = await orderApi.getOrderDetail(orderId);
+			console.log('[LocalOrderDetails] 订单详情:', detail);
+			console.log('[LocalOrderDetails] 订单货币:', detail.currency);
+			console.log('[LocalOrderDetails] 订单总额:', detail.total_amount);
 			setOrderDetail(detail);
 		} catch (error) {
 			console.error('加载订单详情失败:', error);
@@ -318,7 +321,7 @@ const LocalOrderDetails = () => {
 					<View style={styles.totalRow}>
 						<Text style={styles.totalLabel}>Total ({orderDetail.items.length} items)</Text>
 						<Text style={styles.totalAmount}>
-							{orderDetail.total_amount}<Text style={styles.currencyOrange}>FCFA</Text>
+							{orderDetail.actual_amount.toFixed(2)}<Text style={styles.currencyOrange}>{orderDetail.currency || 'FCFA'}</Text>
 						</Text>
 					</View>
 

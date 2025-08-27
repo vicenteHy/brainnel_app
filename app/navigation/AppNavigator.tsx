@@ -285,8 +285,8 @@ export const AppNavigator = () => {
           component={Screens.OrderSuccess}
         />
         <Stack.Screen
-          name="PaymentSuccess"
-          component={Screens.PaymentSuccess}
+          name="LocalPaymentSuccess"
+          component={Screens.LocalPaymentSuccess}
         />
         <Stack.Screen
           name="LocalOrderDetails"
