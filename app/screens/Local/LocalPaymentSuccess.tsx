@@ -26,7 +26,6 @@ const LocalPaymentSuccess = () => {
 		currency,
 		pickupLocation,
 		pickupDate,
-		pickupTime,
 		orderId
 	} = route.params;
 
@@ -41,9 +40,7 @@ const LocalPaymentSuccess = () => {
 					style={styles.headerGradient}
 				>
 					<View style={[styles.headerContent, { paddingTop: topInset }]}>
-						<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-							<Ionicons name="chevron-back" size={24} color="#fff" />
-						</TouchableOpacity>
+						<View style={styles.backButton} />
 						<Text style={styles.headerTitle}>Paiement réussi</Text>
 						<View style={styles.backButton} />
 					</View>
@@ -105,13 +102,6 @@ const LocalPaymentSuccess = () => {
 								<Text style={styles.navigationText}>Navigation</Text>
 							</TouchableOpacity>
 						</View>
-					</View>
-
-					<View style={styles.divider} />
-
-					<View style={styles.subSection}>
-						<Text style={styles.sectionLabel}>Heure de retrait</Text>
-						<Text style={styles.timeValue}>{pickupTime}</Text>
 					</View>
 				</View>
 

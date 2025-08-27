@@ -367,6 +367,32 @@ const LocalOrderDetails = () => {
 
 				<View style={{ height: 50 }} />
 			</ScrollView>
+
+			{/* 待付款状态显示支付按钮 */}
+			{orderDetail.order_status === 0 && orderDetail.pay_status === 0 && (
+				<View style={styles.payButtonContainer}>
+					<TouchableOpacity 
+						style={styles.payButton}
+						onPress={() => {
+							// 如果是mobile money支付，跳转到确认页面
+							if (orderDetail.payment_method === 'mobile_money') {
+								navigation.navigate('LocalMobileMoneyConfirm' as never, {
+									orderId: orderDetail.order_id,
+									orderNo: orderDetail.order_no,
+									amount: orderDetail.actual_amount,
+									currency: orderDetail.currency || 'FCFA'
+								} as never);
+							} else {
+								// 其他支付方式直接发起支付
+								Alert.alert('Info', 'Initier le paiement...');
+								// TODO: 实现其他支付方式的逻辑
+							}
+						}}
+					>
+						<Text style={styles.payButtonText}>Payer maintenant</Text>
+					</TouchableOpacity>
+				</View>
+			)}
 		</SafeAreaView>
 	);
 };
@@ -663,6 +689,34 @@ const styles = StyleSheet.create({
 		fontSize: fontSize(14),
 		color: '#2196F3',
 		textDecorationLine: 'underline',
+	},
+	payButtonContainer: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: '#fff',
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+		borderTopWidth: 1,
+		borderTopColor: '#E0E0E0',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+	payButton: {
+		backgroundColor: '#FF5100',
+		borderRadius: 24,
+		paddingVertical: 14,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	payButtonText: {
+		color: '#fff',
+		fontSize: fontSize(16),
+		fontWeight: '600',
 	},
 });
 

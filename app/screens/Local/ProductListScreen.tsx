@@ -1110,6 +1110,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     backgroundColor: 'transparent',
+    pointerEvents: 'box-none', // 允许触摸事件穿透，解决TestFlight滑动问题
   },
   // 新增可滚动内容样式
   scrollableContent: {

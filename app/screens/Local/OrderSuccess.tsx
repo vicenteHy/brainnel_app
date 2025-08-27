@@ -30,9 +30,7 @@ const LocalOrderSuccess = () => {
 					style={styles.headerGradient}
 				>
 					<View style={[styles.headerContent, { paddingTop: topInset }]}>
-						<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-							<Ionicons name="chevron-back" size={24} color="#fff" />
-						</TouchableOpacity>
+						<View style={styles.backButton} />
 						<Text style={styles.headerTitle}>Commande réussie</Text>
 						<View style={styles.backButton} />
 					</View>
