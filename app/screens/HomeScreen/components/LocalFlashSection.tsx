@@ -6,18 +6,25 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchLevel1Categories, LocalCategory } from '../../../services/local/categoryApi';
 import fontSize from '../../../utils/fontsizeUtils';
+import useUserStore from '../../../store/user';
 
 export default function LocalFlashSection() {
   const navigation = useNavigation<any>();
   const [categories, setCategories] = useState<LocalCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 39 });
+  const { user } = useUserStore();
+  const [isIvoryCoastUser, setIsIvoryCoastUser] = useState(false);
+  const [checkingCountry, setCheckingCountry] = useState(true);
 
   // 分类图标映射
   const categoryIcons: { [key: number]: any } = {
@@ -62,26 +69,98 @@ export default function LocalFlashSection() {
     return () => clearInterval(timer);
   }, []);
 
+  // 检查用户国家
+  useEffect(() => {
+    console.log('[LocalFlashSection] useEffect触发 - user变化');
+    checkUserCountry();
+  }, [user]);
+
   // 加载分类数据
   useEffect(() => {
-    loadCategories();
-  }, []);
+    console.log('[LocalFlashSection] useEffect触发 - isIvoryCoastUser:', isIvoryCoastUser);
+    if (isIvoryCoastUser) {
+      loadCategories();
+    }
+  }, [isIvoryCoastUser]);
+
+  const checkUserCountry = async () => {
+    console.log('[LocalFlashSection] 开始检查用户国家...');
+    let isCI = false; // 使用局部变量跟踪状态
+    
+    try {
+      // 先检查用户信息中的国家
+      console.log('[LocalFlashSection] 用户信息:', {
+        country: user?.country,
+        country_en: user?.country_en,
+        country_code: user?.country_code,
+        user_id: user?.user_id,
+        username: user?.username
+      });
+
+      const isFromIvoryCoastByUser = user?.country === 'Côte d\'Ivoire' || 
+                                     user?.country === 'Ivory Coast' || 
+                                     user?.country === 'CI' ||
+                                     user?.country_en === 'Ivory Coast' ||
+                                     user?.country_en === 'Côte d\'Ivoire' ||
+                                     user?.country_code === 225;
+
+      console.log('[LocalFlashSection] 用户信息中是否为科特迪瓦:', isFromIvoryCoastByUser);
+
+      if (isFromIvoryCoastByUser) {
+        console.log('[LocalFlashSection] ✅ 用户来自科特迪瓦（基于用户信息）');
+        isCI = true;
+      } else {
+        // 如果用户信息中没有，检查本地存储的国家选择
+        console.log('[LocalFlashSection] 用户信息中未找到科特迪瓦，检查本地存储...');
+        const savedCountry = await AsyncStorage.getItem('@selected_country');
+        console.log('[LocalFlashSection] 本地存储的国家数据:', savedCountry);
+        
+        if (savedCountry) {
+          const parsedCountry = JSON.parse(savedCountry);
+          console.log('[LocalFlashSection] 解析后的国家数据:', parsedCountry);
+          
+          // 检查是否是科特迪瓦（国家代码225）
+          if (parsedCountry.country === 225) {
+            console.log('[LocalFlashSection] ✅ 用户选择了科特迪瓦（基于本地存储）');
+            isCI = true;
+          } else {
+            console.log('[LocalFlashSection] ❌ 用户选择的国家不是科特迪瓦，国家代码:', parsedCountry.country);
+            isCI = false;
+          }
+        } else {
+          console.log('[LocalFlashSection] ❌ 本地存储中没有国家选择');
+          isCI = false;
+        }
+      }
+    } catch (error) {
+      console.error('[LocalFlashSection] 检查用户国家失败:', error);
+      isCI = false;
+    } finally {
+      console.log('[LocalFlashSection] 国家检查完成，最终状态 - 是否为科特迪瓦用户:', isCI);
+      setIsIvoryCoastUser(isCI);
+      setCheckingCountry(false);
+    }
+  };
 
   const loadCategories = async () => {
+    console.log('[LocalFlashSection] 开始加载分类数据...');
     try {
       setLoading(true);
       const response = await fetchLevel1Categories();
+      console.log('[LocalFlashSection] 获取到分类数据:', response?.length, '个分类');
       
       // 筛选并排序要显示的分类
       const filteredCategories = displayCategoryIds
         .map(id => response.find(cat => cat.category_id === id))
         .filter(cat => cat !== undefined) as LocalCategory[];
       
+      console.log('[LocalFlashSection] 筛选后的分类:', filteredCategories.length, '个分类');
       setCategories(filteredCategories);
     } catch (error) {
-      console.error('获取分类失败:', error);
+      console.error('[LocalFlashSection] 获取分类失败:', error);
     } finally {
       setLoading(false);
+      console.log('[LocalFlashSection] 分类加载完成');
     }
   };
 
@@ -99,6 +178,12 @@ export default function LocalFlashSection() {
   const formatTime = (value: number) => {
     return value.toString().padStart(2, '0');
   };
+
+  // 如果正在检查国家或用户不是科特迪瓦用户，不显示组件
+  if (checkingCountry || !isIvoryCoastUser) {
+    console.log('[LocalFlashSection] 组件不显示 - checkingCountry:', checkingCountry, ', isIvoryCoastUser:', isIvoryCoastUser);
+    return null;
+  }
 
   if (loading) {
     return (
@@ -187,14 +272,17 @@ export default function LocalFlashSection() {
                 key={category.category_id}
                 style={styles.categoryItem}
                 onPress={() => handleCategoryPress(category)}
+                activeOpacity={0.7}
               >
-                {categoryIcons[category.category_id] && (
-                  <Image 
-                    source={categoryIcons[category.category_id]} 
-                    style={styles.categoryIcon}
-                  />
-                )}
-                <Text style={styles.categoryName} numberOfLines={2}>
+                <View style={styles.categoryIconWrapper}>
+                  {categoryIcons[category.category_id] && (
+                    <Image 
+                      source={categoryIcons[category.category_id]} 
+                      style={styles.categoryIcon}
+                    />
+                  )}
+                </View>
+                <Text style={styles.categoryName} numberOfLines={2} adjustsFontSizeToFit>
                   {category.name_fr}
                 </Text>
               </TouchableOpacity>
@@ -208,14 +296,17 @@ export default function LocalFlashSection() {
                 key={category.category_id}
                 style={styles.categoryItem}
                 onPress={() => handleCategoryPress(category)}
+                activeOpacity={0.7}
               >
-                {categoryIcons[category.category_id] && (
-                  <Image 
-                    source={categoryIcons[category.category_id]} 
-                    style={styles.categoryIcon}
-                  />
-                )}
-                <Text style={styles.categoryName} numberOfLines={2}>
+                <View style={styles.categoryIconWrapper}>
+                  {categoryIcons[category.category_id] && (
+                    <Image 
+                      source={categoryIcons[category.category_id]} 
+                      style={styles.categoryIcon}
+                    />
+                  )}
+                </View>
+                <Text style={styles.categoryName} numberOfLines={2} adjustsFontSizeToFit>
                   {category.name_fr}
                 </Text>
               </TouchableOpacity>
@@ -226,6 +317,8 @@ export default function LocalFlashSection() {
     </View>
   );
 }
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -336,29 +429,41 @@ const styles = StyleSheet.create({
     color: '#FF5100',
   },
   categoriesGrid: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingTop: 10,
   },
   categoryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: Platform.OS === 'android' ? 8 : 10,
+    paddingHorizontal: 2,
   },
   categoryItem: {
-    width: '18%',
+    flex: 1,
+    maxWidth: screenWidth / 5.8,
     alignItems: 'center',
+    marginHorizontal: 2,
   },
   categoryIcon: {
-    width: 68,
-    height: 68,
-    borderRadius: 14,
-    marginBottom: 8,
-    resizeMode: 'cover',
+    width: screenWidth / 6.8,
+    height: screenWidth / 6.8,
+    borderRadius: 12,
+    marginBottom: 6,
+    resizeMode: 'contain',
   },
   categoryName: {
-    fontSize: fontSize(11),
+    fontSize: fontSize(10),
     color: '#333',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: fontSize(13),
+    minHeight: fontSize(26),
+    paddingHorizontal: 2,
+  },
+  categoryIconWrapper: {
+    width: screenWidth / 6.8,
+    height: screenWidth / 6.8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
   },
 });

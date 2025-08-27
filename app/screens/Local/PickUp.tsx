@@ -14,6 +14,7 @@ import {
   Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 // import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import SimpleMapView from '../../components/SimpleMapView';
 import * as Location from 'expo-location';
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 44 : 0,
+    paddingTop: Platform.OS === 'ios' ? 44 : Constants.statusBarHeight,
   },
   loadingContainer: {
     flex: 1,

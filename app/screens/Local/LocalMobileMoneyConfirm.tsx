@@ -11,7 +11,9 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import Constants from 'expo-constants';
 import BackIcon from '../../components/BackIcon';
 import fontSize from '../../utils/fontsizeUtils';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
   },
   safeAreaContent: {
     flex: 1,
-    paddingTop: 0,
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
   },
   container: {
     flex: 1,

@@ -234,7 +234,7 @@ export const EmailOtpScreen = () => {
       await userApi.sendEmailOtp(email, i18n.language || 'en');
       Alert.alert(
         t('success'),
-        t('emailLogin.verification_code_sent') || '验证码已发送到您的邮箱',
+        t('emailLogin.verification_code_sent') || 'Le code de vérification a été envoyé à votre e-mail',
         [{ text: t('ok') || 'OK' }]
       );
       // 重置倒计时
@@ -266,7 +266,7 @@ export const EmailOtpScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backButtonText}>✕</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>{t('emailLogin.verificationCode.title') || '验证邮箱'}</Text>
+          <Text style={styles.title}>{t('emailLogin.verificationCode.title') || 'Vérifier l\'e-mail'}</Text>
         </View>
 
         <View style={styles.content}>
@@ -275,15 +275,15 @@ export const EmailOtpScreen = () => {
           </View>
 
           <Text style={styles.subtitle}>
-            {t('emailLogin.verificationCode.title') || '输入验证码'}
+            {t('emailLogin.verificationCode.title') || 'Entrez le code de vérification'}
           </Text>
           <Text style={styles.description}>
-            {t('emailLogin.code_sent_info', { email }) || `我们已向 ${email} 发送了4位数验证码`}
+            {t('emailLogin.code_sent_info', { email }) || `Nous avons envoyé un code à 4 chiffres à ${email}`}
           </Text>
 
           <TextInput
             style={[styles.input, error && styles.inputError]}
-            placeholder={t('emailLogin.verificationCode.placeholder') || '请输入4位验证码'}
+            placeholder={t('emailLogin.verificationCode.placeholder') || 'Entrez le code à 4 chiffres'}
             placeholderTextColor="#9CA3AF"
             value={otp}
             onChangeText={(text) => {
@@ -309,29 +309,29 @@ export const EmailOtpScreen = () => {
             {isVerifying ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.verifyButtonText}>{t('emailLogin.verify_and_login') || '验证'}</Text>
+              <Text style={styles.verifyButtonText}>{t('emailLogin.verify_and_login') || 'Vérifier'}</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.resendContainer}>
             <Text style={styles.resendText}>
-              {t('whatsapp.resend_text') || '没有收到验证码？'}
+              {t('whatsapp.resend_text') || 'Code non reçu ?'}
             </Text>
             {canResend ? (
               <TouchableOpacity onPress={handleResendOtp} disabled={isResending}>
                 <Text style={styles.resendLink}>
-                  {isResending ? t('loading') : t('emailLogin.resend_code') || '重新发送'}
+                  {isResending ? t('loading') : t('emailLogin.resend_code') || 'Renvoyer'}
                 </Text>
               </TouchableOpacity>
             ) : (
               <Text style={styles.countdownText}>
-                {t('emailLogin.resend_code') || '重新发送'} ({countdown}s)
+                {t('emailLogin.resend_code') || 'Renvoyer'} ({countdown}s)
               </Text>
             )}
           </View>
 
           <Text style={styles.tipText}>
-            {t('login.verification.expiration') || '验证码将在5分钟后过期'}
+            {t('login.verification.expiration') || 'Le code expire dans 5 minutes'}
           </Text>
         </View>
       </SafeAreaView>

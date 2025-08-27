@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { performCurrencyConversion, getConvertedAmountByKey } from '../previewOrder/payment/utils';
@@ -615,7 +616,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 44 : 0,
+    paddingTop: Platform.OS === 'ios' ? 44 : Constants.statusBarHeight,
   },
   header: {
     flexDirection: 'row',

@@ -113,7 +113,7 @@ export const EmailLoginScreen = () => {
       // 成功提示
       Alert.alert(
         t('success'),
-        t('emailLogin.verification_code_sent') || '验证码已发送到您的邮箱',
+        t('emailLogin.verification_code_sent') || 'Le code de vérification a été envoyé à votre e-mail',
         [{ text: t('ok') || 'OK' }]
       );
       

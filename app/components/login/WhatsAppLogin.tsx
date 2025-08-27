@@ -154,7 +154,7 @@ export const WhatsAppLogin: React.FC<WhatsAppLoginProps> = ({
         console.error("[WhatsApp] 服务器错误详情:", error.data.detail);
       }
       
-      let errorMessage = "发送验证码失败，请重试";
+      let errorMessage = "Échec de l'envoi du code, veuillez réessayer";
       if (error?.data?.detail && Array.isArray(error.data.detail)) {
         const firstError = error.data.detail[0];
         if (firstError && typeof firstError === 'object' && firstError.msg) {
@@ -174,7 +174,7 @@ export const WhatsAppLogin: React.FC<WhatsAppLoginProps> = ({
     
     if (!verificationCode || verificationCode.length !== 4) {
       console.log("[WhatsApp] 验证码格式错误，长度:", verificationCode?.length);
-      Alert.alert(t("error"), "请输入4位验证码");
+      Alert.alert(t("error"), "Veuillez entrer le code à 4 chiffres");
       return;
     }
 

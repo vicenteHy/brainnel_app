@@ -11,8 +11,10 @@ import {
   SafeAreaView,
   Alert,
   Modal,
+  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import type { StyleProp, ImageStyle } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -725,7 +727,7 @@ const styles = StyleSheet.create({
   },
   overlayHeader: {
     position: 'absolute',
-    top: 10,
+    top: Platform.OS === 'android' ? Constants.statusBarHeight + 10 : 10,
     left: 0,
     right: 0,
     flexDirection: 'row',

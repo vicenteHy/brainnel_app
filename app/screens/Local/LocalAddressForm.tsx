@@ -16,6 +16,7 @@ import {
   ScrollView
 } from "react-native";
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import { useState } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -622,7 +623,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 44 : 0,
+    paddingTop: Platform.OS === 'ios' ? 44 : Constants.statusBarHeight,
   },
   header: {
     flexDirection: 'row',
