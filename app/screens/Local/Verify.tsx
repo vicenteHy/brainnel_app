@@ -111,13 +111,7 @@ const Verify = ({ navigation }: any) => {
           year: 'numeric' 
         });
         
-        navigation.navigate('PaymentSuccess', {
-          paymentMethod: 'Paiement à la livraison',
-          amount: 0, // COD 不需要显示金额
-          currency: 'FCFA',
-          pickupLocation: 'Shopping Center East Side Market Square, Downtown',
-          pickupDate: pickupDate,
-          pickupTime: '09:00-17:00',
+        navigation.navigate('OrderSuccess', {
           orderId: orderId
         });
       } else {

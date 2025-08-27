@@ -115,16 +115,22 @@ export default function PickUp() {
     try {
       setLoading(true);
       
-      // 模拟用户位置（科特迪瓦坐标）
-      const simulatedCoords = {
-        latitude: 5.341806,  // 5°20'30.5"N
-        longitude: -3.971889, // 3°58'18.8"W
-      };
-      
       // 请求位置权限
-      const { status: _status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       
-      const userCoords = simulatedCoords; // 使用模拟位置
+      let userCoords = null;
+      
+      if (status === 'granted') {
+        // 获取用户真实位置
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
+        userCoords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+      }
       
       setUserLocation(userCoords);
       

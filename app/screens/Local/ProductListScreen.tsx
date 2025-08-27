@@ -227,19 +227,14 @@ export default function LocalProductListScreen() {
     setShowCategoryModal(false);
     if (categoryId !== selectedCategoryId) {
       setSelectedCategoryId(categoryId);
-      // 滚动到对应的分类标签
-      requestAnimationFrame(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollTo({ x: currentScrollXRef.current, animated: false });
+      // 滚动到对应的分类标签 - 简化异步处理
+      setTimeout(() => {
+        if (categoryId === null) {
+          scrollToTab('all');
+        } else {
+          scrollToTab(`cat-${categoryId}`);
         }
-        requestAnimationFrame(() => {
-          if (categoryId === null) {
-            scrollToTab('all');
-          } else {
-            scrollToTab(`cat-${categoryId}`);
-          }
-        });
-      });
+      }, 100);
     }
   }, [selectedCategoryId, scrollToTab]);
 
@@ -295,8 +290,15 @@ export default function LocalProductListScreen() {
       setHasMore(hasMoreData);
     } catch (error) {
       console.error('Failed to load products:', error);
+      // 确保错误时也重置状态
+      setProducts([]);
+      setFilteredProducts([]);
+      setHasMore(false);
     } finally {
-      setCategoryLoading(false);
+      // 确保状态重置 - 添加延迟以避免 iOS 渲染问题
+      setTimeout(() => {
+        setCategoryLoading(false);
+      }, 0);
     }
   }, [selectedCategoryId]);
 
@@ -552,7 +554,7 @@ export default function LocalProductListScreen() {
           <TouchableOpacity 
             style={[styles.tab, selectedCategoryId === null && styles.activeTab]}
             onPress={() => {
-              if (!categoryLoading) {
+              if (!categoryLoading && selectedCategoryId !== null) {
                 setSelectedCategoryId(null);
               }
             }}
@@ -570,7 +572,7 @@ export default function LocalProductListScreen() {
               key={category.category_id}
               style={[styles.tab, selectedCategoryId === category.category_id && styles.activeTab]}
               onPress={() => {
-                if (!categoryLoading) {
+                if (!categoryLoading && selectedCategoryId !== category.category_id) {
                   setSelectedCategoryId(category.category_id);
                 }
               }}
@@ -614,6 +616,7 @@ export default function LocalProductListScreen() {
             contentContainerStyle={styles.productList}
             columnWrapperStyle={styles.columnWrapper}
             scrollEnabled={false}
+            bounces={false}
           />
         ) : (
           <FlatList
@@ -626,6 +629,13 @@ export default function LocalProductListScreen() {
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             ListFooterComponent={renderFooter}
+            scrollEnabled={true}
+            bounces={true}
+            showsVerticalScrollIndicator={false}
+            removeClippedSubviews={false}
+            windowSize={10}
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
           />
         )}
       </View>

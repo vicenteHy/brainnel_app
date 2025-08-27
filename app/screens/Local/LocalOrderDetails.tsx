@@ -303,10 +303,10 @@ const LocalOrderDetails = () => {
 								<Text style={styles.productQuantity}>Quantité:{item.quantity}</Text>
 								<View style={styles.priceRow}>
 									<Text style={styles.productPrice}>
-										{item.unit_price.toFixed(2)}<Text style={styles.currency}>{orderDetail.currency || 'FCFA'}</Text>
+										{Math.round(item.unit_price)}<Text style={styles.currency}>{orderDetail.currency || 'FCFA'}</Text>
 									</Text>
 									<Text style={styles.originalPrice}>
-										{(item.unit_price * 1.2).toFixed(2)}<Text style={styles.currencySmall}>{orderDetail.currency || 'FCFA'}</Text>
+										{Math.round(item.unit_price * 1.2)}<Text style={styles.currencySmall}>{orderDetail.currency || 'FCFA'}</Text>
 									</Text>
 								</View>
 							</View>
@@ -321,7 +321,7 @@ const LocalOrderDetails = () => {
 					<View style={styles.totalRow}>
 						<Text style={styles.totalLabel}>Total ({orderDetail.items.length} items)</Text>
 						<Text style={styles.totalAmount}>
-							{orderDetail.actual_amount.toFixed(2)}<Text style={styles.currencyOrange}>{orderDetail.currency || 'FCFA'}</Text>
+							{Math.round(orderDetail.actual_amount)}<Text style={styles.currencyOrange}>{orderDetail.currency || 'FCFA'}</Text>
 						</Text>
 					</View>
 
