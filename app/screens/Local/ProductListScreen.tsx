@@ -362,6 +362,7 @@ export default function LocalProductListScreen() {
     const discount = Math.round(item.off * 100);
     const localStock = item.is_local_stock === 1;
     const deliveryDays = localStock ? '3 jours' : '7 jours';
+    const progressPercentage = Math.random() * 20 + 80; // 生成80-100之间的随机百分比
     
     return (
       <TouchableOpacity
@@ -407,12 +408,12 @@ export default function LocalProductListScreen() {
                   colors={['#FF8C00', '#FF5100']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={[styles.progressBarFill, { width: `${Math.max(Math.min(((10 - item.stock) / 10) * 100, 100), 0)}%` }]}
+                  style={[styles.progressBarFill, { width: `${progressPercentage}%` }]}
                 />
               </View>
               <Image 
                 source={require('../../../assets/local/inventory.png')} 
-                style={[styles.stockIcon, { left: `${Math.max(Math.min(((10 - item.stock) / 10) * 100, 100), 0)}%` }]}
+                style={[styles.stockIcon, { left: `${progressPercentage}%` }]}
               />
             </View>
           </View>

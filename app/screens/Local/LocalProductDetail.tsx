@@ -75,6 +75,7 @@ export default function LocalProductDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [progressPercentage] = useState(Math.random() * 20 + 80); // 生成80-100之间的随机百分比
   
   const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
   const pagerRef = useRef<PagerView>(null);
@@ -495,12 +496,12 @@ export default function LocalProductDetail() {
                     colors={['#FF8C00', '#FF5100']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={[styles.stockFill, { width: `${Math.max(Math.min(((10 - getCurrentStock()) / 10) * 100, 100), 0)}%` }]}
+                    style={[styles.stockFill, { width: `${progressPercentage}%` }]}
                   />
                 </View>
                 <Image 
                   source={require('../../../assets/local/inventory.png')} 
-                  style={[styles.stockIcon, { left: `${Math.max(Math.min(((10 - getCurrentStock()) / 10) * 100, 100), 0)}%` }]}
+                  style={[styles.stockIcon, { left: `${progressPercentage}%` }]}
                 />
               </View>
             </View>
