@@ -45,6 +45,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   // 货币选择（分别为 paypal 与 bank_card 独立保存）
   const [paypalCurrency, setPaypalCurrency] = useState<'USD' | 'EUR'>('USD');
   const [bankCardCurrency, setBankCardCurrency] = useState<'USD' | 'EUR'>('USD');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // 参考 PaymentMethod.tsx 的汇率（FCFA -> 外币）
   const EXCHANGE_RATES = { USD: 580, EUR: 655.96 } as const; // 1 外币 = X FCFA
 
@@ -391,8 +392,11 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
       {/* Submit Button */}
       <View style={styles.submitContainer}>
         <TouchableOpacity 
-          style={styles.submitButton}
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          disabled={isSubmitting}
           onPress={async () => {
+            if (isSubmitting) return;
+            setIsSubmitting(true);
             try {
               console.log('[LocalPayment] Create order - start', {
                 time: new Date().toISOString(),
@@ -600,11 +604,13 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                   console.error('[LocalPayment] error.response.data', anyErr.response.data);
                 }
               } catch {}
+            } finally {
+              setIsSubmitting(false);
             }
           }}
         >
           <Text style={styles.submitButtonText}>
-            Valider la commande
+            {isSubmitting ? 'Traitement en cours...' : 'Valider la commande'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -905,6 +911,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 24,
     alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#FFB59C',
+    opacity: 0.7,
   },
   submitButtonText: {
     color: 'white',
