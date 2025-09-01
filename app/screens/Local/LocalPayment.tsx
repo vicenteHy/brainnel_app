@@ -500,26 +500,33 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 currency: orderCurrency,
               };
 
-              console.log('[LocalPayment] Create order - request body', requestBody);
-              const res = await orderApi.createOrder(requestBody);
-              console.log('[LocalPayment] Create order - success response', res);
-
+              // 如果是货到付款，先检查是否需要身份验证
               if (selectedPayment === 'cod') {
-                // 检查是否需要身份验证
                 try {
                   const profileResp = await userApi.getProfile();
                   const profileData = (profileResp as unknown as User) as User;
                   
                   if (!profileData.id_card && !profileData.passport) {
-                    // 需要身份验证，跳转到验证页面
+                    // 需要身份验证，跳转到验证页面，传递订单数据以便验证后创建订单
                     console.log('[LocalPayment] Navigating to Verify (COD needs verification)');
-                    navigation.navigate('Verify', { orderId: res.order_id } as never);
+                    navigation.navigate('Verify', { 
+                      pendingOrder: requestBody,
+                      returnRoute: 'LocalPayment'
+                    } as never);
                     return;
                   }
                 } catch (error) {
                   console.error('[LocalPayment] Failed to check user profile:', error);
+                  Alert.alert('Erreur', 'Impossible de vérifier le profil utilisateur');
+                  return;
                 }
-                
+              }
+
+              console.log('[LocalPayment] Create order - request body', requestBody);
+              const res = await orderApi.createOrder(requestBody);
+              console.log('[LocalPayment] Create order - success response', res);
+
+              if (selectedPayment === 'cod') {
                 console.log('[LocalPayment] Navigating to OrderSuccess (COD)');
                 navigation.navigate('OrderSuccess', { orderId: res.order_id });
               } else {
