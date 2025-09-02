@@ -115,11 +115,16 @@ const Verify = ({ navigation }: any) => {
           orderId: orderId
         });
       } else {
-        Alert.alert('Échec du téléchargement', response.message || 'Échec du téléchargement, veuillez réessayer');
+        const errorMessage = response.data?.detail || response.message || 'Échec de la vérification, veuillez réessayer';
+        Alert.alert('Échec de la vérification', errorMessage);
       }
     } catch (error) {
       console.error('Échec du téléchargement:', error);
-      Alert.alert('Échec du téléchargement', 'Erreur réseau ou serveur, veuillez réessayer plus tard');
+      
+      // 优先使用后端返回的详细错误信息
+      const errorMessage = error?.data?.detail || 'Erreur réseau ou serveur, veuillez réessayer plus tard';
+      
+      Alert.alert('Échec de la vérification', errorMessage);
     } finally {
       setIsUploading(false);
     }
