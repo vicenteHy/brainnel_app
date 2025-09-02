@@ -300,7 +300,7 @@ export const LocalAddressForm = () => {
           receiver_first_name: formData.receiver_first_name,
           receiver_last_name: formData.receiver_last_name,
           country: selectedCountryInfo?.name_en || "",
-          receiver_phone: formData.receiver_phone,
+          receiver_phone: `${formData.country_code}${formData.receiver_phone}`,
           whatsapp_phone: whatsappNumber,
           province: "",
           city: "",
