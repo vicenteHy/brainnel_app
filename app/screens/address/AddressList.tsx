@@ -123,16 +123,6 @@ export function AddressList() {
               {addresses?.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => {
-                    const prevRoute =
-                      navigation.getState().routes[
-                        navigation.getState().routes.length - 2
-                      ];
-                    if (prevRoute?.name === "MainTabs") {
-                      return; // Do not execute if coming from ProfileScreen
-                    }
-                    setAddressId(item.address_id);
-                  }}
                   activeOpacity={1}
                 >
                   <View
