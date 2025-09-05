@@ -22,7 +22,7 @@
         "applinks:api.brainnel.com",
         "applinks:brainnel.com"
       ],
-      "buildNumber": "600",
+      "buildNumber": "601",
       "googleServicesFile": "./GoogleService-Info.plist",
       "config": {
         "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_API_KEY"
