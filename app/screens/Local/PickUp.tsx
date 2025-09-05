@@ -143,7 +143,18 @@ export default function PickUp() {
       );
       
       setPickupLocations(locations);
-      
+
+      // 打印详细的取货时间信息
+      console.log('自提点详细时间表:');
+      locations.forEach((location, index) => {
+        console.log(`\n${index + 1}. ${location.name} (${location.address})`);
+        console.log('距离:', pickupApi.formatDistance(location.distance));
+        console.log('完整时间表:', location.timetables);
+        location.timetables.forEach((time, timeIndex) => {
+          console.log(`  时间段 ${timeIndex + 1}: ${time.day_of_week} ${time.start_time}-${time.end_time}`);
+        });
+      });
+
       // 后端返回的第一个就是最近的自提点
       if (locations.length > 0) {
         const nearest = locations[0]; // 第一个就是最近的

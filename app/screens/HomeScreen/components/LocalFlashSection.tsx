@@ -38,10 +38,12 @@ export default function LocalFlashSection() {
     11: require('../../../../assets/local/11.png'),
     12: require('../../../../assets/local/12.png'),
     13: require('../../../../assets/local/13.png'),
+    17: require('../../../../assets/local/17.png'),
+    18: require('../../../../assets/local/18.png'),
   };
 
-  // 要显示的分类ID顺序
-  const displayCategoryIds = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+  // 要显示的分类ID顺序 (4*3布局，共12个分类)
+  const displayCategoryIds = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18];
 
   // 倒计时逻辑
   useEffect(() => {
@@ -147,17 +149,68 @@ export default function LocalFlashSection() {
     try {
       setLoading(true);
       const response = await fetchLevel1Categories();
-      console.log('[LocalFlashSection] 获取到分类数据:', response?.length, '个分类');
+      
+      // 详细的后端返回数据调试日志
+      console.log('=== 后端返回的完整分类数据 ===');
+      console.log('[LocalFlashSection] 总分类数量:', response?.length);
+      console.log('[LocalFlashSection] 完整分类列表:', JSON.stringify(response, null, 2));
+      
+      // 显示每个分类的详细信息
+      if (response && Array.isArray(response)) {
+        response.forEach((category, index) => {
+          console.log(`[LocalFlashSection] 分类 ${index + 1}:`, {
+            id: category.category_id,
+            name_fr: category.name_fr,
+            name_en: category.name_en,
+            description: category.description,
+            parent_id: category.parent_id,
+            level: category.level,
+            is_active: category.is_active,
+            sort_order: category.sort_order
+          });
+        });
+      }
+      
+      console.log('=== 开始筛选要显示的分类 ===');
+      console.log('[LocalFlashSection] 目标分类ID列表:', displayCategoryIds);
       
       // 筛选并排序要显示的分类
       const filteredCategories = displayCategoryIds
-        .map(id => response.find(cat => cat.category_id === id))
+        .map(id => {
+          const foundCategory = response.find(cat => cat.category_id === id);
+          console.log(`[LocalFlashSection] 查找分类ID ${id}:`, foundCategory ? '✅ 找到' : '❌ 未找到');
+          if (foundCategory) {
+            console.log(`[LocalFlashSection] 分类ID ${id} 详情:`, {
+              name_fr: foundCategory.name_fr,
+              name_en: foundCategory.name_en,
+              is_active: foundCategory.is_active
+            });
+          }
+          return foundCategory;
+        })
         .filter(cat => cat !== undefined) as LocalCategory[];
       
-      console.log('[LocalFlashSection] 筛选后的分类:', filteredCategories.length, '个分类');
+      console.log('=== 筛选结果 ===');
+      console.log('[LocalFlashSection] 筛选后的分类数量:', filteredCategories.length);
+      console.log('[LocalFlashSection] 筛选后的分类列表:', 
+        filteredCategories.map(cat => ({
+          id: cat.category_id,
+          name_fr: cat.name_fr,
+          name_en: cat.name_en
+        }))
+      );
+      
+      // 检查哪些目标分类没有找到
+      const foundIds = filteredCategories.map(cat => cat.category_id);
+      const missingIds = displayCategoryIds.filter(id => !foundIds.includes(id));
+      if (missingIds.length > 0) {
+        console.warn('[LocalFlashSection] 未找到的分类ID:', missingIds);
+      }
+      
       setCategories(filteredCategories);
     } catch (error) {
       console.error('[LocalFlashSection] 获取分类失败:', error);
+      console.error('[LocalFlashSection] 错误堆栈:', error.stack);
     } finally {
       setLoading(false);
       console.log('[LocalFlashSection] 分类加载完成');
@@ -263,11 +316,11 @@ export default function LocalFlashSection() {
           </View>
         </View>
 
-        {/* 分类网格 */}
+        {/* 分类网格 - 4*3布局 */}
         <View style={styles.categoriesGrid}>
           {/* 第一行 */}
           <View style={styles.categoryRow}>
-            {categories.slice(0, 5).map((category) => (
+            {categories.slice(0, 4).map((category) => (
               <TouchableOpacity
                 key={category.category_id}
                 style={styles.categoryItem}
@@ -291,7 +344,31 @@ export default function LocalFlashSection() {
 
           {/* 第二行 */}
           <View style={styles.categoryRow}>
-            {categories.slice(5, 10).map((category) => (
+            {categories.slice(4, 8).map((category) => (
+              <TouchableOpacity
+                key={category.category_id}
+                style={styles.categoryItem}
+                onPress={() => handleCategoryPress(category)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.categoryIconWrapper}>
+                  {categoryIcons[category.category_id] && (
+                    <Image 
+                      source={categoryIcons[category.category_id]} 
+                      style={styles.categoryIcon}
+                    />
+                  )}
+                </View>
+                <Text style={styles.categoryName} numberOfLines={2} adjustsFontSizeToFit>
+                  {category.name_fr}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* 第三行 */}
+          <View style={[styles.categoryRow, styles.lastCategoryRow]}>
+            {categories.slice(8, 12).map((category) => (
               <TouchableOpacity
                 key={category.category_id}
                 style={styles.categoryItem}
@@ -401,7 +478,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    paddingBottom: 16,
+    paddingBottom: 2,
   },
   infoBanner: {
     flexDirection: 'row',
@@ -431,39 +508,43 @@ const styles = StyleSheet.create({
   categoriesGrid: {
     paddingHorizontal: 10,
     paddingTop: 10,
+    paddingBottom: 0,
   },
   categoryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Platform.OS === 'android' ? 8 : 10,
+    marginBottom: Platform.OS === 'android' ? 6 : 8,
     paddingHorizontal: 2,
+  },
+  lastCategoryRow: {
+    marginBottom: 2,
   },
   categoryItem: {
     flex: 1,
-    maxWidth: screenWidth / 5.8,
+    maxWidth: screenWidth / 4.2,
     alignItems: 'center',
     marginHorizontal: 2,
   },
   categoryIcon: {
-    width: screenWidth / 6.8,
-    height: screenWidth / 6.8,
+    width: screenWidth / 5.5,
+    height: screenWidth / 5.5,
     borderRadius: 12,
-    marginBottom: 6,
+    marginBottom: 4,
     resizeMode: 'contain',
   },
   categoryName: {
     fontSize: fontSize(10),
     color: '#333',
     textAlign: 'center',
-    lineHeight: fontSize(13),
-    minHeight: fontSize(26),
+    lineHeight: fontSize(12),
+    minHeight: fontSize(20),
     paddingHorizontal: 2,
   },
   categoryIconWrapper: {
-    width: screenWidth / 6.8,
-    height: screenWidth / 6.8,
+    width: screenWidth / 5.5,
+    height: screenWidth / 5.5,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
 });
