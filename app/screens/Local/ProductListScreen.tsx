@@ -7,7 +7,6 @@ import {
   Text,
   Image,
   ActivityIndicator,
-  ImageBackground,
   Dimensions,
   ScrollView,
   Animated,
@@ -559,6 +558,7 @@ export default function LocalProductListScreen() {
                 setSelectedCategoryId(null);
               }
             }}
+            onLayout={(e) => handleCategoryLayout(-1, e)}
           >
             <Text 
               style={[styles.tabText, selectedCategoryId === null && styles.activeTabText]}
@@ -577,6 +577,7 @@ export default function LocalProductListScreen() {
                   setSelectedCategoryId(category.category_id);
                 }
               }}
+              onLayout={(e) => handleCategoryLayout(category.category_id, e)}
             >
               <Text 
                 style={[styles.tabText, selectedCategoryId === category.category_id && styles.activeTabText]}
@@ -610,6 +611,7 @@ export default function LocalProductListScreen() {
           </View>
         ) : categoryLoading ? (
           <FlatList
+            key={`skeleton-${selectedCategoryId ?? 'all'}`}
             data={Array(6).fill(null).map((_, index) => ({ id: `skeleton-${index}` }))}
             renderItem={() => <ProductSkeleton />}
             keyExtractor={(item) => item.id}
@@ -618,9 +620,11 @@ export default function LocalProductListScreen() {
             columnWrapperStyle={styles.columnWrapper}
             scrollEnabled={false}
             bounces={false}
+            removeClippedSubviews={false}
           />
         ) : (
           <FlatList
+            key={`data-${selectedCategoryId ?? 'all'}`}
             data={filteredProducts}
             renderItem={renderProduct}
             keyExtractor={(item) => `${item.product_id}`}
