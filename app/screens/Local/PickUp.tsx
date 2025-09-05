@@ -242,23 +242,7 @@ export default function PickUp() {
     return dayLabel;
   }, []);
 
-  const getTodayLabel = useCallback(() => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return days[new Date().getDay()];
-  }, []);
 
-  const getDisplayTimetableForToday = useCallback((timetables: { start_time: string; end_time: string; day_of_week: string }[]) => {
-    if (!Array.isArray(timetables) || timetables.length === 0) return '';
-    const todayKey = getTodayLabel();
-    const normalizeDay = (d: string) => (d || '').toString().trim().toLowerCase();
-    const isWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(todayKey);
-    const todayItem =
-      timetables.find(t => normalizeDay(t.day_of_week) === todayKey) ||
-      (isWeekday ? timetables.find(t => normalizeDay(t.day_of_week) === 'weekday') : undefined) ||
-      timetables.find(t => normalizeDay(t.day_of_week) === 'everyday') ||
-      timetables[0];
-    return formatTimetableDisplay(todayItem);
-  }, [formatTimetableDisplay, getTodayLabel]);
 
   const handleSelectPickup = (location: PickupLocation) => {
     setSelectedPickup(location);
@@ -386,15 +370,16 @@ export default function PickUp() {
               ]}
               onPress={() => handleSelectPickup(location)}
             >
-              <>
-                <View style={styles.cardHeader}>
-                  <View style={styles.cardTitleRow}>
-                    <Text style={[
-                      styles.locationName,
-                      isSelected && styles.selectedText,
-                    ]}>
-                      {location.name}
-                    </Text>
+              {/* 顶部：名称和选中状态 */}
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitleContainer}>
+                  <Text style={[
+                    styles.locationName,
+                    isSelected && styles.selectedText,
+                  ]}>
+                    {location.name}
+                  </Text>
+                  <View style={styles.badgesContainer}>
                     {isNearest && (
                       <View style={styles.nearestBadge}>
                         <Text style={styles.nearestText}>
@@ -402,47 +387,64 @@ export default function PickUp() {
                         </Text>
                       </View>
                     )}
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={22} color="#FF5100" />
+                    )}
                   </View>
-                  
-                  {isSelected && (
-                    <Ionicons name="checkmark-circle" size={24} color="#FF5100" />
-                  )}
+                </View>
+              </View>
+
+              {/* 地址信息区域 */}
+              <View style={styles.locationInfoSection}>
+                <View style={[styles.infoRow, { marginBottom: location.distance !== null ? 8 : 0 }]}>
+                  <Ionicons name="location-outline" size={16} color="#999" />
+                  <Text style={styles.locationAddress}>{location.address}</Text>
                 </View>
                 
-                <Text style={styles.locationAddress}>
-                  <Ionicons name="location-outline" size={14} color="#666" />
-                  {' '}{location.address}
-                </Text>
-                
                 {location.distance !== null && (
-                  <Text style={styles.distance}>
-                    <Ionicons name="navigate-outline" size={14} color="#666" />
-                    {' '}{pickupApi.formatDistance(location.distance)}
-                  </Text>
+                  <View style={[styles.infoRow, { marginBottom: 0 }]}>
+                    <Ionicons name="navigate-outline" size={16} color="#999" />
+                    <Text style={styles.distance}>{pickupApi.formatDistance(location.distance)}</Text>
+                  </View>
                 )}
-                
-                <View style={styles.timetableRow}>
-                  <View style={[styles.statusBadge, { backgroundColor: '#FFAE11' }]}>
-                    <Text style={styles.statusText}>
+              </View>
+
+              {/* 取货时间区域 */}
+              <View style={styles.scheduleSection}>
+                <View style={styles.scheduleSectionHeader}>
+                  <View style={styles.scheduleBadge}>
+                    <Text style={styles.scheduleBadgeText}>
                       {isChineseLanguage ? '取货时间' : 'Heure de retrait'}
                     </Text>
                   </View>
-                  
-                  <Text style={styles.timetable}>
-                    {getDisplayTimetableForToday(location.timetables)}
-                  </Text>
                 </View>
                 
-                <TouchableOpacity
-                  style={styles.navigateButton}
-                  onPress={() => openGoogleMaps(location)}
-                >
-                  <Ionicons name="navigate" size={16} color="#FF5100" />
-                  <Text style={styles.navigateText}>
-                    {isChineseLanguage ? '导航' : 'Navigation'}
-                  </Text>
-                </TouchableOpacity>
-              </>
+                <View style={styles.scheduleGrid}>
+                  {location.timetables.map((time, timeIndex) => {
+                    return (
+                      <View 
+                        key={`${location.id}-${time.day_of_week}-${timeIndex}`}
+                        style={styles.scheduleItem}
+                      >
+                        <Text style={styles.scheduleText}>
+                          {formatTimetableDisplay(time)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* 底部导航按钮 */}
+              <TouchableOpacity
+                style={styles.navigateButton}
+                onPress={() => openGoogleMaps(location)}
+              >
+                <Ionicons name="navigate" size={18} color="#FF5100" />
+                <Text style={styles.navigateText}>
+                  {isChineseLanguage ? '导航' : 'Navigation'}
+                </Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           );
         })}
@@ -582,99 +584,134 @@ const styles = StyleSheet.create({
   },
   locationCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 16,
     marginHorizontal: 15,
-    marginBottom: 10,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#f0f0f0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
   },
   selectedCard: {
     borderColor: '#FF5100',
     borderWidth: 2,
-    backgroundColor: '#FFF8F5',
+    backgroundColor: '#FFFAF8',
   },
   cardHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  cardTitleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    alignItems: 'flex-start',
   },
   locationName: {
     fontSize: fontSize(16),
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '600',
+    color: '#1a1a1a',
+    flex: 1,
     marginRight: 8,
+    lineHeight: fontSize(22),
   },
   selectedText: {
     color: '#FF5100',
   },
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   nearestBadge: {
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   nearestText: {
-    fontSize: fontSize(10),
+    fontSize: fontSize(11),
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  locationInfoSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fafafa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   locationAddress: {
-    fontSize: fontSize(14),
-    color: '#666',
-    marginBottom: 5,
+    fontSize: fontSize(13),
+    color: '#000',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: fontSize(18),
   },
   distance: {
     fontSize: fontSize(13),
-    color: '#999',
-    marginBottom: 8,
+    color: '#000',
+    marginLeft: 8,
   },
-  timetableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+  scheduleSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  scheduleSectionHeader: {
     marginBottom: 10,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  scheduleBadge: {
+    backgroundColor: '#FFAE11',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    marginRight: 10,
+    alignSelf: 'flex-start',
   },
-  statusText: {
+  scheduleBadgeText: {
     fontSize: fontSize(11),
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  timetable: {
-    fontSize: fontSize(12),
-    color: '#666',
+  scheduleGrid: {
+    flexDirection: 'column',
+    gap: 4,
+  },
+  scheduleItem: {
+    paddingVertical: 3,
+  },
+  scheduleText: {
+    fontSize: fontSize(13),
+    color: '#000',
+    lineHeight: fontSize(18),
   },
   navigateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 15,
+    justifyContent: 'center',
+    marginHorizontal: 16,
+    marginVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
     backgroundColor: '#FFF0E5',
   },
   navigateText: {
-    marginLeft: 5,
-    fontSize: fontSize(13),
+    marginLeft: 6,
+    fontSize: fontSize(14),
     color: '#FF5100',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   bottomBar: {
     position: 'absolute',
