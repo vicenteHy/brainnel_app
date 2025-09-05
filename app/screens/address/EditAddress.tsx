@@ -230,7 +230,7 @@ export const EditAddress = () => {
                             <BackIcon size={fontSize(20)} />
                           </TouchableOpacity>
                         </View>
-                        <Text style={styles.titleHeading}>{t("address.edit_recipient")}</Text>
+                        <Text style={styles.titleHeading}>{t("address.select_recipient")}</Text>
                       </View>
                       <View style={styles.recipientInfoForm}>
                         <View style={styles.contactFormContainer}>
@@ -446,7 +446,7 @@ export const EditAddress = () => {
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{t("address.select_country_code")}</Text>
+                  <Text style={styles.modalTitle}>{t("address.select_country")}</Text>
                   <TouchableOpacity onPress={() => setOpen(false)}>
                     <Text style={styles.closeButton}>{t("address.close")}</Text>
                   </TouchableOpacity>

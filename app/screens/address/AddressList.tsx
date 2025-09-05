@@ -122,8 +122,9 @@ export function AddressList() {
             >
               {addresses?.map((item, index) => (
                 <TouchableOpacity
-                  key={index}
+                  key={item.address_id}
                   activeOpacity={1}
+                  onPress={() => setAddressId(item.address_id)}
                 >
                   <View
                     style={[
