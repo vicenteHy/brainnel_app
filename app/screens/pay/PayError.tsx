@@ -99,6 +99,9 @@ export const PayError = () => {
     is_local = 0
   } = params;
   
+  // 确保 is_local 是数字类型进行比较
+  const isLocalOrder = Number(is_local) === 1;
+  
   console.log("解析后的参数:");
   console.log("- order_no:", order_no);
   console.log("- order_id:", order_id);
@@ -140,10 +143,12 @@ export const PayError = () => {
     } else {
       // 订单支付失败
       
-      // 检查是否是本地订单
-      if (is_local === 1) {
+      // 检查是否是本地订单（使用预处理的 isLocalOrder 变量）
+      console.log("PayError - Checking isLocalOrder:", isLocalOrder, "original is_local:", is_local, "type:", typeof is_local);
+      if (isLocalOrder) {
         // 本地订单，跳转到 LocalOrderDetails
         const finalOrderId = order_id || order_no;
+        console.log("PayError - Local order detected, finalOrderId:", finalOrderId);
         if (finalOrderId) {
           console.log("PayError - Local order, navigating to LocalOrderDetails:", finalOrderId);
           navigation.navigate("LocalOrderDetails", { orderId: String(finalOrderId) });

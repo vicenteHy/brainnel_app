@@ -459,12 +459,16 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
               });
 
               // 根据支付方式决定订单货币
-              let orderCurrency = userBalanceCurrency || 'FCFA';
+              let orderCurrency = 'FCFA';  // 默认使用 FCFA
               let orderAmount = finalUnitPrice;
               let orderTotalAmount = baseUnitPrice;
               let orderDiscountAmount = discountAmount;
               
-              if (selectedPayment === 'paypal') {
+              // Mobile Money、Wave、Balance 和 COD 都必须使用 FCFA
+              if (selectedPayment === 'mobile_money' || selectedPayment === 'wave' || 
+                  selectedPayment === 'balance' || selectedPayment === 'cod') {
+                orderCurrency = 'FCFA';  // 强制使用 FCFA
+              } else if (selectedPayment === 'paypal') {
                 orderCurrency = paypalCurrency;  // USD 或 EUR
                 // 如果是 PayPal，需要转换金额
                 const convertedAmount = (Array.isArray(convertedAmounts) && getConvertedAmountByKey(convertedAmounts, 'total_amount')) || convertFcfa(finalUnitPrice, paypalCurrency);

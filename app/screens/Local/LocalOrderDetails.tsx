@@ -11,6 +11,7 @@ const LocalOrderDetails = () => {
 	const route = useRoute<RouteProp<RootStackParamList, 'LocalOrderDetails'>>();
 	const [orderDetail, setOrderDetail] = useState<LocalOrderDetail | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
 	const { orderId } = route.params;
 
@@ -372,24 +373,110 @@ const LocalOrderDetails = () => {
 			{orderDetail.order_status === 0 && orderDetail.pay_status === 0 && (
 				<View style={styles.payButtonContainer}>
 					<TouchableOpacity 
-						style={styles.payButton}
-						onPress={() => {
-							// 如果是mobile money支付，跳转到确认页面
-							if (orderDetail.payment_method === 'mobile_money') {
-								navigation.navigate('LocalMobileMoneyConfirm' as never, {
-									orderId: orderDetail.order_id,
-									orderNo: orderDetail.order_no,
-									amount: orderDetail.actual_amount,
-									currency: orderDetail.currency || 'FCFA'
-								} as never);
-							} else {
-								// 其他支付方式直接发起支付
-								Alert.alert('Info', 'Initier le paiement...');
-								// TODO: 实现其他支付方式的逻辑
+						style={[styles.payButton, isPaymentProcessing && styles.payButtonDisabled]}
+						disabled={isPaymentProcessing}
+						onPress={async () => {
+							if (isPaymentProcessing) return;
+							
+							try {
+								setIsPaymentProcessing(true);
+								
+								// 如果是mobile money支付，跳转到确认页面
+								if (orderDetail.payment_method === 'mobile_money') {
+									navigation.navigate('LocalMobileMoneyConfirm' as never, {
+										orderId: orderDetail.order_id,
+										orderNo: orderDetail.order_no,
+										amount: orderDetail.actual_amount,
+										currency: orderDetail.currency || 'FCFA'
+									} as never);
+								} else if (orderDetail.payment_method === 'wave' || 
+										   orderDetail.payment_method === 'paypal' || 
+										   orderDetail.payment_method === 'bank_card') {
+									// Wave, PayPal, Bank Card 支付方式
+									console.log('[LocalOrderDetails] Initiating payment for:', orderDetail.payment_method);
+									
+									// 发起支付
+									const payRes = await orderApi.initiatePayment({
+										order_id: orderDetail.order_id,
+										amount: orderDetail.actual_amount,
+										method: orderDetail.payment_method as any,
+										currency: orderDetail.currency || 'FCFA',
+										extra: {},
+									});
+									
+									console.log('[LocalOrderDetails] Payment response:', payRes);
+									
+									if (payRes?.payment_url) {
+										// 跳转到支付页面
+										const paymentId = String(orderDetail.order_id);
+										const payUrl = String(payRes.payment_url);
+										console.log('[LocalOrderDetails] Navigating to Pay with:', { 
+											paymentId, 
+											payUrl, 
+											method: orderDetail.payment_method,
+											is_local: 1 
+										});
+										
+										(navigation as any).navigate('Pay', { 
+											order_id: paymentId, 
+											payUrl, 
+											method: orderDetail.payment_method,
+											is_local: 1 
+										});
+									} else {
+										Alert.alert('Erreur', payRes?.msg || 'Échec de l\'initialisation du paiement');
+									}
+								} else if (orderDetail.payment_method === 'balance') {
+									// 余额支付
+									console.log('[LocalOrderDetails] Balance payment for order:', orderDetail.order_id);
+									
+									// 发起余额支付
+									const payRes = await orderApi.initiatePayment({
+										order_id: orderDetail.order_id,
+										amount: orderDetail.actual_amount,
+										method: 'balance',
+										currency: orderDetail.currency || 'FCFA',
+										extra: {},
+									});
+									
+									console.log('[LocalOrderDetails] Balance payment response:', payRes);
+									
+									if (payRes?.success) {
+										// 余额支付成功，跳转到成功页面
+										navigation.navigate('LocalPaymentSuccess' as never, {
+											paymentMethod: 'Solde de compte',
+											amount: orderDetail.actual_amount,
+											currency: orderDetail.currency || 'FCFA',
+											pickupLocation: orderDetail.receiver_address,
+											pickupDate: formatDate(orderDetail.pickup_date),
+											pickupTime: formatTime(orderDetail.pickup_time),
+											orderId: orderDetail.order_id
+										} as never);
+									} else {
+										Alert.alert('Erreur', payRes?.msg || 'Solde insuffisant ou échec du paiement');
+									}
+								} else if (orderDetail.payment_method === 'cod') {
+									// 货到付款，不需要在线支付
+									Alert.alert(
+										'Paiement à la livraison', 
+										'Cette commande sera payée en espèces lors de la réception.',
+										[{ text: 'OK' }]
+									);
+								} else {
+									// 其他未知支付方式
+									Alert.alert('Erreur', `Mode de paiement non pris en charge: ${orderDetail.payment_method}`);
+								}
+							} catch (error) {
+								console.error('[LocalOrderDetails] Payment error:', error);
+								Alert.alert('Erreur', 'Échec de l\'initialisation du paiement');
+							} finally {
+								setIsPaymentProcessing(false);
 							}
 						}}
 					>
-						<Text style={styles.payButtonText}>Payer maintenant</Text>
+						<Text style={styles.payButtonText}>
+							{isPaymentProcessing ? 'Traitement en cours...' : 'Payer maintenant'}
+						</Text>
 					</TouchableOpacity>
 				</View>
 			)}
@@ -717,6 +804,10 @@ const styles = StyleSheet.create({
 		color: '#fff',
 		fontSize: fontSize(16),
 		fontWeight: '600',
+	},
+	payButtonDisabled: {
+		backgroundColor: '#FFB59C',
+		opacity: 0.7,
 	},
 });
 
