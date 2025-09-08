@@ -42,8 +42,9 @@ export default function LocalFlashSection() {
     18: require('../../../../assets/local/18.png'),
   };
 
-  // 要显示的分类ID顺序 (4*3布局，共12个分类)
-  const displayCategoryIds = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18];
+  // 要显示的分类ID集合 (4*3布局，共12个分类)
+  // 将使用后端返回的顺序，而不是预定义的顺序
+  const displayCategoryIds = new Set([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18]);
 
   // 倒计时逻辑
   useEffect(() => {
@@ -172,27 +173,25 @@ export default function LocalFlashSection() {
       }
       
       console.log('=== 开始筛选要显示的分类 ===');
-      console.log('[LocalFlashSection] 目标分类ID列表:', displayCategoryIds);
+      console.log('[LocalFlashSection] 目标分类ID集合:', Array.from(displayCategoryIds));
       
-      // 筛选并排序要显示的分类
-      const filteredCategories = displayCategoryIds
-        .map(id => {
-          const foundCategory = response.find(cat => cat.category_id === id);
-          console.log(`[LocalFlashSection] 查找分类ID ${id}:`, foundCategory ? '✅ 找到' : '❌ 未找到');
-          if (foundCategory) {
-            console.log(`[LocalFlashSection] 分类ID ${id} 详情:`, {
-              name_fr: foundCategory.name_fr,
-              name_en: foundCategory.name_en,
-              is_active: foundCategory.is_active
-            });
-          }
-          return foundCategory;
-        })
-        .filter(cat => cat !== undefined) as LocalCategory[];
+      // 根据后端返回的顺序筛选要显示的分类
+      const filteredCategories = response
+        .filter(cat => displayCategoryIds.has(cat.category_id))
+        .slice(0, 12); // 确保最多显示12个分类
+      
+      // 输出筛选详情
+      filteredCategories.forEach(category => {
+        console.log(`[LocalFlashSection] 分类ID ${category.category_id} 详情:`, {
+          name_fr: category.name_fr,
+          name_en: category.name_en,
+          is_active: category.is_active
+        });
+      });
       
       console.log('=== 筛选结果 ===');
       console.log('[LocalFlashSection] 筛选后的分类数量:', filteredCategories.length);
-      console.log('[LocalFlashSection] 筛选后的分类列表:', 
+      console.log('[LocalFlashSection] 筛选后的分类列表(按后端顺序):', 
         filteredCategories.map(cat => ({
           id: cat.category_id,
           name_fr: cat.name_fr,
@@ -202,7 +201,7 @@ export default function LocalFlashSection() {
       
       // 检查哪些目标分类没有找到
       const foundIds = filteredCategories.map(cat => cat.category_id);
-      const missingIds = displayCategoryIds.filter(id => !foundIds.includes(id));
+      const missingIds = Array.from(displayCategoryIds).filter(id => !foundIds.includes(id));
       if (missingIds.length > 0) {
         console.warn('[LocalFlashSection] 未找到的分类ID:', missingIds);
       }

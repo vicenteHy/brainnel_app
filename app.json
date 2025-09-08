@@ -2,7 +2,7 @@
   "expo": {
     "name": "brainnel",
     "slug": "brainnel",
-    "version": "5.5.9",
+    "version": "5.6.0",
     "orientation": "portrait",
     "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "applinks:api.brainnel.com",
         "applinks:brainnel.com"
       ],
-      "buildNumber": "606",
+      "buildNumber": "608",
       "googleServicesFile": "./GoogleService-Info.plist",
       "config": {
         "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_API_KEY"

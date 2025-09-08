@@ -7,6 +7,10 @@ export interface LocalCategory {
   name: string;
   name_fr: string;
   level: number;
+  name_en?: string;
+  description?: string;
+  is_active?: boolean;
+  sort_order?: number;
 }
 
 // API 响应类型

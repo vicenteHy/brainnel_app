@@ -92,8 +92,8 @@ android {
         applicationId 'uni.UNIC87CC93'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 606
-        versionName "5.5.9"
+        versionCode 608
+        versionName "5.6.0"
     }
     signingConfigs {
         debug {
