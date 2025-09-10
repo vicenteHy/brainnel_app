@@ -1,9 +1,19 @@
-import type { LocalProduct } from './productList';
+import type { LocalProduct, LocalProductSku } from './productList';
+
+// 订单数据类型
+export interface OrderData {
+  product: LocalProduct;
+  selectedSku?: LocalProductSku;
+  quantity: number;
+  selectedAttributes: { [key: string]: number };
+  totalPrice: number;
+}
 
 // 商品缓存管理
 class ProductCacheManager {
   private cache: Map<number, LocalProduct> = new Map();
   private lastProductId?: number;
+  private orderData?: OrderData;
 
   // 设置商品缓存
   setProduct(productId: number, product: LocalProduct) {
@@ -48,6 +58,21 @@ class ProductCacheManager {
   // 获取所有缓存商品
   getAllProducts(): LocalProduct[] {
     return Array.from(this.cache.values());
+  }
+
+  // 设置订单数据
+  setOrderData(data: OrderData) {
+    this.orderData = data;
+  }
+
+  // 获取订单数据
+  getOrderData(): OrderData | undefined {
+    return this.orderData;
+  }
+
+  // 清除订单数据
+  clearOrderData() {
+    this.orderData = undefined;
   }
 }
 

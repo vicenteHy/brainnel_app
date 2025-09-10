@@ -20,7 +20,7 @@ import fontSize from '../../utils/fontsizeUtils';
 import userApi from '../../services/api/userApi';
 import type { User } from '../../services/api/userApi';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { productCacheManager } from '../../services/local/productCache';
+import { productCacheManager, type OrderData } from '../../services/local/productCache';
 import type { LocalProduct } from '../../services/local/productList';
 import { getFirstProductImage } from '../../services/local/productList';
 import { orderApi, type CreateLocalOrderRequest } from '../../services/local/orderApi';
@@ -40,7 +40,8 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   const [userBalance, setUserBalance] = useState<number | null>(null);
   const [userBalanceCurrency, setUserBalanceCurrency] = useState<string>('FCFA');
   const [orderProduct, setOrderProduct] = useState<LocalProduct | null>(null);
-  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [, setPickupLocations] = useState<PickupLocation[]>([]);
   const [selectedPickupLocation, setSelectedPickupLocation] = useState<PickupLocation | null>(null);
   // 货币选择（分别为 paypal 与 bank_card 独立保存）
   const [paypalCurrency, setPaypalCurrency] = useState<'USD' | 'EUR'>('USD');
@@ -56,7 +57,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   };
   // 转换结果（使用系统已有转换工具）
   const [convertedAmounts, setConvertedAmounts] = useState<any[]>([]);
-  const [isConverting, setIsConverting] = useState(false);
+  const [, setIsConverting] = useState(false);
 
   const orderSummary = {
     productName: 'Une sélection de hauts de sport sport Form Flex butter s...',
@@ -97,10 +98,14 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
         }
       } catch {}
     })();
-    // 读取缓存的商品信息作为订单展示
+    // 读取缓存的商品信息和订单数据
     const cached = productCacheManager.getLastProduct();
+    const cachedOrderData = productCacheManager.getOrderData();
     if (cached) {
       setOrderProduct(cached);
+    }
+    if (cachedOrderData) {
+      setOrderData(cachedOrderData);
     }
     // 获取自提点列表
     (async () => {
@@ -124,14 +129,17 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
     return () => {
       isMounted = false;
     };
-  }, [defaultAddress, addresses, fetchDefaultAddress, fetchAddresses]);
+  }, [defaultAddress, addresses, fetchDefaultAddress, fetchAddresses, pickupLocationIdFromRoute]);
 
   // 价格计算（前5种方式均为10%折扣）
   const DISCOUNT_RATE = 0.1;
   // 仅前几种在线支付享受折扣，货到付款（cod）不打折
   const discountablePayments = new Set(['mobile_money', 'wave', 'paypal', 'bank_card', 'balance']);
   const isDiscountPayment = discountablePayments.has(selectedPayment);
-  const baseUnitPrice = orderProduct ? orderProduct.price : orderSummary.productTotal;
+  
+  // 使用订单数据中的数量，如果没有则默认为1
+  const orderQuantity = orderData?.quantity ?? 1;
+  const baseUnitPrice = orderData?.product?.price ?? orderProduct?.price ?? orderSummary.productTotal;
   const discountAmount = isDiscountPayment ? Math.round(baseUnitPrice * DISCOUNT_RATE) : 0;
   const finalUnitPrice = baseUnitPrice - discountAmount;
   const isCardOrPaypal = selectedPayment === 'paypal' || selectedPayment === 'bank_card';
@@ -342,15 +350,15 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 {!!orderProduct?.content_fr && (
                   <Text style={styles.productVariant} numberOfLines={1}>{orderProduct.content_fr}</Text>
                 )}
-                <Text style={styles.productQuantity} numberOfLines={1}>Quantité: 1</Text>
+                <Text style={styles.productQuantity} numberOfLines={1}>Quantité: {orderQuantity}</Text>
               </View>
               <View style={styles.priceContainer}>
                 <Text style={styles.currentPrice}>
-                  {finalUnitPriceDisplay}
+                  {isCardOrPaypal ? (finalUnitPriceDisplay * orderQuantity).toFixed(2) : (finalUnitPrice * orderQuantity)}
                   <Text style={styles.currencyCode}>{displayCurrency}</Text>
                 </Text>
                 <Text style={styles.originalPrice}>
-                  {baseUnitPriceDisplay}{displayCurrency}
+                  {isCardOrPaypal ? (baseUnitPriceDisplay * orderQuantity).toFixed(2) : (baseUnitPrice * orderQuantity)}{displayCurrency}
                 </Text>
               </View>
             </View>
@@ -361,14 +369,14 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Total</Text>
               <Text style={[styles.priceValue, styles.totalPrice]}>
-                {isCardOrPaypal ? finalUnitPriceDisplay : finalUnitPrice}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+                {isCardOrPaypal ? (finalUnitPriceDisplay * orderQuantity).toFixed(2) : (finalUnitPrice * orderQuantity)}{isCardOrPaypal ? displayCurrency : 'FCFA'}
               </Text>
             </View>
             
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Total produit</Text>
+              <Text style={styles.priceLabel}>Total produit ({orderQuantity} x)</Text>
               <Text style={styles.priceValue}>
-                {isCardOrPaypal ? baseUnitPriceDisplay : baseUnitPrice}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+                {isCardOrPaypal ? (baseUnitPriceDisplay * orderQuantity).toFixed(2) : (baseUnitPrice * orderQuantity)}{isCardOrPaypal ? displayCurrency : 'FCFA'}
               </Text>
             </View>
             
@@ -382,7 +390,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 )}
               </View>
               <Text style={[styles.priceValue, styles.discountValue]}>
-                -{isCardOrPaypal ? discountAmountDisplay : discountAmount}{isCardOrPaypal ? displayCurrency : 'FCFA'}
+                -{isCardOrPaypal ? (discountAmountDisplay * orderQuantity).toFixed(2) : (discountAmount * orderQuantity)}{isCardOrPaypal ? displayCurrency : 'FCFA'}
               </Text>
             </View>
           </View>
@@ -410,7 +418,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 return;
               }
 
-              const quantity = 1;
+              const quantity = orderQuantity;
               const skuId = product.skus?.[0]?.sku_id ?? '';
 
               // 处理地址与自提点
@@ -504,27 +512,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 currency: orderCurrency,
               };
 
-              // 如果是货到付款，先检查是否需要身份验证
-              if (selectedPayment === 'cod') {
-                try {
-                  const profileResp = await userApi.getProfile();
-                  const profileData = (profileResp as unknown as User) as User;
-                  
-                  if (!profileData.id_card && !profileData.passport) {
-                    // 需要身份验证，跳转到验证页面，传递订单数据以便验证后创建订单
-                    console.log('[LocalPayment] Navigating to Verify (COD needs verification)');
-                    navigation.navigate('Verify', { 
-                      pendingOrder: requestBody,
-                      returnRoute: 'LocalPayment'
-                    } as never);
-                    return;
-                  }
-                } catch (error) {
-                  console.error('[LocalPayment] Failed to check user profile:', error);
-                  Alert.alert('Erreur', 'Impossible de vérifier le profil utilisateur');
-                  return;
-                }
-              }
+              // 货到付款直接创建订单，不再检查身份验证
 
               console.log('[LocalPayment] Create order - request body', requestBody);
               const res = await orderApi.createOrder(requestBody);
@@ -579,7 +567,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                     console.log('[LocalPayment] Navigating to PaymentSuccess (Balance)');
                     navigation.navigate('LocalPaymentSuccess', {
                       paymentMethod: 'Solde de compte',
-                      amount: finalUnitPrice,
+                      amount: finalUnitPrice * quantity,
                       currency: 'FCFA',
                       pickupLocation: selectedPickupLocation?.address || 'Shopping Center East Side Market Square, Downtown',
                       pickupDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', { 

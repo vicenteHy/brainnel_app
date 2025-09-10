@@ -84,8 +84,9 @@ export default function LocalProductListScreen() {
   const route = useRoute();
   const { i18n } = useTranslation();
   
-  type LocalRouteParams = { category_id?: number };
-  const initialCategoryId = (route as unknown as { params?: LocalRouteParams }).params?.category_id;
+  type LocalRouteParams = { category_id?: number; categoryName?: string };
+  const routeParams = (route as unknown as { params?: LocalRouteParams }).params;
+  const initialCategoryId = routeParams?.category_id;
   
   const [products, setProducts] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,6 +107,11 @@ export default function LocalProductListScreen() {
   const nextPageRef = useRef(1);
   const isInitialLoad = useRef(true);
   const previousCategoryId = useRef<number | null | undefined>(undefined);
+  
+  // 调试：打印路由参数（仅在初始加载时）
+  if (isInitialLoad.current) {
+    console.log('📱 LocalProductListScreen 路由参数:', routeParams);
+  }
   
   // Refs for category scrolling
   const categoryWidthsRef = useRef<Map<number, number>>(new Map());
@@ -270,7 +276,12 @@ export default function LocalProductListScreen() {
   // 分类切换时的加载（使用骨架图）
   const loadProductsWithSkeleton = useCallback(async () => {
     try {
+      console.log('🔄 开始加载分类产品:', selectedCategoryId);
       setCategoryLoading(true);
+      
+      // 立即清空当前产品数据，避免显示错误的产品
+      setProducts([]);
+      setFilteredProducts([]);
       
       const response = await fetchLocalProducts({ 
         page: 1,
@@ -279,6 +290,7 @@ export default function LocalProductListScreen() {
       });
       
       const items = response?.items || [];
+      console.log('✅ 分类产品加载完成:', selectedCategoryId, '产品数量:', items.length);
       
       setProducts(items);
       setFilteredProducts(items);
@@ -288,7 +300,7 @@ export default function LocalProductListScreen() {
       const hasMoreData = items.length === 20;
       setHasMore(hasMoreData);
     } catch (error) {
-      console.error('Failed to load products:', error);
+      console.error('❌ 加载分类产品失败:', error);
       // 确保错误时也重置状态
       setProducts([]);
       setFilteredProducts([]);
@@ -297,7 +309,7 @@ export default function LocalProductListScreen() {
       // 确保状态重置 - 添加延迟以避免 iOS 渲染问题
       setTimeout(() => {
         setCategoryLoading(false);
-      }, 0);
+      }, 100);
     }
   }, [selectedCategoryId]);
 
@@ -353,6 +365,26 @@ export default function LocalProductListScreen() {
     }
     previousCategoryId.current = selectedCategoryId;
   }, [selectedCategoryId, loadProductsWithSkeleton, loadInitialProducts]);
+
+  // 处理深链接参数变化 - 只在初始加载时处理
+  useEffect(() => {
+    const newCategoryId = routeParams?.category_id;
+    
+    // 只在初始加载时处理深链接参数，避免用户手动切换后被覆盖
+    if (isInitialLoad.current && newCategoryId !== undefined && newCategoryId !== selectedCategoryId) {
+      console.log('🔗 深链接参数变化（初始加载），切换到分类:', newCategoryId);
+      setSelectedCategoryId(newCategoryId);
+      
+      // 延迟滚动到对应分类，确保分类列表已加载
+      setTimeout(() => {
+        if (newCategoryId === null) {
+          scrollToTab('all', true);
+        } else {
+          scrollToTab(`cat-${newCategoryId}`, true);
+        }
+      }, 500);
+    }
+  }, [routeParams?.category_id, selectedCategoryId, scrollToTab]);
 
 
   const renderProduct = ({ item }: { item: LocalProduct }) => {
@@ -554,7 +586,8 @@ export default function LocalProductListScreen() {
           <TouchableOpacity 
             style={[styles.tab, selectedCategoryId === null && styles.activeTab]}
             onPress={() => {
-              if (!categoryLoading && selectedCategoryId !== null) {
+              if (!categoryLoading) {
+                console.log('🏷️ 点击全部分类，当前分类:', selectedCategoryId);
                 setSelectedCategoryId(null);
               }
             }}
@@ -573,7 +606,8 @@ export default function LocalProductListScreen() {
               key={category.category_id}
               style={[styles.tab, selectedCategoryId === category.category_id && styles.activeTab]}
               onPress={() => {
-                if (!categoryLoading && selectedCategoryId !== category.category_id) {
+                if (!categoryLoading) {
+                  console.log('🏷️ 点击分类:', category.category_id, category.name_fr, '当前分类:', selectedCategoryId);
                   setSelectedCategoryId(category.category_id);
                 }
               }}

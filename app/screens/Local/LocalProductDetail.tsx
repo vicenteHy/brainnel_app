@@ -262,8 +262,27 @@ export default function LocalProductDetail() {
       setShowLoginModal(true);
       return;
     }
+    
+    // 保存选择的商品信息和数量到缓存，供后续页面使用
+    const selectedSku = getSelectedSku();
+    const orderData = {
+      product: product as LocalProduct,
+      selectedSku,
+      quantity,
+      selectedAttributes,
+      totalPrice: getCurrentPrice() * quantity,
+    };
+    
+    // 将订单数据存储到产品缓存管理器
+    productCacheManager.setOrderData(orderData);
+    
     // 导航到本地地址填写页面
-    navigation.navigate('LocalAddressForm' as never);
+    navigation.navigate('LocalAddressForm' as never, { 
+      quantity,
+      productId: product?.product_id,
+      selectedAttributes,
+      totalPrice: getCurrentPrice() * quantity 
+    } as never);
   };
 
   const handleDismissLoginModal = useCallback(() => {

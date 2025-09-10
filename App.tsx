@@ -1114,6 +1114,38 @@ function AppContent() {
         return;
       }
 
+      // 处理LocalProductList深链接
+      const { resolveDeepLinkRoute } = require('./app/utils/deepLinkUtils');
+      const deepLinkRoute = resolveDeepLinkRoute(url);
+      
+      if (deepLinkRoute) {
+        console.log('🔗 处理深链接路由:', deepLinkRoute);
+        
+        // 确保导航器准备就绪后进行导航
+        const navigateToRoute = () => {
+          if (navigationRef.isReady()) {
+            // 先导航到MainTabs确保基础导航栈正确
+            navigationRef.navigate("MainTabs");
+            
+            // 延迟导航到目标页面，确保MainTabs已加载
+            setTimeout(() => {
+              if (navigationRef.isReady()) {
+                // @ts-expect-error 动态导航类型检查
+                navigationRef.navigate(deepLinkRoute.screen, deepLinkRoute.params);
+              }
+            }, 300);
+          }
+        };
+        
+        if (navigationRef.isReady()) {
+          navigateToRoute();
+        } else {
+          setTimeout(navigateToRoute, 500);
+        }
+        
+        return; // 处理了深链接后直接返回
+      }
+
       // 只有在非支付相关的深度链接时才跳转到MainTabs
       if (!url.includes('payment-success') && 
           !url.includes('payment-failure') && 
