@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,263 +7,310 @@ import {
   ScrollView,
   Alert,
   Platform,
-  Linking,
   ActivityIndicator,
-  Dimensions,
-  PanResponder,
   Animated,
+  Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
-// import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import SimpleMapView from '../../components/SimpleMapView';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { pickupApi } from '../../services/local/pickupApi';
-import type { PickupLocation } from '../../services/local/pickupApi';
+import { districtApi, type District } from '../../services/local/districtApi';
 import fontSize from '../../utils/fontsizeUtils';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList } from '../../navigation/types';
 import BackIcon from '../../components/BackIcon';
-import { Image } from 'react-native';
+import AddressDescriptionModal, { type RecipientInfo } from '../../components/AddressDescriptionModal';
+import MapGuideModal from '../../components/MapGuideModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { height: screenHeight } = Dimensions.get('window');
+// 大区中心坐标（阿比让各大区的大致中心位置）
+const DISTRICT_CENTERS: Record<string, { latitude: number; longitude: number; zoom?: number }> = {
+  'Cocody': { latitude: 5.3599, longitude: -3.9916, zoom: 13 },
+  'Marcory': { latitude: 5.2859, longitude: -3.9899, zoom: 13 },
+  'Yopougon': { latitude: 5.3364, longitude: -4.0839, zoom: 13 },
+  'Koumassi': { latitude: 5.2922, longitude: -3.9519, zoom: 13 },
+  'Bingerville': { latitude: 5.3555, longitude: -3.8989, zoom: 13 },
+};
+
+// 默认阿比让中心
+const DEFAULT_CENTER = { latitude: 5.345, longitude: -4.024 };
 
 export default function PickUp() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { i18n } = useTranslation();
-  // const mapRef = useRef<MapView>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
   const isChineseLanguage = i18n.language === 'zh' || i18n.language === 'cn';
   
-  const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
-  const [selectedPickup, setSelectedPickup] = useState<PickupLocation | null>(null);
-  // 地图区域状态暂未使用，移除以避免未使用告警
-
-  // 底部面板动画相关
-  const [panelHeight] = useState(new Animated.Value(screenHeight * 0.4));
-  const minPanelHeight = screenHeight * 0.4; // 最小高度（折叠状态）
-  const maxPanelHeight = screenHeight * 0.8; // 最大高度（展开状态）
+  // 流程步骤：1=选大区, 2=地图标点, 3=填地址（通过modal）
+  const [step, setStep] = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
   
-  // 创建手势响应器
-  const lastGestureY = useRef(0);
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_evt, gestureState) => {
-        return Math.abs(gestureState.dy) > 5;
-      },
-      onPanResponderGrant: () => {
-        lastGestureY.current = 0;
-      },
-      onPanResponderMove: (_evt, gestureState) => {
-        // 计算从上次位置的变化
-        const deltaY = gestureState.dy - lastGestureY.current;
-        lastGestureY.current = gestureState.dy;
-        
-        // 获取当前高度并计算新高度
-        const currentHeight = (panelHeight as unknown as { _value: number })._value;
-        let newHeight = currentHeight - deltaY;
-        
-        // 限制高度范围
-        newHeight = Math.max(minPanelHeight, Math.min(maxPanelHeight, newHeight));
-        
-        panelHeight.setValue(newHeight);
-      },
-      onPanResponderRelease: (_evt, gestureState) => {
-        const velocity = gestureState.vy;
-        const currentHeight = (panelHeight as unknown as { _value: number })._value;
-        
-        // 根据速度和当前位置决定最终状态
-        let shouldExpand = false;
-        
-        if (Math.abs(velocity) > 0.5) {
-          // 快速滑动，根据方向决定
-          shouldExpand = velocity < 0; // 向上滑动展开
-        } else {
-          // 慢速滑动，根据位置决定
-          const threshold = (minPanelHeight + maxPanelHeight) / 2;
-          shouldExpand = currentHeight > threshold;
-        }
-        
-        const toValue = shouldExpand ? maxPanelHeight : minPanelHeight;
-        
-        Animated.spring(panelHeight, {
-          toValue,
-          useNativeDriver: false,
-          tension: 50,
-          friction: 10,
-        }).start();
-        
-        // 展开状态由动画高度隐式表达，无需独立状态
-      },
-    })
-  ).current;
+  // 大区数据
+  const [districts, setDistricts] = useState<(District & { cityName: string })[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<(District & { cityName: string }) | null>(null);
+  
+  // 地图相关
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [customMarker, setCustomMarker] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ latitude: number; longitude: number }>(DEFAULT_CENTER);
+  
+  // 地址描述modal
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  
+  // 引导动画
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
-  const fitMapToMarkers = useCallback((_locations: PickupLocation[]) => {
-    // 地图功能暂时禁用
+  // 加载大区列表
+  useEffect(() => {
+    loadDistricts();
+    requestLocationPermission();
   }, []);
 
-  const initializeMap = useCallback(async () => {
+  const loadDistricts = async () => {
     try {
       setLoading(true);
-      
-      // 请求位置权限
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      let userCoords = null;
-      
-      if (status === 'granted') {
-        // 获取用户真实位置
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        
-        userCoords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-      }
-      
-      setUserLocation(userCoords);
-      
-      // 获取自提点列表
-      const locations = await pickupApi.getPickupLocations(
-        userCoords ? {
-          latitude: userCoords.latitude,
-          longitude: userCoords.longitude,
-        } : undefined
-      );
-      
-      setPickupLocations(locations);
-
-      // 打印详细的取货时间信息
-      console.log('自提点详细时间表:');
-      locations.forEach((location, index) => {
-        console.log(`\n${index + 1}. ${location.name} (${location.address})`);
-        console.log('距离:', pickupApi.formatDistance(location.distance));
-        console.log('完整时间表:', location.timetables);
-        location.timetables.forEach((time, timeIndex) => {
-          console.log(`  时间段 ${timeIndex + 1}: ${time.day_of_week} ${time.start_time}-${time.end_time}`);
-        });
-      });
-
-      // 后端返回的第一个就是最近的自提点
-      if (locations.length > 0) {
-        const nearest = locations[0]; // 第一个就是最近的
-        setSelectedPickup(nearest);
-      }
-      
-      // 如果有自提点，调整地图显示所有标记
-      if (locations.length > 0) {
-        fitMapToMarkers(locations);
-      }
-      
+      const allDistricts = await districtApi.getAllDistricts();
+      setDistricts(allDistricts);
     } catch (error) {
-      console.error('初始化地图失败:', error);
+      console.error('加载大区列表失败:', error);
       Alert.alert(
         isChineseLanguage ? '错误' : 'Erreur',
-        isChineseLanguage ? '无法加载自提点信息' : 'Impossible de charger les points de retrait'
+        isChineseLanguage ? '无法加载大区列表' : 'Impossible de charger la liste des districts'
       );
     } finally {
       setLoading(false);
     }
-  }, [isChineseLanguage, fitMapToMarkers]);
+  };
 
-  // 在定义 initializeMap 之后调用，避免使用前定义
-  useEffect(() => {
-    initializeMap();
-  }, [initializeMap]);
-
-  const openGoogleMaps = (location: PickupLocation) => {
-    const scheme = Platform.select({
-      ios: 'maps://app',
-      android: 'geo:0,0',
-    });
-    
-    const url = Platform.select({
-      ios: `${scheme}?daddr=${location.latitude},${location.longitude}&dirflg=d`,
-      android: `${scheme}?q=${location.latitude},${location.longitude}(${location.name})`,
-    });
-    
-    if (url) {
-      Linking.canOpenURL(url).then(supported => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          // 如果没有安装Google Maps，打开网页版
-          const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`;
-          Linking.openURL(webUrl);
-        }
-      });
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.error('获取位置权限失败:', error);
     }
   };
 
-  const formatTimetableDisplay = useCallback((time: { start_time: string; end_time: string; day_of_week: string }) => {
-    const formatTime = (t: string) => {
-      if (!t) return '';
-      const parts = t.split(':');
-      if (parts.length < 2) return t;
-      const hour = parts[0].padStart(2, '0');
-      const minute = parts[1].padStart(2, '0');
-      return `${hour}:${minute}`;
-    };
-
-    const normalizeDay = (d: string) => (d || '').toString().trim().toLowerCase();
-
+  // 选择大区
+  const handleSelectDistrict = async (district: District & { cityName: string }) => {
+    setSelectedDistrict(district);
+    
+    // 设置地图中心为该大区的中心坐标
+    const center = DISTRICT_CENTERS[district.name] || DEFAULT_CENTER;
+    setMapCenter(center);
+    
+    // 进入第二步：地图标点
+    setStep(2);
+    
+    // 每次都显示引导动画
+    setTimeout(() => {
+      setShowGuideModal(true);
+    }, 500);
+  };
   
-
-    const frDayMap: Record<string, string> = {
-      monday: 'Lun',
-      tuesday: 'Mar',
-      wednesday: 'Mer',
-      thursday: 'Jeu',
-      friday: 'Ven',
-      saturday: 'Sam',
-      sunday: 'Dim',
-      weekday: 'Lun-Ven',
-      everyday: 'Tous les jours',
-    };
-
-    const dayKey = normalizeDay(time.day_of_week);
-    const dayLabel = frDayMap[dayKey] || time.day_of_week;
-    const start = formatTime(time.start_time);
-    const end = formatTime(time.end_time);
-
-    if (start && end) return `${dayLabel} ${start} - ${end}`;
-    if (start || end) return `${dayLabel} ${start || end}`;
-    return dayLabel;
-  }, []);
-
-
-
-  const handleSelectPickup = (location: PickupLocation) => {
-    setSelectedPickup(location);
+  // 关闭引导
+  const handleCloseGuide = () => {
+    setShowGuideModal(false);
   };
 
-  const handleConfirm = () => {
-    if (!selectedPickup) {
+  // 处理地图点击
+  const handleMapClick = (latitude: number, longitude: number) => {
+    console.log('地图点击:', latitude, longitude);
+    setCustomMarker({ latitude, longitude });
+  };
+
+  // 确认标点，进入填写地址描述
+  const handleConfirmMarker = () => {
+    if (!customMarker) {
       Alert.alert(
         isChineseLanguage ? '提示' : 'Info',
-        isChineseLanguage ? '请选择一个自提点' : 'Veuillez sélectionner un point de retrait'
+        isChineseLanguage ? '请在地图上点击选择取货位置' : 'Veuillez cliquer sur la carte pour choisir un emplacement'
       );
       return;
     }
     
-    // 跳转到支付页面
-    navigation.navigate('LocalPayment', { pickup_location_id: selectedPickup.id });
+    setShowAddressModal(true);
   };
 
-  // 标记颜色逻辑当前未使用，移除以避免未使用告警
+  // 确认地址描述，导航到支付页面
+  const handleConfirmAddress = (recipientInfo: RecipientInfo) => {
+    if (!selectedDistrict || !customMarker) return;
+    
+    setShowAddressModal(false);
+    
+    console.log('收件人信息:', recipientInfo);
+    
+    // 添加国家代码225（不带+号）
+    const phoneWithCode = `225${recipientInfo.phone}`;
+    const whatsappWithCode = `225${recipientInfo.whatsapp}`;
+    
+    console.log('处理后的电话:', { phone: phoneWithCode, whatsapp: whatsappWithCode });
+    
+    // 导航到支付页面，传递自定义取货点信息
+    navigation.navigate('LocalPayment', {
+      district_id: selectedDistrict.id,
+      full_name: recipientInfo.fullName,
+      phone: phoneWithCode,
+      whatsapp: whatsappWithCode,
+      address_description: recipientInfo.addressDescription,
+      latitude: customMarker.latitude,
+      longitude: customMarker.longitude,
+    });
+  };
 
-  if (loading) {
+  // 返回上一步
+  const handleGoBack = () => {
+    if (step === 2) {
+      setStep(1);
+      setCustomMarker(null);
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  // 渲染步骤指示器
+  const renderStepIndicator = () => (
+    <View style={styles.stepIndicator}>
+      <View style={styles.stepItem}>
+        <View style={[styles.stepCircle, step >= 1 && styles.stepCircleActive]}>
+          <Text style={[styles.stepNumber, step >= 1 && styles.stepNumberActive]}>1</Text>
+        </View>
+        <Text style={styles.stepLabel}>
+          {isChineseLanguage ? '选大区' : 'District'}
+        </Text>
+      </View>
+      <View style={[styles.stepLine, step >= 2 && styles.stepLineActive]} />
+      <View style={styles.stepItem}>
+        <View style={[styles.stepCircle, step >= 2 && styles.stepCircleActive]}>
+          <Text style={[styles.stepNumber, step >= 2 && styles.stepNumberActive]}>2</Text>
+        </View>
+        <Text style={styles.stepLabel}>
+          {isChineseLanguage ? '标记位置' : 'Marquer'}
+        </Text>
+      </View>
+      <View style={[styles.stepLine, false && styles.stepLineActive]} />
+      <View style={styles.stepItem}>
+        <View style={[styles.stepCircle, false && styles.stepCircleActive]}>
+          <Text style={[styles.stepNumber, false && styles.stepNumberActive]}>3</Text>
+        </View>
+        <Text style={styles.stepLabel}>
+          {isChineseLanguage ? '填地址' : 'Adresse'}
+        </Text>
+      </View>
+    </View>
+  );
+
+  // Step 1: 选择大区
+  const renderDistrictSelection = () => (
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {renderStepIndicator()}
+      
+      <View style={styles.sectionHeader}>
+        <Ionicons name="location-outline" size={24} color="#FF5100" />
+        <Text style={styles.sectionTitle}>
+          {isChineseLanguage ? '选择您的大区' : 'Choisissez votre district'}
+        </Text>
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF5100" />
+        </View>
+      ) : (
+        <View style={styles.districtList}>
+          {districts.map((district) => (
+            <TouchableOpacity
+              key={district.id}
+              style={styles.districtCard}
+              onPress={() => handleSelectDistrict(district)}
+            >
+              <View style={styles.districtIcon}>
+                <Ionicons name="business-outline" size={24} color="#FF5100" />
+              </View>
+              <View style={styles.districtInfo}>
+                <Text style={styles.districtName}>{district.name}</Text>
+                <Text style={styles.districtCity}>{district.cityName}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+
+  // Step 2: 地图标点
+  const renderMapMarking = () => (
+    <View style={styles.container}>
+      {renderStepIndicator()}
+      
+      {/* 简化引导提示 */}
+      <View style={styles.guideContainer}>
+        <Image
+          source={require('../../../assets/guide/point.png')}
+          style={styles.guideIcon}
+          resizeMode="contain"
+        />
+        <Text style={styles.guideText}>
+          {isChineseLanguage
+            ? '点击地图标记取货位置'
+            : 'Cliquez sur la carte pour marquer'}
+        </Text>
+        {selectedDistrict && (
+          <View style={styles.districtBadge}>
+            <Text style={styles.districtBadgeText}>{selectedDistrict.name}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* 地图 */}
+      <View style={styles.mapContainer}>
+        <SimpleMapView
+          locations={[]}
+          userLocation={mapCenter}
+          showsUserLocation={false}
+          enableMapClick={true}
+          onMapClick={handleMapClick}
+          customMarker={customMarker || undefined}
+          onMapReady={() => console.log('地图已就绪')}
+        />
+      </View>
+
+      {/* 底部按钮 */}
+      <View style={styles.bottomBar}>
+        {customMarker && (
+          <View style={styles.markerInfo}>
+            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+            <Text style={styles.markerInfoText}>
+              {isChineseLanguage ? '已标记位置' : 'Position marquée'}
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={[styles.confirmButton, !customMarker && styles.confirmButtonDisabled]}
+          onPress={handleConfirmMarker}
+          disabled={!customMarker}
+        >
+          <Text style={styles.confirmButtonText}>
+            {isChineseLanguage ? '下一步：填写地址' : 'Suivant: Adresse'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  if (loading && districts.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FF5100" />
@@ -275,202 +322,51 @@ export default function PickUp() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.mainContainer}>
       <StatusBar style="dark" />
+      
       {/* 顶部导航栏 */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <BackIcon size={fontSize(20)} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {isChineseLanguage ? '选择自提点' : 'Choisir un point de retrait'}
+          {isChineseLanguage ? '设置取货点' : 'Point de retrait'}
         </Text>
         <View style={{ width: 20 }} />
       </View>
 
-      {/* 地图 - 全屏 */}
-      <View style={styles.fullMapContainer}>
-        <SimpleMapView
-          locations={pickupLocations.map(loc => ({
-            id: String(loc.id),
-            latitude: loc.latitude,
-            longitude: loc.longitude,
-            title: loc.name,
-            address: loc.address,
-          }))}
-          userLocation={userLocation || undefined}
-          selectedLocationId={selectedPickup?.id?.toString()}
-          showsUserLocation={true}
-          onMarkerPress={(locationId) => {
-            const location = pickupLocations.find(loc => String(loc.id) === locationId);
-            if (location) {
-              handleSelectPickup(location);
-            }
-          }}
-          onMapReady={() => {}}
-        />
-      </View>
+      {/* 内容区域 */}
+      {step === 1 ? renderDistrictSelection() : renderMapMarking()}
 
-      {/* 可拖动的底部面板 */}
-      <Animated.View 
-        style={[
-          styles.bottomPanel,
-          {
-            height: panelHeight,
-          }
-        ]}
-      >
-        {/* 拖动手柄 */}
-        <View 
-          style={styles.dragHandle}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.dragBar} />
-        </View>
-
-        {/* 自提点列表 */}
-        <ScrollView 
-          ref={scrollViewRef}
-          style={styles.listContainer} 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-        {/* 通知条 */}
-        <View style={styles.noticeBar}>
-          <Image 
-            source={require('../../../assets/local/notice.png')} 
-            style={styles.noticeIcon}
-          />
-          <View style={styles.noticeContent}>
-            <Text style={styles.noticeTitle}>
-              {isChineseLanguage ? '重要提醒' : 'Rappel important'}
-            </Text>
-            <Text style={styles.noticeText}>
-              {isChineseLanguage 
-                ? '订单将在取货点保留3天。超过期限后，如未取货，订单将自动取消。请合理安排您的时间。'
-                : 'La commande sera livrée à deux reprises. Si vous ne la récupérez pas lors de ces deux tentatives, la commande sera annulée.'
-              }
-            </Text>
-          </View>
-        </View>
-
-        {pickupLocations.map((location, index) => {
-          const isSelected = selectedPickup?.id === location.id;
-          const isNearest = index === 0; // 第一个就是最近的
-          
-          return (
-            <TouchableOpacity
-              key={location.id}
-              style={[
-                styles.locationCard,
-                isSelected && styles.selectedCard,
-              ]}
-              onPress={() => handleSelectPickup(location)}
-            >
-              {/* 顶部：名称和选中状态 */}
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTitleContainer}>
-                  <Text style={[
-                    styles.locationName,
-                    isSelected && styles.selectedText,
-                  ]}>
-                    {location.name}
-                  </Text>
-                  <View style={styles.badgesContainer}>
-                    {isNearest && (
-                      <View style={styles.nearestBadge}>
-                        <Text style={styles.nearestText}>
-                          {isChineseLanguage ? '最近' : 'Plus proche'}
-                        </Text>
-                      </View>
-                    )}
-                    {isSelected && (
-                      <Ionicons name="checkmark-circle" size={22} color="#FF5100" />
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              {/* 地址信息区域 */}
-              <View style={styles.locationInfoSection}>
-                <View style={[styles.infoRow, { marginBottom: location.distance !== null ? 8 : 0 }]}>
-                  <Ionicons name="location-outline" size={16} color="#999" />
-                  <Text style={styles.locationAddress}>{location.address}</Text>
-                </View>
-                
-                {location.distance !== null && (
-                  <View style={[styles.infoRow, { marginBottom: 0 }]}>
-                    <Ionicons name="navigate-outline" size={16} color="#999" />
-                    <Text style={styles.distance}>{pickupApi.formatDistance(location.distance)}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* 取货时间区域 */}
-              <View style={styles.scheduleSection}>
-                <View style={styles.scheduleSectionHeader}>
-                  <View style={styles.scheduleBadge}>
-                    <Text style={styles.scheduleBadgeText}>
-                      {isChineseLanguage ? '取货时间' : 'Heure de retrait'}
-                    </Text>
-                  </View>
-                </View>
-                
-                <View style={styles.scheduleGrid}>
-                  {location.timetables.map((time, timeIndex) => {
-                    return (
-                      <View 
-                        key={`${location.id}-${time.day_of_week}-${timeIndex}`}
-                        style={styles.scheduleItem}
-                      >
-                        <Text style={styles.scheduleText}>
-                          {formatTimetableDisplay(time)}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {/* 底部导航按钮 */}
-              <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={() => openGoogleMaps(location)}
-              >
-                <Ionicons name="navigate" size={18} color="#FF5100" />
-                <Text style={styles.navigateText}>
-                  {isChineseLanguage ? '导航' : 'Navigation'}
-                </Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          );
-        })}
-        </ScrollView>
-
-        {/* 底部确认按钮 - 放在面板内部 */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleConfirm}
-          >
-            <Text style={styles.confirmButtonText}>
-              {isChineseLanguage ? '确认选择' : 'Confirmer la sélection'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+      {/* 地址描述Modal */}
+      <AddressDescriptionModal
+        visible={showAddressModal}
+        districtName={selectedDistrict?.name}
+        onConfirm={handleConfirmAddress}
+        onCancel={() => setShowAddressModal(false)}
+      />
+      
+      {/* 引导动画Modal */}
+      <MapGuideModal
+        visible={showGuideModal}
+        onClose={handleCloseGuide}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: Platform.OS === 'ios' ? 44 : Constants.statusBarHeight,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -492,7 +388,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    zIndex: 5,
   },
   backButton: {
     padding: 4,
@@ -503,297 +398,182 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     textAlign: 'center',
     flex: 1,
-    letterSpacing: 0.3,
   },
-  fullMapContainer: {
-    height: screenHeight * 0.5,
+  
+  // 步骤指示器
+  stepIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
   },
-  map: {
-    flex: 1,
+  stepItem: {
+    alignItems: 'center',
   },
-  userMarker: {
-    backgroundColor: 'rgba(65, 105, 225, 0.2)',
-    borderRadius: 20,
-    padding: 5,
-  },
-  customMarker: {
+  stepCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 4,
   },
-  mapTip: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  stepCircleActive: {
+    backgroundColor: '#FF5100',
   },
-  mapTipText: {
-    marginLeft: 5,
-    fontSize: fontSize(12),
+  stepNumber: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#999',
+  },
+  stepNumberActive: {
+    color: '#fff',
+  },
+  stepLabel: {
+    fontSize: fontSize(11),
     color: '#666',
   },
-  bottomPanel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 10,
-    zIndex: 10,
-  },
-  dragHandle: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  dragBar: {
+  stepLine: {
     width: 40,
-    height: 4,
-    backgroundColor: '#DDD',
-    borderRadius: 2,
+    height: 2,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 8,
+    marginBottom: 20,
   },
-  listContainer: {
-    flex: 1,
+  stepLineActive: {
+    backgroundColor: '#FF5100',
   },
-  scrollContent: {
-    paddingBottom: 120, // 为底部按钮和手机底部留出空间
+
+  // 大区选择
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  locationCard: {
+  sectionTitle: {
+    fontSize: fontSize(18),
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginLeft: 8,
+  },
+  districtList: {
+    gap: 12,
+  },
+  districtCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 16,
-    marginHorizontal: 15,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#f0f0f0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
+    elevation: 2,
   },
-  selectedCard: {
-    borderColor: '#FF5100',
-    borderWidth: 2,
-    backgroundColor: '#FFFAF8',
-  },
-  cardHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  cardTitleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  locationName: {
-    fontSize: fontSize(16),
-    fontWeight: '600',
-    color: '#1a1a1a',
-    flex: 1,
-    marginRight: 8,
-    lineHeight: fontSize(22),
-  },
-  selectedText: {
-    color: '#FF5100',
-  },
-  badgesContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  nearestBadge: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  nearestText: {
-    fontSize: fontSize(11),
-    color: '#fff',
-    fontWeight: '600',
-  },
-  locationInfoSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fafafa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  locationAddress: {
-    fontSize: fontSize(13),
-    color: '#000',
-    marginLeft: 8,
-    flex: 1,
-    lineHeight: fontSize(18),
-  },
-  distance: {
-    fontSize: fontSize(13),
-    color: '#000',
-    marginLeft: 8,
-  },
-  scheduleSection: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  scheduleSectionHeader: {
-    marginBottom: 10,
-  },
-  scheduleBadge: {
-    backgroundColor: '#FFAE11',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  scheduleBadgeText: {
-    fontSize: fontSize(11),
-    color: '#fff',
-    fontWeight: '600',
-  },
-  scheduleGrid: {
-    flexDirection: 'column',
-    gap: 4,
-  },
-  scheduleItem: {
-    paddingVertical: 3,
-  },
-  scheduleText: {
-    fontSize: fontSize(13),
-    color: '#000',
-    lineHeight: fontSize(18),
-  },
-  navigateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#FFF0E5',
-  },
-  navigateText: {
-    marginLeft: 6,
-    fontSize: fontSize(14),
-    color: '#FF5100',
-    fontWeight: '600',
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 30, // 增加底部间距，适配手机底部
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  confirmButton: {
-    backgroundColor: '#FF5100',
-    borderRadius: 25,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    fontSize: fontSize(16),
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  noticeBar: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(173, 216, 230, 0.3)', // 浅蓝色透明背景
-    marginHorizontal: 15,
-    marginBottom: 15,
-    marginTop: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    alignItems: 'flex-start',
-    borderRadius: 8,
-  },
-  noticeIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-    marginTop: 2,
-  },
-  noticeContent: {
-    flex: 1,
-  },
-  noticeTitle: {
-    fontSize: fontSize(14),
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  noticeText: {
-    fontSize: fontSize(12),
-    color: '#666',
-    lineHeight: fontSize(18),
-  },
-  collapsedCard: {
-    padding: 8,
-    marginBottom: 8,
-  },
-  collapsedCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWrapper: {
+  districtIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: '#FFF0E5',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+  },
+  districtInfo: {
+    flex: 1,
+  },
+  districtName: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  districtCity: {
+    fontSize: fontSize(13),
+    color: '#666',
+  },
+
+  // 地图标点 - 简化引导提示
+  guideContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF5100',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    gap: 8,
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  guideIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff',
+  },
+  guideText: {
+    fontSize: fontSize(14),
+    color: '#fff',
+    fontWeight: '700',
+    flex: 1,
+  },
+  districtBadge: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  districtBadgeText: {
+    fontSize: fontSize(11),
+    color: '#FF5100',
+    fontWeight: '700',
+  },
+  mapContainer: {
+    flex: 1,
     position: 'relative',
   },
-  nearestDot: {
-    position: 'absolute',
-    top: 3,
-    right: 3,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#4CAF50',
-    borderWidth: 2,
-    borderColor: '#fff',
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 30,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  markerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  markerInfoText: {
+    fontSize: fontSize(14),
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  confirmButton: {
+    backgroundColor: '#FF5100',
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: '#CCC',
+  },
+  confirmButtonText: {
+    fontSize: fontSize(16),
+    color: '#fff',
+    fontWeight: '600',
   },
 });

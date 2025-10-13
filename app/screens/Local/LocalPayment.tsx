@@ -35,6 +35,17 @@ type LocalPaymentNav = NativeStackNavigationProp<Record<string, object | undefin
 const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   const route = useRoute<RouteProp<RootStackParamList, 'LocalPayment'>>();
   const pickupLocationIdFromRoute = route.params?.pickup_location_id;
+  
+  // 自定义取货点数据
+  const customPickupData = route.params ? {
+    district_id: route.params.district_id,
+    full_name: route.params.full_name,
+    phone: route.params.phone,
+    whatsapp: route.params.whatsapp,
+    receiver_address: route.params.address_description,
+    latitude: route.params.latitude,
+    longitude: route.params.longitude,
+  } : null;
   const { defaultAddress, addresses, fetchDefaultAddress, fetchAddresses } = useAddressStore();
   const [selectedPayment, setSelectedPayment] = useState<string>('mobile_money');
   const [userBalance, setUserBalance] = useState<number | null>(null);
@@ -422,19 +433,28 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
               const skuId = product.skus?.[0]?.sku_id ?? '';
 
               // 处理地址与自提点
-              const addressId = defaultAddress?.address_id ?? (addresses && addresses.length > 0 ? addresses[0].address_id : undefined);
-              if (!addressId) {
-                Alert.alert('Adresse requise', "Veuillez ajouter une adresse de réception.", [
-                  { text: 'OK', onPress: () => navigation.navigate('LocalAddressForm' as never) }
-                ]);
-                return;
-              }
-              const pickupId = pickupLocationIdFromRoute ?? 0;
-              if (!pickupId) {
-                Alert.alert('Point de retrait', 'Veuillez choisir un point de retrait.', [
-                  { text: 'OK', onPress: () => navigation.navigate('PickUp' as never) }
-                ]);
-                return;
+              // 检查是否有自定义取货点数据
+              const hasCustomPickup = customPickupData && customPickupData.district_id;
+              
+              let addressId: number | undefined;
+              let pickupId: number | undefined;
+              
+              if (!hasCustomPickup) {
+                // 使用旧的地址系统
+                addressId = defaultAddress?.address_id ?? (addresses && addresses.length > 0 ? addresses[0].address_id : undefined);
+                if (!addressId) {
+                  Alert.alert('Adresse requise', "Veuillez ajouter une adresse de réception.", [
+                    { text: 'OK', onPress: () => navigation.navigate('LocalAddressForm' as never) }
+                  ]);
+                  return;
+                }
+                pickupId = pickupLocationIdFromRoute ?? 0;
+                if (!pickupId) {
+                  Alert.alert('Point de retrait', 'Veuillez choisir un point de retrait.', [
+                    { text: 'OK', onPress: () => navigation.navigate('PickUp' as never) }
+                  ]);
+                  return;
+                }
               }
 
               // 如果选择余额支付，先检查余额是否充足
@@ -510,6 +530,16 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                 actual_amount: orderAmount * quantity,
                 discount_amount: orderDiscountAmount * quantity,
                 currency: orderCurrency,
+                // 自定义取货点数据
+                ...(hasCustomPickup && customPickupData ? {
+                  district_id: customPickupData.district_id,
+                  full_name: customPickupData.full_name,
+                  phone: customPickupData.phone,
+                  whatsapp: customPickupData.whatsapp,
+                  receiver_address: customPickupData.receiver_address,
+                  latitude: customPickupData.latitude,
+                  longitude: customPickupData.longitude,
+                } : {}),
               };
 
               // 货到付款直接创建订单，不再检查身份验证

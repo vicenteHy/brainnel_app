@@ -10,14 +10,22 @@ export interface CreateLocalOrderItem {
 
 export interface CreateLocalOrderRequest {
   items: CreateLocalOrderItem[];
-  address_id: number;
-  pickup_location_id: number;
+  address_id?: number;
+  pickup_location_id?: number;
   payment_method: string;
   buyer_message?: string;
   total_amount: number;
   actual_amount: number;
   discount_amount: number;
   currency: string;
+  // 自定义取货点字段
+  district_id?: number;
+  full_name?: string;
+  phone?: string;
+  whatsapp?: string;
+  receiver_address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CreatedLocalOrderItem {

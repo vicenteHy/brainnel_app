@@ -276,13 +276,8 @@ export default function LocalProductDetail() {
     // 将订单数据存储到产品缓存管理器
     productCacheManager.setOrderData(orderData);
     
-    // 导航到本地地址填写页面
-    navigation.navigate('LocalAddressForm' as never, { 
-      quantity,
-      productId: product?.product_id,
-      selectedAttributes,
-      totalPrice: getCurrentPrice() * quantity 
-    } as never);
+    // 导航到选择取货点页面（选大区 -> 地图标点 -> 填写收件人信息）
+    navigation.navigate('PickUp' as never);
   };
 
   const handleDismissLoginModal = useCallback(() => {

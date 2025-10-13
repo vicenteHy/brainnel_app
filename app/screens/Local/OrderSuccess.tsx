@@ -1,4 +1,4 @@
-import { StyleSheet, View, Dimensions, TouchableOpacity, Text, Platform, StatusBar as RNStatusBar } from 'react-native';
+import { StyleSheet, View, Dimensions, TouchableOpacity, Text, Platform, StatusBar as RNStatusBar, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,51 +47,68 @@ const LocalOrderSuccess = () => {
 			</View>
 
 			{/* White Panel from the brown bar down */}
-			<View style={[styles.contentCard, { top: panelTop + extraOffset }]}> 
-				<View style={styles.successBadge}>
-					<Ionicons name="checkmark" size={38} color="#FF5100" />
-				</View>
-				<Text style={styles.successTitle}>Merci pour votre commande</Text>
-				<Text style={styles.successSubtitle}>Nous préparons votre commande. Vous recevrez une notification bientôt.</Text>
+			<View style={[styles.contentCard, { top: panelTop + extraOffset }]}>
+				<ScrollView 
+					style={styles.scrollContent}
+					contentContainerStyle={styles.scrollContentContainer}
+					showsVerticalScrollIndicator={false}
+				>
+					<View style={styles.successBadge}>
+						<Ionicons name="checkmark" size={38} color="#FF5100" />
+					</View>
+					<Text style={styles.successTitle}>Merci pour votre commande</Text>
+					<Text style={styles.successSubtitle}>Votre commande a été enregistrée avec succès.</Text>
 
 				<View style={styles.divider} />
 				<View style={styles.sectionHeaderRow}>
 					<View style={styles.sectionIcon}>
-						<Ionicons name="cube-outline" size={18} color="#FF5100" />
+						<Ionicons name="home-outline" size={18} color="#FF5100" />
 					</View>
-					<Text style={styles.sectionHeaderText}>Informations de retrait</Text>
+					<Text style={styles.sectionHeaderText}>Livraison à domicile</Text>
 				</View>
 
 				<View style={styles.sectionBody}>
 					<View style={styles.subSection}>
-						<Text style={styles.sectionLabel}>Lieu de retrait</Text>
-						<View style={styles.locationRow}>
-							<Text style={styles.locationValue}>Shopping Center East Side Market Square, Downtown</Text>
-							<TouchableOpacity>
-								<Text style={styles.navigationText}>Navigation</Text>
-							</TouchableOpacity>
+						<Text style={styles.sectionLabel}>Mode de livraison</Text>
+						<View style={styles.deliveryInfoBox}>
+							<Ionicons name="location" size={20} color="#FF5100" style={{ marginRight: 8 }} />
+							<Text style={styles.deliveryText}>Livraison à l'adresse que vous avez choisie</Text>
 						</View>
 					</View>
 
 					<View style={styles.divider} />
 
 					<View style={styles.subSection}>
-						<Text style={styles.sectionLabel}>Date de retrait</Text>
-						<Text style={styles.sectionValue}>Lundi 23 décembre 2024</Text>
+						<Text style={styles.sectionLabel}>Prochaine étape</Text>
+						<View style={styles.stepBox}>
+							<View style={styles.stepRow}>
+								<Ionicons name="call-outline" size={18} color="#4CAF50" />
+								<Text style={styles.stepText}>Nous vous contacterons par WhatsApp ou téléphone</Text>
+							</View>
+							<View style={styles.stepRow}>
+								<Ionicons name="calendar-outline" size={18} color="#4CAF50" />
+								<Text style={styles.stepText}>Pour convenir d'un rendez-vous de livraison</Text>
+							</View>
+						</View>
 					</View>
 
 					<View style={styles.divider} />
 
 					<View style={styles.subSection}>
-						<Text style={styles.sectionLabel}>Heure de retrait</Text>
-						<Text style={styles.timeValue}>09:00-17:00</Text>
+						<Text style={styles.sectionLabel}>Délai de livraison</Text>
+						<Text style={styles.timeValue}>48 heures</Text>
+						<Text style={styles.deliveryNote}>Après confirmation du rendez-vous</Text>
 					</View>
 				</View>
 
-				<View style={styles.tipBox}>
-					<Text style={styles.tipText}>Veuillez respecter l’horaire et arriver à l’heure.</Text>
-				</View>
-
+					<View style={styles.tipBox}>
+						<Ionicons name="information-circle" size={20} color="#FF5100" style={{ marginRight: 6 }} />
+						<Text style={styles.tipText}>Assurez-vous d'être disponible pour recevoir notre appel et planifier la livraison.</Text>
+					</View>
+					
+					{/* Spacer for bottom buttons */}
+					<View style={{ height: 140 }} />
+				</ScrollView>
 			</View>
 
 			{/* Bottom fixed actions */}
@@ -158,18 +175,23 @@ const styles = StyleSheet.create({
 	contentCard: {
 		position: 'absolute',
 		width: '85%',
-		height: '65%',
+		maxHeight: '65%',
 		zIndex: 10,
 		backgroundColor: '#fff',
-		paddingHorizontal: 20,
-		paddingTop: 8,
-		paddingBottom: 20,
 		borderTopLeftRadius: 0,
 		borderTopRightRadius: 0,
 		borderBottomLeftRadius: 16,
 		borderBottomRightRadius: 16,
-
 		alignSelf: 'center',
+		overflow: 'hidden',
+	},
+	scrollContent: {
+		flex: 1,
+	},
+	scrollContentContainer: {
+		paddingHorizontal: 20,
+		paddingTop: 8,
+		paddingBottom: 20,
 	},
 	successBadge: {
 		alignSelf: 'center',
@@ -286,11 +308,49 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		paddingHorizontal: 12,
 		paddingVertical: 12,
+		flexDirection: 'row',
+		alignItems: 'center',
 	},
 	tipText: {
 		color: '#FF5100',
+		fontSize: fontSize(13),
+		fontWeight: '600',
+		flex: 1,
+	},
+	deliveryInfoBox: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#FFF0E5',
+		paddingHorizontal: 12,
+		paddingVertical: 10,
+		borderRadius: 8,
+	},
+	deliveryText: {
 		fontSize: fontSize(14),
-        fontWeight: '600',
+		color: '#333',
+		flex: 1,
+	},
+	stepBox: {
+		backgroundColor: '#F5F9F5',
+		paddingHorizontal: 12,
+		paddingVertical: 12,
+		borderRadius: 8,
+		gap: 10,
+	},
+	stepRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 10,
+	},
+	stepText: {
+		fontSize: fontSize(13),
+		color: '#333',
+		flex: 1,
+	},
+	deliveryNote: {
+		fontSize: fontSize(13),
+		color: '#666',
+		marginTop: 4,
 	},
 	divider: {
 		height: 1,

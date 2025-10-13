@@ -87,7 +87,16 @@ export type RootStackParamList = {
   LocalAddressForm: { address?: unknown };
   PickUp: undefined;
   Verify: undefined;
-  LocalPayment: { pickup_location_id?: number };
+  LocalPayment: { 
+    pickup_location_id?: number;
+    district_id?: number;
+    full_name?: string;
+    phone?: string;
+    whatsapp?: string;
+    address_description?: string;
+    latitude?: number;
+    longitude?: number;
+  };
   LocalMobileMoneyConfirm: {
     orderId?: number;
     orderNo?: string;

@@ -19,6 +19,9 @@ interface SimpleMapViewProps {
   onMarkerPress?: (locationId: string) => void;
   showsUserLocation?: boolean;
   onMapReady?: () => void;
+  onMapClick?: (latitude: number, longitude: number) => void; // 新增：地图点击回调
+  customMarker?: { latitude: number; longitude: number }; // 新增：用户自定义标记位置
+  enableMapClick?: boolean; // 新增：是否启用地图点击
 }
 
 export default function SimpleMapView({ 
@@ -27,7 +30,10 @@ export default function SimpleMapView({
   selectedLocationId,
   onMarkerPress,
   showsUserLocation = true,
-  onMapReady
+  onMapReady,
+  onMapClick,
+  customMarker,
+  enableMapClick = false
 }: SimpleMapViewProps) {
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
@@ -35,34 +41,17 @@ export default function SimpleMapView({
   const [mapReady, setMapReady] = useState(false);
   const [mapHtml, setMapHtml] = useState<string>('');
 
-  // 获取用户位置
+  // 更新用户位置（当 initialUserLocation 变化时）
   useEffect(() => {
-    if (showsUserLocation && !initialUserLocation) {
+    if (initialUserLocation) {
+      setUserLocation(initialUserLocation);
+    } else if (showsUserLocation) {
       // 使用模拟位置（科特迪瓦坐标）
       const simulatedLocation = {
         latitude: 5.341806,  // 5°20'30.5"N
         longitude: -3.971889, // 3°58'18.8"W
       };
       setUserLocation(simulatedLocation);
-      
-      // 注释掉真实位置获取
-      // (async () => {
-      //   try {
-      //     const { status } = await Location.requestForegroundPermissionsAsync();
-      //     if (status !== 'granted') {
-      //       Alert.alert('提示', '需要位置权限才能显示您的位置');
-      //       return;
-      //     }
-      //
-      //     const location = await Location.getCurrentPositionAsync({});
-      //     setUserLocation({
-      //       latitude: location.coords.latitude,
-      //       longitude: location.coords.longitude,
-      //     });
-      //   } catch (error) {
-      //     console.error('获取位置失败:', error);
-      //   }
-      // })();
     }
   }, [showsUserLocation, initialUserLocation]);
 
@@ -195,7 +184,7 @@ export default function SimpleMapView({
             // 初始化地图
             map = new google.maps.Map(document.getElementById('map'), {
               center: { lat: ${center.latitude}, lng: ${center.longitude} },
-              zoom: 13,
+              zoom: ${enableMapClick ? '14' : '13'},
               mapTypeControl: false,
               streetViewControl: false,
               fullscreenControl: false,
@@ -371,6 +360,23 @@ export default function SimpleMapView({
             // 定义 updateSelectedMarker 函数
             window.updateSelectedMarker = updateSelectedMarker;
             
+            // 添加地图点击事件监听（如果启用）
+            ${enableMapClick ? `
+            map.addListener('click', function(e) {
+              const lat = e.latLng.lat();
+              const lng = e.latLng.lng();
+              
+              // 通知 React Native
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'mapClick',
+                  latitude: lat,
+                  longitude: lng
+                }));
+              }
+            });
+            ` : ''}
+            
             // 通知地图加载完成
             setTimeout(() => {
               if (window.ReactNativeWebView) {
@@ -449,6 +455,9 @@ export default function SimpleMapView({
         onMapReady?.();
       } else if (data.type === 'markerPress' && onMarkerPress) {
         onMarkerPress(data.markerId);
+      } else if (data.type === 'mapClick' && onMapClick) {
+        // 处理地图点击事件
+        onMapClick(data.latitude, data.longitude);
       } else if (data.type === 'error') {
         console.error('地图错误:', data.message);
         Alert.alert('地图加载错误', data.message);
@@ -470,6 +479,52 @@ export default function SimpleMapView({
       `);
     }
   }, [userLocation, loading]);
+
+  // 监听自定义标记的变化 - 在地图上显示/更新自定义标记
+  useEffect(() => {
+    if (webViewRef.current && mapReady && customMarker) {
+      const jsCode = `
+        (function() {
+          try {
+            // 删除旧的自定义标记
+            if (window.customMarker) {
+              window.customMarker.setMap(null);
+            }
+            
+            // 创建新的自定义标记
+            const marker = new google.maps.Marker({
+              position: { lat: ${customMarker.latitude}, lng: ${customMarker.longitude} },
+              map: map,
+              title: '我的取货点',
+              icon: {
+                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+                fillColor: '#FF5100',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+                scale: 2,
+                anchor: new google.maps.Point(12, 24)
+              },
+              animation: google.maps.Animation.DROP
+            });
+            
+            window.customMarker = marker;
+            
+            // 将地图中心移动到标记位置
+            map.panTo({ lat: ${customMarker.latitude}, lng: ${customMarker.longitude} });
+            map.setZoom(16);
+            
+            return 'Custom marker added';
+          } catch(e) {
+            console.error('Error adding custom marker:', e);
+            return 'Error: ' + e.message;
+          }
+        })();
+      `;
+      
+      webViewRef.current.injectJavaScript(jsCode);
+    }
+  }, [customMarker, mapReady]);
 
   // 监听选中位置的变化 - 更新标记 UI（选中显示标题，未选中仅显示图标）
   useEffect(() => {

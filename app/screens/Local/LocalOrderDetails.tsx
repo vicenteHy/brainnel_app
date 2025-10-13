@@ -245,41 +245,56 @@ const LocalOrderDetails = () => {
 				{/* 收货信息 */}
 				<View style={styles.section}>
 					<View style={styles.addressHeader}>
-						<Ionicons name="location" size={20} color="#FF5100" style={styles.locationIcon} />
-						<Text style={styles.receiverName}>{orderDetail.receiver_name}</Text>
+						<Ionicons name="home" size={20} color="#FF5100" style={styles.locationIcon} />
+						<Text style={styles.receiverName}>Livraison à domicile</Text>
 					</View>
 					
-					<View style={styles.contactInfo}>
-						<Text style={styles.contactLabel}>
-							TÉLÉPHONE:<Text style={styles.contactNumber}>{orderDetail.receiver_phone}</Text> WHATSAPP:<Text style={styles.contactNumber}>{orderDetail.receiver_phone}</Text>
-						</Text>
+					<View style={styles.deliveryInfoCard}>
+						<View style={styles.infoRow}>
+							<Ionicons name="person-outline" size={18} color="#666" />
+							<Text style={styles.infoLabel}>Destinataire:</Text>
+							<Text style={styles.infoValue}>{orderDetail.receiver_name}</Text>
+						</View>
+						
+						<View style={styles.infoRow}>
+							<Ionicons name="call-outline" size={18} color="#666" />
+							<Text style={styles.infoLabel}>Téléphone:</Text>
+							<Text style={styles.infoValue}>{orderDetail.receiver_phone}</Text>
+						</View>
+						
+						<View style={styles.infoRow}>
+							<Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+							<Text style={styles.infoLabel}>WhatsApp:</Text>
+							<Text style={styles.infoValue}>{orderDetail.receiver_phone}</Text>
+						</View>
+						
+						<View style={styles.dividerLine} />
+						
+						<View style={styles.addressRow}>
+							<Ionicons name="location-outline" size={18} color="#666" />
+							<View style={{ flex: 1, marginLeft: 8 }}>
+								<Text style={styles.addressLabel}>Adresse de livraison:</Text>
+								<Text style={styles.addressText}>{orderDetail.receiver_address}</Text>
+							</View>
+						</View>
 					</View>
 
-					<View style={styles.pickupSection}>
-						<Text style={styles.pickupLabel}>PICKUP LOCATION:</Text>
-						<Text style={styles.pickupAddress}>{orderDetail.receiver_address}</Text>
-						<TouchableOpacity style={styles.navigationButton}>
-							<Text style={styles.navigationLink}>NAVIGATION</Text>
-						</TouchableOpacity>
+					<View style={styles.deliveryNoticeBox}>
+						<View style={styles.noticeRow}>
+							<Ionicons name="time-outline" size={20} color="#FF5100" />
+							<Text style={styles.noticeTitle}>Délai de livraison</Text>
+						</View>
+						<Text style={styles.noticeText}>Nous vous contacterons par WhatsApp ou téléphone pour convenir d'un rendez-vous.</Text>
+						<Text style={styles.noticeHighlight}>Livraison dans les 48 heures après confirmation.</Text>
 					</View>
-
-					<View style={styles.pickupDateSection}>
-						<Text style={styles.pickupLabel}>PICKUP DATE</Text>
-						<Text style={styles.pickupDateText}>{formatDate(orderDetail.pickup_date)}</Text>
-					</View>
-
-					<View style={styles.pickupTimeSection}>
-						<Text style={styles.pickupLabel}>PICKUP TIME</Text>
-						<Text style={styles.pickupTimeText}>{formatTime(orderDetail.pickup_time)}</Text>
-					</View>
-
+					
 					<View style={styles.verificationCodeContainer}>
-						<Text style={styles.verificationCodeLabel}>Code de retrait: </Text>
+						<Text style={styles.verificationCodeLabel}>Code de vérification: </Text>
 						<Text style={styles.verificationCodeText}>{orderDetail.verification_code}</Text>
 						<TouchableOpacity onPress={() => {
 							if (orderDetail?.verification_code) {
 								Clipboard.setString(orderDetail.verification_code);
-								Alert.alert('Copié', 'Code de retrait copié');
+								Alert.alert('Copié', 'Code de vérification copié');
 							}
 						}} style={styles.copyButton}>
 							<Ionicons name="copy-outline" size={18} color="#666" />
@@ -648,6 +663,81 @@ const styles = StyleSheet.create({
 	},
 	copyButton: {
 		padding: 4,
+	},
+	deliveryInfoCard: {
+		backgroundColor: '#F8F8F8',
+		borderRadius: 8,
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		marginTop: 12,
+		marginBottom: 12,
+	},
+	infoRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingVertical: 8,
+		gap: 8,
+	},
+	infoLabel: {
+		fontSize: fontSize(13),
+		color: '#666',
+		minWidth: 85,
+	},
+	infoValue: {
+		fontSize: fontSize(14),
+		color: '#000',
+		flex: 1,
+		fontWeight: '500',
+	},
+	dividerLine: {
+		height: 1,
+		backgroundColor: '#E0E0E0',
+		marginVertical: 8,
+	},
+	addressRow: {
+		flexDirection: 'row',
+		alignItems: 'flex-start',
+		paddingVertical: 8,
+	},
+	addressLabel: {
+		fontSize: fontSize(13),
+		color: '#666',
+		marginBottom: 4,
+	},
+	addressText: {
+		fontSize: fontSize(14),
+		color: '#000',
+		lineHeight: 20,
+	},
+	deliveryNoticeBox: {
+		backgroundColor: '#FFF5E5',
+		borderRadius: 8,
+		paddingVertical: 14,
+		paddingHorizontal: 16,
+		borderLeftWidth: 4,
+		borderLeftColor: '#FF5100',
+	},
+	noticeRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+		gap: 8,
+	},
+	noticeTitle: {
+		fontSize: fontSize(15),
+		color: '#FF5100',
+		fontWeight: '600',
+	},
+	noticeText: {
+		fontSize: fontSize(13),
+		color: '#666',
+		lineHeight: 20,
+		marginBottom: 6,
+	},
+	noticeHighlight: {
+		fontSize: fontSize(14),
+		color: '#FF5100',
+		fontWeight: '600',
 	},
 	sectionTitle: {
 		fontSize: fontSize(16),
