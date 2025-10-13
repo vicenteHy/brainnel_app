@@ -25,7 +25,6 @@ import type { LocalProduct } from '../../services/local/productList';
 import { getFirstProductImage } from '../../services/local/productList';
 import { orderApi, type CreateLocalOrderRequest } from '../../services/local/orderApi';
 import { useAddressStore } from '../../store/address';
-import { pickupApi, type PickupLocation } from '../../services/local/pickupApi';
 import type { RootStackParamList } from '../../navigation/types';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -34,9 +33,8 @@ type LocalPaymentNav = NativeStackNavigationProp<Record<string, object | undefin
 
 const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   const route = useRoute<RouteProp<RootStackParamList, 'LocalPayment'>>();
-  const pickupLocationIdFromRoute = route.params?.pickup_location_id;
   
-  // 自定义取货点数据
+  // 自定义送货数据
   const customPickupData = route.params ? {
     district_id: route.params.district_id,
     full_name: route.params.full_name,
@@ -52,8 +50,6 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
   const [userBalanceCurrency, setUserBalanceCurrency] = useState<string>('FCFA');
   const [orderProduct, setOrderProduct] = useState<LocalProduct | null>(null);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
-  const [, setPickupLocations] = useState<PickupLocation[]>([]);
-  const [selectedPickupLocation, setSelectedPickupLocation] = useState<PickupLocation | null>(null);
   // 货币选择（分别为 paypal 与 bank_card 独立保存）
   const [paypalCurrency, setPaypalCurrency] = useState<'USD' | 'EUR'>('USD');
   const [bankCardCurrency, setBankCardCurrency] = useState<'USD' | 'EUR'>('USD');
@@ -118,29 +114,10 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
     if (cachedOrderData) {
       setOrderData(cachedOrderData);
     }
-    // 获取自提点列表
-    (async () => {
-      try {
-        const locations = await pickupApi.getPickupLocations({
-          latitude: 5.341806,
-          longitude: -3.971889
-        });
-        setPickupLocations(locations);
-        // 根据pickupLocationIdFromRoute选择对应的自提点
-        if (pickupLocationIdFromRoute && locations.length > 0) {
-          const selectedLocation = locations.find(loc => loc.id === pickupLocationIdFromRoute);
-          setSelectedPickupLocation(selectedLocation || locations[0]);
-        } else if (locations.length > 0) {
-          setSelectedPickupLocation(locations[0]);
-        }
-      } catch (error) {
-        console.error('获取自提点失败:', error);
-      }
-    })();
     return () => {
       isMounted = false;
     };
-  }, [defaultAddress, addresses, fetchDefaultAddress, fetchAddresses, pickupLocationIdFromRoute]);
+  }, [defaultAddress, addresses, fetchDefaultAddress, fetchAddresses]);
 
   // 价格计算（前5种方式均为10%折扣）
   const DISCOUNT_RATE = 0.1;
@@ -594,19 +571,8 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
                     return;
                   } else if (selectedPayment === 'balance') {
                     // 余额支付，如果走到这里说明余额充足且支付成功
-                    console.log('[LocalPayment] Navigating to PaymentSuccess (Balance)');
-                    navigation.navigate('LocalPaymentSuccess', {
-                      paymentMethod: 'Solde de compte',
-                      amount: finalUnitPrice * quantity,
-                      currency: 'FCFA',
-                      pickupLocation: selectedPickupLocation?.address || 'Shopping Center East Side Market Square, Downtown',
-                      pickupDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', { 
-                        weekday: 'long', 
-                        day: 'numeric', 
-                        month: 'long', 
-                        year: 'numeric' 
-                      }),
-                      pickupTime: selectedPickupLocation?.timetables?.[0]?.description || '09:00-17:00',
+                    console.log('[LocalPayment] Navigating to OrderSuccess (Balance)');
+                    navigation.navigate('OrderSuccess', {
                       orderId: res.order_id
                     });
                   } else if (payRes?.payment_url) {
