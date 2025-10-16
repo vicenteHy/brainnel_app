@@ -3,7 +3,7 @@ const DEV_API_URL = 'https://api.brainnel.com/test';
 const PROD_API_URL = 'https://api.brainnel.com/backend';
 
 // 使用环境变量或手动切换
-const IS_PRODUCTION = false; // 修改此值来切换环境 - 当前使用测试服务器
+const IS_PRODUCTION = true; // 修改此值来切换环境 - 当前使用正式服务器
 export const API_BASE_URL = IS_PRODUCTION ? PROD_API_URL : DEV_API_URL;
 
 // WebSocket配置 - 自动将 https 转换为 wss

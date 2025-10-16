@@ -1126,6 +1126,7 @@ const styles = StyleSheet.create({
   quantityText: {
     fontSize: fontSize(15),
     fontWeight: 'bold',
+    color: '#333',
     marginHorizontal: 12,
     minWidth: 30,
     textAlign: 'center',

@@ -27,15 +27,6 @@ import AddressDescriptionModal, { type RecipientInfo } from '../../components/Ad
 import MapGuideModal from '../../components/MapGuideModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 大区中心坐标（阿比让各大区的大致中心位置）
-const DISTRICT_CENTERS: Record<string, { latitude: number; longitude: number; zoom?: number }> = {
-  'Cocody': { latitude: 5.3599, longitude: -3.9916, zoom: 13 },
-  'Marcory': { latitude: 5.2859, longitude: -3.9899, zoom: 13 },
-  'Yopougon': { latitude: 5.3364, longitude: -4.0839, zoom: 13 },
-  'Koumassi': { latitude: 5.2922, longitude: -3.9519, zoom: 13 },
-  'Bingerville': { latitude: 5.3555, longitude: -3.8989, zoom: 13 },
-};
-
 // 默认阿比让中心
 const DEFAULT_CENTER = { latitude: 5.345, longitude: -4.024 };
 
@@ -106,8 +97,11 @@ export default function PickUp() {
   const handleSelectDistrict = async (district: District & { cityName: string }) => {
     setSelectedDistrict(district);
     
-    // 设置地图中心为该大区的中心坐标
-    const center = DISTRICT_CENTERS[district.name] || DEFAULT_CENTER;
+    // 设置地图中心为该大区的中心坐标（从 API 获取）
+    const center = {
+      latitude: district.latitude,
+      longitude: district.longitude,
+    };
     setMapCenter(center);
     
     // 进入第二步：地图标点
@@ -128,6 +122,18 @@ export default function PickUp() {
   const handleMapClick = (latitude: number, longitude: number) => {
     console.log('地图点击:', latitude, longitude);
     setCustomMarker({ latitude, longitude });
+  };
+  
+  // 标记在用户位置
+  const handleMarkAtMyLocation = () => {
+    if (userLocation) {
+      setCustomMarker(userLocation);
+    } else {
+      Alert.alert(
+        isChineseLanguage ? '提示' : 'Info',
+        isChineseLanguage ? '无法获取您的位置' : 'Impossible d\'obtenir votre position'
+      );
+    }
   };
 
   // 确认标点，进入填写地址描述
@@ -257,20 +263,20 @@ export default function PickUp() {
       
       {/* 简化引导提示 */}
       <View style={styles.guideContainer}>
-        <Image
-          source={require('../../../assets/guide/point.png')}
-          style={styles.guideIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.guideText}>
-          {isChineseLanguage
-            ? '点击地图标记取货位置'
-            : 'Cliquez sur la carte pour marquer'}
-        </Text>
-        {selectedDistrict && (
-          <View style={styles.districtBadge}>
-            <Text style={styles.districtBadgeText}>{selectedDistrict.name}</Text>
-          </View>
+        <View style={styles.guideTextContainer}>
+          <Text style={styles.guideText}>
+            {isChineseLanguage
+              ? '在地图上选择你的收货地址或者点击右边按钮直接使用当前位置'
+              : 'Choisissez votre adresse sur la carte ou cliquez sur le bouton pour utiliser votre position actuelle'}
+          </Text>
+        </View>
+        {userLocation && (
+          <TouchableOpacity
+            style={styles.myLocationButtonInline}
+            onPress={handleMarkAtMyLocation}
+          >
+            <Ionicons name="locate" size={20} color="#FF5100" />
+          </TouchableOpacity>
         )}
       </View>
 
@@ -278,8 +284,9 @@ export default function PickUp() {
       <View style={styles.mapContainer}>
         <SimpleMapView
           locations={[]}
-          userLocation={mapCenter}
-          showsUserLocation={false}
+          userLocation={userLocation || undefined}
+          mapCenter={mapCenter}
+          showsUserLocation={true}
           enableMapClick={true}
           onMapClick={handleMapClick}
           customMarker={customMarker || undefined}
@@ -521,11 +528,20 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: '#fff',
   },
+  guideTextContainer: {
+    flex: 1,
+  },
   guideText: {
     fontSize: fontSize(14),
     color: '#fff',
     fontWeight: '700',
-    flex: 1,
+  },
+  guideSubText: {
+    fontSize: fontSize(11),
+    color: '#fff',
+    fontWeight: '400',
+    marginTop: 4,
+    opacity: 0.9,
   },
   districtBadge: {
     backgroundColor: '#fff',
@@ -541,6 +557,15 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
     position: 'relative',
+  },
+  myLocationButtonInline: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   bottomBar: {
     paddingHorizontal: 16,

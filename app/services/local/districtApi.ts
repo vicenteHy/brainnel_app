@@ -3,6 +3,8 @@ import { apiService } from '../api/apiClient';
 export interface District {
   id: number;
   name: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface City {

@@ -15,6 +15,7 @@ interface MapLocation {
 interface SimpleMapViewProps {
   locations: MapLocation[];
   userLocation?: { latitude: number; longitude: number };
+  mapCenter?: { latitude: number; longitude: number }; // 新增：地图中心位置（独立于用户位置）
   selectedLocationId?: string;
   onMarkerPress?: (locationId: string) => void;
   showsUserLocation?: boolean;
@@ -27,6 +28,7 @@ interface SimpleMapViewProps {
 export default function SimpleMapView({ 
   locations = [], 
   userLocation: initialUserLocation,
+  mapCenter: initialMapCenter,
   selectedLocationId,
   onMarkerPress,
   showsUserLocation = true,
@@ -79,7 +81,7 @@ export default function SimpleMapView({
     
     // 默认中心点（科特迪瓦阿比让）
     const defaultCenter = { latitude: 5.345, longitude: -4.024 };
-    const center = userLocation || (locations.length > 0 ? locations[0] : defaultCenter);
+    const center = initialMapCenter || userLocation || (locations.length > 0 ? locations[0] : defaultCenter);
     
     return `
       <!DOCTYPE html>
@@ -301,7 +303,7 @@ export default function SimpleMapView({
             });
 
             // 添加用户位置标记
-            ${userLocation ? `
+            ${userLocation && showsUserLocation ? `
               // 用户位置的自定义图标（绿色圆形）
               const userIcon = {
                 path: google.maps.SymbolPath.CIRCLE,
@@ -512,7 +514,6 @@ export default function SimpleMapView({
             
             // 将地图中心移动到标记位置
             map.panTo({ lat: ${customMarker.latitude}, lng: ${customMarker.longitude} });
-            map.setZoom(16);
             
             return 'Custom marker added';
           } catch(e) {
