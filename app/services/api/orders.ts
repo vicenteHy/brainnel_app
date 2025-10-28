@@ -305,6 +305,8 @@ export interface OrderItemDetails {
   sku_image: string;
   order_item_id: string;
   order_id: string;
+  is_live_stream_product?: number; // 是否直播商品 0-否 1-是
+  is_inquiry?: number; // 是否询盘商品 0-否 1-是
   create_time: string; // or Date
   update_time: string; // or Date
 }

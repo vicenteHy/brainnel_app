@@ -157,9 +157,9 @@ export default function PickUp() {
     
     console.log('收件人信息:', recipientInfo);
     
-    // 添加国家代码225（不带+号）
-    const phoneWithCode = `225${recipientInfo.phone}`;
-    const whatsappWithCode = `225${recipientInfo.whatsapp}`;
+    // 使用用户选择的区号（不带+号）
+    const phoneWithCode = `${recipientInfo.phoneCountryCode}${recipientInfo.phone}`;
+    const whatsappWithCode = `${recipientInfo.whatsappCountryCode}${recipientInfo.whatsapp}`;
     
     console.log('处理后的电话:', { phone: phoneWithCode, whatsapp: whatsappWithCode });
     

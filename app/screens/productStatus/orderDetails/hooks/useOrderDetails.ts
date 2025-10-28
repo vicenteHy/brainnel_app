@@ -131,7 +131,12 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
     const groupedData: {
       [key: string]: {
         offer_id: number;
-        skus: { quantity: number; sku_id: string }[];
+        skus: { 
+          quantity: number; 
+          sku_id: string;
+          is_inquiry_item: boolean;
+          is_live_item: boolean;
+        }[];
       };
     } = {};
 
@@ -148,6 +153,8 @@ export const useOrderDetails = ({ orderId, status }: UseOrderDetailsParams) => {
       groupedData[offerId].skus.push({
         quantity: item.quantity,
         sku_id: item.sku_id.toString(),
+        is_inquiry_item: item.is_inquiry === 1,
+        is_live_item: item.is_live_stream_product === 1,
       });
     });
 

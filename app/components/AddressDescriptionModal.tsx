@@ -17,11 +17,12 @@ import fontSize from '../utils/fontsizeUtils';
 import { useTranslation } from 'react-i18next';
 
 export interface RecipientInfo {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   phone: string;
   whatsapp: string;
   addressDescription: string;
+  phoneCountryCode: string;
+  whatsappCountryCode: string;
 }
 
 interface AddressDescriptionModalProps {
@@ -46,6 +47,17 @@ export default function AddressDescriptionModal({
   const [whatsapp, setWhatsapp] = useState('');
   const [addressDescription, setAddressDescription] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // 区号选择
+  const [phoneCountryCode, setPhoneCountryCode] = useState('225');
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState('225');
+  const [showPhoneCodePicker, setShowPhoneCodePicker] = useState(false);
+  const [showWhatsappCodePicker, setShowWhatsappCodePicker] = useState(false);
+  
+  const countryCodes = [
+    { code: '225', flag: '🇨🇮', name: 'Côte d\'Ivoire' },
+    { code: '86', flag: '🇨🇳', name: 'Chine' },
+  ];
 
   const handleConfirm = () => {
     const newErrors: Record<string, string> = {};
@@ -58,15 +70,11 @@ export default function AddressDescriptionModal({
     // 验证电话
     if (!phone.trim()) {
       newErrors.phone = 'Veuillez entrer le numéro de téléphone';
-    } else if (phone.length !== 8 && phone.length !== 10) {
-      newErrors.phone = 'Le numéro doit contenir 8 ou 10 chiffres';
     }
     
     // 验证WhatsApp
     if (!whatsapp.trim()) {
       newErrors.whatsapp = 'Veuillez entrer le numéro WhatsApp';
-    } else if (whatsapp.length !== 8 && whatsapp.length !== 10) {
-      newErrors.whatsapp = 'Le numéro doit contenir 8 ou 10 chiffres';
     }
     
     // 验证地址描述
@@ -87,6 +95,8 @@ export default function AddressDescriptionModal({
       phone: phone.trim(),
       whatsapp: whatsapp.trim(),
       addressDescription: addressDescription.trim(),
+      phoneCountryCode,
+      whatsappCountryCode,
     });
     
     // 清空表单
@@ -99,6 +109,8 @@ export default function AddressDescriptionModal({
     setWhatsapp('');
     setAddressDescription('');
     setErrors({});
+    setPhoneCountryCode('225');
+    setWhatsappCountryCode('225');
   };
   
   const handleCancel = () => {
@@ -159,9 +171,15 @@ export default function AddressDescriptionModal({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>*{isChineseLanguage ? '电话' : 'Téléphone'}</Text>
               <View style={styles.phoneContainer}>
-                <View style={styles.countryCode}>
-                  <Text style={styles.countryCodeText}>🇨🇮 +225</Text>
-                </View>
+                <TouchableOpacity 
+                  style={styles.countryCode}
+                  onPress={() => setShowPhoneCodePicker(true)}
+                >
+                  <Text style={styles.countryCodeText}>
+                    {countryCodes.find(c => c.code === phoneCountryCode)?.flag} +{phoneCountryCode}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color="#666" style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
                 <TextInput
                   style={[styles.phoneInput, errors.phone ? styles.inputError : null]}
                   placeholder={isChineseLanguage ? '请输入电话号码' : 'Entrez votre numéro'}
@@ -172,7 +190,6 @@ export default function AddressDescriptionModal({
                     if (errors.phone) setErrors({...errors, phone: ''});
                   }}
                   keyboardType="phone-pad"
-                  maxLength={10}
                 />
               </View>
               {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
@@ -182,9 +199,15 @@ export default function AddressDescriptionModal({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>*WhatsApp</Text>
               <View style={styles.phoneContainer}>
-                <View style={styles.countryCode}>
-                  <Text style={styles.countryCodeText}>🇨🇮 +225</Text>
-                </View>
+                <TouchableOpacity 
+                  style={styles.countryCode}
+                  onPress={() => setShowWhatsappCodePicker(true)}
+                >
+                  <Text style={styles.countryCodeText}>
+                    {countryCodes.find(c => c.code === whatsappCountryCode)?.flag} +{whatsappCountryCode}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color="#666" style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
                 <TextInput
                   style={[styles.phoneInput, errors.whatsapp ? styles.inputError : null]}
                   placeholder={isChineseLanguage ? '请输入WhatsApp号码' : 'Entrez votre WhatsApp'}
@@ -195,7 +218,6 @@ export default function AddressDescriptionModal({
                     if (errors.whatsapp) setErrors({...errors, whatsapp: ''});
                   }}
                   keyboardType="phone-pad"
-                  maxLength={10}
                 />
               </View>
               {errors.whatsapp ? <Text style={styles.errorText}>{errors.whatsapp}</Text> : null}
@@ -248,6 +270,82 @@ export default function AddressDescriptionModal({
           </View>
         </View>
       </KeyboardAvoidingView>
+      
+      {/* 电话区号选择器 */}
+      <Modal
+        visible={showPhoneCodePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPhoneCodePicker(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowPhoneCodePicker(false)}>
+          <View style={styles.pickerOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerTitle}>{isChineseLanguage ? '选择区号' : 'Sélectionner le code'}</Text>
+                {countryCodes.map((country) => (
+                  <TouchableOpacity
+                    key={country.code}
+                    style={[
+                      styles.pickerItem,
+                      phoneCountryCode === country.code && styles.pickerItemSelected
+                    ]}
+                    onPress={() => {
+                      setPhoneCountryCode(country.code);
+                      setShowPhoneCodePicker(false);
+                    }}
+                  >
+                    <Text style={styles.pickerItemText}>
+                      {country.flag} +{country.code} {country.name}
+                    </Text>
+                    {phoneCountryCode === country.code && (
+                      <Ionicons name="checkmark" size={20} color="#FF5100" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+      
+      {/* WhatsApp区号选择器 */}
+      <Modal
+        visible={showWhatsappCodePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWhatsappCodePicker(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowWhatsappCodePicker(false)}>
+          <View style={styles.pickerOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerTitle}>{isChineseLanguage ? '选择区号' : 'Sélectionner le code'}</Text>
+                {countryCodes.map((country) => (
+                  <TouchableOpacity
+                    key={country.code}
+                    style={[
+                      styles.pickerItem,
+                      whatsappCountryCode === country.code && styles.pickerItemSelected
+                    ]}
+                    onPress={() => {
+                      setWhatsappCountryCode(country.code);
+                      setShowWhatsappCodePicker(false);
+                    }}
+                  >
+                    <Text style={styles.pickerItemText}>
+                      {country.flag} +{country.code} {country.name}
+                    </Text>
+                    {whatsappCountryCode === country.code && (
+                      <Ionicons name="checkmark" size={20} color="#FF5100" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </Modal>
   );
 }
@@ -324,6 +422,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   countryCode: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 12,
@@ -392,5 +492,41 @@ const styles = StyleSheet.create({
     fontSize: fontSize(16),
     fontWeight: '600',
     color: '#fff',
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    width: '80%',
+    maxWidth: 320,
+  },
+  pickerTitle: {
+    fontSize: fontSize(16),
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  pickerItemSelected: {
+    backgroundColor: '#FFF0E5',
+  },
+  pickerItemText: {
+    fontSize: fontSize(14),
+    color: '#333',
   },
 });
