@@ -38,6 +38,26 @@ interface RechargeScreenProps {
   // 可以添加其他 props，比如路由参数
 }
 
+// 解析金额字符串，处理各种区域格式（逗号、空格、点号作为千位分隔符）
+const parseAmountString = (amountStr: string): number => {
+  if (!amountStr) return 0;
+  // 移除所有非数字字符，除了小数点（但需要判断是小数点还是千位分隔符）
+  // 先移除空格和逗号
+  let cleaned = amountStr.replace(/[\s,]/g, "");
+  // 如果有多个点号，说明点号是千位分隔符，全部移除
+  const dotCount = (cleaned.match(/\./g) || []).length;
+  if (dotCount > 1) {
+    cleaned = cleaned.replace(/\./g, "");
+  } else if (dotCount === 1) {
+    // 如果只有一个点号，检查它是小数点还是千位分隔符
+    // 如果点号后面正好有3位数字且是结尾，则是千位分隔符
+    if (/\.\d{3}$/.test(cleaned) && !/\.\d{1,2}$/.test(cleaned)) {
+      cleaned = cleaned.replace(/\./g, "");
+    }
+  }
+  return parseFloat(cleaned) || 0;
+};
+
 const RechargeScreen = () => {
   const { t } = useTranslation();
   const [selectedPrice, setSelectedPrice] = useState<string>("");
@@ -370,8 +390,8 @@ const RechargeScreen = () => {
     if (selectedOperator) {
       // 准备支付参数，方便后续发送
       const params = {
-        originalAmount: parseFloat(selectedPrice.replace(/,/g, "")),
-        amount: parseFloat(selectedPrice.replace(/,/g, "")),
+        originalAmount: parseAmountString(selectedPrice),
+        amount: parseAmountString(selectedPrice),
         currency: user?.currency,
         payment_method: "",
         selectedPriceLabel: selectedPrice + " " + user?.currency,
@@ -413,7 +433,7 @@ const RechargeScreen = () => {
             }
           } else {
             // 如果没有转换结果，使用原始金额作为备用
-            params.amount = parseFloat(selectedPrice.replace(/,/g, ""));
+            params.amount = parseAmountString(selectedPrice);
           }
           // selectedPriceLabel 保持显示原始美元金额
           // params.selectedPriceLabel 已经在上面设置为原始金额，不需要修改
@@ -447,7 +467,7 @@ const RechargeScreen = () => {
             }
           } else {
             // 如果没有转换结果，使用原始金额作为备用
-            params.amount = parseFloat(selectedPrice.replace(/,/g, ""));
+            params.amount = parseAmountString(selectedPrice);
           }
         }
         // mobile_money 的其他处理现在在 PhoneNumberInputModal 内部进行
@@ -488,8 +508,8 @@ const RechargeScreen = () => {
     // 增加请求版本号
     const currentVersion = ++conversionRequestVersionRef.current;
 
-    // 格式化金额，去除逗号
-    const amount = parseFloat(price.replace(/,/g, ""));
+    // 格式化金额，处理各种区域格式
+    const amount = parseAmountString(price);
 
     // 如果金额为0或无效，则不进行转换
     if (!amount || isNaN(amount)) {
