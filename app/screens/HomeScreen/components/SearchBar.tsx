@@ -18,11 +18,10 @@ const IconComponent = React.memo(({ name, size, color }: IconProps) => {
 });
 
 interface SearchBarProps {
-  onCameraPress: () => void;
 }
 
 export const SearchBar = React.memo(
-  ({ onCameraPress }: SearchBarProps) => {
+  ({}: SearchBarProps) => {
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
     const { t } = useTranslation();
 
@@ -42,9 +41,6 @@ export const SearchBar = React.memo(
           <Text style={styles.searchPlaceholder}>
             {t("homePage.searchPlaceholder")}
           </Text>
-          <TouchableOpacity style={styles.cameraButton} onPress={onCameraPress}>
-            <IconComponent name="camera-outline" size={30} color="#333" />
-          </TouchableOpacity>
           <TouchableOpacity
             style={styles.searchButton}
             onPress={navigateToSearch}
@@ -55,7 +51,7 @@ export const SearchBar = React.memo(
       </View>
     );
   },
-  (prevProps, nextProps) => {
-    return prevProps.onCameraPress === nextProps.onCameraPress;
+  () => {
+    return true;
   },
 );

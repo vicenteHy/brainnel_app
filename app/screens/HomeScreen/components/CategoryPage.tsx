@@ -43,7 +43,6 @@ interface CategoryPageProps {
   onLoadMore: (categoryId: number) => void;
   onRefresh: (categoryId: number) => void;
   onProductPress: (item: Product) => void;
-  onCameraPress: () => void;
   onLoginRequired: () => void; // 新增：需要登录时的回调
   userStore: any;
   t: (key: string) => string;
@@ -64,7 +63,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   onLoadMore,
   onRefresh,
   onProductPress,
-  onCameraPress,
   onLoginRequired,
   userStore,
   t,
@@ -359,8 +357,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
           // 推荐页面显示功能导航和轮播图
           <>
             <FeatureNavigationBar />
-            <CarouselBanner 
-              onCameraPress={onCameraPress} 
+            <CarouselBanner
               onLoginRequired={onLoginRequired} 
               isRefreshing={pageData.loading}
             />
@@ -373,7 +370,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         )}
       </>
     ),
-    [categoryId, onCameraPress, onLoginRequired, subcategoryComponent, pageData.loading, renderHeaderComponent],
+    [categoryId, onLoginRequired, subcategoryComponent, pageData.loading, renderHeaderComponent],
   );
 
   // 处理用户下拉刷新

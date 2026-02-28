@@ -282,9 +282,6 @@ const TaskCenterScreen = ({ navigation }: any) => {
 
   const handleTaskAction = (taskId: number) => {
     switch (taskId) {
-      case 1: // 图搜
-        navigation.navigate('Search' as any, { showImageSearchGuide: true });
-        break;
       case 2: // 文本搜索
         navigation.navigate('Search' as any);
         break;
@@ -358,26 +355,6 @@ const TaskCenterScreen = ({ navigation }: any) => {
           <View style={styles.divider} />
 
           <View style={styles.tasksList}>
-            <TaskItem
-              icon={require('../../../assets/img/searchByImage.png')}
-              title="Recherche par image"
-              description="Search for products using images to discover what you want"
-              reward={20}
-              buttonText=""
-              status={getTaskStatus(1)}
-              onPress={async () => {
-                const status = getTaskStatus(1);
-                if (status === 1) {
-                  // 领取奖励
-                  await reportTaskClaimed(1);
-                  Alert.alert(t('成功'), t('奖励领取成功'));
-                } else if (status === 0) {
-                  // 跳转到对应页面完成任务
-                  handleTaskAction(1);
-                }
-              }}
-            />
-
             <TaskItem
               icon={require('../../../assets/img/searchByText.png')}
               title="Recherche par texte"

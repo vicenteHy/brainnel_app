@@ -16,7 +16,6 @@ import {
   Platform,
   StatusBar,
   SafeAreaView,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,7 +32,6 @@ import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import useUserStore from "../../store/user";
 import useAnalyticsStore from "../../store/analytics";
-import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { useGlobalStore } from "../../store/useGlobalStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCategoryImageSource } from "../../utils/categoryImageUtils";
@@ -129,9 +127,7 @@ export const HomeScreen = () => {
 
   
   // 本地状态
-  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(-1); // -1 表示推荐页
-  const [galleryUsed, setGalleryUsed] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false); // 不依赖userStore初始化，在useEffect中处理
   const [hasUserDismissedLoginModal, setHasUserDismissedLoginModal] = useState(false); // 用户是否已关闭过登录弹窗
   const [hasCheckedActivity, setHasCheckedActivity] = useState(false); // 是否已检查过活动状态
@@ -324,11 +320,6 @@ export const HomeScreen = () => {
     [navigation],
   );
 
-  // 处理相机按钮点击
-  const handleCameraPress = useCallback(() => {
-    setShowImagePickerModal(true);
-  }, []);
-
   // 处理关闭登录弹窗
   const handleDismissLoginModal = useCallback(async () => {
     setShowLoginModal(false);
@@ -409,95 +400,6 @@ export const HomeScreen = () => {
       }
     }
   }, [userStore.user?.user_id, selectedCategoryId]);
-
-  // 图片选择器相关函数
-  const cleanupImagePickerCache = async () => {
-    try {
-      setGalleryUsed(false);
-    } catch (error) {
-      setGalleryUsed(false);
-    }
-  };
-
-  const handleChooseFromGallery = useCallback(async () => {
-    setShowImagePickerModal(false);
-    setTimeout(async () => {
-      try {
-        const options: ImageLibraryOptions = {
-          mediaType: 'photo' as MediaType,
-          includeBase64: false,
-          maxHeight: 2000,
-          maxWidth: 2000,
-          quality: 1,
-        };
-        
-        launchImageLibrary(options, (response: ImagePickerResponse) => {
-          if (response.didCancel) {
-            return;
-          }
-          
-          if (response.errorMessage) {
-            return;
-          }
-          
-          if (response.assets && response.assets.length > 0) {
-            const asset = response.assets[0];
-            if (asset.uri) {
-              navigation.navigate("ImageSearchResultScreen", {
-                image: asset.uri,
-                type: 1,
-              });
-            }
-          }
-        });
-      } catch (error) {
-        await cleanupImagePickerCache();
-      }
-    }, 500);
-  }, [navigation, t]);
-
-  const handleTakePhoto = useCallback(async () => {
-    setShowImagePickerModal(false);
-    setTimeout(async () => {
-      try {
-        const options: CameraOptions = {
-          mediaType: 'photo' as MediaType,
-          includeBase64: false,
-          maxHeight: 2000,
-          maxWidth: 2000,
-          quality: 1,
-        };
-        
-        launchCamera(options, (response: ImagePickerResponse) => {
-          if (response.didCancel) {
-            return;
-          }
-          
-          if (response.errorMessage) {
-            return;
-          }
-          
-          if (response.assets && response.assets.length > 0) {
-            const asset = response.assets[0];
-            if (asset.uri) {
-              navigation.navigate("ImageSearchResultScreen", {
-                image: asset.uri,
-                type: 1,
-              });
-            }
-          }
-        });
-      } catch (error) {
-        await cleanupImagePickerCache();
-      }
-    }, 500);
-  }, [navigation, t]);
-
-  const resetAppState = useCallback(() => {
-    setGalleryUsed(false);
-    cleanupImagePickerCache();
-    Alert.alert(t('banner.inquiry.camera_reset'), t('banner.inquiry.camera_reset_message'));
-  }, [t]);
 
   // 获取一级类目并初始化数据（只在组件挂载时执行一次）
   useEffect(() => {
@@ -906,7 +808,7 @@ export const HomeScreen = () => {
         <View style={styles.container}>
           {/* 固定的搜索栏和分类栏 */}
           <View style={styles.fixedHeader}>
-            <SearchBar onCameraPress={handleCameraPress} />
+            <SearchBar />
             {renderCategorySection}
           </View>
 
@@ -980,7 +882,6 @@ export const HomeScreen = () => {
               onLoadMore={loadMoreData}
               onRefresh={refreshPageData}
               onProductPress={handleProductPress}
-              onCameraPress={handleCameraPress}
               onLoginRequired={handleLoginRequired}
               userStore={memoizedUserStore}
               t={t}
@@ -996,87 +897,6 @@ export const HomeScreen = () => {
               )}
             />
           </View>
-
-          {/* 图片选择弹窗 */}
-          {showImagePickerModal && (
-            <>
-              <TouchableOpacity
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "#00000080",
-                  zIndex: 999,
-                }}
-                activeOpacity={1}
-                onPress={() => setShowImagePickerModal(false)}
-              />
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "#fff",
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  paddingTop: 12,
-                  paddingHorizontal: 20,
-                  paddingBottom: 2,
-                  zIndex: 1000,
-                }}
-              >
-                {!galleryUsed ? (
-                  <TouchableOpacity
-                    style={styles.imagePickerOption}
-                    onPress={handleTakePhoto}
-                  >
-                    <IconComponent
-                      name="camera-outline"
-                      size={24}
-                      color="#333"
-                    />
-                    <Text style={styles.imagePickerText}>
-                      {t("homePage.takePhoto")}
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.imagePickerOption}
-                    onPress={resetAppState}
-                  >
-                    <IconComponent
-                      name="refresh-outline"
-                      size={24}
-                      color="#333"
-                    />
-                    <Text style={styles.imagePickerText}>重置相机功能</Text>
-                  </TouchableOpacity>
-                )}
-                <View style={styles.imagePickerDivider} />
-                <TouchableOpacity
-                  style={styles.imagePickerOption}
-                  onPress={handleChooseFromGallery}
-                >
-                  <IconComponent name="images-outline" size={24} color="#333" />
-                  <Text style={styles.imagePickerText}>
-                    {t("homePage.chooseFromGallery")}
-                  </Text>
-                </TouchableOpacity>
-                <View style={styles.imagePickerDivider} />
-                <TouchableOpacity
-                  style={styles.imagePickerCancelButton}
-                  onPress={() => setShowImagePickerModal(false)}
-                >
-                  <Text style={styles.imagePickerCancelText}>
-                    {t("homePage.cancel")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
 
           {/* 分类选择弹窗 */}
           {showCategoryModal && (
