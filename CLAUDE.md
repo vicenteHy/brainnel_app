@@ -20,20 +20,20 @@ npm run ios
 npm run android
 ```
 
-### app打包流程（打包时自动执行以下所有步骤，不需要询问用户确认）
-当用户说"打包"时，直接执行以下所有步骤：
-1. 更新版本号（以下文件全部同步更新）：
-   - app.json: version 和 expo.ios.buildNumber
-   - android/app/build.gradle: versionCode 和 versionName
-   - ios/brainnel/Info.plist: CFBundleShortVersionString 和 CFBundleVersion
-2. git 提交并推送代码
-3. cd到 /Users/vicente/Desktop/brainnel_app/android 运行：./gradlew assembleRelease
-4. 编译完成后，将APK复制到桌面：cp /Users/vicente/Desktop/brainnel_app/android/app/build/outputs/apk/release/app-release.apk /Users/vicente/Desktop/
-5. 上传APK到服务器：
-   - scp -i /Users/vicente/Desktop/delivery/sakura.pem /Users/vicente/Desktop/app-release.apk admin@13.245.18.173:/tmp/
-   - ssh brainnel-app "sudo mv /tmp/app-release.apk /data1/apk/brainnel_app.apk"
-6. 更新数据库版本信息：
-   mysql -h 13.245.18.173 -P 53307 -u root -pKajx5gtk3Y1GzQA55wez admin -e "UPDATE app_versions SET staging_version = '新版本号', staging_version_code = 新版本代码, staging_release_notes = '更新说明', staging_updated_at = NOW() WHERE app_name = 'brainnel_app';"
+### 构建发布
+```bash
+# Android APK 预览版
+npm run build:android:preview
+
+# Android 生产版本
+npm run build:android:production
+
+# iOS 构建
+npm run build:ios
+
+# 所有平台构建
+npm run build:all
+```
 
 ## 架构概览
 

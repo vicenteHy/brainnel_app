@@ -10,12 +10,13 @@ import useUserStore from "../../../store/user";
 import { getActivityStatus } from "../../../services/api/activity";
 
 interface CarouselBannerProps {
+  onCameraPress: () => void;
   onLoginRequired: () => void;
   isRefreshing?: boolean;
 }
 
 export const CarouselBanner = React.memo(
-  ({ onLoginRequired, isRefreshing = false }: CarouselBannerProps) => {
+  ({ onCameraPress, onLoginRequired, isRefreshing = false }: CarouselBannerProps) => {
     const screenWidth = Dimensions.get("window").width;
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
     const [showSpinWheel, setShowSpinWheel] = useState(false);
@@ -239,7 +240,8 @@ export const CarouselBanner = React.memo(
     );
   },
   (prevProps, nextProps) => {
-    return prevProps.onLoginRequired === nextProps.onLoginRequired &&
+    return prevProps.onCameraPress === nextProps.onCameraPress && 
+           prevProps.onLoginRequired === nextProps.onLoginRequired &&
            prevProps.isRefreshing === nextProps.isRefreshing;
   },
 );

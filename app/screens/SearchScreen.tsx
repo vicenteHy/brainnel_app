@@ -10,6 +10,8 @@ import {
   StatusBar,
   Image,
   Platform,
+  Modal,
+  Alert,
   ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +20,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import SearchIcon from "../components/SearchIcon";
+import { launchImageLibrary, launchCamera, MediaType, ImagePickerResponse, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
+import CameraIcon from "../components/CameraIcon";
 import { productApi } from "../services/api/productApi";
 import useAnalyticsStore from "../store/analytics";
 import fontSize from "../utils/fontsizeUtils";
@@ -86,7 +90,10 @@ export const SearchScreen = ({ route }: any) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { t } = useTranslation();
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
+  const [galleryUsed, setGalleryUsed] = useState(false);
   const [trendingSearchTerms, setTrendingSearchTerms] = useState<string[]>([]);
+  const [showImageSearchGuide, setShowImageSearchGuide] = useState(false);
 
   // 获取热门搜索词
   const loadHotTerms = useCallback(async () => {
@@ -104,6 +111,32 @@ export const SearchScreen = ({ route }: any) => {
     useCallback(() => {
       loadSearchHistory();
       loadHotTerms();
+      
+      // 检查是否需要显示图搜引导
+      const checkGuide = async () => {
+        try {
+          // 只有从任务中心进入且带有showImageSearchGuide参数时才显示
+          if (route?.params?.showImageSearchGuide) {
+            const hasShown = await AsyncStorage.getItem('hasShownImageSearchGuide');
+            console.log('图搜引导 - hasShownImageSearchGuide:', hasShown);
+            if (!hasShown) {
+              console.log('图搜引导 - 从任务中心进入，准备显示引导');
+              setTimeout(() => {
+                console.log('图搜引导 - 设置显示状态为 true');
+                setShowImageSearchGuide(true);
+                AsyncStorage.setItem('hasShownImageSearchGuide', 'true');
+              }, 500);
+            } else {
+              console.log('图搜引导 - 用户已经看过引导');
+            }
+          } else {
+            console.log('图搜引导 - 不是从任务中心进入，不显示引导');
+          }
+        } catch (error) {
+          console.error('图搜引导 - 检查失败:', error);
+        }
+      };
+      checkGuide();
     }, [loadHotTerms])
   );
 
@@ -246,6 +279,100 @@ export const SearchScreen = ({ route }: any) => {
     });
   }
 
+  // 通用图片选择/拍照逻辑
+  const cleanupImagePickerCache = async () => {
+    try {
+      console.log("react-native-image-picker 自动管理缓存");
+      setGalleryUsed(false);
+    } catch (error) {
+      setGalleryUsed(false);
+    }
+  };
+  const handleChooseFromGallery = useCallback(async () => {
+    setShowImagePickerModal(false);
+    setTimeout(async () => {
+      try {
+        const options: ImageLibraryOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: false,
+          maxHeight: 2000,
+          maxWidth: 2000,
+          quality: 1,
+        };
+        
+        launchImageLibrary(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了图片选择');
+            return;
+          }
+          
+          if (response.errorMessage) {
+            console.log('相册错误:', response.errorMessage);
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+              navigation.navigate("ImageSearchResultScreen", {
+                image: asset.uri,
+                type: 1,
+              });
+            }
+          }
+        });
+      } catch (error) {
+        await cleanupImagePickerCache();
+      }
+    }, 500);
+  }, [navigation, t]);
+  const handleTakePhoto = useCallback(async () => {
+    setShowImagePickerModal(false);
+    setTimeout(async () => {
+      try {
+        const options: CameraOptions = {
+          mediaType: 'photo' as MediaType,
+          includeBase64: false,
+          maxHeight: 2000,
+          maxWidth: 2000,
+          quality: 1,
+        };
+        
+        launchCamera(options, (response: ImagePickerResponse) => {
+          if (response.didCancel) {
+            console.log('用户取消了拍照');
+            return;
+          }
+          
+          if (response.errorMessage) {
+            console.log('相机错误:', response.errorMessage);
+            return;
+          }
+          
+          if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+              navigation.navigate("ImageSearchResultScreen", {
+                image: asset.uri,
+                type: 1,
+              });
+            }
+          }
+        });
+      } catch (error) {
+        await cleanupImagePickerCache();
+      }
+    }, 500);
+  }, [navigation, t]);
+  const resetAppState = useCallback(() => {
+    setGalleryUsed(false);
+    cleanupImagePickerCache();
+    Alert.alert(t('banner.inquiry.camera_reset'), t('banner.inquiry.camera_reset_message'));
+  }, [t]);
+  const handleCameraPress = useCallback(() => {
+    setShowImagePickerModal(true);
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -286,6 +413,13 @@ export const SearchScreen = ({ route }: any) => {
                     <IconComponent name="close-circle" size={18} color="#777" />
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                  onPress={handleCameraPress}
+                  style={{ marginLeft: 8 }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <CameraIcon size={20} color="#747474" />
+                </TouchableOpacity>
               </View>
               <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
                 <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
@@ -338,6 +472,84 @@ export const SearchScreen = ({ route }: any) => {
           </View>
         </View>
       </ScrollView>
+      {/* Image Picker Modal */}
+      <Modal
+        visible={showImagePickerModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowImagePickerModal(false)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "#00000080", justifyContent: "flex-end" }}
+          activeOpacity={1}
+          onPress={() => setShowImagePickerModal(false)}
+        >
+          <View style={{ backgroundColor: "#fff", borderTopLeftRadius: 10, borderTopRightRadius: 10, paddingTop: 20 }}>
+            {!galleryUsed ? (
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15 }}
+                onPress={handleTakePhoto}
+              >
+                <CameraIcon size={24} color="#333" />
+                <Text style={{ fontSize: fontSize(16), color: "#333", marginLeft: 10 }}>{t('takePhoto')}</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15 }}
+                onPress={resetAppState}
+              >
+                <Text style={{ fontSize: fontSize(16), color: "#333", marginLeft: 10 }}>{t('resetCamera')}</Text>
+              </TouchableOpacity>
+            )}
+            <View style={{ height: 1, backgroundColor: "#eee", marginHorizontal: 20 }} />
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15 }}
+              onPress={handleChooseFromGallery}
+            >
+              <Text style={{ fontSize: fontSize(16), color: "#333" }}>{t('chooseFromGallery')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ alignItems: "center", paddingVertical: 15, borderTopWidth: 1, borderTopColor: "#eee", marginTop: 10 }}
+              onPress={() => setShowImagePickerModal(false)}
+            >
+              <Text style={{ fontSize: fontSize(16), color: "#333" }}>{t('cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 图搜引导遮罩层 */}
+      {showImageSearchGuide && (
+        <TouchableOpacity 
+          style={styles.imageSearchGuideOverlay}
+          activeOpacity={1}
+          onPress={() => setShowImageSearchGuide(false)}
+        >
+          <View style={styles.imageSearchGuideContainer}>
+            <Image 
+              source={require('../../assets/img/imageSearch_guide.png')}
+              style={styles.imageSearchGuideImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* 高亮的相机按钮 - 在引导层之上 */}
+      {showImageSearchGuide && (
+        <View style={styles.cameraButtonOverlay}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowImageSearchGuide(false);
+              handleCameraPress();
+            }}
+            style={styles.cameraButtonHighlight}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <CameraIcon size={20} color="#747474" />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -470,5 +682,42 @@ const styles = StyleSheet.create({
     fontSize: fontSize(14),
     color: '#9e9e9e',
     fontWeight: 700,
+  },
+  imageSearchGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000CC',
+    zIndex: 1000,
+  },
+  imageSearchGuideContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 80,  // 从顶部向下80px的位置开始
+  },
+  imageSearchGuideImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'contain',
+  },
+  cameraButtonOverlay: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 10 : 70,  // 向上移动
+    right: 90,  // 再向左移动
+    zIndex: 1001,
+  },
+  cameraButtonHighlight: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 10,
+    shadowColor: '#FF5100',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
   },
 }); 
