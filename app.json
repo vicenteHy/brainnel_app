@@ -2,7 +2,7 @@
   "expo": {
     "name": "brainnel",
     "slug": "brainnel",
-    "version": "5.7.3",
+    "version": "5.7.4",
     "orientation": "portrait",
     "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
