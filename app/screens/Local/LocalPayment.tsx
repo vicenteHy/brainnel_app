@@ -588,14 +588,7 @@ const LocalPayment = ({ navigation }: { navigation: LocalPaymentNav }) => {
               }
             } catch (e: unknown) {
               console.error('[LocalPayment] Create order error raw:', e);
-              const detail = (e as any)?.response?.data?.detail;
-              const validationMessage = Array.isArray(detail)
-                ? detail.map((item: any) => String(item?.msg || '')).find((message: string) => /phone|whatsapp/i.test(message))
-                : '';
-              const phoneField = /whatsapp/i.test(validationMessage || '') ? 'WhatsApp' : 'téléphone';
-              const msg = validationMessage
-                ? `Le numéro ${phoneField} doit avoir 10 chiffres après +225 et commencer par 01, 05 ou 07.`
-                : (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string')
+              const msg = (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string')
                 ? (e as { message: string }).message
                 : 'Échec de la création de la commande';
               Alert.alert('Erreur', msg);
