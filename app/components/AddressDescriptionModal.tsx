@@ -56,11 +56,16 @@ export default function AddressDescriptionModal({
   
   const countryCodes = [
     { code: '225', flag: '🇨🇮', name: 'Côte d\'Ivoire' },
-    { code: '86', flag: '🇨🇳', name: 'Chine' },
   ];
 
   const handleConfirm = () => {
     const newErrors: Record<string, string> = {};
+    const localPhone = phone.replace(/^(00225|225)/, '');
+    const localWhatsapp = whatsapp.replace(/^(00225|225)/, '');
+    const validCiMobile = (value: string) => /^(01|05|07)\d{8}$/.test(value);
+    const phoneFormatError = isChineseLanguage
+      ? '请输入 +225 后的 10 位手机号（01、05 或 07 开头）'
+      : 'Saisissez 10 chiffres après +225, commençant par 01, 05 ou 07';
     
     // 验证全名
     if (!fullName.trim()) {
@@ -70,11 +75,15 @@ export default function AddressDescriptionModal({
     // 验证电话
     if (!phone.trim()) {
       newErrors.phone = 'Veuillez entrer le numéro de téléphone';
+    } else if (!validCiMobile(localPhone)) {
+      newErrors.phone = phoneFormatError;
     }
     
     // 验证WhatsApp
     if (!whatsapp.trim()) {
       newErrors.whatsapp = 'Veuillez entrer le numéro WhatsApp';
+    } else if (!validCiMobile(localWhatsapp)) {
+      newErrors.whatsapp = phoneFormatError;
     }
     
     // 验证地址描述
@@ -92,8 +101,8 @@ export default function AddressDescriptionModal({
     // 所有验证通过，返回数据
     onConfirm({
       fullName: fullName.trim(),
-      phone: phone.trim(),
-      whatsapp: whatsapp.trim(),
+      phone: localPhone,
+      whatsapp: localWhatsapp,
       addressDescription: addressDescription.trim(),
       phoneCountryCode,
       whatsappCountryCode,

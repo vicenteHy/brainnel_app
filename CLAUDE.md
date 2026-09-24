@@ -115,3 +115,5 @@ npm run build:all
 - **EAS Project ID**: 4b8bd660-e8b5-48ad-ac8a-a05607f96eb6
 - **设计稿尺寸**: 430x932
 - **支持的登录方式**: Google、Apple、邮箱、WhatsApp
+
+- 2026-09-24: Local checkout sends custom recipient contact data through `PickUp` → `AddressDescriptionModal` → `LocalPayment` → `/api/flash-local/orders/`. The product backend accepts Côte d'Ivoire mobile numbers with 10 local digits starting 01, 05, or 07; the server normalizes them to `225` + 10 digits. Validate phone and WhatsApp before leaving the address modal, and show the specific field when the backend returns 422. A 422 at order creation occurs before Wave payment initiation. App source changes need a mobile release to reach installed devices.
