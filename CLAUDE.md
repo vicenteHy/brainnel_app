@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code and Codex when working with code in this repository. AGENTS.md in this directory is a symlink to this file, so Claude and Codex read the same rules. Make every edit in CLAUDE.md.
+
+This repository is public on GitHub. Never commit server addresses, ports, database users, passwords, tokens or keys to it; refer to the delivery root's CLAUDE.md for them.
 
 ## 项目概览
 
@@ -34,6 +36,26 @@ npm run build:ios
 # 所有平台构建
 npm run build:all
 ```
+
+### app打包流程（本地打包；用户说"打包"时直接执行以下所有步骤，不需要询问确认）
+在仓库根目录执行：
+1. 更新版本号（以下文件全部同步更新）：
+   - app.json: version 和 expo.ios.buildNumber
+   - android/app/build.gradle: versionCode 和 versionName
+   - ios/brainnel/Info.plist: CFBundleShortVersionString 和 CFBundleVersion
+2. git 提交并推送代码
+3. Android 打包：`cd android && ./gradlew assembleRelease && ./gradlew bundleRelease`
+4. 编译完成后，把 APK 和 AAB 复制到桌面：
+   - `cp android/app/build/outputs/apk/release/app-release.apk ~/Desktop/`
+   - `cp android/app/build/outputs/bundle/release/app-release.aab ~/Desktop/`
+5. 不再上传 APK 到服务器。旧流程会放到 `/data1/apk/brainnel_app.apk`；2026-11-18 核对，当前服务器上没有这个文件，也没有接口或 nginx 路由读取它。App 内的更新提示打开 admin 库 `app_versions.link_url`：Android 指向 Google Play，iOS 指向 App Store。所以 Android 新版本要把 AAB 上传到 Google Play Console，这份流程不会自动上传。
+6. 更新数据库 Android 版本信息（admin 库；地址和账号见 delivery 根目录 CLAUDE.md「数据库连接方式」，不写进本仓库）：
+   `UPDATE app_versions SET latest_version = '新版本号', update_message = '法语更新说明', update_message_en = '英语更新说明', updated_at = NOW() WHERE platform = 'android';`
+7. iOS 打包并上传 App Store Connect：
+   - Archive: `xcodebuild archive -workspace ios/brainnel.xcworkspace -scheme brainnel -configuration Release -archivePath ~/Desktop/brainnel.xcarchive -allowProvisioningUpdates`
+   - 导出并上传: `xcodebuild -exportArchive -archivePath ~/Desktop/brainnel.xcarchive -exportPath ~/Desktop/brainnel_ipa/ -exportOptionsPlist ios/ExportOptions.plist -allowProvisioningUpdates`
+   - ExportOptions.plist 使用 app-store-connect 方式，会自动上传到 App Store Connect。这个文件没有进 Git，只在本机。
+8. 更新数据库 iOS 版本信息：同第 6 步，条件改为 `WHERE platform = 'ios'`。
 
 ## 架构概览
 
